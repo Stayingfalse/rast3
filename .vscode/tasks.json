@@ -1,0 +1,44 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Dev Server",
+			"type": "shell",
+			"command": "npm run dev",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Build",
+			"type": "shell",
+			"command": "npm run docker:build",
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Run",
+			"type": "shell",
+			"command": "npm run docker:run",
+			"group": "build",
+			"isBackground": true,
+			"dependsOn": "Docker Build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Compose Up",
+			"type": "shell",
+			"command": "npm run docker:up",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Compose Down",
+			"type": "shell",
+			"command": "npm run docker:down",
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

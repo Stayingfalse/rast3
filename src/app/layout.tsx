@@ -5,6 +5,8 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { AuthProvider } from "./_components/auth-provider";
+import AdminButton from "./_components/admin-button";
+import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,26 +26,30 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable}`}>
-      <body>
-        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-top bg-repeat bg-fixed bg-#13264D">
-        {/* Header with SVG image */}
-        <header className="absolute left-1/2 top-[-0.5rem] max-w-[150%] -translate-x-1/2 z-0 w-full flex justify-center pointer-events-none select-none">
-          <a href="/">
-            <img
-              src="/header.svg"
-              alt="Header Logo"
-              className="w-full h-auto z-0"
-              draggable="false"
-            />
-          </a>
-        </header>
+      <SessionProvider>
+        <body>
+          <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-top bg-repeat bg-fixed bg-#13264D">
+            {/* Admin Button (top right) */}
+            <AdminButton />
+            {/* Header with SVG image */}
+            <header className="absolute left-1/2 top-[-0.5rem] max-w-[150%] -translate-x-1/2 z-0 w-full flex justify-center pointer-events-none select-none">
+              <a href="/">
+                <img
+                  src="/header.svg"
+                  alt="Header Logo"
+                  className="w-full h-auto z-0"
+                  draggable="false"
+                />
+              </a>
+            </header>
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-                <AuthProvider>
-                    <TRPCReactProvider>{children}</TRPCReactProvider>
-                </AuthProvider>
+              <AuthProvider>
+                <TRPCReactProvider>{children}</TRPCReactProvider>
+              </AuthProvider>
             </div>
-        </main>
-      </body>
+          </main>
+        </body>
+      </SessionProvider>
     </html>
   );
 }

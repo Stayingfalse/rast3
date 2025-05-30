@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  HomeIcon, 
-  BuildingOfficeIcon, 
+import {
+  HomeIcon,
+  BuildingOfficeIcon,
   GlobeAltIcon,
   UsersIcon,
-  Cog6ToothIcon 
+  Cog6ToothIcon,
+  LinkIcon
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -15,6 +16,7 @@ const navigation = [
   { name: "Departments", href: "/admin/departments", icon: BuildingOfficeIcon },
   { name: "Domains", href: "/admin/domains", icon: GlobeAltIcon },
   { name: "Users", href: "/admin/users", icon: UsersIcon },
+  { name: "Links", href: "/admin/links", icon: LinkIcon },
   { name: "Settings", href: "/admin/settings", icon: Cog6ToothIcon },
 ];
 

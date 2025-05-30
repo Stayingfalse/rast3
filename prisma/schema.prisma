@@ -158,6 +158,22 @@ model WishlistReport {
   @@index([resolved])
 }
 
+model Link {
+  id           String     @id @default(cuid())
+  name         String
+  url          String
+  description  String?
+  domain       String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  error        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([domain])
+  @@index([departmentId])
+}
+
 enum AdminLevel {
   SITE
   DOMAIN

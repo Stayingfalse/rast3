@@ -110,4 +110,98 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
+
+  // Update user's admin level and scope
+  updateAdminLevel: protectedProcedure
+    .input(z.object({
+      userId: z.string(),
+      adminLevel: z.enum(["USER", "DEPARTMENT", "DOMAIN"]), // Don't expose SITE level
+      adminScope: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Validate that adminScope is provided for DOMAIN and DEPARTMENT levels
+      if ((input.adminLevel === "DOMAIN" || input.adminLevel === "DEPARTMENT") && !input.adminScope) {
+        throw new Error("Admin scope is required for domain and department admin levels");
+      }
+
+      return (ctx.db as any).user.update({
+        where: { id: input.userId },
+        data: {
+          adminLevel: input.adminLevel,
+          adminScope: input.adminLevel === "USER" ? null : input.adminScope,
+        },
+        include: {
+          department: true,
+        },
+      });
+    }),
+
+  // Get detailed user statistics for tooltips
+  getUserStats: protectedProcedure
+    .input(z.object({
+      userId: z.string(),
+    }))
+    .query(async ({ ctx, input }) => {
+      // Get user's assignment statistics
+      const assignmentStats = await (ctx.db as any).wishlistAssignment.findMany({
+        where: { assignedUserId: input.userId },
+        include: {
+          purchases: true,
+          reports: true,
+          wishlistOwner: {
+            select: {
+              name: true,
+              firstName: true,
+              lastName: true,
+            }
+          }
+        }
+      });
+
+      // Get user's own wishlist statistics
+      const ownWishlistStats = await (ctx.db as any).wishlistAssignment.findMany({
+        where: { wishlistOwnerId: input.userId },
+        include: {
+          purchases: true,
+          reports: true,
+          assignedUser: {
+            select: {
+              name: true,
+              firstName: true,
+              lastName: true,
+            }
+          }
+        }      });      
+      
+      // Calculate totals
+      const totalAssignments = assignmentStats.length;
+      const totalPurchases = assignmentStats.filter((a: any) => a.purchases).length;
+      const totalReports = assignmentStats.reduce((sum: number, a: any) => sum + a.reports.length, 0);
+
+      const wishlistAssignedTo = ownWishlistStats.length;
+      const wishlistPurchases = ownWishlistStats.filter((a: any) => a.purchases).length;
+      const wishlistReports = ownWishlistStats.reduce((sum: number, a: any) => sum + a.reports.length, 0);
+
+      return {
+        assignments: {
+          total: totalAssignments,
+          purchased: totalPurchases,
+          reported: totalReports,
+        },
+        ownWishlist: {
+          assignedTo: wishlistAssignedTo,
+          purchases: wishlistPurchases,
+          reports: wishlistReports,
+        },
+        recentActivity: {
+          assignments: assignmentStats.slice(0, 3).map((a: any) => ({
+            ownerName: a.wishlistOwner.firstName && a.wishlistOwner.lastName 
+              ? `${a.wishlistOwner.firstName} ${a.wishlistOwner.lastName}`
+              : a.wishlistOwner.name || "Unknown",
+            hasPurchase: !!a.purchases,
+            hasReports: a.reports.length > 0,
+          })),
+        }
+      };
+    }),
 });

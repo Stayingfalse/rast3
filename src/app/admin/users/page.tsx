@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
 
-// Type definitions
+// Type definitions with admin fields
 type User = {
   id: string;
   name?: string | null;
@@ -15,11 +15,74 @@ type User = {
   domain?: string | null;
   departmentId?: string | null;
   profileCompleted: boolean;
+  adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+  adminScope?: string | null;
+  department?: {
+    id: string;
+    name: string;
+    domain: string;
+  } | null;
 };
+
+// User Statistics Tooltip Component
+function UserStatsTooltip({ userId }: { userId: string }) {
+  const { data: stats, isLoading } = api.user.getUserStats.useQuery({ userId });
+
+  if (isLoading) {
+    return (
+      <div className="bg-black/90 text-white p-3 rounded-lg shadow-lg min-w-64">
+        <div className="animate-pulse">Loading statistics...</div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="bg-black/90 text-white p-3 rounded-lg shadow-lg min-w-64">
+        <div className="text-red-400">Error loading statistics</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-black/90 text-white p-4 rounded-lg shadow-lg min-w-64 max-w-80">
+      <h4 className="font-semibold text-blue-400 mb-3">User Statistics</h4>
+      
+      <div className="space-y-2">
+        <div>
+          <div className="text-sm font-medium text-gray-300">Assignments</div>
+          <div className="text-xs text-gray-400">
+            {stats.assignments.total} total • {stats.assignments.purchased} purchased • {stats.assignments.reported} reported
+          </div>
+        </div>
+        
+        <div>
+          <div className="text-sm font-medium text-gray-300">Own Wishlist</div>
+          <div className="text-xs text-gray-400">
+            {stats.ownWishlist.assignedTo} assigned • {stats.ownWishlist.purchases} purchased • {stats.ownWishlist.reports} reported
+          </div>
+        </div>        {stats.recentActivity.assignments.length > 0 && (
+          <div>
+            <div className="text-sm font-medium text-gray-300 mt-3 mb-1">Recent Activity</div>
+            <div className="space-y-1">
+              {stats.recentActivity.assignments.map((activity: any, index: number) => (
+                <div key={index} className="text-xs text-gray-400 flex items-center gap-2">
+                  <span>{activity.ownerName}</span>
+                  {activity.hasPurchase && <span className="text-green-400">✓</span>}
+                  {activity.hasReports && <span className="text-yellow-400">⚠</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
-  
+  const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);  
   const { data: users = [], refetch } = api.user.getAll.useQuery();
   const { data: stats } = api.user.getStats.useQuery();
   const { data: domains = [] } = api.domain.getAll.useQuery();
@@ -39,11 +102,59 @@ export default function UsersPage() {
     },
   });
 
+  const updateAdminLevelMutation = api.user.updateAdminLevel.useMutation({
+    onSuccess: () => {
+      void refetch();
+    },
+  });
+
   const deleteUserMutation = api.user.delete.useMutation({
     onSuccess: () => {
       void refetch();
     },
   });
+
+  // Helper functions
+  const getAdminLevelDisplay = (user: User) => {
+    if (!user.adminLevel || user.adminLevel === "USER") {
+      return "Regular User";
+    }
+    
+    if (user.adminLevel === "DEPARTMENT") {
+      const deptName = user.department?.name || user.adminScope;
+      return `Department Admin${deptName ? ` (${deptName})` : ""}`;
+    }
+    
+    if (user.adminLevel === "DOMAIN") {
+      return `Domain Admin${user.adminScope ? ` (${user.adminScope})` : ""}`;
+    }
+    
+    return user.adminLevel;
+  };
+
+  const handleUpdateAdminLevel = (userId: string, adminLevel: "USER" | "DEPARTMENT" | "DOMAIN", user: User) => {
+    let adminScope: string | undefined;
+    
+    if (adminLevel === "DEPARTMENT") {
+      if (!user.departmentId) {
+        alert("User must be assigned to a department first");
+        return;
+      }
+      adminScope = user.departmentId;
+    } else if (adminLevel === "DOMAIN") {
+      if (!user.domain) {
+        alert("User must have a domain assigned first");
+        return;
+      }
+      adminScope = user.domain;
+    }
+
+    updateAdminLevelMutation.mutate({
+      userId,
+      adminLevel,
+      adminScope,
+    });
+  };
   // Filter users by selected domain
   const filteredUsers = selectedDomain === "all" 
     ? users 
@@ -170,8 +281,7 @@ export default function UsersPage() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-white/5">
+            <table className="w-full">              <thead className="bg-white/5">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">
                     User
@@ -183,15 +293,17 @@ export default function UsersPage() {
                     Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">
+                    Admin Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {filteredUsers.map((user) => (
+              </thead>              <tbody className="divide-y divide-white/10">
+                {filteredUsers.map((user: User) => (
                   <tr key={user.id} className="hover:bg-white/5">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -199,11 +311,22 @@ export default function UsersPage() {
                           {user.firstName?.[0] ?? user.name?.[0] ?? "?"}
                         </div>
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-white">
-                            {user.firstName && user.lastName 
-                              ? `${user.firstName} ${user.lastName}`
-                              : user.name || "Unknown User"
-                            }
+                          <div className="text-sm font-medium text-white relative">
+                            <span
+                              onMouseEnter={() => setHoveredUserId(user.id)}
+                              onMouseLeave={() => setHoveredUserId(null)}
+                              className="cursor-pointer hover:text-blue-400"
+                            >
+                              {user.firstName && user.lastName 
+                                ? `${user.firstName} ${user.lastName}`
+                                : user.name || "Unknown User"
+                              }
+                            </span>
+                            {hoveredUserId === user.id && (
+                              <div className="absolute z-50 left-0 top-6">
+                                <UserStatsTooltip userId={user.id} />
+                              </div>
+                            )}
                           </div>
                           <div className="text-sm text-white/60">
                             ID: {user.id.slice(0, 8)}...
@@ -227,12 +350,33 @@ export default function UsersPage() {
                         disabled={updateDepartmentMutation.isPending}
                       >
                         <option value="">No Department</option>
-                        {departments.map((dept) => (
+                        {departments.map((dept: any) => (
                           <option key={dept.id} value={dept.id}>
                             {dept.name} ({dept.domain})
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        <select
+                          value={user.adminLevel || "USER"}
+                          onChange={(e) => handleUpdateAdminLevel(
+                            user.id, 
+                            e.target.value as "USER" | "DEPARTMENT" | "DOMAIN", 
+                            user
+                          )}
+                          className="text-sm rounded border border-gray-300 bg-white px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          disabled={updateAdminLevelMutation.isPending}
+                        >
+                          <option value="USER">Regular User</option>
+                          <option value="DEPARTMENT">Department Admin</option>
+                          <option value="DOMAIN">Domain Admin</option>
+                        </select>
+                        <div className="text-xs text-white/60">
+                          {getAdminLevelDisplay(user)}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

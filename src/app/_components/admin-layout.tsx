@@ -21,15 +21,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   if (isLoading || !user) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[var(--blueZodiac)]">
+      <div className="flex w-full items-center justify-center bg-[var(--blueZodiac)]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full">
-      <div className="flex h-screen w-full pt-24">
+    <div className="relative w-full">
+      <div className="flex w-full pt-24">
         <AdminSidebar />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">

@@ -10,7 +10,9 @@ import { ProfileSetupModal } from "./profile-setup-modal";
 export function AuthShowcase() {
   const { data: sessionData } = useSession();
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
-  const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState(false);  // Get current user profile with proper typing
+  const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState(false);
+
+  // Get current user profile - only runs for authenticated users
   const { data: userProfile, refetch: refetchProfile } = api.profile.getCurrentProfile.useQuery(
     undefined,
     { enabled: !!sessionData?.user }
@@ -31,7 +33,6 @@ export function AuthShowcase() {
     refetch: () => void;
   };
 
-
   // Check if profile setup is needed when user signs in
   useEffect(() => {
     if (sessionData?.user && userProfile) {
@@ -46,6 +47,30 @@ export function AuthShowcase() {
     }
   }, [sessionData, userProfile]);
 
+  // Early return if user is not authenticated - prevents rendering authenticated content
+  if (!sessionData?.user) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4">
+        <p className="text-center text-2xl text-white">
+          {/* Show nothing for unauthenticated users */}
+        </p>
+        <div className="flex gap-3">
+          <button
+            className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+            onClick={() => setIsSignInModalOpen(true)}
+          >
+            Sign in
+          </button>
+        </div>
+        
+        <SignInModal 
+          isOpen={isSignInModalOpen} 
+          onClose={() => setIsSignInModalOpen(false)} 
+        />
+      </div>
+    );
+  }
+
   const handleProfileSetupComplete = () => {
     setIsProfileSetupModalOpen(false);
     void refetchProfile(); // Refresh the profile data
@@ -54,14 +79,15 @@ export function AuthShowcase() {
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <p className="text-center text-2xl text-white">
-        {sessionData && userProfile?.firstName && userProfile?.lastName ? (
+        {userProfile?.firstName && userProfile?.lastName ? (
           <span>Welcome, {userProfile.firstName} {userProfile.lastName}!</span>
-        ) : sessionData ? (
+        ) : (
           <span>Logged in as {sessionData.user?.name}</span>
-        ) : null}
+        )}
       </p>
-        {/* Profile Status */}
-      {sessionData && userProfile && (
+      
+      {/* Profile Status */}
+      {userProfile && (
         <div className="text-center">
           {userProfile.profileCompleted ? (
             <div className="space-y-1">
@@ -88,13 +114,13 @@ export function AuthShowcase() {
       <div className="flex gap-3">
         <button
           className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-          onClick={sessionData ? () => void signOut() : () => setIsSignInModalOpen(true)}
+          onClick={() => void signOut()}
         >
-          {sessionData ? "Sign out" : "Sign in"}
+          Sign out
         </button>
         
         {/* Profile Setup Button for completed profiles */}
-        {sessionData && userProfile?.profileCompleted && (
+        {userProfile?.profileCompleted && (
           <button
             className="rounded-full bg-blue-600/20 px-6 py-3 font-semibold text-blue-300 no-underline transition hover:bg-blue-600/30"
             onClick={() => setIsProfileSetupModalOpen(true)}
@@ -104,10 +130,7 @@ export function AuthShowcase() {
         )}
       </div>
             
-      <SignInModal 
-        isOpen={isSignInModalOpen} 
-        onClose={() => setIsSignInModalOpen(false)} 
-      />      <ProfileSetupModal
+      <ProfileSetupModal
         isOpen={isProfileSetupModalOpen}
         onComplete={handleProfileSetupComplete}
         onClose={() => setIsProfileSetupModalOpen(false)}

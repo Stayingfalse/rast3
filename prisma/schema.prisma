@@ -110,15 +110,16 @@ model VerificationToken {
 }
 
 model WishlistAssignment {
-  id              String           @id @default(cuid())
-  assignedUserId  String
-  wishlistOwnerId String
-  assignedAt      DateTime         @default(now())
-  isActive        Boolean          @default(true)
-  purchases       Purchase?
-  assignedUser    User             @relation("AssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
-  wishlistOwner   User             @relation("WishlistOwner", fields: [wishlistOwnerId], references: [id], onDelete: Cascade)
-  reports         WishlistReport[]
+  id                String           @id @default(cuid())
+  assignedUserId    String
+  wishlistOwnerId   String
+  assignedAt        DateTime         @default(now())
+  isActive          Boolean          @default(true)
+  isCrossDepartment Boolean          @default(false)
+  purchases         Purchase?
+  assignedUser      User             @relation("AssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
+  wishlistOwner     User             @relation("WishlistOwner", fields: [wishlistOwnerId], references: [id], onDelete: Cascade)
+  reports           WishlistReport[]
 
   @@unique([assignedUserId, wishlistOwnerId])
   @@index([assignedUserId])

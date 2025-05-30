@@ -2,8 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
-export const wishlistRouter = createTRPCRouter({
-  // Get the current user's assigned wishlists (links they can shop from)
+export const wishlistRouter = createTRPCRouter({  // Get the current user's assigned wishlists (links they can shop from)
   getMyAssignments: protectedProcedure.query(async ({ ctx }) => {
     const assignments = await ctx.db.wishlistAssignment.findMany({
       where: {
@@ -18,6 +17,12 @@ export const wishlistRouter = createTRPCRouter({
             firstName: true,
             lastName: true,
             amazonWishlistUrl: true,
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         purchases: true,
@@ -70,14 +75,14 @@ export const wishlistRouter = createTRPCRouter({
 
   // Distribute initial 3 wishlists to current user
   requestInitialAssignments: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-
-    // Check if user has profile completed and wishlist URL
+    const userId = ctx.session.user.id;    // Check if user has profile completed and wishlist URL
     const currentUser = await ctx.db.user.findUnique({
       where: { id: userId },
       select: {
         profileCompleted: true,
         amazonWishlistUrl: true,
+        domain: true,
+        departmentId: true,
       },
     });
 
@@ -85,6 +90,13 @@ export const wishlistRouter = createTRPCRouter({
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "Please complete your profile and add your wishlist URL first",
+      });
+    }
+
+    if (!currentUser.domain || !currentUser.departmentId) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Please ensure your domain and department are set in your profile",
       });
     }
 
@@ -101,15 +113,15 @@ export const wishlistRouter = createTRPCRouter({
         code: "BAD_REQUEST",
         message: "You already have your initial 3 assignments",
       });
-    }
-
-    // Get all eligible users (excluding current user, users without wishlists)
+    }    // Get all eligible users (excluding current user, users without wishlists, different domain/department)
     const eligibleUsers = await ctx.db.user.findMany({
       where: {
         AND: [
           { id: { not: userId } },
           { profileCompleted: true },
           { amazonWishlistUrl: { not: null } },
+          { domain: currentUser.domain }, // Same domain only
+          { departmentId: currentUser.departmentId }, // Same department only
         ],
       },
       select: {
@@ -175,6 +187,22 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      // Get current user's domain and department
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          domain: true,
+          departmentId: true,
+        },
+      });
+
+      if (!currentUser?.domain || !currentUser?.departmentId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Please ensure your domain and department are set in your profile",
+        });
+      }
+
       // Check current assignment count
       const currentAssignmentCount = await ctx.db.wishlistAssignment.count({
         where: {
@@ -199,9 +227,7 @@ export const wishlistRouter = createTRPCRouter({
         select: { wishlistOwnerId: true },
       });
 
-      const assignedUserIds = existingAssignments.map(a => a.wishlistOwnerId);
-
-      // Get eligible users (excluding already assigned ones)
+      const assignedUserIds = existingAssignments.map(a => a.wishlistOwnerId);      // Get eligible users (excluding already assigned ones, same domain/department only)
       const eligibleUsers = await ctx.db.user.findMany({
         where: {
           AND: [
@@ -209,6 +235,8 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
+            { domain: currentUser.domain }, // Same domain only
+            { departmentId: currentUser.departmentId }, // Same department only
           ],
         },
         select: {
@@ -254,6 +282,114 @@ export const wishlistRouter = createTRPCRouter({
                   firstName: true,
                   lastName: true,
                   amazonWishlistUrl: true,
+                },
+              },
+            },
+          })
+        )
+      );
+
+      return assignments;
+    }),
+
+  // Request cross-department assignments when same-department ones are not available
+  requestCrossDepartmentAssignments: protectedProcedure
+    .input(z.object({
+      count: z.number().min(1).max(3).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Get current user's domain (but allow different departments)
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          domain: true,
+          departmentId: true,
+        },
+      });
+
+      if (!currentUser?.domain) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Please ensure your domain is set in your profile",
+        });
+      }
+
+      // Get users already assigned to this user
+      const existingAssignments = await ctx.db.wishlistAssignment.findMany({
+        where: {
+          assignedUserId: userId,
+          isActive: true,
+        },
+        select: { wishlistOwnerId: true },
+      });
+
+      const assignedUserIds = existingAssignments.map(a => a.wishlistOwnerId);
+
+      // Get eligible users from same domain but different departments
+      const eligibleUsers = await ctx.db.user.findMany({
+        where: {
+          AND: [
+            { id: { not: userId } },
+            { id: { notIn: assignedUserIds } },
+            { profileCompleted: true },
+            { amazonWishlistUrl: { not: null } },
+            { domain: currentUser.domain }, // Same domain
+            { departmentId: { not: currentUser.departmentId } }, // Different department
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: {
+              name: true,
+            },
+          },
+          ownedWishlist: {
+            where: { isActive: true },
+            select: { assignedUserId: true },
+          },
+        },
+      });
+
+      // Sort by assignment count (prioritize users with fewer assignments)
+      const sortedUsers = eligibleUsers
+        .map(user => ({
+          ...user,
+          assignmentCount: user.ownedWishlist.length,
+        }))
+        .sort((a, b) => a.assignmentCount - b.assignmentCount);
+
+      const selectedUsers = sortedUsers.slice(0, input.count);
+
+      if (selectedUsers.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No cross-department wishlists available for assignment",
+        });
+      }      // Create assignments
+      const assignments = await Promise.all(
+        selectedUsers.map(user =>
+          ctx.db.wishlistAssignment.create({
+            data: {
+              assignedUserId: userId,
+              wishlistOwnerId: user.id,
+            },
+            include: {
+              wishlistOwner: {
+                select: {
+                  id: true,
+                  name: true,
+                  firstName: true,
+                  lastName: true,
+                  amazonWishlistUrl: true,
+                  department: {
+                    select: {
+                      name: true,
+                    },
+                  },
                 },
               },
             },
@@ -378,6 +514,70 @@ export const wishlistRouter = createTRPCRouter({
       });
 
       return report;
+    }),
+
+  // Clear report when issue is fixed
+  clearReport: protectedProcedure
+    .input(z.object({
+      assignmentId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify the user owns this assignment
+      const assignment = await ctx.db.wishlistAssignment.findFirst({
+        where: {
+          id: input.assignmentId,
+          assignedUserId: userId,
+        },
+      });
+
+      if (!assignment) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only clear reports for your own assignments",
+        });
+      }
+
+      // Delete all reports for this assignment
+      await ctx.db.wishlistReport.deleteMany({
+        where: {
+          wishlistAssignmentId: input.assignmentId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  // Undo purchase marking
+  undoPurchase: protectedProcedure
+    .input(z.object({
+      assignmentId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify the user owns this assignment
+      const assignment = await ctx.db.wishlistAssignment.findFirst({
+        where: {
+          id: input.assignmentId,
+          assignedUserId: userId,
+        },
+      });
+
+      if (!assignment) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only undo purchases for your own assignments",
+        });
+      }      // Delete the purchase record
+      await ctx.db.purchase.deleteMany({
+        where: {
+          wishlistAssignmentId: input.assignmentId,
+        },
+      });
+
+      return { success: true };
     }),
 
   // Get reports for admin/debugging

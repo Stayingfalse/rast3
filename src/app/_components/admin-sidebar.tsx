@@ -22,7 +22,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-white/5 backdrop-blur-sm">
+    <div className="flex w-64 flex-col bg-white/5 backdrop-blur-sm">
       <div className="flex h-16 shrink-0 items-center px-6">
         <h1 className="text-xl font-bold text-white">Admin Panel</h1>
       </div>

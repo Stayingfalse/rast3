@@ -9,19 +9,19 @@ type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 export function WishlistManager() {
   const { data: sessionData } = useSession();
   const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
-  const [modalType, setModalType] = useState<"purchase" | "report" | null>(null);
+  const [modalType, setModalType] = useState<"purchase" | "report" | "no-assignments" | null>(null);
   const [purchaseNotes, setPurchaseNotes] = useState("");
   const [reportType, setReportType] = useState<"NO_ITEMS" | "DOESNT_EXIST" | "NO_ADDRESS" | "OTHER">("NO_ITEMS");
   const [reportDescription, setReportDescription] = useState("");
 
-  // Check if user has completed profile
+  // Check if user has completed profile - only run when authenticated
   const { data: userProfile } = api.profile.getCurrentProfile.useQuery(
     undefined,
     { enabled: !!sessionData?.user }
   );
 
   // Only show queries if user is authenticated and has completed profile
-  const shouldShowWishlist = sessionData?.user && userProfile?.profileCompleted;
+  const shouldShowWishlist = !!sessionData?.user && userProfile?.profileCompleted;
 
   // Queries - only run if user should see wishlist
   const { data: assignments, isLoading, refetch } = api.wishlist.getMyAssignments.useQuery(
@@ -33,16 +33,32 @@ export function WishlistManager() {
     { enabled: shouldShowWishlist }
   );
 
+  // Early return if user is not authenticated - after all hooks
+  if (!sessionData?.user) {
+    return null; // Don't show anything if not authenticated
+  }
+
   // Mutations
   const requestInitial = api.wishlist.requestInitialAssignments.useMutation({
     onSuccess: () => {
       refetch();
     },
   });
-
   const requestAdditional = api.wishlist.requestAdditionalAssignments.useMutation({
     onSuccess: () => {
       refetch();
+    },
+    onError: (error) => {
+      if (error.message.includes("No additional wishlists available")) {
+        setModalType("no-assignments");
+      }
+    },
+  });
+
+  const requestCrossDepartment = api.wishlist.requestCrossDepartmentAssignments.useMutation({
+    onSuccess: () => {
+      refetch();
+      setModalType(null);
     },
   });
   const markPurchase = api.wishlist.markPurchase.useMutation({
@@ -63,11 +79,28 @@ export function WishlistManager() {
     },
   });
 
+  const clearReport = api.wishlist.clearReport.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const undoPurchase = api.wishlist.undoPurchase.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
   const getDisplayName = (owner: WishlistAssignment["wishlistOwner"]) => {
     if (owner.firstName && owner.lastName) {
       return `${owner.firstName} ${owner.lastName}`;
     }
     return owner.name || "Anonymous";
+  };
+
+  const isCrossDepartmentAssignment = (assignment: WishlistAssignment) => {
+    // We'll determine this by comparing the assignment owner's department with the current user's department
+    return assignment.wishlistOwner.department?.id !== userProfile?.departmentId;
   };
 
   const formatReportType = (type: string) => {
@@ -165,6 +198,7 @@ export function WishlistManager() {
           </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">            {assignments?.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
+              const isCrossDept = isCrossDepartmentAssignment(assignment);
 
               return (
                 <div
@@ -174,15 +208,23 @@ export function WishlistManager() {
                       ? "border-green-200 bg-green-50"
                       : hasReport
                       ? "border-yellow-200 bg-yellow-50"
+                      : isCrossDept
+                      ? "border-purple-200 bg-purple-50 hover:border-purple-300"
                       : "border-gray-200 bg-white hover:border-blue-300"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {getDisplayName(assignment.wishlistOwner)}
-                    </h3>
-                    {hasPurchase && <span className="text-green-600 text-sm font-medium">✅ Purchased</span>}
-                    {hasReport && !hasPurchase && <span className="text-yellow-600 text-sm font-medium">⚠️ Reported</span>}
+                    <div>
+                      {isCrossDept && (
+                        <span className="text-purple-600 text-xs font-medium bg-purple-100 px-2 py-1 rounded-full">
+                          📍 {assignment.wishlistOwner.department?.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {hasPurchase && <span className="text-green-600 text-sm font-medium">✅ Purchased</span>}
+                      {hasReport && !hasPurchase && <span className="text-yellow-600 text-sm font-medium">⚠️ Reported</span>}
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -192,7 +234,7 @@ export function WishlistManager() {
                       rel="noopener noreferrer"
                       className="block w-full bg-orange-500 hover:bg-orange-600 text-white text-center py-2 px-4 rounded-lg font-medium transition-colors"
                     >
-                      🛒 View Amazon Wishlist
+                      🛒 View Wishlist
                     </a>                    {!hasPurchase && !hasReport && (
                       <div className="flex gap-2">
                         <button
@@ -215,20 +257,46 @@ export function WishlistManager() {
                         </button>
                       </div>
                     )}                    {hasPurchase && assignment.purchases && (
-                      <div className="text-sm text-gray-600">
-                        <div>Purchased: {new Date(assignment.purchases.purchasedAt).toLocaleDateString()}</div>
-                        {assignment.purchases.notes && (
-                          <div className="mt-1 italic">"{assignment.purchases.notes}"</div>
-                        )}
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">
+                          <div>Purchased: {new Date(assignment.purchases.purchasedAt).toLocaleDateString()}</div>
+                          {assignment.purchases.notes && (
+                            <div className="mt-1 italic">"{assignment.purchases.notes}"</div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm("Are you sure you want to undo this purchase? This will remove the purchase record.")) {
+                              undoPurchase.mutate({ assignmentId: assignment.id });
+                            }
+                          }}
+                          disabled={undoPurchase.isPending}
+                          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          {undoPurchase.isPending ? "Undoing..." : "Undo Purchased"}
+                        </button>
                       </div>
                     )}
 
-                    {hasReport && (
-                      <div className="text-sm text-gray-600">
-                        <div>Reported: {formatReportType(assignment.reports[0]!.reportType)}</div>
-                        {assignment.reports[0]!.description && (
-                          <div className="mt-1 italic">"{assignment.reports[0]!.description}"</div>
-                        )}
+                    {hasReport && !hasPurchase && (
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">
+                          <div>Reported: {formatReportType(assignment.reports[0]!.reportType)}</div>
+                          {assignment.reports[0]!.description && (
+                            <div className="mt-1 italic">"{assignment.reports[0]!.description}"</div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm("Mark this issue as fixed? This will remove the report.")) {
+                              clearReport.mutate({ assignmentId: assignment.id });
+                            }
+                          }}
+                          disabled={clearReport.isPending}
+                          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          {clearReport.isPending ? "Clearing..." : "It's Fixed"}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -336,6 +404,50 @@ export function WishlistManager() {
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>          </div>
+        </div>
+      )}
+
+      {/* No Assignments Available Modal */}
+      {modalType === "no-assignments" && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">No More Wishlists Available</h3>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                We couldn't find any more wishlists from your department to assign to you. 
+                This might be because:
+              </p>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                <li>All colleagues in your department already have assignments</li>
+                <li>Some colleagues haven't completed their profiles yet</li>
+                <li>You've already been assigned all available wishlists</li>
+              </ul>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800 mb-3">
+                  <strong>Would you like to get a wishlist from another department in your company?</strong>
+                </p>
+                <p className="text-xs text-blue-600">
+                  This will be highlighted differently to show it's from a different department.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    requestCrossDepartment.mutate({ count: 1 });
+                  }}
+                  disabled={requestCrossDepartment.isPending}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  {requestCrossDepartment.isPending ? "Finding..." : "Get Cross-Department Link"}
+                </button>
+                <button
+                  onClick={() => setModalType(null)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  Try Again Later
                 </button>
               </div>
             </div>

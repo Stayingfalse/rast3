@@ -30,7 +30,7 @@ function UserStatsTooltip({ userId }: { userId: string }) {
 
   if (isLoading) {
     return (
-      <div className="bg-black/90 text-white p-3 rounded-lg shadow-lg min-w-64">
+      <div className="bg-black/95 text-white p-3 rounded-lg shadow-lg min-w-64">
         <div className="animate-pulse">Loading statistics...</div>
       </div>
     );
@@ -38,14 +38,14 @@ function UserStatsTooltip({ userId }: { userId: string }) {
 
   if (!stats) {
     return (
-      <div className="bg-black/90 text-white p-3 rounded-lg shadow-lg min-w-64">
+      <div className="bg-black/95 text-white p-3 rounded-lg shadow-lg min-w-64">
         <div className="text-red-400">Error loading statistics</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-black/90 text-white p-4 rounded-lg shadow-lg min-w-64 max-w-80">
+    <div className="bg-black/95 text-white p-4 rounded-lg shadow-lg min-w-64 max-w-80">
       <h4 className="font-semibold text-blue-400 mb-3">User Statistics</h4>
       
       <div className="space-y-2">
@@ -61,20 +61,8 @@ function UserStatsTooltip({ userId }: { userId: string }) {
           <div className="text-xs text-gray-400">
             {stats.ownWishlist.assignedTo} assigned • {stats.ownWishlist.purchases} purchased • {stats.ownWishlist.reports} reported
           </div>
-        </div>        {stats.recentActivity.assignments.length > 0 && (
-          <div>
-            <div className="text-sm font-medium text-gray-300 mt-3 mb-1">Recent Activity</div>
-            <div className="space-y-1">
-              {stats.recentActivity.assignments.map((activity: any, index: number) => (
-                <div key={index} className="text-xs text-gray-400 flex items-center gap-2">
-                  <span>{activity.ownerName}</span>
-                  {activity.hasPurchase && <span className="text-green-400">✓</span>}
-                  {activity.hasReports && <span className="text-yellow-400">⚠</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
+          
       </div>
     </div>
   );
@@ -113,6 +101,10 @@ export default function UsersPage() {
       void refetch();
     },
   });
+
+  // Add state for editing fields
+  const [editingDepartmentUserId, setEditingDepartmentUserId] = useState<string | null>(null);
+  const [editingAdminUserId, setEditingAdminUserId] = useState<string | null>(null);
 
   // Helper functions
   const getAdminLevelDisplay = (user: User) => {
@@ -342,39 +334,81 @@ export default function UsersPage() {
                         {user.domain || "No domain"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={user.departmentId || ""}
-                        onChange={(e) => handleUpdateDepartment(user.id, e.target.value || null)}
-                        className="text-sm rounded border border-gray-300 bg-white px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        disabled={updateDepartmentMutation.isPending}
-                      >
-                        <option value="">No Department</option>
-                        {departments.map((dept: any) => (
-                          <option key={dept.id} value={dept.id}>
-                            {dept.name} ({dept.domain})
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
+                    <td className="px-6 py-4">
+                      {editingDepartmentUserId === user.id ? (
                         <select
-                          value={user.adminLevel || "USER"}
-                          onChange={(e) => handleUpdateAdminLevel(
-                            user.id, 
-                            e.target.value as "USER" | "DEPARTMENT" | "DOMAIN", 
-                            user
-                          )}
+                          value={user.departmentId || ""}
+                          onChange={(e) => {
+                            handleUpdateDepartment(user.id, e.target.value || null);
+                            setEditingDepartmentUserId(null);
+                          }}
+                          onBlur={() => setEditingDepartmentUserId(null)}
+                          autoFocus
                           className="text-sm rounded border border-gray-300 bg-white px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          disabled={updateAdminLevelMutation.isPending}
+                          disabled={updateDepartmentMutation.isPending}
                         >
-                          <option value="USER">Regular User</option>
-                          <option value="DEPARTMENT">Department Admin</option>
-                          <option value="DOMAIN">Domain Admin</option>
+                          <option value="">No Department</option>
+                          {departments.map((dept: any) => (
+                            <option key={dept.id} value={dept.id}>
+                              {dept.name} ({dept.domain})
+                            </option>
+                          ))}
                         </select>
+                      ) : (
+                        <div
+                          className="text-sm text-white cursor-pointer min-h-[28px] break-words whitespace-normal"
+                          onDoubleClick={() => setEditingDepartmentUserId(user.id)}
+                          title="Double-click to edit department"
+                        >
+                          {user.department?.name
+                            ? `${user.department.name} (${user.department.domain})`
+                            : <span className="text-white/40">No Department</span>}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        {editingAdminUserId === user.id ? (
+                          user.adminLevel === "SITE" ? (
+                            <select
+                              value="SITE"
+                              disabled
+                              className="text-sm rounded border border-gray-300 bg-white px-2 py-1 text-gray-500 cursor-not-allowed"
+                            >
+                              <option value="SITE">Site Admin</option>
+                            </select>
+                          ) : (
+                            <select
+                              value={user.adminLevel || "USER"}
+                              onChange={(e) => {
+                                handleUpdateAdminLevel(
+                                  user.id,
+                                  e.target.value as "USER" | "DEPARTMENT" | "DOMAIN",
+                                  user
+                                );
+                                setEditingAdminUserId(null);
+                              }}
+                              onBlur={() => setEditingAdminUserId(null)}
+                              autoFocus
+                              className="text-sm rounded border border-gray-300 bg-white px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              disabled={updateAdminLevelMutation.isPending}
+                            >
+                              <option value="USER">Regular User</option>
+                              <option value="DEPARTMENT">Department Admin</option>
+                              <option value="DOMAIN">Domain Admin</option>
+                            </select>
+                          )
+                        ) : (
+                          <div
+                            className="text-sm text-white cursor-pointer min-h-[28px] break-words whitespace-normal"
+                            onDoubleClick={() => setEditingAdminUserId(user.id)}
+                            title="Double-click to edit admin role"
+                          >
+                            {getAdminLevelDisplay(user)}
+                          </div>
+                        )}
                         <div className="text-xs text-white/60">
-                          {getAdminLevelDisplay(user)}
+                          {/* Optionally show more info here if needed */}
                         </div>
                       </div>
                     </td>

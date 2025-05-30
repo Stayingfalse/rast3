@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
+import { Preloader } from "./preloader";
 
 interface ProfileSetupModalProps {
   isOpen: boolean;
@@ -131,8 +132,15 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     }
   };
   if (!isOpen) return null;
+  if (existingProfile === undefined) {
+    return <Preloader message="Loading your profile..." />;
+  }
   // Check if user has a disabled domain
   const isDomainDisabled = !!(existingProfile?.domain && existingProfile?.domainEnabled === false) && !forceEditEmail;
+
+  if (!existingProfile && isOpen) {
+    return <Preloader message="Loading your profile..." />;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

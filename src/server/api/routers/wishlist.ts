@@ -17,6 +17,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
             firstName: true,
             lastName: true,
             amazonWishlistUrl: true,
+            domain: true, // <-- Add domain to the select
             department: {
               select: {
                 id: true,

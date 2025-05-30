@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { Preloader } from "./preloader";
 
 type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 
@@ -131,6 +132,10 @@ export function WishlistManager() {
     }
   };
 
+  if (!userProfile) {
+    return <Preloader message="Santa is sorting your parcels..." />;
+  }
+
   if (!userProfile?.profileCompleted) {
     return (
       <div className="max-w-2xl mx-auto p-6 mt-8">
@@ -145,11 +150,7 @@ export function WishlistManager() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8 mt-8">
-        <div className="text-lg text-white">Loading your wishlist assignments...</div>
-      </div>
-    );
+    return <Preloader message="Loading your wishlist assignments..." />;
   }
 
   // Patch: handle cross-department fallback
@@ -235,14 +236,14 @@ export function WishlistManager() {
           </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">            {assignments?.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
-              // Robust logic: isStranger = wishlistDomain is defined and userDomain is defined and different, or wishlistDomain is defined and userDomain is undefined/null
-              // isCrossDept = both domains defined and equal, but departments differ
+              // Fix: Only treat as stranger if wishlistDomain is defined and different from userDomain, or if either is missing (but not both missing)
               const wishlistDomain = (assignment.wishlistOwner as any).domain;
               const wishlistDeptId = assignment.wishlistOwner.department?.id;
               const userDomain = userProfile?.domain;
               const userDeptId = userProfile?.departmentId;
-              const isStranger = Boolean(wishlistDomain && ((userDomain && wishlistDomain !== userDomain) || !userDomain));
-              const isCrossDept = Boolean(!isStranger && wishlistDomain && userDomain && wishlistDomain === userDomain && wishlistDeptId && userDeptId && wishlistDeptId !== userDeptId);
+              // Only tag as stranger if both domains are defined and different, or if wishlistDomain is defined and userDomain is missing
+              const isStranger = (wishlistDomain && userDomain && wishlistDomain !== userDomain) || (!userDomain && wishlistDomain);
+              const isCrossDept = !isStranger && wishlistDomain && userDomain && wishlistDomain === userDomain && wishlistDeptId && userDeptId && wishlistDeptId !== userDeptId;
 
               return (
                 <div
@@ -286,24 +287,30 @@ export function WishlistManager() {
                     >
                       🛒 View Wishlist
                     </a>                    {!hasPurchase && !hasReport && (
-                      <div className="flex gap-2">
+                        <div className="flex gap-2">
                         <button
                           onClick={() => {
-                            setSelectedAssignment(assignment.id);
-                            setModalType("purchase");
+                          setSelectedAssignment(assignment.id);
+                          setModalType("purchase");
                           }}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         >
-                          Mark Purchased
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                          </svg>
+                          Gifted
                         </button>
                         <button
                           onClick={() => {
-                            setSelectedAssignment(assignment.id);
-                            setModalType("report");
+                          setSelectedAssignment(assignment.id);
+                          setModalType("report");
                           }}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         >
-                          Report Issue
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+                            <path d="M12 2c.38 0 .73.21.9.55l9 16A1 1 0 0 1 21 20H3a1 1 0 0 1-.9-1.45l9-16A1 1 0 0 1 12 2zm0 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-1-6v4a1 1 0 1 0 2 0V9a1 1 0 1 0-2 0z" />
+                            </svg>
+                          Issue
                         </button>
                       </div>
                     )}                    {hasPurchase && assignment.purchases && (

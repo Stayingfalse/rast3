@@ -2,30 +2,9 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { api } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
 
-interface WishlistAssignment {
-  id: string;
-  assignedAt: Date;
-  wishlistOwner: {
-    id: string;
-    name: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    amazonWishlistUrl: string | null;
-  };
-  purchases: Array<{
-    id: string;
-    purchasedAt: Date;
-    notes: string | null;
-  }>;
-  reports: Array<{
-    id: string;
-    reportType: string;
-    description: string | null;
-    reportedAt: Date;
-  }>;
-}
+type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 
 export function WishlistManager() {
   const { data: sessionData } = useSession();
@@ -154,9 +133,7 @@ export function WishlistManager() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Request Initial Assignments */}
+      </div>      {/* Request Initial Assignments */}
       {(!assignments || assignments.length === 0) && (
         <div className="bg-gradient-to-r from-red-50 to-green-50 rounded-lg shadow-md p-6 text-center">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🎁 Get Started!</h2>
@@ -185,9 +162,8 @@ export function WishlistManager() {
                 {requestAdditional.isPending ? "Finding..." : "Request More"}
               </button>
             )}
-          </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {assignments.map((assignment: any) => {
-              const hasPurchase = assignment.purchases.length > 0;
+          </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">            {assignments?.map((assignment: WishlistAssignment) => {
+              const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
 
               return (
@@ -238,13 +214,11 @@ export function WishlistManager() {
                           Report Issue
                         </button>
                       </div>
-                    )}
-
-                    {hasPurchase && (
+                    )}                    {hasPurchase && assignment.purchases && (
                       <div className="text-sm text-gray-600">
-                        <div>Purchased: {new Date(assignment.purchases[0]!.purchasedAt).toLocaleDateString()}</div>
-                        {assignment.purchases[0]!.notes && (
-                          <div className="mt-1 italic">"{assignment.purchases[0]!.notes}"</div>
+                        <div>Purchased: {new Date(assignment.purchases.purchasedAt).toLocaleDateString()}</div>
+                        {assignment.purchases.notes && (
+                          <div className="mt-1 italic">"{assignment.purchases.notes}"</div>
                         )}
                       </div>
                     )}

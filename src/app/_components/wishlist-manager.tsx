@@ -27,18 +27,12 @@ export function WishlistManager() {
   const { data: assignments, isLoading, refetch } = api.wishlist.getMyAssignments.useQuery(
     undefined,
     { enabled: shouldShowWishlist }
-  );
-  const { data: stats } = api.wishlist.getAssignmentStats.useQuery(
+  );  const { data: stats } = api.wishlist.getAssignmentStats.useQuery(
     undefined,
     { enabled: shouldShowWishlist }
   );
 
-  // Early return if user is not authenticated - after all hooks
-  if (!sessionData?.user) {
-    return null; // Don't show anything if not authenticated
-  }
-
-  // Mutations
+  // Mutations - must be called before any conditional returns
   const requestInitial = api.wishlist.requestInitialAssignments.useMutation({
     onSuccess: () => {
       refetch();
@@ -91,6 +85,11 @@ export function WishlistManager() {
     },
   });
 
+  // Early return if user is not authenticated - after all hooks
+  if (!sessionData?.user) {
+    return null; // Don't show anything if not authenticated
+  }
+
   const getDisplayName = (owner: WishlistAssignment["wishlistOwner"]) => {
     if (owner.firstName && owner.lastName) {
       return `${owner.firstName} ${owner.lastName}`;
@@ -102,7 +101,6 @@ export function WishlistManager() {
     // We'll determine this by comparing the assignment owner's department with the current user's department
     return assignment.wishlistOwner.department?.id !== userProfile?.departmentId;
   };
-
   const formatReportType = (type: string) => {
     switch (type) {
       case "NO_ITEMS": return "No Items";
@@ -112,9 +110,6 @@ export function WishlistManager() {
       default: return type;
     }
   };
-  if (!sessionData?.user) {
-    return null; // Don't show anything if not authenticated
-  }
 
   if (!userProfile?.profileCompleted) {
     return (

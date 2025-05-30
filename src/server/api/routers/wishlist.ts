@@ -42,30 +42,78 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Get statistics about assignments (for admins or debugging)
   getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {
+    // Get current user for department context
+    const currentUser = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { id: true, departmentId: true },
+    });
+    const departmentId = currentUser?.departmentId;
+    const userId = currentUser?.id;
+
+    // Total wishlists with a URL (site-wide)
+    const totalLinks = await ctx.db.user.count({
+      where: { amazonWishlistUrl: { not: null } },
+    });
+
+    // Wishlists with a URL in the current user's department
+    const departmentLinks = departmentId
+      ? await ctx.db.user.count({
+          where: {
+            amazonWishlistUrl: { not: null },
+            departmentId,
+          },
+        })
+      : 0;
+
+    // Unallocated wishlists (with URL, not assigned to anyone), EXCLUDING current user's own
+    const unallocatedLinks = await ctx.db.user.count({
+      where: {
+        amazonWishlistUrl: { not: null },
+        id: { not: userId },
+        ownedWishlist: {
+          none: { isActive: true },
+        },
+      },
+    });
+
+    // Unallocated wishlists in the current user's department, EXCLUDING current user's own
+    const unallocatedDepartmentLinks = departmentId
+      ? await ctx.db.user.count({
+          where: {
+            amazonWishlistUrl: { not: null },
+            departmentId,
+            id: { not: userId },
+            ownedWishlist: {
+              none: { isActive: true },
+            },
+          },
+        })
+      : 0;
+
+    // Old stats for compatibility
     const totalUsers = await ctx.db.user.count({
       where: {
         profileCompleted: true,
         amazonWishlistUrl: { not: null },
       },
     });
-
     const totalAssignments = await ctx.db.wishlistAssignment.count({
       where: { isActive: true },
     });
-
     const usersWithAssignments = await ctx.db.user.count({
       where: {
         assignedLinks: {
-          some: {
-            isActive: true,
-          },
+          some: { isActive: true },
         },
       },
     });
-
     const averageAssignments = totalUsers > 0 ? totalAssignments / totalUsers : 0;
 
     return {
+      totalLinks,
+      departmentLinks,
+      unallocatedLinks,
+      unallocatedDepartmentLinks,
       totalUsers,
       totalAssignments,
       usersWithAssignments,
@@ -75,7 +123,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Distribute initial 3 wishlists to current user
   requestInitialAssignments: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;    // Check if user has profile completed and wishlist URL
+    const userId = ctx.session.user.id;
+    // Check if user has profile completed and wishlist URL
     const currentUser = await ctx.db.user.findUnique({
       where: { id: userId },
       select: {
@@ -101,23 +150,28 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
     }
 
     // Check if user already has assignments
-    const existingAssignments = await ctx.db.wishlistAssignment.count({
+    const existingAssignments = await ctx.db.wishlistAssignment.findMany({
       where: {
         assignedUserId: userId,
         isActive: true,
       },
+      select: { wishlistOwnerId: true },
     });
+    const assignedUserIds = existingAssignments.map(a => a.wishlistOwnerId);
 
-    if (existingAssignments >= 3) {
+    if (assignedUserIds.length >= 3) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "You already have your initial 3 assignments",
       });
-    }    // Get all eligible users (excluding current user, users without wishlists, different domain/department)
+    }
+
+    // Get all eligible users (excluding current user, users without wishlists, different domain/department, and already assigned)
     const eligibleUsers = await ctx.db.user.findMany({
       where: {
         AND: [
           { id: { not: userId } },
+          { id: { notIn: assignedUserIds } },
           { profileCompleted: true },
           { amazonWishlistUrl: { not: null } },
           { domain: currentUser.domain }, // Same domain only
@@ -143,7 +197,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
       .sort((a, b) => a.assignmentCount - b.assignmentCount);
 
     // Select up to 3 users, avoiding duplicates
-    const neededAssignments = 3 - existingAssignments;
+    const neededAssignments = 3 - assignedUserIds.length;
     const selectedUsers = sortedUsers.slice(0, neededAssignments);
 
     if (selectedUsers.length === 0) {
@@ -390,6 +444,105 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
                       name: true,
                     },
                   },
+                },
+              },
+            },
+          })
+        )
+      );
+
+      return assignments;
+    }),
+
+  // Request cross-domain (stranger) assignments when no more are available in user's domain
+  requestCrossDomainAssignments: protectedProcedure
+    .input(z.object({
+      count: z.number().min(1).max(3).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Get current user's domain
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { domain: true },
+      });
+
+      if (!currentUser?.domain) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Please ensure your domain is set in your profile",
+        });
+      }
+
+      // Get users already assigned to this user
+      const existingAssignments = await ctx.db.wishlistAssignment.findMany({
+        where: {
+          assignedUserId: userId,
+          isActive: true,
+        },
+        select: { wishlistOwnerId: true },
+      });
+      const assignedUserIds = existingAssignments.map(a => a.wishlistOwnerId);
+
+      // Get eligible users from a different domain
+      const eligibleUsers = await ctx.db.user.findMany({
+        where: {
+          AND: [
+            { id: { not: userId } },
+            { id: { notIn: assignedUserIds } },
+            { profileCompleted: true },
+            { amazonWishlistUrl: { not: null } },
+            { domain: { not: currentUser.domain } }, // Different domain only
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          firstName: true,
+          lastName: true,
+          amazonWishlistUrl: true,
+          ownedWishlist: {
+            where: { isActive: true },
+            select: { assignedUserId: true },
+          },
+        },
+      });
+
+      // Sort by assignment count (prioritize users with fewer assignments)
+      const sortedUsers = eligibleUsers
+        .map(user => ({
+          ...user,
+          assignmentCount: user.ownedWishlist.length,
+        }))
+        .sort((a, b) => a.assignmentCount - b.assignmentCount);
+
+      const selectedUsers = sortedUsers.slice(0, input.count);
+
+      if (selectedUsers.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No cross-domain wishlists available for assignment",
+        });
+      }
+
+      // Create assignments (do not include department/domain info in return)
+      const assignments = await Promise.all(
+        selectedUsers.map(user =>
+          ctx.db.wishlistAssignment.create({
+            data: {
+              assignedUserId: userId,
+              wishlistOwnerId: user.id,
+            },
+            include: {
+              wishlistOwner: {
+                select: {
+                  id: true,
+                  name: true,
+                  firstName: true,
+                  lastName: true,
+                  amazonWishlistUrl: true,
+                  // No department/domain info for privacy
                 },
               },
             },

@@ -13,6 +13,7 @@ export function WishlistManager() {
   const [purchaseNotes, setPurchaseNotes] = useState("");
   const [reportType, setReportType] = useState<"NO_ITEMS" | "DOESNT_EXIST" | "NO_ADDRESS" | "OTHER">("NO_ITEMS");
   const [reportDescription, setReportDescription] = useState("");
+  const [strangerModal, setStrangerModal] = useState(false);
 
   // Check if user has completed profile - only run when authenticated
   const { data: userProfile } = api.profile.getCurrentProfile.useQuery(
@@ -27,7 +28,8 @@ export function WishlistManager() {
   const { data: assignments, isLoading, refetch } = api.wishlist.getMyAssignments.useQuery(
     undefined,
     { enabled: shouldShowWishlist }
-  );  const { data: stats } = api.wishlist.getAssignmentStats.useQuery(
+  );
+  const { data: stats, refetch: refetchStats } = api.wishlist.getAssignmentStats.useQuery(
     undefined,
     { enabled: shouldShowWishlist }
   );
@@ -36,11 +38,18 @@ export function WishlistManager() {
   const requestInitial = api.wishlist.requestInitialAssignments.useMutation({
     onSuccess: () => {
       refetch();
+      refetchStats();
+    },
+    onError: (error) => {
+      if (error.message.includes("No eligible wishlists available")) {
+        setModalType("no-assignments");
+      }
     },
   });
   const requestAdditional = api.wishlist.requestAdditionalAssignments.useMutation({
     onSuccess: () => {
       refetch();
+      refetchStats();
     },
     onError: (error) => {
       if (error.message.includes("No additional wishlists available")) {
@@ -52,6 +61,7 @@ export function WishlistManager() {
   const requestCrossDepartment = api.wishlist.requestCrossDepartmentAssignments.useMutation({
     onSuccess: () => {
       refetch();
+      refetchStats();
       setModalType(null);
     },
   });
@@ -82,6 +92,16 @@ export function WishlistManager() {
   const undoPurchase = api.wishlist.undoPurchase.useMutation({
     onSuccess: () => {
       refetch();
+    },
+  });
+
+  // Add cross-domain assignment mutation (must be implemented in backend)
+  const requestCrossDomain = api.wishlist.requestCrossDomainAssignments?.useMutation({
+    onSuccess: () => {
+      refetch();
+      refetchStats();
+      setStrangerModal(false);
+      setModalType(null);
     },
   });
 
@@ -132,6 +152,17 @@ export function WishlistManager() {
     );
   }
 
+  // Patch: handle cross-department fallback
+  const handleCrossDepartment = () => {
+    requestCrossDepartment.mutate({ count: 1 }, {
+      onError: (error) => {
+        if (error.message.includes('No cross-department wishlists available')) {
+          setStrangerModal(true);
+        }
+      },
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Header with stats */}
@@ -143,21 +174,21 @@ export function WishlistManager() {
         
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-green-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.totalUsers}</div>
-              <div className="text-sm text-green-700">Total Participants</div>
+            <div className="bg-green-50 p-3 rounded-lg z-50">
+              <div className="text-2xl font-bold text-green-600">{stats.totalLinks ?? "-"}</div>
+              <div className="text-sm text-green-700">Total Links</div>
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalAssignments}</div>
-              <div className="text-sm text-blue-700">Active Assignments</div>
+            <div className="bg-blue-50 p-3 rounded-lg z-50">
+              <div className="text-2xl font-bold text-blue-600">{stats.departmentLinks ?? "-"}</div>
+              <div className="text-sm text-blue-700">Links in Your Department</div>
             </div>
-            <div className="bg-purple-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{stats.usersWithAssignments}</div>
-              <div className="text-sm text-purple-700">Users with Lists</div>
+            <div className="bg-orange-50 p-3 rounded-lg z-50">
+              <div className="text-2xl font-bold text-orange-600">{stats.unallocatedLinks ?? "-"}</div>
+              <div className="text-sm text-orange-700">Unallocated Links</div>
             </div>
-            <div className="bg-orange-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{stats.averageAssignments.toFixed(1)}</div>
-              <div className="text-sm text-orange-700">Avg per User</div>
+            <div className="bg-purple-50 p-3 rounded-lg z-50">
+              <div className="text-2xl font-bold text-purple-600">{stats.unallocatedDepartmentLinks ?? "-"}</div>
+              <div className="text-sm text-purple-700">Unallocated in Your Dept</div>
             </div>
           </div>
         )}
@@ -167,7 +198,8 @@ export function WishlistManager() {
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🎁 Get Started!</h2>
           <p className="text-gray-600 mb-6">
             Request your first 3 wishlist assignments to start shopping for others!
-          </p>          <button
+          </p>
+          <button
             onClick={() => requestInitial.mutate()}
             disabled={requestInitial.isPending}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
@@ -182,7 +214,17 @@ export function WishlistManager() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">Your Wishlist Assignments ({assignments.length})</h2>
-            {assignments.length >= 3 && (            <button
+            {/* Show 'Try for More Assignments' if <3, else 'Request More' */}
+            {assignments.length < 3 ? (
+              <button
+                onClick={() => requestInitial.mutate()}
+                disabled={requestInitial.isPending}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
+              >
+                {requestInitial.isPending ? "Finding..." : "Try for More Assignments"}
+              </button>
+            ) : (
+              <button
                 onClick={() => requestAdditional.mutate({ count: 1 })}
                 disabled={requestAdditional.isPending}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
@@ -193,7 +235,14 @@ export function WishlistManager() {
           </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">            {assignments?.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
-              const isCrossDept = isCrossDepartmentAssignment(assignment);
+              // Robust logic: isStranger = wishlistDomain is defined and userDomain is defined and different, or wishlistDomain is defined and userDomain is undefined/null
+              // isCrossDept = both domains defined and equal, but departments differ
+              const wishlistDomain = (assignment.wishlistOwner as any).domain;
+              const wishlistDeptId = assignment.wishlistOwner.department?.id;
+              const userDomain = userProfile?.domain;
+              const userDeptId = userProfile?.departmentId;
+              const isStranger = Boolean(wishlistDomain && ((userDomain && wishlistDomain !== userDomain) || !userDomain));
+              const isCrossDept = Boolean(!isStranger && wishlistDomain && userDomain && wishlistDomain === userDomain && wishlistDeptId && userDeptId && wishlistDeptId !== userDeptId);
 
               return (
                 <div
@@ -203,6 +252,8 @@ export function WishlistManager() {
                       ? "border-green-200 bg-green-50"
                       : hasReport
                       ? "border-yellow-200 bg-yellow-50"
+                      : isStranger
+                      ? "border-pink-200 bg-pink-50 hover:border-pink-300"
                       : isCrossDept
                       ? "border-purple-200 bg-purple-50 hover:border-purple-300"
                       : "border-gray-200 bg-white hover:border-blue-300"
@@ -210,11 +261,15 @@ export function WishlistManager() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      {isCrossDept && (
-                        <span className="text-purple-600 text-xs font-medium bg-purple-100 px-2 py-1 rounded-full">
-                          📍 {assignment.wishlistOwner.department?.name}
+                      {isStranger ? (
+                        <span className="text-pink-600 text-xs font-medium bg-pink-100 px-2 py-1 rounded-full">
+                          🎁 Stranger
                         </span>
-                      )}
+                      ) : (isCrossDept && assignment.wishlistOwner.department && assignment.wishlistOwner.department.name) ? (
+                        <span className="text-purple-600 text-xs font-medium bg-purple-100 px-2 py-1 rounded-full">
+                          📍 {assignment.wishlistOwner.department.name}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {hasPurchase && <span className="text-green-600 text-sm font-medium">✅ Purchased</span>}
@@ -430,9 +485,7 @@ export function WishlistManager() {
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => {
-                    requestCrossDepartment.mutate({ count: 1 });
-                  }}
+                  onClick={handleCrossDepartment}
                   disabled={requestCrossDepartment.isPending}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium"
                 >
@@ -443,6 +496,44 @@ export function WishlistManager() {
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium"
                 >
                   Try Again Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stranger (cross-domain) fallback modal */}
+      {strangerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">No More Wishlists in Your Company</h3>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                There are no more wishlists available in your company or department.<br />
+                Would you like to help a <span className="font-bold text-pink-600">stranger</span> from another company/domain?
+              </p>
+              <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
+                <p className="text-sm text-pink-800 mb-3">
+                  <strong>This wishlist will be from a random participant outside your company. Their identity and department will not be shown.</strong>
+                </p>
+                <p className="text-xs text-pink-600">
+                  These are rare! Thank you for spreading extra holiday cheer.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => requestCrossDomain?.mutate({ count: 1 })}
+                  disabled={requestCrossDomain?.isPending}
+                  className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  {requestCrossDomain?.isPending ? "Finding..." : "Get a Stranger's Wishlist"}
+                </button>
+                <button
+                  onClick={() => setStrangerModal(false)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  Cancel
                 </button>
               </div>
             </div>

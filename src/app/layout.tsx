@@ -32,7 +32,7 @@ export default function RootLayout({
             <img
               src="/header.svg"
               alt="Header Logo"
-              className="w-full h-auto"
+              className="w-full h-auto z-0"
               draggable="false"
             />
           </a>

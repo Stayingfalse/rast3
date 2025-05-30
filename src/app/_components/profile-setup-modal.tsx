@@ -30,6 +30,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   
   const [domain, setDomain] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [forceEditEmail, setForceEditEmail] = useState(false);
   const isEditing = existingProfile?.profileCompleted ?? false;
 
   // Initialize form data with existing profile when modal opens
@@ -131,7 +132,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   };
   if (!isOpen) return null;
   // Check if user has a disabled domain
-  const isDomainDisabled = !!(existingProfile?.domain && existingProfile?.domainEnabled === false);
+  const isDomainDisabled = !!(existingProfile?.domain && existingProfile?.domainEnabled === false) && !forceEditEmail;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -150,6 +151,16 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                 <div className="mt-2 text-sm text-orange-700">
                   <p>Your organization's domain ({existingProfile?.domain}) is currently disabled.</p>
                   <p className="mt-1">Please contact your manager to enable access. You can only update your profile or sign out.</p>
+                  <button
+                    type="button"
+                    className="mt-3 inline-block rounded bg-white border border-orange-300 px-3 py-1 text-xs text-orange-700 hover:bg-orange-100 font-medium shadow-sm"
+                    onClick={() => {
+                      setForceEditEmail(true);
+                      setErrors({});
+                    }}
+                  >
+                    Used the wrong email? Click here to change it.
+                  </button>
                 </div>
               </div>
             </div>

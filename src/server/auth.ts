@@ -5,6 +5,7 @@ import Twitch from "next-auth/providers/twitch"
 import Google from "next-auth/providers/google"
 import { type DefaultSession } from "next-auth"
 import { db } from "~/server/db"
+import LoopsProvider from "next-auth/providers/loops"
 
 declare module "next-auth" {
   interface Session {
@@ -40,6 +41,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
+    // Only use LoopsProvider for magic link login
+    LoopsProvider({
+      apiKey: process.env.AUTH_LOOPS_KEY!,
+      transactionalId: process.env.AUTH_LOOPS_TRANSACTIONAL_ID!,
+      allowDangerousEmailAccountLinking: true,
+    }),
   ],
   callbacks: {
     session: ({ session, user }: { session: any; user: any }) => ({

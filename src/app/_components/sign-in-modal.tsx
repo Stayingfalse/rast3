@@ -1,43 +1,83 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "~/trpc/react";
 
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Example static list (expand as needed or load from config)
+const STATIC_WORK_DOMAINS = [
+  "sensee.co.uk",
+  "bupa.com",
+];
+
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [showLoops, setShowLoops] = useState(false);
+  const [loopsEmail, setLoopsEmail] = useState("");
+  const [loopsSent, setLoopsSent] = useState(false);
+  const [loopsError, setLoopsError] = useState<string | null>(null);
+  const [loopsWarning, setLoopsWarning] = useState<string | null>(null);
+
+  // Remove tRPC domain.getAll for signed-out users
+  // const { data: domains } = api.domain.getAll.useQuery(undefined, { enabled: isOpen });
+  // const knownDomains = (domains || []).map((d: any) => d.name?.toLowerCase?.()).filter(Boolean);
+  const knownDomains = STATIC_WORK_DOMAINS;
 
   const handleSignIn = async (provider: string) => {
     setIsLoading(provider);
     try {
-      if (provider === "debug") {
-        // Handle debug login
-        const response = await fetch("/api/debug-login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        
-        if (response.ok) {
-          // Redirect to force session refresh
-          window.location.reload();
-        } else {
-          console.error("Debug login failed");
-        }
-      } else {
-        await signIn(provider);
-      }
+      await signIn(provider);
     } catch (error) {
       console.error("Sign in error:", error);
     } finally {
       setIsLoading(null);
     }
   };
+
+  // Loops magic link logic
+  const handleLoopsSend = async () => {
+    setLoopsError(null);
+    setLoopsSent(false);
+    setIsLoading("loops");
+    try {
+      // Use NextAuth's Loops provider for magic link
+      const result = await signIn("loops", {
+        email: loopsEmail,
+        redirect: false,
+      });
+      if (result?.error) {
+        setLoopsError(result.error);
+        setIsLoading(null);
+      } else {
+        setLoopsSent(true);
+        setIsLoading(null);
+      }
+    } catch (err: any) {
+      setLoopsError("Failed to send magic link. Please try again.");
+      setIsLoading(null);
+    }
+  };
+
+  // Check for work domain warning
+  useEffect(() => {
+    if (!loopsEmail.includes("@")) {
+      setLoopsWarning(null);
+      return;
+    }
+    const domain = loopsEmail.split("@")[1]?.toLowerCase?.();
+    if (domain && knownDomains.includes(domain)) {
+      setLoopsWarning(
+        "Please do not use your work email. Magic links may not be delivered to work addresses due to admin controls."
+      );
+    } else {
+      setLoopsWarning(null);
+    }
+  }, [loopsEmail, knownDomains]);
 
   if (!isOpen) return null;
 
@@ -62,43 +102,74 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>        {/* Modal content */}
+        </button>
+        {/* Modal content */}
         <div className="text-center">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Sign in to your account
           </h2>
 
-          <div className="space-y-3">
-            {/* Debug Login Button - Only in development */}
-            {process.env.NODE_ENV === "development" && (
-              <>
-                <button
-                  onClick={() => handleSignIn("debug")}
-                  disabled={isLoading !== null}
-                  className="flex w-full items-center justify-center gap-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 px-4 py-3 text-yellow-800 transition hover:bg-yellow-100 disabled:opacity-50"
-                >
-                  {isLoading === "debug" ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-yellow-800 border-t-transparent" />
-                  ) : (
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                  )}
-                  <span className="font-medium">
-                    {isLoading === "debug" ? "Signing in..." : "🛠️ Debug Login (Dev Only)"}
-                  </span>
-                </button>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">or continue with</span>
-                  </div>
-                </div>
-              </>
+          {/* Magic Link Login always visible at the top */}
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleLoopsSend();
+            }}
+            className="space-y-2 mb-4"
+          >
+            <input
+              type="email"
+              required
+              autoFocus
+              placeholder="Enter your PERSONAL email address"
+              value={loopsEmail}
+              onChange={e => setLoopsEmail(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              disabled={isLoading === "loops" || loopsSent}
+            />
+            {loopsWarning && (
+              <div className="rounded bg-orange-50 border border-orange-200 text-orange-700 px-3 py-2 text-xs mt-1">
+                {loopsWarning}
+              </div>
             )}
+            <button
+              type="submit"
+              disabled={isLoading === "loops" || loopsSent}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-[#7C3AED] px-4 py-2 text-white transition hover:bg-[#5B21B6] disabled:opacity-50"
+            >
+              {isLoading === "loops" ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M16 12v1a4 4 0 01-8 0v-1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12 16v2m0-6V6m0 0L8 10m4-4l4 4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+              <span className="font-medium">
+                {loopsSent ? "Magic Link Sent!" : "Send Magic Link"}
+              </span>
+            </button>
+            {loopsSent && (
+              <div className="text-green-600 text-xs pt-2">Check your inbox for a magic link to sign in.</div>
+            )}
+            {loopsError && (
+              <div className="text-red-600 text-xs pt-2">{loopsError}</div>
+            )}
+            <div className="mt-2 text-xs text-gray-500">
+              <span>
+                If you use a work email, you may not receive the magic link due to organization restrictions.
+              </span>
+            </div>
+          </form>
 
+          {/* Separator */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-200" />
+            <span className="mx-4 text-gray-400 text-sm font-medium">-- or --</span>
+            <div className="flex-grow border-t border-gray-200" />
+          </div>
+
+          <div className="space-y-3">
             {/* Discord Sign In Button */}
             <button
               onClick={() => handleSignIn("discord")}
@@ -161,8 +232,6 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
 
             </button>
           </div>
-
-          
 
           <p className="mt-6 text-sm text-gray-500">
             By signing in, you agree to our terms of service and privacy policy.

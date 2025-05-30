@@ -4,8 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 // Amazon UK wishlist URL regex
 const amazonWishlistRegex =   /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
 
-export const profileRouter = createTRPCRouter({
-  // Get current user's profile with domain status
+export const profileRouter = createTRPCRouter({  // Get current user's profile with domain status
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
     const user = await (ctx.db as any).user.findUnique({
       where: { id: ctx.session.user.id },
@@ -32,9 +31,7 @@ export const profileRouter = createTRPCRouter({
       adminLevel: user.adminLevel,
       adminScope: user.adminScope,
     };
-  }),
-
-  // Check if a domain is enabled
+  }),  // Check if a domain is enabled
   checkDomainStatus: protectedProcedure
     .input(z.object({ domain: z.string() }))
     .query(async ({ ctx, input }) => {

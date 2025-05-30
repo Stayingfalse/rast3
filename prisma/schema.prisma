@@ -50,9 +50,9 @@ model Session {
 }
 
 model User {
-  id                 String      @id @default(cuid())
+  id                 String               @id @default(cuid())
   name               String?
-  email              String?     @unique
+  email              String?              @unique
   emailVerified      DateTime?
   image              String?
   amazonWishlistUrl  String?
@@ -60,16 +60,19 @@ model User {
   domain             String?
   firstName          String?
   lastName           String?
-  profileCompleted   Boolean     @default(false)
+  profileCompleted   Boolean              @default(false)
   profileCompletedAt DateTime?
-  workEmail          String?     @unique
+  workEmail          String?              @unique
+  adminLevel         AdminLevel           @default(USER)
+  adminScope         String?
   accounts           Account[]
   posts              Post[]
+  purchases          Purchase[]
   sessions           Session[]
-  department         Department? @relation(fields: [departmentId], references: [id])
-
-  adminLevel AdminLevel @default(USER)
-  adminScope String?
+  department         Department?          @relation(fields: [departmentId], references: [id])
+  assignedLinks      WishlistAssignment[] @relation("AssignedUser")
+  ownedWishlist      WishlistAssignment[] @relation("WishlistOwner")
+  reports            WishlistReport[]
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -87,13 +90,13 @@ model Department {
 }
 
 model Domain {
-  id           String       @id @default(cuid())
-  name         String       @unique
-  enabled      Boolean      @default(false)
-  description  String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  
+  id          String   @id @default(cuid())
+  name        String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@index([name])
   @@index([enabled])
 }
@@ -106,9 +109,64 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model WishlistAssignment {
+  id              String           @id @default(cuid())
+  assignedUserId  String
+  wishlistOwnerId String
+  assignedAt      DateTime         @default(now())
+  isActive        Boolean          @default(true)
+  purchases       Purchase?
+  assignedUser    User             @relation("AssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
+  wishlistOwner   User             @relation("WishlistOwner", fields: [wishlistOwnerId], references: [id], onDelete: Cascade)
+  reports         WishlistReport[]
+
+  @@unique([assignedUserId, wishlistOwnerId])
+  @@index([assignedUserId])
+  @@index([wishlistOwnerId])
+  @@index([isActive])
+}
+
+model Purchase {
+  id                   String             @id @default(cuid())
+  userId               String
+  wishlistAssignmentId String             @unique
+  purchasedAt          DateTime           @default(now())
+  notes                String?
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wishlistAssignment   WishlistAssignment @relation(fields: [wishlistAssignmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([wishlistAssignmentId])
+}
+
+model WishlistReport {
+  id                   String             @id @default(cuid())
+  userId               String
+  wishlistAssignmentId String
+  reportType           ReportType
+  description          String?
+  reportedAt           DateTime           @default(now())
+  resolved             Boolean            @default(false)
+  resolvedAt           DateTime?
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wishlistAssignment   WishlistAssignment @relation(fields: [wishlistAssignmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([wishlistAssignmentId])
+  @@index([reportType])
+  @@index([resolved])
+}
+
 enum AdminLevel {
   SITE
   DOMAIN
   DEPARTMENT
   USER
+}
+
+enum ReportType {
+  NO_ITEMS
+  DOESNT_EXIST
+  NO_ADDRESS
+  OTHER
 }

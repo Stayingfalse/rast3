@@ -1,6 +1,7 @@
 import { profileRouter } from "~/server/api/routers/profile";
 import { domainRouter } from "~/server/api/routers/domain";
 import { userRouter } from "~/server/api/routers/user";
+import { wishlistRouter } from "~/server/api/routers/wishlist";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
   profile: profileRouter,
   domain: domainRouter,
   user: userRouter,
+  wishlist: wishlistRouter,
 });
 
 // export type definition of API

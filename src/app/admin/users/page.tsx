@@ -4,6 +4,19 @@ import { useState } from "react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
 
+// Type definitions
+type User = {
+  id: string;
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  workEmail?: string | null;
+  domain?: string | null;
+  departmentId?: string | null;
+  profileCompleted: boolean;
+};
+
 export default function UsersPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
   
@@ -31,11 +44,10 @@ export default function UsersPage() {
       void refetch();
     },
   });
-
   // Filter users by selected domain
   const filteredUsers = selectedDomain === "all" 
     ? users 
-    : users.filter(user => user.domain === selectedDomain);
+    : users.filter((user: User) => user.domain === selectedDomain);
 
   const handleToggleProfile = (userId: string, currentStatus: boolean) => {
     toggleProfileMutation.mutate({
@@ -138,9 +150,8 @@ export default function UsersPage() {
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="all">All Domains</option>
-              {domains.map((domain) => (
+            >              <option value="all">All Domains</option>
+              {domains.map((domain: { name: string; enabled: boolean }) => (
                 <option key={domain.name} value={domain.name}>
                   {domain.name} ({domain.enabled ? "Enabled" : "Disabled"})
                 </option>

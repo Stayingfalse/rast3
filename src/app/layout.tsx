@@ -25,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <body>
+        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-top bg-repeat bg-fixed bg-#13264D">
         {/* Header with SVG image */}
         <header className="absolute left-1/2 top-[-0.5rem] max-w-[150%] -translate-x-1/2 z-0 w-full flex justify-center pointer-events-none select-none">
           <a href="/">
@@ -36,7 +37,6 @@ export default function RootLayout({
             />
           </a>
         </header>
-        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[var(--blueZodiac)] bg-[url('/plaid.png')] bg-top bg-repeat">
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
                 <AuthProvider>
                     <TRPCReactProvider>{children}</TRPCReactProvider>

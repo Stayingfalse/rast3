@@ -50,11 +50,18 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = async (_opts: { req?: Request; headers?: Headers } = {}) => {
-  // For App Router, we don't have access to session in the context
-  // Session will be handled in the procedures that need it
+export const createTRPCContext = async (opts: { headers: Headers }) => {
+  // Get the session using NextAuth v5's auth() function
+  let session: Session | null = null;
+  try {
+    session = await auth();
+  } catch (error) {
+    console.error("[TRPC] Error getting session:", error);
+    // Session remains null, which is fine for public procedures
+  }
+
   return createInnerTRPCContext({
-    session: null,
+    session,
   });
 };
 
@@ -143,18 +150,14 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(async ({ ctx, next }) => {
-    // Get session for this specific request
-    const session = await auth();
-    
-    if (!session?.user) {
+  .use(({ ctx, next }) => {
+    if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     return next({
       ctx: {
-        ...ctx,
         // infers the `session` as non-nullable
-        session: { ...session, user: session.user },
+        session: { ...ctx.session, user: ctx.session.user },
       },
     });
   });

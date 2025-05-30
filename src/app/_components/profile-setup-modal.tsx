@@ -130,9 +130,8 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     }
   };
   if (!isOpen) return null;
-
   // Check if user has a disabled domain
-  const isDomainDisabled = existingProfile?.domain && existingProfile?.domainEnabled === false;
+  const isDomainDisabled = !!(existingProfile?.domain && existingProfile?.domainEnabled === false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

@@ -1,11 +1,10 @@
 import Link from "next/link";
 
 import { AuthShowcase } from "~/app/_components/auth-showcase";
+import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
-
-  void api.post.getLatest.prefetch();
 
   return (
     <HydrateClient>
@@ -15,6 +14,7 @@ export default async function Home() {
           <div className="flex flex-col items-center gap-2">
 
             <AuthShowcase />
+            <WishlistManager />
           </div>
     </HydrateClient>
   );

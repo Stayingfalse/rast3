@@ -2,6 +2,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import NextAuth from "next-auth"
 import Discord from "next-auth/providers/discord"
 import Twitch from "next-auth/providers/twitch"
+import Google from "next-auth/providers/google"
 import { type DefaultSession } from "next-auth"
 import { db } from "~/server/db"
 
@@ -19,17 +20,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Discord({
       clientId: process.env.AUTH_DISCORD_ID!,
       clientSecret: process.env.AUTH_DISCORD_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+      ? [
+          Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
     ...(process.env.AUTH_TWITCH_ID && process.env.AUTH_TWITCH_SECRET
       ? [
           Twitch({
             clientId: process.env.AUTH_TWITCH_ID,
             clientSecret: process.env.AUTH_TWITCH_SECRET,
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
-  ],  callbacks: {
-    session: ({ session, user }) => ({
+  ],
+  callbacks: {
+    session: ({ session, user }: { session: any; user: any }) => ({
       ...session,
       user: {
         ...session.user,
@@ -38,4 +51,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   },
   debug: process.env.NODE_ENV === "development",
-})
+});

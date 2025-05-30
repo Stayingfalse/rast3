@@ -98,6 +98,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                 </div>
               </>
             )}
+
             {/* Discord Sign In Button */}
             <button
               onClick={() => handleSignIn("discord")}
@@ -133,7 +134,35 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                 {isLoading === "twitch" ? "Signing in..." : "Continue with Twitch"}
               </span>
             </button>
+            
+            {/* Google Sign In Button */}
+            <button
+              onClick={() => handleSignIn("google")}
+              disabled={isLoading !== null}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-800 transition hover:bg-gray-50 disabled:opacity-50 shadow-sm"
+            >
+              {isLoading === "google" ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-800 border-t-transparent" />
+              ) : (
+                // Google SVG logo
+                <svg className="h-5 w-5" viewBox="0 0 48 48">
+                  <g>
+                    <path fill="#4285F4" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.2 3.2-4.2 5.5-7.8 5.5-4.7 0-8.5-3.8-8.5-8.5s3.8-8.5 8.5-8.5c2.1 0 4 .7 5.5 2l6.1-6.1C36.2 9.1 30.4 7 24 7 13.5 7 5 15.5 5 26s8.5 19 19 19 19-8.5 19-19c0-1.3-.1-2.5-.4-3.5z"/>
+                    <path fill="#34A853" d="M24 45c5.4 0 9.9-1.8 13.2-4.8l-6.1-6.1c-1.7 1.2-3.9 2-6.1 2-4.7 0-8.5-3.8-8.5-8.5H5v5.3C8.3 40.2 15.5 45 24 45z"/>
+                    <path fill="#FBBC05" d="M15.5 27.6c-.4-1.2-.6-2.5-.6-3.6s.2-2.5.6-3.6V15H5c-1.1 2.2-1.7 4.7-1.7 7.5s.6 5.3 1.7 7.5l10.5-7.4z"/>
+                    <path fill="#EA4335" d="M24 14.5c2.6 0 4.9.9 6.7 2.6l5-5C33.9 9.1 29.2 7 24 7c-8.5 0-15.7 4.8-19 11.7l10.5 7.4c1.2-3.7 4.7-6.6 8.5-6.6z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                  </g>
+                </svg>
+              )}
+              <span className="font-medium">
+                {isLoading === "google" ? "Signing in..." : "Continue with Google"}
+              </span>
+
+            </button>
           </div>
+
+          
 
           <p className="mt-6 text-sm text-gray-500">
             By signing in, you agree to our terms of service and privacy policy.

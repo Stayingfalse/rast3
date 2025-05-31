@@ -4,19 +4,20 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 
-// Define types based on what's returned from the API
+// Define the type manually based on the Prisma include in the domain router
 type DomainWithCount = {
   id: string;
   name: string;
   enabled: boolean;
-  description?: string | null;
+  description: string | null;
   createdAt: Date;
   updatedAt: Date;
-  createdBy?: {
+  createdById: string | null;
+  createdBy: {
     id: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    email?: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
   } | null;
   _count: {
     departments: number;
@@ -36,10 +37,10 @@ function DomainManagement() {
   const [newDomainDescription, setNewDomainDescription] = useState("");
   const [newDomainEnabled, setNewDomainEnabled] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingDomain, setEditingDomain] = useState<DomainWithCount | null>(null);
-
   // Get all domains
   const { data: domains, refetch } = api.domain.getAll.useQuery();
+  
+  const [editingDomain, setEditingDomain] = useState<DomainWithCount | null>(null);
 
   const createDomainMutation = api.domain.create.useMutation({
     onSuccess: () => {
@@ -107,8 +108,7 @@ function DomainManagement() {
       });    } catch {
       // Error handled in mutation
     }
-  };
-  const handleDeleteDomain = (domain: DomainWithCount) => {
+  };  const handleDeleteDomain = (domain: DomainWithCount) => {
     if (confirm(`Are you sure you want to delete the domain "${domain.name}"?`)) {
       deleteDomainMutation.mutate({ id: domain.id });
     }
@@ -213,7 +213,7 @@ function DomainManagement() {
                   </th>
                 </tr>
               </thead>              <tbody className="divide-y divide-white/10">
-                {domains.map((domain: DomainWithCount) => (
+                {domains?.map((domain: DomainWithCount) => (
                   <tr key={domain.id}>
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-white">                      {editingDomain?.id === domain.id ? (
                         <input

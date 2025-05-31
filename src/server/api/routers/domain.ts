@@ -25,7 +25,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
     }
     // SITE gets all, USER should never reach here
 
-    return ctx.db.domain.findMany({
+    const domains = await ctx.db.domain.findMany({
       where,
       include: {
         createdBy: {
@@ -36,14 +36,26 @@ export const domainRouter = createTRPCRouter({  // Get all domains
             email: true,
           },
         },
-        _count: {
-          select: {
-            departments: true,
-          },
-        },
       },
       orderBy: { name: "asc" },
     });
+
+    // Get department counts for each domain manually
+    const domainsWithCounts = await Promise.all(
+      domains.map(async (domain) => {
+        const departmentCount = await ctx.db.department.count({
+          where: { domain: domain.name },
+        });
+        return {
+          ...domain,
+          _count: {
+            departments: departmentCount,
+          },
+        };
+      })
+    );
+
+    return domainsWithCounts;
   }),
   // Get domain by name
   getByName: protectedProcedure

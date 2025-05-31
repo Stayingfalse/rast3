@@ -194,10 +194,9 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-orange-800">Domain Access Restricted</h3>
-                <div className="mt-2 text-sm text-orange-700">
+                <h3 className="text-sm font-medium text-orange-800">Domain Access Restricted</h3>                <div className="mt-2 text-sm text-orange-700">
                   <p>Your organization&apos;s domain ({existingProfile?.domain}) is currently disabled.</p>
-                  <p className="mt-1">Please contact your manager to enable access. You can only update your profile or sign out.</p>
+                  <p className="mt-1">Please contact your manager or IT department to enable access. You can only update your profile or sign out.</p>
                   <button
                     type="button"
                     className="mt-3 inline-block rounded bg-white border border-orange-300 px-3 py-1 text-xs text-orange-700 hover:bg-orange-100 font-medium shadow-sm"
@@ -223,19 +222,18 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Organization Domain Not Set Up</h3>
+              <div className="ml-3">                <h3 className="text-sm font-medium text-blue-800">Organization Domain Not Set Up</h3>
                 <div className="mt-2 text-sm text-blue-700">
                   <p>The domain &quot;{domain}&quot; hasn&apos;t been set up in our system yet.</p>
-                  <p className="mt-1">Please speak to your employer about setting this up, or if you&apos;d like to set it up now and become the domain administrator, click below.</p>
+                  <p className="mt-1"><strong>We recommend</strong> speaking to your employer or IT department first to see if they want to set this up.</p>
+                  <p className="mt-1">Alternatively, if you&apos;d like to set it up yourself now, you can become the domain administrator.</p>
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <button
+                <div className="mt-4 flex gap-2">                  <button
                     type="button"
                     className="inline-block rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 font-medium shadow-sm"
                     onClick={() => setShowDomainSetup(true)}
                   >
-                    Set Up Domain Now & Become Admin
+                    Set Up Domain Now
                   </button>
                   <button
                     type="button"
@@ -245,7 +243,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                       setErrors({});
                     }}
                   >
-                    Used Wrong Email? Change It
+                    Wrong Email Address?
                   </button>
                 </div>
               </div>
@@ -343,19 +341,17 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <div className="ml-3 flex-1">
-                    <h3 className="text-sm font-medium text-blue-800">Domain Not Found</h3>
+                  <div className="ml-3 flex-1">                    <h3 className="text-sm font-medium text-blue-800">Domain Not Found</h3>
                     <div className="mt-2 text-sm text-blue-700">
                       <p>The domain &quot;{domain}&quot; isn&apos;t set up in our system yet.</p>
-                      <p className="mt-1">Please speak to your employer about setting this up, or set it up yourself and become the domain administrator.</p>
+                      <p className="mt-1"><strong>Recommended:</strong> Check with your employer first, or set it up yourself below.</p>
                     </div>
-                    <div className="mt-4 flex gap-2">
-                      <button
+                    <div className="mt-4 flex gap-2">                      <button
                         type="button"
                         className="inline-block rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 font-medium shadow-sm"
                         onClick={() => setShowDomainSetup(true)}
                       >
-                        Set Up Domain & Become Admin
+                        Set Up Domain
                       </button>
                       <button
                         type="button"

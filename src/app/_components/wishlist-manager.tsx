@@ -162,7 +162,7 @@ export function WishlistManager() {
           Shop from other people&apos;s wishlists and spread the holiday joy!
         </p>
           {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-auto gap-2 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-center">
             {/* Dynamic stats based on user's domain/department status */}
             {stats.totalUsers && (
               <div className="bg-green-50 p-3 rounded-lg z-40">

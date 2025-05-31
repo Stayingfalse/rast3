@@ -184,8 +184,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        {/* Domain Disabled Warning */}
+      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">        {/* Domain Issues Warnings */}
         {isDomainDisabled && (
           <div className="mb-4 rounded-lg bg-orange-50 border border-orange-200 p-4">
             <div className="flex items-center">
@@ -208,6 +207,45 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                     }}
                   >
                     Used the wrong email? Click here to change it.
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Domain Doesn't Exist - Alternative to inline notification */}
+        {!isEditing && domain && domainStatus && !domainStatus.exists && !showDomainSetup && !isDomainDisabled && (
+          <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Organization Domain Not Set Up</h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>The domain &quot;{domain}&quot; hasn&apos;t been set up in our system yet.</p>
+                  <p className="mt-1">Please speak to your employer about setting this up, or if you&apos;d like to set it up now and become the domain administrator, click below.</p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    className="inline-block rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 font-medium shadow-sm"
+                    onClick={() => setShowDomainSetup(true)}
+                  >
+                    Set Up Domain Now & Become Admin
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-block rounded bg-white border border-blue-300 px-3 py-1 text-xs text-blue-700 hover:bg-blue-50 font-medium shadow-sm"
+                    onClick={() => {
+                      setForceEditEmail(true);
+                      setErrors({});
+                    }}
+                  >
+                    Used Wrong Email? Change It
                   </button>
                 </div>
               </div>
@@ -296,8 +334,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
             )}            {domain && (
               <p className="mt-1 text-sm text-gray-500">Domain: {domain}</p>
             )}
-            
-            {/* Domain Setup Option */}
+              {/* Domain Setup Option - Inline notification */}
             {shouldShowDomainSetup && !showDomainSetup && (
               <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-4">
                 <div className="flex items-center">
@@ -307,10 +344,10 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
                     </svg>
                   </div>
                   <div className="ml-3 flex-1">
-                    <h3 className="text-sm font-medium text-blue-800">New Domain Detected</h3>
+                    <h3 className="text-sm font-medium text-blue-800">Domain Not Found</h3>
                     <div className="mt-2 text-sm text-blue-700">
-                      <p>The domain &quot;{domain}&quot; doesn&apos;t exist in our system yet.</p>
-                      <p className="mt-1">You can set it up and become the domain administrator.</p>
+                      <p>The domain &quot;{domain}&quot; isn&apos;t set up in our system yet.</p>
+                      <p className="mt-1">Please speak to your employer about setting this up, or set it up yourself and become the domain administrator.</p>
                     </div>
                     <div className="mt-4 flex gap-2">
                       <button

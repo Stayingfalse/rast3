@@ -50,7 +50,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async (_opts: { headers: Headers }) => {
   // Get the session using NextAuth v5's auth() function
   let session: Session | null = null;
   try {

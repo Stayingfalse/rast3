@@ -99,7 +99,7 @@ export function AuthShowcase() {
               {/* Domain status warning */}
               {userProfile.domain && userProfile.domainEnabled === false && (
                 <p className="text-sm text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg border border-orange-500/20">
-                  ⚠ Your organization's domain ({userProfile.domain}) is currently disabled. Contact your manager for access.
+                  ⚠ Your organization&apos;s domain ({userProfile.domain}) is currently disabled. Contact your manager for access.
                 </p>
               )}
             </div>

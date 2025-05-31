@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { type DefaultSession, type NextAuthOptions } from "next-auth";
+import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import { type Session } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "~/server/db";
@@ -14,8 +15,8 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+      adminScope?: string | null;
     } & DefaultSession["user"];
   }
 
@@ -30,7 +31,7 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
-export const authConfig: NextAuthOptions = {
+export const authConfig: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
   providers: [
@@ -50,7 +51,7 @@ export const authConfig: NextAuthOptions = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
+    session: ({ session, user }: { session: Session; user: { id: string } }) => ({
       ...session,
       user: {
         ...session.user,

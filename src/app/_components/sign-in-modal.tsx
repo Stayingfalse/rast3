@@ -2,7 +2,6 @@
 
 import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { api } from "~/trpc/react";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -17,7 +16,6 @@ const STATIC_WORK_DOMAINS = [
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  const [showLoops, setShowLoops] = useState(false);
   const [loopsEmail, setLoopsEmail] = useState("");
   const [loopsSent, setLoopsSent] = useState(false);
   const [loopsError, setLoopsError] = useState<string | null>(null);
@@ -54,10 +52,9 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
         setLoopsError(result.error);
         setIsLoading(null);
       } else {
-        setLoopsSent(true);
-        setIsLoading(null);
+        setLoopsSent(true);      setIsLoading(null);
       }
-    } catch (err: any) {
+    } catch {
       setLoopsError("Failed to send magic link. Please try again.");
       setIsLoading(null);
     }
@@ -113,7 +110,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           <form
             onSubmit={e => {
               e.preventDefault();
-              handleLoopsSend();
+              void handleLoopsSend();
             }}
             className="space-y-2 mb-4"
           >

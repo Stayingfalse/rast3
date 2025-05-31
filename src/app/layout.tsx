@@ -2,6 +2,8 @@ import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
 import { type Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { AuthProvider } from "./_components/auth-provider";
@@ -33,14 +35,17 @@ export default function RootLayout({
             <AdminButton />
             {/* Header with SVG image */}
             <header className="absolute left-1/2 top-[-0.5rem] max-w-[150%] -translate-x-1/2 z-0 w-full flex justify-center pointer-events-none select-none">
-              <a href="/">
-                <img
+              <Link href="/">
+                <Image
                   src="/header.svg"
                   alt="Header Logo"
+                  width={800}
+                  height={200}
                   className="w-full h-auto z-0"
                   draggable="false"
+                  priority
                 />
-              </a>
+              </Link>
             </header>
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
               <AuthProvider>

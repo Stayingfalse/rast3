@@ -24,6 +24,12 @@ type User = {
   } | null;
 };
 
+type Department = {
+  id: string;
+  name: string;
+  domain: string;
+};
+
 // User Statistics Tooltip Component
 function UserStatsTooltip({ userId }: { userId: string }) {
   const { data: stats, isLoading } = api.user.getUserStats.useQuery({ userId });
@@ -113,7 +119,7 @@ export default function UsersPage() {
     }
     
     if (user.adminLevel === "DEPARTMENT") {
-      const deptName = user.department?.name || user.adminScope;
+      const deptName = user.department?.name ?? user.adminScope;
       return `Department Admin${deptName ? ` (${deptName})` : ""}`;
     }
     
@@ -311,7 +317,7 @@ export default function UsersPage() {
                             >
                               {user.firstName && user.lastName 
                                 ? `${user.firstName} ${user.lastName}`
-                                : user.name || "Unknown User"
+                                : user.name ?? "Unknown User"
                               }
                             </span>
                             {hoveredUserId === user.id && (
@@ -328,18 +334,18 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-white">
-                        {user.workEmail || user.email || "No email"}
+                        {user.workEmail ?? user.email ?? "No email"}
                       </div>
                       <div className="text-sm text-white/60">
-                        {user.domain || "No domain"}
+                        {user.domain ?? "No domain"}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       {editingDepartmentUserId === user.id ? (
                         <select
-                          value={user.departmentId || ""}
+                          value={user.departmentId ?? ""}
                           onChange={(e) => {
-                            handleUpdateDepartment(user.id, e.target.value || null);
+                            handleUpdateDepartment(user.id, e.target.value ?? null);
                             setEditingDepartmentUserId(null);
                           }}
                           onBlur={() => setEditingDepartmentUserId(null)}
@@ -347,8 +353,7 @@ export default function UsersPage() {
                           className="text-sm rounded border border-gray-300 bg-white px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           disabled={updateDepartmentMutation.isPending}
                         >
-                          <option value="">No Department</option>
-                          {departments.map((dept: any) => (
+                          <option value="">No Department</option>                          {departments.map((dept: Department) => (
                             <option key={dept.id} value={dept.id}>
                               {dept.name} ({dept.domain})
                             </option>
@@ -379,7 +384,7 @@ export default function UsersPage() {
                             </select>
                           ) : (
                             <select
-                              value={user.adminLevel || "USER"}
+                              value={user.adminLevel ?? "USER"}
                               onChange={(e) => {
                                 handleUpdateAdminLevel(
                                   user.id,
@@ -437,7 +442,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => handleDeleteUser(user.id, user.firstName && user.lastName 
                             ? `${user.firstName} ${user.lastName}`
-                            : user.name || "Unknown User"
+                            : user.name ?? "Unknown User"
                           )}
                           disabled={deleteUserMutation.isPending}
                           className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"

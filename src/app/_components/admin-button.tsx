@@ -13,7 +13,7 @@ export default function AdminButton() {
   // Check for admin role (USER, DEPARTMENT, DOMAIN, SITE)
   const adminLevels = ["DEPARTMENT", "DOMAIN", "SITE"];
   const userAdminLevel = session.user.adminLevel;
-  if (!adminLevels.includes(userAdminLevel)) return null;
+  if (!userAdminLevel || !adminLevels.includes(userAdminLevel)) return null;
 
   return (
     <button

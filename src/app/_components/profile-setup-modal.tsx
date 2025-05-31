@@ -74,9 +74,9 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
 
   // Extract domain when work email changes
   useEffect(() => {
-    if (formData.workEmail && formData.workEmail.includes("@")) {
+    if (formData.workEmail?.includes("@")) {
       const emailDomain = formData.workEmail.split("@")[1];
-      setDomain(emailDomain || "");
+      setDomain(emailDomain ?? "");
     } else {
       setDomain("");
     }
@@ -131,8 +131,8 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       firstName: formData.firstName,
       lastName: formData.lastName,
       workEmail: formData.workEmail,
-      departmentId: formData.departmentId || undefined,
-      amazonWishlistUrl: trimmedWishlistUrl || undefined,
+      departmentId: formData.departmentId ?? undefined,
+      amazonWishlistUrl: trimmedWishlistUrl ?? undefined,
     });
   };
 
@@ -169,7 +169,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-orange-800">Domain Access Restricted</h3>
                 <div className="mt-2 text-sm text-orange-700">
-                  <p>Your organization's domain ({existingProfile?.domain}) is currently disabled.</p>
+                  <p>Your organization&apos;s domain ({existingProfile?.domain}) is currently disabled.</p>
                   <p className="mt-1">Please contact your manager to enable access. You can only update your profile or sign out.</p>
                   <button
                     type="button"

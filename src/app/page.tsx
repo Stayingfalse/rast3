@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 import { AuthShowcase } from "~/app/_components/auth-showcase";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
 

@@ -38,8 +38,8 @@ export function WishlistManager() {
   // Mutations - must be called before any conditional returns
   const requestInitial = api.wishlist.requestInitialAssignments.useMutation({
     onSuccess: () => {
-      refetch();
-      refetchStats();
+      void refetch();
+      void refetchStats();
     },
     onError: (error) => {
       if (error.message.includes("No eligible wishlists available")) {
@@ -49,8 +49,8 @@ export function WishlistManager() {
   });
   const requestAdditional = api.wishlist.requestAdditionalAssignments.useMutation({
     onSuccess: () => {
-      refetch();
-      refetchStats();
+      void refetch();
+      void refetchStats();
     },
     onError: (error) => {
       if (error.message.includes("No additional wishlists available")) {
@@ -61,14 +61,14 @@ export function WishlistManager() {
 
   const requestCrossDepartment = api.wishlist.requestCrossDepartmentAssignments.useMutation({
     onSuccess: () => {
-      refetch();
-      refetchStats();
+      void refetch();
+      void refetchStats();
       setModalType(null);
     },
   });
   const markPurchase = api.wishlist.markPurchase.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch();
       setSelectedAssignment(null);
       setModalType(null);
       setPurchaseNotes("");
@@ -77,7 +77,7 @@ export function WishlistManager() {
 
   const reportIssue = api.wishlist.reportIssue.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch();
       setSelectedAssignment(null);
       setModalType(null);
       setReportDescription("");
@@ -86,21 +86,21 @@ export function WishlistManager() {
 
   const clearReport = api.wishlist.clearReport.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch();
     },
   });
 
   const undoPurchase = api.wishlist.undoPurchase.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch();
     },
   });
 
   // Add cross-domain assignment mutation (must be implemented in backend)
   const requestCrossDomain = api.wishlist.requestCrossDomainAssignments?.useMutation({
     onSuccess: () => {
-      refetch();
-      refetchStats();
+      void refetch();
+      void refetchStats();
       setStrangerModal(false);
       setModalType(null);
     },
@@ -111,21 +111,10 @@ export function WishlistManager() {
     return null; // Don't show anything if not authenticated
   }
 
-  const getDisplayName = (owner: WishlistAssignment["wishlistOwner"]) => {
-    if (owner.firstName && owner.lastName) {
-      return `${owner.firstName} ${owner.lastName}`;
-    }
-    return owner.name || "Anonymous";
-  };
-
-  const isCrossDepartmentAssignment = (assignment: WishlistAssignment) => {
-    // We'll determine this by comparing the assignment owner's department with the current user's department
-    return assignment.wishlistOwner.department?.id !== userProfile?.departmentId;
-  };
   const formatReportType = (type: string) => {
     switch (type) {
       case "NO_ITEMS": return "No Items";
-      case "DOESNT_EXIST": return "Link Doesn't Work";
+      case "DOESNT_EXIST": return "Link Doesn&apos;t Work";
       case "NO_ADDRESS": return "No Shipping Address";
       case "OTHER": return "Other Issue";
       default: return type;
@@ -170,7 +159,7 @@ export function WishlistManager() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">🎄 Secret Santa Wishlist Manager</h1>
         <p className="text-gray-600 mb-4">
-          Shop from other people's wishlists and spread the holiday joy!
+          Shop from other people&apos;s wishlists and spread the holiday joy!
         </p>
         
         {stats && (
@@ -193,12 +182,14 @@ export function WishlistManager() {
             </div>
           </div>
         )}
-      </div>      {/* Request Initial Assignments or Waiting for Users */}
+      </div>
+      
+      {/* Request Initial Assignments or Waiting for Users */}
       {(!assignments || assignments.length === 0) && stats && (stats.totalLinks < 10 && stats.departmentLinks < 2) ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6 text-center">
           <h2 className="text-2xl font-semibold text-yellow-800 mb-4">Waiting for More Participants</h2>
           <p className="text-yellow-700 mb-4">
-            There aren't enough wishlists or participants yet to get started. Please check back later when more people have joined and set up their profiles!
+            There aren&apos;t enough wishlists or participants yet to get started. Please check back later when more people have joined and set up their profiles!
           </p>
           <div className="mb-2 text-sm text-yellow-700">Help spread the word:</div>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -220,7 +211,7 @@ export function WishlistManager() {
             </a>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(window.location.origin);
+                void navigator.clipboard.writeText(window.location.origin);
                 alert('Link copied!');
               }}
               className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
@@ -268,16 +259,19 @@ export function WishlistManager() {
                 {requestAdditional.isPending ? "Finding..." : "Request More"}
               </button>
             )}
-          </div>          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">            {assignments?.map((assignment: WishlistAssignment) => {
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {assignments?.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
               // Fix: Only treat as stranger if wishlistDomain is defined and different from userDomain, or if either is missing (but not both missing)
-              const wishlistDomain = (assignment.wishlistOwner as any).domain;
+              const wishlistDomain = (assignment.wishlistOwner as { domain?: string }).domain;
               const wishlistDeptId = assignment.wishlistOwner.department?.id;
               const userDomain = userProfile?.domain;
               const userDeptId = userProfile?.departmentId;
               // Only tag as stranger if both domains are defined and different, or if wishlistDomain is defined and userDomain is missing
-              const isStranger = (wishlistDomain && userDomain && wishlistDomain !== userDomain) || (!userDomain && wishlistDomain);
+              const isStranger = (wishlistDomain && userDomain && wishlistDomain !== userDomain) ?? (!userDomain && wishlistDomain);
               const isCrossDept = !isStranger && wishlistDomain && userDomain && wishlistDomain === userDomain && wishlistDeptId && userDeptId && wishlistDeptId !== userDeptId;
 
               return (
@@ -301,7 +295,7 @@ export function WishlistManager() {
                         <span className="text-pink-600 text-xs font-medium bg-pink-100 px-2 py-1 rounded-full">
                           🎁 Stranger
                         </span>
-                      ) : (isCrossDept && assignment.wishlistOwner.department && assignment.wishlistOwner.department.name) ? (
+                      ) : (isCrossDept && assignment.wishlistOwner.department?.name) ? (
                         <span className="text-purple-600 text-xs font-medium bg-purple-100 px-2 py-1 rounded-full">
                           📍 {assignment.wishlistOwner.department.name}
                         </span>
@@ -315,13 +309,15 @@ export function WishlistManager() {
 
                   <div className="space-y-3">
                     <a
-                      href={assignment.wishlistOwner.amazonWishlistUrl || "#"}
+                      href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block w-full bg-orange-500 hover:bg-orange-600 text-white text-center py-2 px-4 rounded-lg font-medium transition-colors"
                     >
                       🛒 View Wishlist
-                    </a>                    {!hasPurchase && !hasReport && (
+                    </a>
+                    
+                    {!hasPurchase && !hasReport && (
                         <div className="flex gap-2">
                         <button
                           onClick={() => {
@@ -348,12 +344,14 @@ export function WishlistManager() {
                           Issue
                         </button>
                       </div>
-                    )}                    {hasPurchase && assignment.purchases && (
+                    )}
+                    
+                    {hasPurchase && assignment.purchases && (
                       <div className="space-y-2">
                         <div className="text-sm text-gray-600">
                           <div>Purchased: {new Date(assignment.purchases.purchasedAt).toLocaleDateString()}</div>
                           {assignment.purchases.notes && (
-                            <div className="mt-1 italic">"{assignment.purchases.notes}"</div>
+                            <div className="mt-1 italic">&quot;{assignment.purchases.notes}&quot;</div>
                           )}
                         </div>
                         <button
@@ -374,8 +372,8 @@ export function WishlistManager() {
                       <div className="space-y-2">
                         <div className="text-sm text-gray-600">
                           <div>Reported: {formatReportType(assignment.reports[0]!.reportType)}</div>
-                          {assignment.reports[0]!.description && (
-                            <div className="mt-1 italic">"{assignment.reports[0]!.description}"</div>
+                          {assignment.reports[0]?.description && (
+                            <div className="mt-1 italic">&quot;{assignment.reports[0].description}&quot;</div>
                           )}
                         </div>
                         <button
@@ -387,7 +385,7 @@ export function WishlistManager() {
                           disabled={clearReport.isPending}
                           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
                         >
-                          {clearReport.isPending ? "Clearing..." : "It's Fixed"}
+                          {clearReport.isPending ? "Clearing..." : "It&apos;s Fixed"}
                         </button>
                       </div>
                     )}
@@ -458,7 +456,7 @@ export function WishlistManager() {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="NO_ITEMS">Wishlist has no items</option>
-                  <option value="DOESNT_EXIST">Wishlist link doesn't work</option>
+                  <option value="DOESNT_EXIST">Wishlist link doesn&apos;t work</option>
                   <option value="NO_ADDRESS">No shipping address</option>
                   <option value="OTHER">Other issue</option>
                 </select>
@@ -509,20 +507,20 @@ export function WishlistManager() {
             <h3 className="text-xl font-semibold mb-4 text-gray-900">No More Wishlists Available</h3>
             <div className="space-y-4">
               <p className="text-gray-600">
-                We couldn't find any more wishlists from your department to assign to you. 
+                We couldn&apos;t find any more wishlists from your department to assign to you. 
                 This might be because:
               </p>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                 <li>All colleagues in your department already have assignments</li>
-                <li>Some colleagues haven't completed their profiles yet</li>
-                <li>You've already been assigned all available wishlists</li>
+                <li>Some colleagues haven&apos;t completed their profiles yet</li>
+                <li>You&apos;ve already been assigned all available wishlists</li>
               </ul>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800 mb-3">
                   <strong>Would you like to get a wishlist from another department in your company?</strong>
                 </p>
                 <p className="text-xs text-blue-600">
-                  This will be highlighted differently to show it's from a different department.
+                  This will be highlighted differently to show it&apos;s from a different department.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -569,7 +567,7 @@ export function WishlistManager() {
                   disabled={requestCrossDomain?.isPending}
                   className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium"
                 >
-                  {requestCrossDomain?.isPending ? "Finding..." : "Get a Stranger's Wishlist"}
+                  {requestCrossDomain?.isPending ? "Finding..." : "Get a Stranger&apos;s Wishlist"}
                 </button>
                 <button
                   onClick={() => setStrangerModal(false)}

@@ -7,23 +7,32 @@ type UserWithDepartment = User & {
 };
 
 type UserGroupByDomain = {
-  domain: string;
+  domain: string | null;
   _count: {
     id: number;
   };
 };
 
-type WishlistAssignmentWithIncludes = {
+// Specific types for the different query results
+type AssignmentWithOwner = {
   id: string;
   assignedUserId: string;
   wishlistOwnerId: string;
-  purchases: unknown;
-  reports: unknown[];
+  purchases: { id: string; userId: string; wishlistAssignmentId: string; purchasedAt: Date; notes: string | null } | null;
+  reports: Array<{ id: string; userId: string; wishlistAssignmentId: string; reportType: string; description: string | null; reportedAt: Date; resolved: boolean; resolvedAt: Date | null }>;
   wishlistOwner: {
     name: string | null;
     firstName: string | null;
     lastName: string | null;
   };
+};
+
+type AssignmentWithUser = {
+  id: string;
+  assignedUserId: string;
+  wishlistOwnerId: string;
+  purchases: { id: string; userId: string; wishlistAssignmentId: string; purchasedAt: Date; notes: string | null } | null;
+  reports: Array<{ id: string; userId: string; wishlistAssignmentId: string; reportType: string; description: string | null; reportedAt: Date; resolved: boolean; resolvedAt: Date | null }>;
   assignedUser: {
     name: string | null;
     firstName: string | null;
@@ -177,7 +186,7 @@ export const userRouter = createTRPCRouter({
             }
           }
         }
-      }) as WishlistAssignmentWithIncludes[];
+      }) as AssignmentWithOwner[];
 
       // Get user's own wishlist statistics
       const ownWishlistStats = await ctx.db.wishlistAssignment.findMany({
@@ -193,8 +202,7 @@ export const userRouter = createTRPCRouter({
             }
           }
         }
-      }) as WishlistAssignmentWithIncludes[];
-        // Calculate totals
+      }) as AssignmentWithUser[];        // Calculate totals
       const totalAssignments = assignmentStats.length;
       const totalPurchases = assignmentStats.filter((a) => a.purchases).length;
       const totalReports = assignmentStats.reduce((sum: number, a) => sum + a.reports.length, 0);

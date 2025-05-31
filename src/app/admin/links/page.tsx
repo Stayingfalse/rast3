@@ -4,41 +4,68 @@ import { useState, useMemo } from "react";
 import { AdminLayout } from "../../_components/admin-layout";
 import { api } from "../../../trpc/react";
 
-export default function AdminLinksPage() {
-	const [selectedDomain, setSelectedDomain] = useState<string>("all");
+// Define types based on what's returned from the API
+type UserWithWishlist = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  amazonWishlistUrl?: string | null;
+  domain?: string | null;
+  department?: {
+    id: string;
+    name: string;
+  } | null;
+  amazonWishlistUrlStats?: {
+    allocated?: number;
+    purchased?: number;
+    errors?: string[];
+  };
+};
 
-	// Fetch all users with wishlist URLs
-	const { data: users = [], isLoading, isError, error } = api.link.getAll.useQuery();
+type DomainData = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description?: string | null;
+};
+
+type GroupedUsers = Record<string, Record<string, UserWithWishlist[]>>;
+
+export default function AdminLinksPage() {
+	const [selectedDomain, setSelectedDomain] = useState<string>("all");	// Fetch all users with wishlist URLs
+	const { data: users = [], isLoading, isError } = api.link.getAll.useQuery();
 	const { data: domains = [], isLoading: isDomainsLoading } = api.domain.getAll.useQuery();
 
 	// Filter users with wishlist URLs
 	const wishlists = useMemo(() => {
-		return users.filter((u: any) => u.amazonWishlistUrl);
+		return users.filter((u: UserWithWishlist) => u.amazonWishlistUrl);
 	}, [users]);
 
 	// Stats
 	const stats = useMemo(() => {
 		const filtered = selectedDomain === "all"
 			? wishlists
-			: wishlists.filter((u: any) => u.domain === selectedDomain);
+			: wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
 		return {
 			total: filtered.length,
-			domains: Array.from(new Set(wishlists.map((u: any) => u.domain))).length,
-			departments: Array.from(new Set(filtered.map((u: any) => u.department?.name))).length,
+			domains: Array.from(new Set(wishlists.map((u: UserWithWishlist) => u.domain))).length,
+			departments: Array.from(new Set(filtered.map((u: UserWithWishlist) => u.department?.name))).length,
 		};
 	}, [wishlists, selectedDomain]);
 
 	// Group by domain and department
-	const grouped = useMemo(() => {
+	const grouped: GroupedUsers = useMemo(() => {
 		const filtered = selectedDomain === "all"
 			? wishlists
-			: wishlists.filter((u: any) => u.domain === selectedDomain);
-		const result: Record<string, Record<string, any[]>> = {};
+			: wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
+		const result: GroupedUsers = {};
 		for (const user of filtered) {
-			const domain = user.domain || "(No Domain)";
-			const dept = user.department?.name || "(No Department)";
-			if (!result[domain]) result[domain] = {};
-			if (!result[domain][dept]) result[domain][dept] = [];
+			const domain = user.domain ?? "(No Domain)";
+			const dept = user.department?.name ?? "(No Department)";
+			result[domain] ??= {};
+			result[domain][dept] ??= [];
 			result[domain][dept].push(user);
 		}
 		return result;
@@ -48,26 +75,28 @@ export default function AdminLinksPage() {
 	function truncateUrl(url: string, max = 40) {
 		return url.length > max ? url.slice(0, max) + "..." : url;
 	}
-
 	// Row component for each user
-	function WishlistRow({ user }: { user: any }) {
-		const stats = user.amazonWishlistUrlStats || {};
-		const errorCount = stats.errors?.length || 0;
+	function WishlistRow({ user }: { user: UserWithWishlist }) {
+		const stats = user.amazonWishlistUrlStats ?? {};
+		const errorCount = stats.errors?.length ?? 0;
 		const [showErrors, setShowErrors] = useState(false);
 		return (
 			<tr key={user.id} className="hover:bg-white/5">
 				<td className="px-6 py-4 text-white font-medium">
-					{user.firstName || user.name || user.email || user.id}
-				</td>
-				<td className="px-6 py-4">
-					<a
-						href={user.amazonWishlistUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-blue-300 underline break-all"
-					>
-						{truncateUrl(user.amazonWishlistUrl)}
-					</a>
+					{user.firstName ?? user.name ?? user.email ?? user.id}
+				</td>				<td className="px-6 py-4">
+					{user.amazonWishlistUrl ? (
+						<a
+							href={user.amazonWishlistUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-blue-300 underline break-all"
+						>
+							{truncateUrl(user.amazonWishlistUrl)}
+						</a>
+					) : (
+						<span className="text-gray-400">No URL</span>
+					)}
 				</td>
 				<td className="px-6 py-4 text-white text-center">
 					{stats.allocated ?? 1}
@@ -94,10 +123,9 @@ export default function AdminLinksPage() {
 									<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
 								</svg>
 							</button>
-							{showErrors && (
-								<div className="mt-2 bg-red-900/90 text-red-100 rounded p-2 text-xs shadow-lg z-10">
+							{showErrors && (								<div className="mt-2 bg-red-900/90 text-red-100 rounded p-2 text-xs shadow-lg z-10">
 									<ul className="list-disc pl-4">
-										{stats.errors.map((err: string, i: number) => (
+										{stats.errors?.map((err: string, i: number) => (
 											<li key={i}>{err}</li>
 										))}
 									</ul>
@@ -169,8 +197,7 @@ export default function AdminLinksPage() {
 					<div className="flex items-center gap-4">
 						<label htmlFor="domain-filter" className="text-sm font-medium text-white">
 							Filter by Domain:
-						</label>
-						<select
+						</label>						<select
 							id="domain-filter"
 							value={selectedDomain}
 							onChange={e => setSelectedDomain(e.target.value)}
@@ -178,7 +205,7 @@ export default function AdminLinksPage() {
 							disabled={isDomainsLoading}
 						>
 							<option value="all">All Domains</option>
-							{domains.map((domain: any) => (
+							{domains.map((domain: DomainData) => (
 								<option key={domain.name} value={domain.name}>
 									{domain.name} {domain.enabled === false ? "(Disabled)" : ""}
 								</option>
@@ -190,10 +217,9 @@ export default function AdminLinksPage() {
 					</div>
 				</div>
                 {/* Loading/Error States */}
-                {isLoading || isDomainsLoading ? (
-                    <div className="text-white/80 text-center py-8">Loading wishlists...</div>
-                ) : isError ? (
-                    <div className="text-red-400 text-center py-8">Error loading wishlists: {error?.message}</div>
+                {isLoading ?? isDomainsLoading ? (
+                    <div className="text-white/80 text-center py-8">Loading wishlists...</div>                ) : isError ? (
+                    <div className="text-red-400 text-center py-8">Error loading wishlists</div>
                 ) : stats.total === 0 ? (
                     <div className="text-white/60 text-center py-8">No wishlists found.</div>
                 ) : (
@@ -214,9 +240,8 @@ export default function AdminLinksPage() {
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Purchased</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-white/80 uppercase tracking-wider">Errors</th>
                                                     </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-white/10">
-                                                    {users.map((user: any) => (
+                                                </thead>                                                <tbody className="divide-y divide-white/10">
+                                                    {users.map((user: UserWithWishlist) => (
                                                         <WishlistRow key={user.id} user={user} />
                                                     ))}
                                                 </tbody>

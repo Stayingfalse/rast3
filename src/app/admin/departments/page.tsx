@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
-import type { Department, Domain } from "@prisma/client";
 
-type DomainWithCount = Domain & {
-  _count: {
-    departments: number;
-  };
+// Define types based on what's returned from the API
+type Department = {
+  id: string;
+  name: string;
+  domain: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 type DepartmentsByDomain = Record<string, Department[]>;
@@ -55,17 +57,13 @@ function DepartmentManagement() {
       await createDepartmentMutation.mutateAsync({
         name: newDepartmentName.trim(),
         domain: newDepartmentDomain.trim().toLowerCase(),
-      });
-    } catch (error) {
+      });    } catch {
       setIsCreating(false);
     }
   };
   // Group departments by domain
   const departmentsByDomain: DepartmentsByDomain = departments?.reduce((acc: DepartmentsByDomain, dept: Department) => {
-    const domain = dept.domain;
-    if (!acc[domain]) {
-      acc[domain] = [];
-    }
+    const domain = dept.domain;    acc[domain] ??= [];
     acc[domain].push(dept);
     return acc;
   }, {}) ?? {};
@@ -76,8 +74,9 @@ function DepartmentManagement() {
         Department Management
       </h1>      {/* Domain Status Overview */}
       <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
-        <h2 className="mb-4 text-xl font-semibold text-white">Domain Status</h2>        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {domains?.map((domain: DomainWithCount) => (
+        <h2 className="mb-4 text-xl font-semibold text-white">Domain Status</h2>        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {domains?.map((domain) => (
             <div key={domain.id} className="rounded-lg bg-white/5 p-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-white">{domain.name}</h3>
@@ -88,9 +87,9 @@ function DepartmentManagement() {
                 }`}>
                   {domain.enabled ? "Enabled" : "Disabled"}
                 </span>
-              </div>
+              </div>              
               <p className="mt-1 text-sm text-white/60">
-                {domain._count?.departments || 0} departments
+                {(domain as { _count?: { departments: number } })._count?.departments ?? 0} departments
               </p>
               {domain.description && (
                 <p className="mt-1 text-xs text-white/50">{domain.description}</p>
@@ -98,10 +97,8 @@ function DepartmentManagement() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Create New Department */}
-      <div className="mb-8 rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
+      </div>      {/* Create New Department */}
+      <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Department
         </h2>
@@ -116,7 +113,7 @@ function DepartmentManagement() {
                 id="departmentName"
                 value={newDepartmentName}
                 onChange={(e) => setNewDepartmentName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="e.g., Engineering, Marketing, Sales"
                 required
               />
@@ -129,11 +126,11 @@ function DepartmentManagement() {
                 id="departmentDomain"
                 value={newDepartmentDomain}
                 onChange={(e) => setNewDepartmentDomain(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 backdrop-blur-sm px-3 py-2 text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 required
               >
                 <option value="">Select a domain...</option>
-                {domains?.filter((d: any) => d.enabled).map((domain: any) => (
+                {domains?.filter((d) => d.enabled).map((domain) => (
                   <option key={domain.id} value={domain.name} className="bg-gray-800">
                     {domain.name}
                   </option>
@@ -157,14 +154,12 @@ function DepartmentManagement() {
             )}
           </button>
         </form>
-      </div>
-
-      {/* Departments by Domain */}
+      </div>      {/* Departments by Domain */}
       <div className="space-y-6">
         {Object.entries(departmentsByDomain).map(([domainName, depts]) => {
-          const domain = domains?.find((d: any) => d.name === domainName);
+          const domain = domains?.find((d) => d.name === domainName);
           return (
-            <div key={domainName} className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
+            <div key={domainName} className="rounded-lg bg-black/85 backdrop-blur-sm p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">
                   {domainName}
@@ -178,7 +173,7 @@ function DepartmentManagement() {
                 </span>
               </div>
               
-              {(depts as any[]).length > 0 ? (
+              {depts.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-white/20">
                     <thead className="bg-white/5">
@@ -193,9 +188,8 @@ function DepartmentManagement() {
                           Actions
                         </th>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                      {(depts as any[]).map((department: any) => (
+                    </thead>                    <tbody className="divide-y divide-white/10">
+                      {depts.map((department: Department) => (
                         <tr key={department.id}>
                           <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-white">
                             {department.name}

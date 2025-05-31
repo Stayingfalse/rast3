@@ -2,11 +2,11 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Test database connection
-    const userCount = await (db as any).user.count();
-    const departmentCount = await (db as any).department.count();
+    const userCount = await db.user.count();
+    const departmentCount = await db.department.count();
     
     return NextResponse.json({
       status: "healthy",

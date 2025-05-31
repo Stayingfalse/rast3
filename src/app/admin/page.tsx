@@ -3,6 +3,13 @@
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 
+type DomainData = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description?: string | null;
+};
+
 export default function AdminPage() {
   return (
     <AdminLayout>
@@ -31,33 +38,33 @@ function AdminOverview() {
         <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Domains</h3>
           <p className="mt-2 text-3xl font-bold text-white">
-            {domains?.length || 0}
+            {domains?.length ?? 0}
           </p>          <p className="mt-1 text-sm text-white/60">
-            {domains?.filter((d: any) => d.enabled).length || 0} enabled
+            {domains?.filter((d: DomainData) => d.enabled).length ?? 0} enabled
           </p>
         </div>
         
         <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Departments</h3>
           <p className="mt-2 text-3xl font-bold text-white">
-            {departments?.length || 0}
+            {departments?.length ?? 0}
           </p>
         </div>
         
         <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Users</h3>
           <p className="mt-2 text-3xl font-bold text-white">
-            {userStats?.totalUsers || 0}
+            {userStats?.totalUsers ?? 0}
           </p>
           <p className="mt-1 text-sm text-white/60">
-            {userStats?.completedProfiles || 0} profiles completed
+            {userStats?.completedProfiles ?? 0} profiles completed
           </p>
         </div>
         
         <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Pending Profiles</h3>
           <p className="mt-2 text-3xl font-bold text-white">
-            {userStats?.pendingProfiles || 0}
+            {userStats?.pendingProfiles ?? 0}
           </p>
         </div>
       </div>

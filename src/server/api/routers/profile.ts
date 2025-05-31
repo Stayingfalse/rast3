@@ -108,7 +108,7 @@ export const profileRouter = createTRPCRouter({
       // Check if another user already has this work email
       const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
-      }) as User | null;
+      });
       
       if (existingUser && existingUser.id !== ctx.session.user.id) {
         throw new Error("This work email is already registered by another user");
@@ -167,7 +167,7 @@ export const profileRouter = createTRPCRouter({
       // Check if another user already has this work email
       const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
-      }) as User | null;
+      });
       
       if (existingUser && existingUser.id !== ctx.session.user.id) {
         throw new Error("This work email is already registered by another user");

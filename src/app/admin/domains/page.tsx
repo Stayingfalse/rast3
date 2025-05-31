@@ -4,6 +4,19 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 
+// Define types based on what's returned from the API
+type DomainWithCount = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: {
+    departments: number;
+  };
+};
+
 export default function DomainsPage() {
   return (
     <AdminLayout>
@@ -17,7 +30,7 @@ function DomainManagement() {
   const [newDomainDescription, setNewDomainDescription] = useState("");
   const [newDomainEnabled, setNewDomainEnabled] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingDomain, setEditingDomain] = useState<any>(null);
+  const [editingDomain, setEditingDomain] = useState<DomainWithCount | null>(null);
 
   // Get all domains
   const { data: domains, refetch } = api.domain.getAll.useQuery();
@@ -71,8 +84,7 @@ function DomainManagement() {
         name: newDomainName.trim(),
         description: newDomainDescription.trim() || undefined,
         enabled: newDomainEnabled,
-      });
-    } catch (error) {
+      });    } catch {
       setIsCreating(false);
     }
   };
@@ -81,25 +93,22 @@ function DomainManagement() {
     e.preventDefault();
     if (!editingDomain) return;
 
-    try {
-      await updateDomainMutation.mutateAsync({
+    try {      await updateDomainMutation.mutateAsync({
         id: editingDomain.id,
         name: editingDomain.name,
-        description: editingDomain.description,
+        description: editingDomain.description ?? undefined,
         enabled: editingDomain.enabled,
-      });
-    } catch (error) {
+      });    } catch {
       // Error handled in mutation
     }
   };
-
-  const handleDeleteDomain = (domain: any) => {
+  const handleDeleteDomain = (domain: DomainWithCount) => {
     if (confirm(`Are you sure you want to delete the domain "${domain.name}"?`)) {
       deleteDomainMutation.mutate({ id: domain.id });
     }
   };
 
-  const handleToggleEnabled = (domain: any) => {
+  const handleToggleEnabled = (domain: DomainWithCount) => {
     toggleEnabledMutation.mutate({ id: domain.id });
   };
 
@@ -107,10 +116,8 @@ function DomainManagement() {
     <div className="w-full max-w-6xl">
       <h1 className="mb-8 text-3xl font-bold text-white">
         Domain Management
-      </h1>
-
-      {/* Create New Domain */}
-      <div className="mb-8 rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
+      </h1>      {/* Create New Domain */}
+      <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Domain
         </h2>
@@ -119,13 +126,12 @@ function DomainManagement() {
             <div>
               <label htmlFor="domainName" className="block text-sm font-medium text-white">
                 Domain Name *
-              </label>
-              <input
+              </label>              <input
                 type="text"
                 id="domainName"
                 value={newDomainName}
                 onChange={(e) => setNewDomainName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="e.g., company.com, example.org"
                 required
               />
@@ -133,25 +139,23 @@ function DomainManagement() {
             <div>
               <label htmlFor="domainDescription" className="block text-sm font-medium text-white">
                 Description
-              </label>
-              <input
+              </label>              <input
                 type="text"
                 id="domainDescription"
                 value={newDomainDescription}
                 onChange={(e) => setNewDomainDescription(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="Optional description"
               />
             </div>
           </div>
           
-          <div className="flex items-center">
-            <input
+          <div className="flex items-center">            <input
               type="checkbox"
               id="domainEnabled"
               checked={newDomainEnabled}
               onChange={(e) => setNewDomainEnabled(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20  bg-black/85 backdrop-blur-sm text-purple-600 focus:ring-purple-500"
+              className="h-4 w-4 rounded border-white/20 bg-black/85 backdrop-blur-sm text-purple-600 focus:ring-purple-500"
             />
             <label htmlFor="domainEnabled" className="ml-2 text-sm text-white">
               Enable domain immediately
@@ -173,10 +177,8 @@ function DomainManagement() {
             )}
           </button>
         </form>
-      </div>
-
-      {/* Existing Domains */}
-      <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
+      </div>      {/* Existing Domains */}
+      <div className="rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Existing Domains
         </h2>
@@ -202,9 +204,8 @@ function DomainManagement() {
                     Actions
                   </th>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {domains.map((domain: any) => (
+              </thead>              <tbody className="divide-y divide-white/10">
+                {domains.map((domain) => (
                   <tr key={domain.id}>
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-white">
                       {editingDomain?.id === domain.id ? (
@@ -212,7 +213,7 @@ function DomainManagement() {
                           type="text"
                           value={editingDomain.name}
                           onChange={(e) => setEditingDomain({...editingDomain, name: e.target.value})}
-                          className="rounded border border-white/20  bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
+                          className="rounded border border-white/20 bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                         />
                       ) : (
                         domain.name
@@ -222,13 +223,13 @@ function DomainManagement() {
                       {editingDomain?.id === domain.id ? (
                         <input
                           type="text"
-                          value={editingDomain.description || ""}
+                          value={editingDomain.description ?? ""}
                           onChange={(e) => setEditingDomain({...editingDomain, description: e.target.value})}
-                          className="rounded border border-white/20  bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
+                          className="rounded border border-white/20 bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                           placeholder="Description"
                         />
                       ) : (
-                        domain.description || "-"
+                        domain.description ?? "-"
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
@@ -238,7 +239,7 @@ function DomainManagement() {
                             type="checkbox"
                             checked={editingDomain.enabled}
                             onChange={(e) => setEditingDomain({...editingDomain, enabled: e.target.checked})}
-                            className="h-4 w-4 rounded border-white/20  bg-black/85 backdrop-blur-sm text-purple-600"
+                            className="h-4 w-4 rounded border-white/20 bg-black/85 backdrop-blur-sm text-purple-600"
                           />
                           <span className="ml-2 text-white">Enabled</span>
                         </label>
@@ -253,7 +254,7 @@ function DomainManagement() {
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-white/80">
-                      {domain._count?.departments || 0}
+                      {(domain as { _count?: { departments: number } })._count?.departments ?? 0}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                       {editingDomain?.id === domain.id ? (
@@ -274,21 +275,21 @@ function DomainManagement() {
                       ) : (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingDomain(domain)}
+                            onClick={() => setEditingDomain(domain as DomainWithCount)}
                             className="text-blue-400 hover:text-blue-300"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => handleToggleEnabled(domain)}
+                            onClick={() => handleToggleEnabled(domain as DomainWithCount)}
                             className={domain.enabled ? "text-red-400 hover:text-red-300" : "text-green-400 hover:text-green-300"}
                           >
                             {domain.enabled ? "Disable" : "Enable"}
                           </button>
                           <button
-                            onClick={() => handleDeleteDomain(domain)}
+                            onClick={() => handleDeleteDomain(domain as DomainWithCount)}
                             className="text-red-400 hover:text-red-300"
-                            disabled={domain._count?.departments > 0}
+                            disabled={((domain as { _count?: { departments: number } })._count?.departments ?? 0) > 0}
                           >
                             Delete
                           </button>

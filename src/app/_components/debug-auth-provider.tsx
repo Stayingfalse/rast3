@@ -27,12 +27,18 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
     if (isDebugMode) {
       const savedDebugUser = localStorage.getItem("debugUser");
       if (savedDebugUser) {
-        setDebugUser(JSON.parse(savedDebugUser));
+        try {
+          const parsedUser = JSON.parse(savedDebugUser) as DebugUser;
+          setDebugUser(parsedUser);
+        } catch (error) {
+          console.error("Failed to parse debug user from localStorage:", error);
+          localStorage.removeItem("debugUser");
+        }
       }
     }
   }, [isDebugMode]);
 
-  const loginAsDebugUser = async () => {
+  const loginAsDebugUser = () => {
     if (!isDebugMode) return;
 
     const debugUserData: DebugUser = {
@@ -43,21 +49,21 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Create debug user in database
-    try {
-      const response = await fetch("/api/debug-login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    void fetch("/api/debug-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          setDebugUser(debugUserData);
+          localStorage.setItem("debugUser", JSON.stringify(debugUserData));
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to create debug user:", error);
       });
-
-      if (response.ok) {
-        setDebugUser(debugUserData);
-        localStorage.setItem("debugUser", JSON.stringify(debugUserData));
-      }
-    } catch (error) {
-      console.error("Failed to create debug user:", error);
-    }
   };
 
   const logoutDebugUser = () => {

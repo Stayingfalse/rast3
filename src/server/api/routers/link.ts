@@ -46,14 +46,14 @@ export const linkRouter = createTRPCRouter({
     for (const p of purchases) {
       const ownerId = assignmentIdToOwner[p.wishlistAssignmentId];
       if (ownerId) {
-        purchasedCount[ownerId] = (purchasedCount[ownerId] || 0) + p._count.id;
+        purchasedCount[ownerId] = (purchasedCount[ownerId] ?? 0) + p._count.id;
       }
     }
     // Simulate errors for demo: every 4th user gets a fake error
     return users.map((user, idx) => {
       const assignment = assignments.find((a) => a.wishlistOwnerId === user.id);
-      const allocated = assignment?._count.id || 0;
-      const purchased = purchasedCount[user.id] || 0;
+      const allocated = assignment?._count.id ?? 0;
+      const purchased = purchasedCount[user.id] ?? 0;
       const errors = idx % 4 === 3 ? ["Simulated error: Invalid URL"] : [];
       return {
         ...user,

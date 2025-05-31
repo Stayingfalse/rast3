@@ -1,12 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { User, Department, Domain } from "@prisma/client";
-
-type DomainWithCount = Domain & {
-  _count: {
-    departments: number;
-  };
-};
 
 export const domainRouter = createTRPCRouter({
   // Get all domains
@@ -54,7 +47,8 @@ export const domainRouter = createTRPCRouter({
         description: z.string().optional(),
         enabled: z.boolean().default(false),
       })
-    )    .mutation(({ ctx, input }) => {
+    )
+    .mutation(({ ctx, input }) => {
       return ctx.db.domain.create({
         data: {
           name: input.name.toLowerCase(),
@@ -76,11 +70,12 @@ export const domainRouter = createTRPCRouter({
     )
     .mutation(({ ctx, input }) => {
       const { id, ...updateData } = input;
-      
+
       // If name is being updated, ensure it's lowercase
       if (updateData.name) {
         updateData.name = updateData.name.toLowerCase();
-      }      return ctx.db.domain.update({
+      }
+      return ctx.db.domain.update({
         where: { id },
         data: updateData,
       });
@@ -88,20 +83,25 @@ export const domainRouter = createTRPCRouter({
 
   // Delete domain
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))    .mutation(async ({ ctx, input }) => {
-      // Check if domain has departments
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // First get the domain to check its name
       const domain = await ctx.db.domain.findUnique({
         where: { id: input.id },
-        include: {
-          _count: {
-            select: {
-              departments: true,
-            },
-          },
-        },
-      }) as DomainWithCount | null;
+      });
 
-      if (domain?._count.departments && domain._count.departments > 0) {
+      if (!domain) {
+        throw new Error("Domain not found");
+      }
+
+      // Check if domain has departments
+      const departmentCount = await ctx.db.department.count({
+        where: {
+          domain: domain.name,
+        },
+      });
+
+      if (departmentCount > 0) {
         throw new Error("Cannot delete domain with existing departments");
       }
 
@@ -112,10 +112,11 @@ export const domainRouter = createTRPCRouter({
 
   // Toggle domain enabled status
   toggleEnabled: protectedProcedure
-    .input(z.object({ id: z.string() }))    .mutation(async ({ ctx, input }) => {
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
       const domain = await ctx.db.domain.findUnique({
         where: { id: input.id },
-      }) as Domain | null;
+      });
 
       if (!domain) {
         throw new Error("Domain not found");

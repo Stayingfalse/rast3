@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# eslint-disable
+# prettier-ignore
+# vscode-disable-next-line
+# This file is intentionally ignored by VSCode linting and formatting tools
+name: Auto Deploy
+on:
+  push:
+    branches:
+      - main  # Change this if you want to trigger on a different branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Deployment Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -X POST "$WEBHOOK_URL" -H "Content-Type: application/json" -d '{"repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}'

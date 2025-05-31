@@ -42,14 +42,14 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
   }),
 
   // Get statistics about assignments (for admins or debugging)
-  getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {
-    // Get current user for department context
+  getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {    // Get current user for department context
     const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { id: true, departmentId: true },
+      select: { id: true, departmentId: true, domain: true },
     });
     const departmentId = currentUser?.departmentId;
     const userId = currentUser?.id;
+    const domain = currentUser?.domain;
 
     // Total wishlists with a URL (site-wide)
     const totalLinks = await ctx.db.user.count({
@@ -76,6 +76,20 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         },
       },
     });
+
+    // Unallocated wishlists in the current user's domain, EXCLUDING current user's own
+    const unallocatedDomainLinks = domain
+      ? await ctx.db.user.count({
+          where: {
+            amazonWishlistUrl: { not: null },
+            domain,
+            id: { not: userId },
+            ownedWishlist: {
+              none: { isActive: true },
+            },
+          },
+        })
+      : 0;
 
     // Unallocated wishlists in the current user's department, EXCLUDING current user's own
     const unallocatedDepartmentLinks = departmentId

@@ -20,28 +20,37 @@ async function main() {
 
   try {
     switch (command) {
-      case 'status':
+      case 'status':        // Get domain basic info
         const domain = await prisma.domain.findUnique({
           where: { name: domainName },
-          include: {
+          select: {
+            name: true,
+            enabled: true,
+            description: true,
+            createdAt: true,
             createdBy: {
               select: { firstName: true, lastName: true, workEmail: true }
-            },
-            _count: {
-              select: { users: true, departments: true }
             }
           }
         });
-        
+
         if (domain) {
+          // Get counts separately
+          const userCount = await prisma.user.count({
+            where: { domain: domainName }
+          });
+          const departmentCount = await prisma.department.count({
+            where: { domain: domainName }
+          });
+
           console.log('Domain found:');
           console.log(`  Name: ${domain.name}`);
           console.log(`  Enabled: ${domain.enabled}`);
           console.log(`  Description: ${domain.description || 'None'}`);
           console.log(`  Created: ${domain.createdAt}`);
           console.log(`  Created by: ${domain.createdBy ? `${domain.createdBy.firstName} ${domain.createdBy.lastName} (${domain.createdBy.workEmail})` : 'Unknown'}`);
-          console.log(`  Users: ${domain._count.users}`);
-          console.log(`  Departments: ${domain._count.departments}`);
+          console.log(`  Users: ${userCount}`);
+          console.log(`  Departments: ${departmentCount}`);
         } else {
           console.log(`Domain '${domainName}' not found in database.`);
           console.log('This means you should see the domain setup option when signing up.');
@@ -85,9 +94,8 @@ async function main() {
 
       default:
         console.log(`Unknown command: ${command}`);
-    }
-  } catch (error) {
-    console.error('Error:', error.message);
+    }  } catch (error) {
+    console.error('Error:', error instanceof Error ? error.message : String(error));
   } finally {
     await prisma.$disconnect();
   }

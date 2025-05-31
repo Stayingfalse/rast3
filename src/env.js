@@ -16,8 +16,8 @@ export const env = createEnv({
     AUTH_DISCORD_SECRET: z.string(),
     AUTH_TWITCH_ID: z.string().optional(),
     AUTH_TWITCH_SECRET: z.string().optional(),
-    AUTH_LOOPS_KEY: z.string().optional(),
-    AUTH_LOOPS_TRANSACTIONAL_ID: z.string().optional(),
+    AUTH_GITHUB_ID: z.string().optional(),
+    AUTH_GITHUB_SECRET: z.string().optional(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
@@ -44,8 +44,8 @@ export const env = createEnv({
     AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
     AUTH_TWITCH_ID: process.env.AUTH_TWITCH_ID,
     AUTH_TWITCH_SECRET: process.env.AUTH_TWITCH_SECRET,
-    AUTH_LOOPS_KEY: process.env.AUTH_LOOPS_KEY,
-    AUTH_LOOPS_TRANSACTIONAL_ID: process.env.AUTH_LOOPS_TRANSACTIONAL_ID,
+    AUTH_GITHUB_ID: process.env.AUTH_GITHUB_ID,
+    AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
   },

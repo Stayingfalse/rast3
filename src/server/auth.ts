@@ -3,6 +3,7 @@ import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 import Twitch from "next-auth/providers/twitch";
 import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import Email from "next-auth/providers/email";
 import { type DefaultSession } from "next-auth";
 import { LoopsClient } from "loops";
@@ -23,6 +24,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   trustHost: true, // Trust localhost during development
   providers: [
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID!,
+      clientSecret: process.env.AUTH_GITHUB_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
     Discord({
       clientId: process.env.AUTH_DISCORD_ID!,
       clientSecret: process.env.AUTH_DISCORD_SECRET!,

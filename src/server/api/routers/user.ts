@@ -1,16 +1,46 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { User, Department } from "@prisma/client";
+
+type UserWithDepartment = User & {
+  department: Department | null;
+};
+
+type UserGroupByDomain = {
+  domain: string;
+  _count: {
+    id: number;
+  };
+};
+
+type WishlistAssignmentWithIncludes = {
+  id: string;
+  assignedUserId: string;
+  wishlistOwnerId: string;
+  purchases: unknown;
+  reports: unknown[];
+  wishlistOwner: {
+    name: string | null;
+    firstName: string | null;
+    lastName: string | null;
+  };
+  assignedUser: {
+    name: string | null;
+    firstName: string | null;
+    lastName: string | null;
+  };
+};
 
 export const userRouter = createTRPCRouter({
   // Get all users with their profile and domain information
-  getAll: protectedProcedure.query(async ({ ctx }) => {
+  getAll: protectedProcedure.query(async ({ ctx }): Promise<UserWithDepartment[]> => {
     // Get current user
-    const currentUser = await (ctx.db as any).user.findUnique({
+    const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
     });
     if (!currentUser) return [];
 
-    let where = {};
+    let where: Record<string, unknown> = {};
     if (currentUser.adminLevel === "DOMAIN") {
       where = { domain: currentUser.adminScope };
     } else if (currentUser.adminLevel === "DEPARTMENT") {
@@ -18,12 +48,11 @@ export const userRouter = createTRPCRouter({
     }
     // SITE gets all, USER should never reach here
 
-    return (ctx.db as any).user.findMany({
+    return ctx.db.user.findMany({
       where,
       include: {
         department: true,
-      },
-      orderBy: [
+      },      orderBy: [
         { profileCompleted: "asc" },
         { lastName: "asc" },
         { firstName: "asc" },
@@ -33,14 +62,14 @@ export const userRouter = createTRPCRouter({
 
   // Get user statistics
   getStats: protectedProcedure.query(async ({ ctx }) => {
-    const totalUsers = await (ctx.db as any).user.count();
-    const completedProfiles = await (ctx.db as any).user.count({
+    const totalUsers = await ctx.db.user.count();
+    const completedProfiles = await ctx.db.user.count({
       where: { profileCompleted: true },
     });
     const pendingProfiles = totalUsers - completedProfiles;
 
     // Get users by domain
-    const usersByDomain = await (ctx.db as any).user.groupBy({
+    const usersByDomain = await ctx.db.user.groupBy({
       by: ['domain'],
       _count: {
         id: true,
@@ -48,13 +77,11 @@ export const userRouter = createTRPCRouter({
       where: {
         domain: { not: null },
       },
-    });
-
-    return {
+    });    return {
       totalUsers,
       completedProfiles,
       pendingProfiles,
-      usersByDomain: usersByDomain.map((item: any) => ({
+      usersByDomain: usersByDomain.map((item: UserGroupByDomain) => ({
         domain: item.domain,
         count: item._count.id,
       })),
@@ -68,7 +95,7 @@ export const userRouter = createTRPCRouter({
       completed: z.boolean(),
     }))
     .mutation(async ({ ctx, input }) => {
-      return (ctx.db as any).user.update({
+      return ctx.db.user.update({
         where: { id: input.userId },
         data: {
           profileCompleted: input.completed,
@@ -86,9 +113,7 @@ export const userRouter = createTRPCRouter({
       // Don't allow deleting the current user
       if (input.userId === ctx.session.user.id) {
         throw new Error("You cannot delete your own account");
-      }
-
-      return (ctx.db as any).user.delete({
+      }      return ctx.db.user.delete({
         where: { id: input.userId },
       });
     }),
@@ -99,8 +124,7 @@ export const userRouter = createTRPCRouter({
       userId: z.string(),
       departmentId: z.string().nullable(),
     }))
-    .mutation(async ({ ctx, input }) => {
-      return (ctx.db as any).user.update({
+    .mutation(async ({ ctx, input }) => {      return ctx.db.user.update({
         where: { id: input.userId },
         data: {
           departmentId: input.departmentId,
@@ -122,9 +146,7 @@ export const userRouter = createTRPCRouter({
       // Validate that adminScope is provided for DOMAIN and DEPARTMENT levels
       if ((input.adminLevel === "DOMAIN" || input.adminLevel === "DEPARTMENT") && !input.adminScope) {
         throw new Error("Admin scope is required for domain and department admin levels");
-      }
-
-      return (ctx.db as any).user.update({
+      }      return ctx.db.user.update({
         where: { id: input.userId },
         data: {
           adminLevel: input.adminLevel,
@@ -141,9 +163,8 @@ export const userRouter = createTRPCRouter({
     .input(z.object({
       userId: z.string(),
     }))
-    .query(async ({ ctx, input }) => {
-      // Get user's assignment statistics
-      const assignmentStats = await (ctx.db as any).wishlistAssignment.findMany({
+    .query(async ({ ctx, input }) => {      // Get user's assignment statistics
+      const assignmentStats = await ctx.db.wishlistAssignment.findMany({
         where: { assignedUserId: input.userId },
         include: {
           purchases: true,
@@ -156,10 +177,10 @@ export const userRouter = createTRPCRouter({
             }
           }
         }
-      });
+      }) as WishlistAssignmentWithIncludes[];
 
       // Get user's own wishlist statistics
-      const ownWishlistStats = await (ctx.db as any).wishlistAssignment.findMany({
+      const ownWishlistStats = await ctx.db.wishlistAssignment.findMany({
         where: { wishlistOwnerId: input.userId },
         include: {
           purchases: true,
@@ -171,16 +192,16 @@ export const userRouter = createTRPCRouter({
               lastName: true,
             }
           }
-        }      });      
-      
-      // Calculate totals
+        }
+      }) as WishlistAssignmentWithIncludes[];
+        // Calculate totals
       const totalAssignments = assignmentStats.length;
-      const totalPurchases = assignmentStats.filter((a: any) => a.purchases).length;
-      const totalReports = assignmentStats.reduce((sum: number, a: any) => sum + a.reports.length, 0);
+      const totalPurchases = assignmentStats.filter((a) => a.purchases).length;
+      const totalReports = assignmentStats.reduce((sum: number, a) => sum + a.reports.length, 0);
 
       const wishlistAssignedTo = ownWishlistStats.length;
-      const wishlistPurchases = ownWishlistStats.filter((a: any) => a.purchases).length;
-      const wishlistReports = ownWishlistStats.reduce((sum: number, a: any) => sum + a.reports.length, 0);
+      const wishlistPurchases = ownWishlistStats.filter((a) => a.purchases).length;
+      const wishlistReports = ownWishlistStats.reduce((sum: number, a) => sum + a.reports.length, 0);
 
       return {
         assignments: {
@@ -192,12 +213,11 @@ export const userRouter = createTRPCRouter({
           assignedTo: wishlistAssignedTo,
           purchases: wishlistPurchases,
           reports: wishlistReports,
-        },
-        recentActivity: {
-          assignments: assignmentStats.slice(0, 3).map((a: any) => ({
+        },        recentActivity: {
+          assignments: assignmentStats.slice(0, 3).map((a) => ({
             ownerName: a.wishlistOwner.firstName && a.wishlistOwner.lastName 
               ? `${a.wishlistOwner.firstName} ${a.wishlistOwner.lastName}`
-              : a.wishlistOwner.name || "Unknown",
+              : a.wishlistOwner.name ?? "Unknown",
             hasPurchase: !!a.purchases,
             hasReports: a.reports.length > 0,
           })),

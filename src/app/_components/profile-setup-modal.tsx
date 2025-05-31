@@ -100,7 +100,8 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     }
 
     if (formData.amazonWishlistUrl) {
-      const amazonRegex = /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?$/;
+      // Accepts URLs with or without query/fragment
+      const amazonRegex = /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:[?#].*)?$/i;
       if (!amazonRegex.test(formData.amazonWishlistUrl)) {
         newErrors.amazonWishlistUrl = "Must be a valid Amazon UK wishlist URL";
       }
@@ -112,15 +113,26 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
-    }    currentMutation.mutate({
+    }
+    // Trim Amazon wishlist URL to base (remove query/fragment)
+    let trimmedWishlistUrl = formData.amazonWishlistUrl;
+    if (trimmedWishlistUrl) {
+      try {
+        const urlObj = new URL(trimmedWishlistUrl);
+        // Remove query and fragment
+        trimmedWishlistUrl = urlObj.origin + urlObj.pathname;
+      } catch {
+        // fallback: just use the original if parsing fails
+      }
+    }
+    currentMutation.mutate({
       firstName: formData.firstName,
       lastName: formData.lastName,
       workEmail: formData.workEmail,
       departmentId: formData.departmentId || undefined,
-      amazonWishlistUrl: formData.amazonWishlistUrl || undefined,
+      amazonWishlistUrl: trimmedWishlistUrl || undefined,
     });
   };
 
@@ -143,7 +155,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         {/* Domain Disabled Warning */}
         {isDomainDisabled && (

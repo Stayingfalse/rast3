@@ -184,7 +184,7 @@ export default function UsersPage() {
         {/* Statistics Cards */}
         {stats && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -198,7 +198,7 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -212,7 +212,7 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -226,7 +226,7 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -243,7 +243,7 @@ export default function UsersPage() {
         )}
 
         {/* Domain Filter */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg p-4 border border-white/20">
           <div className="flex items-center gap-4">
             <label htmlFor="domain-filter" className="text-sm font-medium text-white">
               Filter by Domain:
@@ -267,7 +267,7 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+        <div className=" bg-black/85 backdrop-blur-sm backdrop-blur-sm rounded-lg border border-white/20">
           <div className="px-6 py-4 border-b border-white/20">
             <h2 className="text-lg font-semibold text-white">Users</h2>
           </div>

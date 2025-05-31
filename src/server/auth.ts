@@ -1,17 +1,19 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import NextAuth from "next-auth"
-import Discord from "next-auth/providers/discord"
-import Twitch from "next-auth/providers/twitch"
-import Google from "next-auth/providers/google"
-import { type DefaultSession } from "next-auth"
-import { db } from "~/server/db"
-import LoopsProvider from "next-auth/providers/loops"
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import NextAuth from "next-auth";
+import Discord from "next-auth/providers/discord";
+import Twitch from "next-auth/providers/twitch";
+import Google from "next-auth/providers/google";
+import { type DefaultSession } from "next-auth";
+import { db } from "~/server/db";
 
+// Augment Session type to include adminLevel and adminScope
 declare module "next-auth" {
   interface Session {
     user: {
-      id: string
-    } & DefaultSession["user"]
+      id: string;
+      adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+      adminScope?: string | null;
+    } & DefaultSession["user"];
   }
 }
 
@@ -41,21 +43,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    // Only use LoopsProvider for magic link login
-    LoopsProvider({
-      apiKey: process.env.AUTH_LOOPS_KEY!,
-      transactionalId: process.env.AUTH_LOOPS_TRANSACTIONAL_ID!,
-      allowDangerousEmailAccountLinking: true,
-    }),
   ],
   callbacks: {
-    session: ({ session, user }: { session: any; user: any }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      // Add adminLevel and adminScope to session.user if present
+      const { id, adminLevel, adminScope } = user as {
+        id: string;
+        adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+        adminScope?: string | null;
+      };
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id,
+          adminLevel,
+          adminScope,
+        },
+      };
+    },
   },
   debug: process.env.NODE_ENV === "development",
 });

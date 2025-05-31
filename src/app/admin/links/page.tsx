@@ -123,7 +123,7 @@ export default function AdminLinksPage() {
 
 				{/* Stats Cards */}
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-					<div className="bg-white/10 rounded-lg p-4 border border-white/20">
+					<div className=" bg-black/85 backdrop-blur-sm rounded-lg p-4 border border-white/20">
 						<div className="flex items-center">
 							<div className="flex-shrink-0">
 								<svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -136,7 +136,7 @@ export default function AdminLinksPage() {
 							</div>
 						</div>
 					</div>
-					<div className="bg-white/10 rounded-lg p-4 border border-white/20">
+					<div className=" bg-black/85 backdrop-blur-sm rounded-lg p-4 border border-white/20">
 						<div className="flex items-center">
 							<div className="flex-shrink-0">
 								<svg className="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -149,7 +149,7 @@ export default function AdminLinksPage() {
 							</div>
 						</div>
 					</div>
-					<div className="bg-white/10 rounded-lg p-4 border border-white/20">
+					<div className=" bg-black/85 backdrop-blur-sm rounded-lg p-4 border border-white/20">
 						<div className="flex items-center">
 							<div className="flex-shrink-0">
 								<svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -165,7 +165,7 @@ export default function AdminLinksPage() {
 				</div>
 
 				{/* Domain Filter */}
-				<div className="bg-white/10 rounded-lg p-4 border border-white/20">
+				<div className=" bg-black/85 backdrop-blur-sm rounded-lg p-4 border border-white/20">
 					<div className="flex items-center gap-4">
 						<label htmlFor="domain-filter" className="text-sm font-medium text-white">
 							Filter by Domain:
@@ -204,7 +204,7 @@ export default function AdminLinksPage() {
                                 {Object.entries(depts).map(([dept, users]) => (
                                     <div key={dept} className="mb-6">
                                         <h3 className="text-lg font-medium text-white/80 mb-1">{dept}</h3>
-                                        <div className="bg-white/10 rounded-lg border border-white/20 overflow-x-auto">
+                                        <div className=" bg-black/85 backdrop-blur-sm rounded-lg border border-white/20 overflow-x-auto">
                                             <table className="min-w-full divide-y divide-white/10">
                                                 <thead className="bg-white/5">
                                                     <tr>

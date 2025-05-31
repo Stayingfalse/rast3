@@ -1,10 +1,17 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { User, Department, Domain } from "@prisma/client";
+
+type DomainWithCount = Domain & {
+  _count: {
+    departments: number;
+  };
+};
 
 export const domainRouter = createTRPCRouter({
   // Get all domains
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    const currentUser = await (ctx.db as any).user.findUnique({
+    const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
     });
     if (!currentUser) return [];
@@ -14,8 +21,8 @@ export const domainRouter = createTRPCRouter({
       where = { name: currentUser.adminScope };
     } else if (currentUser.adminLevel === "DEPARTMENT") {
       // Find department to get domain
-      const dept = await (ctx.db as any).department.findUnique({
-        where: { id: currentUser.adminScope },
+      const dept = await ctx.db.department.findUnique({
+        where: { id: currentUser.adminScope ?? "" },
       });
       if (dept) {
         where = { name: dept.domain };
@@ -25,17 +32,16 @@ export const domainRouter = createTRPCRouter({
     }
     // SITE gets all, USER should never reach here
 
-    return (ctx.db as any).domain.findMany({
+    return ctx.db.domain.findMany({
       where,
       orderBy: { name: "asc" },
     });
   }),
-
   // Get domain by name
   getByName: protectedProcedure
     .input(z.object({ name: z.string() }))
     .query(({ ctx, input }) => {
-      return (ctx.db as any).domain.findUnique({
+      return ctx.db.domain.findUnique({
         where: { name: input.name },
       });
     }),
@@ -48,9 +54,8 @@ export const domainRouter = createTRPCRouter({
         description: z.string().optional(),
         enabled: z.boolean().default(false),
       })
-    )
-    .mutation(({ ctx, input }) => {
-      return (ctx.db as any).domain.create({
+    )    .mutation(({ ctx, input }) => {
+      return ctx.db.domain.create({
         data: {
           name: input.name.toLowerCase(),
           description: input.description,
@@ -75,9 +80,7 @@ export const domainRouter = createTRPCRouter({
       // If name is being updated, ensure it's lowercase
       if (updateData.name) {
         updateData.name = updateData.name.toLowerCase();
-      }
-
-      return (ctx.db as any).domain.update({
+      }      return ctx.db.domain.update({
         where: { id },
         data: updateData,
       });
@@ -85,10 +88,9 @@ export const domainRouter = createTRPCRouter({
 
   // Delete domain
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
+    .input(z.object({ id: z.string() }))    .mutation(async ({ ctx, input }) => {
       // Check if domain has departments
-      const domain = await (ctx.db as any).domain.findUnique({
+      const domain = await ctx.db.domain.findUnique({
         where: { id: input.id },
         include: {
           _count: {
@@ -97,30 +99,29 @@ export const domainRouter = createTRPCRouter({
             },
           },
         },
-      });
+      }) as DomainWithCount | null;
 
-      if (domain?._count.departments > 0) {
+      if (domain?._count.departments && domain._count.departments > 0) {
         throw new Error("Cannot delete domain with existing departments");
       }
 
-      return (ctx.db as any).domain.delete({
+      return ctx.db.domain.delete({
         where: { id: input.id },
       });
     }),
 
   // Toggle domain enabled status
   toggleEnabled: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const domain = await (ctx.db as any).domain.findUnique({
+    .input(z.object({ id: z.string() }))    .mutation(async ({ ctx, input }) => {
+      const domain = await ctx.db.domain.findUnique({
         where: { id: input.id },
-      });
+      }) as Domain | null;
 
       if (!domain) {
         throw new Error("Domain not found");
       }
 
-      return (ctx.db as any).domain.update({
+      return ctx.db.domain.update({
         where: { id: input.id },
         data: { enabled: !domain.enabled },
       });

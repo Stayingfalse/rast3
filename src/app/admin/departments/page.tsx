@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
+import type { Department, Domain } from "@prisma/client";
+
+type DomainWithCount = Domain & {
+  _count: {
+    departments: number;
+  };
+};
+
+type DepartmentsByDomain = Record<string, Department[]>;
 
 export default function DepartmentsPage() {
   return (
@@ -51,28 +60,24 @@ function DepartmentManagement() {
       setIsCreating(false);
     }
   };
-
   // Group departments by domain
-  const departmentsByDomain = departments?.reduce((acc: any, dept: any) => {
-    const domain = dept.domainName || dept.domain;
+  const departmentsByDomain: DepartmentsByDomain = departments?.reduce((acc: DepartmentsByDomain, dept: Department) => {
+    const domain = dept.domain;
     if (!acc[domain]) {
       acc[domain] = [];
     }
     acc[domain].push(dept);
     return acc;
-  }, {}) || {};
+  }, {}) ?? {};
 
   return (
     <div className="w-full max-w-6xl">
       <h1 className="mb-8 text-3xl font-bold text-white">
         Department Management
-      </h1>
-
-      {/* Domain Status Overview */}
-      <div className="mb-8 rounded-lg bg-white/10 p-6 backdrop-blur-sm">
-        <h2 className="mb-4 text-xl font-semibold text-white">Domain Status</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {domains?.map((domain: any) => (
+      </h1>      {/* Domain Status Overview */}
+      <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
+        <h2 className="mb-4 text-xl font-semibold text-white">Domain Status</h2>        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {domains?.map((domain: DomainWithCount) => (
             <div key={domain.id} className="rounded-lg bg-white/5 p-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-white">{domain.name}</h3>
@@ -96,7 +101,7 @@ function DepartmentManagement() {
       </div>
 
       {/* Create New Department */}
-      <div className="mb-8 rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+      <div className="mb-8 rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Department
         </h2>
@@ -111,7 +116,7 @@ function DepartmentManagement() {
                 id="departmentName"
                 value={newDepartmentName}
                 onChange={(e) => setNewDepartmentName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="e.g., Engineering, Marketing, Sales"
                 required
               />
@@ -124,7 +129,7 @@ function DepartmentManagement() {
                 id="departmentDomain"
                 value={newDepartmentDomain}
                 onChange={(e) => setNewDepartmentDomain(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 required
               >
                 <option value="">Select a domain...</option>
@@ -159,7 +164,7 @@ function DepartmentManagement() {
         {Object.entries(departmentsByDomain).map(([domainName, depts]) => {
           const domain = domains?.find((d: any) => d.name === domainName);
           return (
-            <div key={domainName} className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+            <div key={domainName} className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">
                   {domainName}

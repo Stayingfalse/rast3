@@ -175,26 +175,61 @@ export function WishlistManager() {
         
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-green-50 p-3 rounded-lg z-50">
+            <div className="bg-green-50 p-3 rounded-lg z-40">
               <div className="text-2xl font-bold text-green-600">{stats.totalLinks ?? "-"}</div>
               <div className="text-sm text-green-700">Total Links</div>
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg z-50">
+            <div className="bg-blue-50 p-3 rounded-lg z-40">
               <div className="text-2xl font-bold text-blue-600">{stats.departmentLinks ?? "-"}</div>
               <div className="text-sm text-blue-700">Links in Your Department</div>
             </div>
-            <div className="bg-orange-50 p-3 rounded-lg z-50">
+            <div className="bg-orange-50 p-3 rounded-lg z-40">
               <div className="text-2xl font-bold text-orange-600">{stats.unallocatedLinks ?? "-"}</div>
               <div className="text-sm text-orange-700">Unallocated Links</div>
             </div>
-            <div className="bg-purple-50 p-3 rounded-lg z-50">
+            <div className="bg-purple-50 p-3 rounded-lg z-40">
               <div className="text-2xl font-bold text-purple-600">{stats.unallocatedDepartmentLinks ?? "-"}</div>
               <div className="text-sm text-purple-700">Unallocated in Your Dept</div>
             </div>
           </div>
         )}
-      </div>      {/* Request Initial Assignments */}
-      {(!assignments || assignments.length === 0) && (
+      </div>      {/* Request Initial Assignments or Waiting for Users */}
+      {(!assignments || assignments.length === 0) && stats && (stats.totalLinks < 10 && stats.departmentLinks < 2) ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6 text-center">
+          <h2 className="text-2xl font-semibold text-yellow-800 mb-4">Waiting for More Participants</h2>
+          <p className="text-yellow-700 mb-4">
+            There aren't enough wishlists or participants yet to get started. Please check back later when more people have joined and set up their profiles!
+          </p>
+          <div className="mb-2 text-sm text-yellow-700">Help spread the word:</div>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <a
+              href={`mailto:?subject=Join%20our%20Secret%20Santa!&body=Sign%20up%20for%20Secret%20Santa%20here:%20${encodeURIComponent(window.location.origin)}`}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Invite by Email
+            </a>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent('Join our Secret Santa! Sign up here: ' + window.location.origin)}`}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Share on WhatsApp
+            </a>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.origin);
+                alert('Link copied!');
+              }}
+              className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              Copy Signup Link
+            </button>
+          </div>
+        </div>
+      ) : (!assignments || assignments.length === 0) && (
         <div className="bg-gradient-to-r from-red-50 to-green-50 rounded-lg shadow-md p-6 text-center">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🎁 Get Started!</h2>
           <p className="text-gray-600 mb-6">

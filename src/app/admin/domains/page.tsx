@@ -110,7 +110,7 @@ function DomainManagement() {
       </h1>
 
       {/* Create New Domain */}
-      <div className="mb-8 rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+      <div className="mb-8 rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Domain
         </h2>
@@ -125,7 +125,7 @@ function DomainManagement() {
                 id="domainName"
                 value={newDomainName}
                 onChange={(e) => setNewDomainName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="e.g., company.com, example.org"
                 required
               />
@@ -139,7 +139,7 @@ function DomainManagement() {
                 id="domainDescription"
                 value={newDomainDescription}
                 onChange={(e) => setNewDomainDescription(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="mt-1 block w-full rounded-md border border-white/20  bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
                 placeholder="Optional description"
               />
             </div>
@@ -151,7 +151,7 @@ function DomainManagement() {
               id="domainEnabled"
               checked={newDomainEnabled}
               onChange={(e) => setNewDomainEnabled(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-white/10 text-purple-600 focus:ring-purple-500"
+              className="h-4 w-4 rounded border-white/20  bg-black/85 backdrop-blur-sm text-purple-600 focus:ring-purple-500"
             />
             <label htmlFor="domainEnabled" className="ml-2 text-sm text-white">
               Enable domain immediately
@@ -176,7 +176,7 @@ function DomainManagement() {
       </div>
 
       {/* Existing Domains */}
-      <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+      <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Existing Domains
         </h2>
@@ -212,7 +212,7 @@ function DomainManagement() {
                           type="text"
                           value={editingDomain.name}
                           onChange={(e) => setEditingDomain({...editingDomain, name: e.target.value})}
-                          className="rounded border border-white/20 bg-white/10 px-2 py-1 text-white"
+                          className="rounded border border-white/20  bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                         />
                       ) : (
                         domain.name
@@ -224,7 +224,7 @@ function DomainManagement() {
                           type="text"
                           value={editingDomain.description || ""}
                           onChange={(e) => setEditingDomain({...editingDomain, description: e.target.value})}
-                          className="rounded border border-white/20 bg-white/10 px-2 py-1 text-white"
+                          className="rounded border border-white/20  bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                           placeholder="Description"
                         />
                       ) : (
@@ -238,7 +238,7 @@ function DomainManagement() {
                             type="checkbox"
                             checked={editingDomain.enabled}
                             onChange={(e) => setEditingDomain({...editingDomain, enabled: e.target.checked})}
-                            className="h-4 w-4 rounded border-white/20 bg-white/10 text-purple-600"
+                            className="h-4 w-4 rounded border-white/20  bg-black/85 backdrop-blur-sm text-purple-600"
                           />
                           <span className="ml-2 text-white">Enabled</span>
                         </label>

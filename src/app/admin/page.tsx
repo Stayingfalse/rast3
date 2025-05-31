@@ -28,7 +28,7 @@ function AdminOverview() {
 
       {/* Statistics Cards */}
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+        <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Domains</h3>
           <p className="mt-2 text-3xl font-bold text-white">
             {domains?.length || 0}
@@ -37,14 +37,14 @@ function AdminOverview() {
           </p>
         </div>
         
-        <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+        <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Departments</h3>
           <p className="mt-2 text-3xl font-bold text-white">
             {departments?.length || 0}
           </p>
         </div>
         
-        <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+        <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Total Users</h3>
           <p className="mt-2 text-3xl font-bold text-white">
             {userStats?.totalUsers || 0}
@@ -54,7 +54,7 @@ function AdminOverview() {
           </p>
         </div>
         
-        <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+        <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
           <h3 className="text-sm font-medium text-white/80">Pending Profiles</h3>
           <p className="mt-2 text-3xl font-bold text-white">
             {userStats?.pendingProfiles || 0}
@@ -99,7 +99,7 @@ function AdminOverview() {
       </div>
 
       {/* Recent Activity or Alerts */}
-      <div className="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
+      <div className="rounded-lg  bg-black/85 backdrop-blur-sm p-6 backdrop-blur-sm">
         <h2 className="mb-4 text-xl font-semibold text-white">System Status</h2>
         <div className="space-y-2">
           <div className="flex items-center justify-between">

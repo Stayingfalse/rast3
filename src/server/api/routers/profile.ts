@@ -1,29 +1,38 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { User, Department } from "@prisma/client";
+
+type UserWithDepartment = User & {
+  department: Department | null;
+};
+
+type DomainStatus = {
+  enabled: boolean;
+};
 
 // Amazon UK wishlist URL regex
 const amazonWishlistRegex =   /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
 
-export const profileRouter = createTRPCRouter({  // Get current user's profile with domain status
+export const profileRouter = createTRPCRouter({
+  // Get current user's profile with domain status
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
-    const user = await (ctx.db as any).user.findUnique({
+    const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       include: {
         department: true,
       },
-    });
+    }) as UserWithDepartment | null;
 
     if (!user) return null;
 
     // Get domain status if user has a domain
     let domainEnabled = null;
     if (user.domain) {
-      const domain = await (ctx.db as any).domain.findUnique({
+      const domain = await ctx.db.domain.findUnique({
         where: { name: user.domain },
         select: { enabled: true },
-      });
-      domainEnabled = domain?.enabled ?? false;
-    }
+      }) as DomainStatus | null;
+      domainEnabled = domain?.enabled ?? false;    }
 
     return {
       ...user,
@@ -31,14 +40,15 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
       adminLevel: user.adminLevel,
       adminScope: user.adminScope,
     };
-  }),  // Check if a domain is enabled
+  }),
+
+  // Check if a domain is enabled
   checkDomainStatus: protectedProcedure
-    .input(z.object({ domain: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const domain = await (ctx.db as any).domain.findUnique({
+    .input(z.object({ domain: z.string() }))    .query(async ({ ctx, input }) => {
+      const domain = await ctx.db.domain.findUnique({
         where: { name: input.domain },
         select: { enabled: true },
-      });
+      }) as DomainStatus | null;
       
       return {
         exists: !!domain,
@@ -51,18 +61,15 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
     .input(z.object({ domain: z.string() }))
     .query(({ ctx, input }) => {
       // If domain is "all", return all departments
-      if (input.domain === "all") {
-        return (ctx.db as any).department.findMany({
-          orderBy: [{ domain: "asc" }, { name: "asc" }],
-        });
-      }
-      
-      return (ctx.db as any).department.findMany({
+      if (input.domain === "all") {      return ctx.db.department.findMany({
+        orderBy: [{ domain: "asc" }, { name: "asc" }],
+      });
+      }      
+      return ctx.db.department.findMany({
         where: { domain: input.domain },
         orderBy: { name: "asc" },
       });
     }),
-
   // Complete profile setup
   completeProfile: protectedProcedure
     .input(
@@ -88,10 +95,10 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
       
       // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await (ctx.db as any).domain.findUnique({
+        const domainRecord = await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        });
+        }) as DomainStatus | null;
         
         if (domainRecord && !domainRecord.enabled) {
           throw new Error("Your organization's domain is currently disabled. Please contact your manager for access.");
@@ -99,15 +106,13 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
       }
       
       // Check if another user already has this work email
-      const existingUser = await (ctx.db as any).user.findUnique({
+      const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
-      });
+      }) as User | null;
       
       if (existingUser && existingUser.id !== ctx.session.user.id) {
         throw new Error("This work email is already registered by another user");
-      }
-
-      return (ctx.db as any).user.update({
+      }      return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           firstName,
@@ -147,13 +152,12 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
       
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
-      
-      // Check if domain exists and is enabled
+        // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await (ctx.db as any).domain.findUnique({
+        const domainRecord = await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        });
+        }) as DomainStatus | null;
         
         if (domainRecord && !domainRecord.enabled) {
           throw new Error("Your organization's domain is currently disabled. Please contact your manager for access.");
@@ -161,15 +165,15 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
       }
       
       // Check if another user already has this work email
-      const existingUser = await (ctx.db as any).user.findUnique({
+      const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
-      });
+      }) as User | null;
       
       if (existingUser && existingUser.id !== ctx.session.user.id) {
         throw new Error("This work email is already registered by another user");
       }
 
-      return (ctx.db as any).user.update({
+      return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           firstName,
@@ -192,9 +196,8 @@ export const profileRouter = createTRPCRouter({  // Get current user's profile w
         name: z.string().min(1, "Department name is required"),
         domain: z.string().min(1, "Domain is required"),
       })
-    )
-    .mutation(({ ctx, input }) => {
-      return (ctx.db as any).department.create({
+    )    .mutation(({ ctx, input }) => {
+      return ctx.db.department.create({
         data: input,
       });
     }),

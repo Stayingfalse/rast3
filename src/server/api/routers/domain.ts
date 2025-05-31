@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { PrismaClient } from "@prisma/client";
 
-export const domainRouter = createTRPCRouter({
-  // Get all domains
+export const domainRouter = createTRPCRouter({  // Get all domains
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
@@ -27,6 +27,21 @@ export const domainRouter = createTRPCRouter({
 
     return ctx.db.domain.findMany({
       where,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            departments: true,
+          },
+        },
+      },
       orderBy: { name: "asc" },
     });
   }),
@@ -38,7 +53,6 @@ export const domainRouter = createTRPCRouter({
         where: { name: input.name },
       });
     }),
-
   // Create domain
   create: protectedProcedure
     .input(
@@ -54,8 +68,49 @@ export const domainRouter = createTRPCRouter({
           name: input.name.toLowerCase(),
           description: input.description,
           enabled: input.enabled,
+          createdById: ctx.session.user.id,
         },
       });
+    }),  // Create domain and become domain admin (for new users)
+  createAndBecomeDomainAdmin: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Domain name is required"),
+        description: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const domainName = input.name.toLowerCase();
+      
+      // Check if domain already exists
+      const existingDomain = await ctx.db.domain.findUnique({
+        where: { name: domainName },
+      });
+      
+      if (existingDomain) {
+        throw new Error("Domain already exists");
+      }
+      
+      // Create the domain
+      const domain = await ctx.db.domain.create({
+        data: {
+          name: domainName,
+          description: input.description,
+          enabled: true, // Auto-enable when user creates it
+          createdById: ctx.session.user.id,
+        },
+      });
+      
+      // Make the user a domain admin
+      const updatedUser = await ctx.db.user.update({
+        where: { id: ctx.session.user.id },
+        data: {
+          adminLevel: "DOMAIN",
+          adminScope: domainName,
+        },
+      });
+      
+      return { domain, user: updatedUser };
     }),
 
   // Update domain

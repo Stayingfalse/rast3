@@ -30,8 +30,10 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   });
   
   const [domain, setDomain] = useState("");
+  const [domainDescription, setDomainDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forceEditEmail, setForceEditEmail] = useState(false);
+  const [showDomainSetup, setShowDomainSetup] = useState(false);
   const isEditing = existingProfile?.profileCompleted ?? false;
 
   // Initialize form data with existing profile when modal opens
@@ -46,12 +48,18 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       });
     }
   }, [isOpen, existingProfile]);
-
   // Get departments for the domain
   const { data: departments = [] } = api.profile.getDepartmentsByDomain.useQuery(
     { domain },
     { enabled: !!domain }
   );
+
+  // Check domain status
+  const { data: domainStatus } = api.profile.checkDomainStatus.useQuery(
+    { domain },
+    { enabled: !!domain && !isEditing }
+  );
+
   const completeProfileMutation = api.profile.completeProfile.useMutation({
     onSuccess: () => {
       onComplete();
@@ -60,7 +68,6 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       setErrors({ submit: error.message });
     },
   });
-
   const updateProfileMutation = api.profile.updateProfile.useMutation({
     onSuccess: () => {
       onComplete();
@@ -70,8 +77,16 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     },
   });
 
-  const currentMutation = isEditing ? updateProfileMutation : completeProfileMutation;
+  const setupNewDomainMutation = api.profile.setupNewDomain.useMutation({
+    onSuccess: () => {
+      onComplete();
+    },
+    onError: (error) => {
+      setErrors({ submit: error.message });
+    },
+  });
 
+  const currentMutation = showDomainSetup ? setupNewDomainMutation : (isEditing ? updateProfileMutation : completeProfileMutation);
   // Extract domain when work email changes
   useEffect(() => {
     if (formData.workEmail?.includes("@")) {
@@ -81,6 +96,9 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       setDomain("");
     }
   }, [formData.workEmail]);
+
+  // Show domain setup option when domain doesn't exist
+  const shouldShowDomainSetup = !isEditing && domain && domainStatus && !domainStatus.exists;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -110,7 +128,6 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -127,13 +144,25 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
         // fallback: just use the original if parsing fails
       }
     }
-    currentMutation.mutate({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      workEmail: formData.workEmail,
-      departmentId: formData.departmentId ?? undefined,
-      amazonWishlistUrl: trimmedWishlistUrl ?? undefined,
-    });
+
+    if (showDomainSetup) {
+      setupNewDomainMutation.mutate({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        workEmail: formData.workEmail,
+        departmentId: formData.departmentId ?? undefined,
+        amazonWishlistUrl: trimmedWishlistUrl ?? undefined,
+        domainDescription: domainDescription ?? undefined,
+      });
+    } else {
+      currentMutation.mutate({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        workEmail: formData.workEmail,
+        departmentId: formData.departmentId ?? undefined,
+        amazonWishlistUrl: trimmedWishlistUrl ?? undefined,
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -153,9 +182,8 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   if (!existingProfile && isOpen) {
     return <Preloader message="Loading your profile..." />;
   }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         {/* Domain Disabled Warning */}
         {isDomainDisabled && (
@@ -265,9 +293,82 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
             />
             {errors.workEmail && (
               <p className="mt-1 text-sm text-red-600">{errors.workEmail}</p>
-            )}
-            {domain && (
+            )}            {domain && (
               <p className="mt-1 text-sm text-gray-500">Domain: {domain}</p>
+            )}
+            
+            {/* Domain Setup Option */}
+            {shouldShowDomainSetup && !showDomainSetup && (
+              <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-blue-800">New Domain Detected</h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>The domain &quot;{domain}&quot; doesn&apos;t exist in our system yet.</p>
+                      <p className="mt-1">You can set it up and become the domain administrator.</p>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        type="button"
+                        className="inline-block rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 font-medium shadow-sm"
+                        onClick={() => setShowDomainSetup(true)}
+                      >
+                        Set Up Domain & Become Admin
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-block rounded bg-white border border-blue-300 px-3 py-1 text-xs text-blue-700 hover:bg-blue-50 font-medium shadow-sm"
+                        onClick={() => {
+                          setForceEditEmail(true);
+                          setErrors({});
+                        }}
+                      >
+                        Use Different Email
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Domain Setup Form */}
+            {showDomainSetup && (
+              <div className="mt-3 rounded-lg bg-green-50 border border-green-200 p-4">
+                <h4 className="text-sm font-medium text-green-800 mb-3">Setting up domain: {domain}</h4>
+                <div>
+                  <label htmlFor="domainDescription" className="block text-sm font-medium text-gray-700">
+                    Domain Description (Optional)
+                  </label>
+                  <textarea
+                    id="domainDescription"
+                    value={domainDescription}
+                    onChange={(e) => setDomainDescription(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Brief description of your organization..."
+                    rows={2}
+                  />
+                </div>
+                <div className="mt-3 text-xs text-green-700">
+                  <p>• You will become the domain administrator</p>
+                  <p>• You can manage users and departments for this domain</p>
+                  <p>• Other users with {domain} emails can join your organization</p>
+                </div>
+                <button
+                  type="button"
+                  className="mt-3 inline-block rounded bg-gray-200 border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-300 font-medium shadow-sm"
+                  onClick={() => {
+                    setShowDomainSetup(false);
+                    setDomainDescription("");
+                  }}
+                >
+                  Cancel Domain Setup
+                </button>
+              </div>
             )}
           </div>
 
@@ -334,16 +435,15 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
               >
                 {isDomainDisabled ? "Close" : "Cancel"}
               </button>
-            )}
-            {!isDomainDisabled && (
+            )}            {!isDomainDisabled && (
               <button
                 type="submit"
                 disabled={currentMutation.isPending}
                 className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {currentMutation.isPending 
-                  ? (isEditing ? "Updating..." : "Completing...") 
-                  : (isEditing ? "Update Profile" : "Complete Profile")
+                  ? (showDomainSetup ? "Setting up domain..." : (isEditing ? "Updating..." : "Completing...")) 
+                  : (showDomainSetup ? "Set Up Domain & Complete Profile" : (isEditing ? "Update Profile" : "Complete Profile"))
                 }
               </button>
             )}

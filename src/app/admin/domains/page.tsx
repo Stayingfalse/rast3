@@ -12,6 +12,12 @@ type DomainWithCount = {
   description?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  createdBy?: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  } | null;
   _count: {
     departments: number;
   };
@@ -196,35 +202,35 @@ function DomainManagement() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
                     Status
+                  </th>                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
+                    Departments
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
-                    Departments
+                    Created By
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
                     Actions
                   </th>
                 </tr>
               </thead>              <tbody className="divide-y divide-white/10">
-                {domains.map((domain) => (
+                {domains.map((domain: DomainWithCount) => (
                   <tr key={domain.id}>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-white">
-                      {editingDomain?.id === domain.id ? (
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-white">                      {editingDomain?.id === domain.id ? (
                         <input
                           type="text"
                           value={editingDomain.name}
-                          onChange={(e) => setEditingDomain({...editingDomain, name: e.target.value})}
+                          onChange={(e) => editingDomain && setEditingDomain({...editingDomain, name: e.target.value})}
                           className="rounded border border-white/20 bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                         />
                       ) : (
                         domain.name
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/80">
-                      {editingDomain?.id === domain.id ? (
+                    <td className="px-6 py-4 text-sm text-white/80">                      {editingDomain?.id === domain.id ? (
                         <input
                           type="text"
                           value={editingDomain.description ?? ""}
-                          onChange={(e) => setEditingDomain({...editingDomain, description: e.target.value})}
+                          onChange={(e) => editingDomain && setEditingDomain({...editingDomain, description: e.target.value})}
                           className="rounded border border-white/20 bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
                           placeholder="Description"
                         />
@@ -233,12 +239,11 @@ function DomainManagement() {
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
-                      {editingDomain?.id === domain.id ? (
-                        <label className="flex items-center">
+                      {editingDomain?.id === domain.id ? (                        <label className="flex items-center">
                           <input
                             type="checkbox"
                             checked={editingDomain.enabled}
-                            onChange={(e) => setEditingDomain({...editingDomain, enabled: e.target.checked})}
+                            onChange={(e) => editingDomain && setEditingDomain({...editingDomain, enabled: e.target.checked})}
                             className="h-4 w-4 rounded border-white/20 bg-black/85 backdrop-blur-sm text-purple-600"
                           />
                           <span className="ml-2 text-white">Enabled</span>
@@ -252,9 +257,24 @@ function DomainManagement() {
                           {domain.enabled ? "Enabled" : "Disabled"}
                         </span>
                       )}
+                    </td>                    <td className="whitespace-nowrap px-6 py-4 text-sm text-white/80">
+                      {domain._count?.departments ?? 0}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-white/80">
-                      {(domain as { _count?: { departments: number } })._count?.departments ?? 0}
+                    <td className="px-6 py-4 text-sm text-white/80">
+                      {domain.createdBy ? (
+                        <div>
+                          <div className="font-medium">
+                            {domain.createdBy.firstName} {domain.createdBy.lastName}
+                          </div>
+                          {domain.createdBy.email && (
+                            <div className="text-xs text-white/60">
+                              {domain.createdBy.email}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-white/40 italic">Unknown</span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                       {editingDomain?.id === domain.id ? (
@@ -272,24 +292,23 @@ function DomainManagement() {
                             Cancel
                           </button>
                         </div>
-                      ) : (
-                        <div className="flex gap-2">
+                      ) : (                        <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingDomain(domain as DomainWithCount)}
+                            onClick={() => setEditingDomain(domain)}
                             className="text-blue-400 hover:text-blue-300"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => handleToggleEnabled(domain as DomainWithCount)}
+                            onClick={() => handleToggleEnabled(domain)}
                             className={domain.enabled ? "text-red-400 hover:text-red-300" : "text-green-400 hover:text-green-300"}
                           >
                             {domain.enabled ? "Disable" : "Enable"}
                           </button>
                           <button
-                            onClick={() => handleDeleteDomain(domain as DomainWithCount)}
+                            onClick={() => handleDeleteDomain(domain)}
                             className="text-red-400 hover:text-red-300"
-                            disabled={((domain as { _count?: { departments: number } })._count?.departments ?? 0) > 0}
+                            disabled={(domain._count?.departments ?? 0) > 0}
                           >
                             Delete
                           </button>

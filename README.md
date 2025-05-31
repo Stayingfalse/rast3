@@ -1,10 +1,29 @@
-# Random Acts of Santa 2025
+# Random Acts of Santa 2025 🎅
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A modern holiday platform built to spread Christmas cheer through community-driven acts of kindness. This application helps organize and coordinate holiday giving within communities.
+
+Built with the [T3 Stack](https://create.t3.gg/) for a full-stack TypeScript experience.
+
+## Features
+
+### 🎁 Community Gift Organization
+- Create and participate in holiday exchanges
+- Simple gift coordination system
+- Community-based giving initiatives
+
+### 🔐 Secure Authentication
+- Multiple OAuth providers (Discord, Twitch, Google)
+- Secure user profiles and preferences
+- Privacy-focused design
+
+### 🎯 Random Acts of Kindness
+- Community-driven kindness initiatives
+- Holiday spirit coordination
+- Seasonal giving activities
 
 ## Getting Started
 
-### Development
+### Development Setup
 
 First, install dependencies:
 
@@ -18,91 +37,126 @@ Copy the environment variables:
 cp .env.example .env
 ```
 
-Fill in your `.env` file with the necessary values. Then, push the database schema:
+Configure your `.env` file with the required OAuth credentials and database settings. Then, initialize the database:
 
 ```bash
 npm run db:push
 ```
 
-Run the development server:
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to access the application.
+
+### Required Environment Variables
+
+```env
+# Database
+DATABASE_URL="your-database-connection-string"
+
+# NextAuth.js
+AUTH_SECRET="generate-with-npx-auth-secret"
+
+# OAuth Providers
+AUTH_DISCORD_ID="your-discord-app-id"
+AUTH_DISCORD_SECRET="your-discord-app-secret"
+AUTH_TWITCH_ID="your-twitch-app-id"
+AUTH_TWITCH_SECRET="your-twitch-app-secret"
+AUTH_GOOGLE_ID="your-google-app-id"
+AUTH_GOOGLE_SECRET="your-google-app-secret"
+```
+
+## Deployment
 
 ### Docker Deployment
 
-This project is configured for Docker deployment following the [T3 Docker guide](https://create.t3.gg/en/deployment/docker).
+This project is optimized for Docker deployment following T3 Stack best practices.
 
-#### Build and run with Docker:
+#### Quick Start with Docker:
 
 ```bash
 # Build the image
-docker build -t t3-app --build-arg NEXT_PUBLIC_CLIENTVAR=clientvar .
+docker build -t random-acts-santa .
 
 # Run the container
-docker run -p 3000:3000 -e DATABASE_URL="file:./db.sqlite" t3-app
+docker run -p 3000:3000 \
+  -e DATABASE_URL="your-database-url" \
+  -e AUTH_SECRET="your-auth-secret" \
+  random-acts-santa
 ```
 
 #### Using Docker Compose:
 
 ```bash
-# Build and run
+# Development
 docker-compose up --build
 
-# Run in background
-docker-compose up -d --build
+# Production
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-#### Environment Variables for Docker:
+#### Production Environment Setup:
 
-Make sure to set these environment variables when running in production:
+For production deployment, ensure these environment variables are configured:
 
-- `DATABASE_URL` - Your database connection string (format: `mysql://username:password@host:port/database`)
-- `AUTH_SECRET` - Generate with `npx auth secret`
-- `AUTH_DISCORD_ID` - Your Discord OAuth app ID
-- `AUTH_DISCORD_SECRET` - Your Discord OAuth app secret
+- `DATABASE_URL` - Production database connection (MySQL/PostgreSQL recommended)
+- `AUTH_SECRET` - Secure random string for session encryption
+- OAuth provider credentials for each enabled provider
+- `NEXTAUTH_URL` - Your application's public URL
 
-#### Database Setup:
+#### Database Migration:
 
-After configuring your database URL, push the schema:
+After deploying, run the database migration:
 
 ```bash
 npx prisma db push
 ```
 
-**Troubleshooting Database Connection:**
-- Ensure your database server is running and accessible
-- Verify the correct port (MySQL/MariaDB typically uses port 3306)
-- Check firewall settings and network connectivity
-- Confirm database credentials and database name
+## Technology Stack
 
-## What's next? How do I make an app with this?
+This application leverages modern web technologies for optimal performance and developer experience:
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **[Next.js 14+](https://nextjs.org)** - React framework with App Router
+- **[TypeScript](https://typescriptlang.org)** - Type-safe development
+- **[tRPC](https://trpc.io)** - End-to-end typesafe APIs
+- **[Prisma](https://prisma.io)** - Database ORM and migrations
+- **[NextAuth.js](https://next-auth.js.org)** - Authentication with multiple providers
+- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first styling
+- **[Docker](https://docker.com)** - Containerized deployment
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Contributing
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+We welcome contributions to make Random Acts of Santa even better! Whether it's bug fixes, new features, or improvements to the community experience.
 
-## Learn More
+### Development Guidelines
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- Follow TypeScript best practices
+- Use tRPC for API endpoints
+- Implement proper error handling
+- Write tests for new features
+- Follow the existing code style
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Support & Community
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+Join our community to get help, share ideas, or contribute to the project:
 
-## How do I deploy this?
+- [T3 Stack Discord](https://t3.gg/discord) for technical questions
+- [GitHub Issues](https://github.com/your-repo/random-acts-santa/issues) for bug reports
+- [Discussions](https://github.com/your-repo/random-acts-santa/discussions) for feature requests
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## Deployment Guides
 
-**Version:** 0.1.5
+Detailed deployment instructions for various platforms:
+
+- [Vercel Deployment](https://create.t3.gg/en/deployment/vercel)
+- [Docker Deployment](https://create.t3.gg/en/deployment/docker)
+- [Traditional VPS Setup](https://create.t3.gg/en/deployment/netlify)
+
+---
+
+**Spread the holiday cheer! 🎄✨**
+
+*Version: 0.1.5*

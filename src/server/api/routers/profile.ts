@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { Prisma } from "@prisma/client";
 
 type UserWithDepartment = {
   id: string;
@@ -82,19 +83,49 @@ export const profileRouter = createTRPCRouter({
         enabled: domain?.enabled ?? false,
       };
     }),
-
   // Get departments for a domain
   getDepartmentsByDomain: protectedProcedure
     .input(z.object({ domain: z.string() }))
-    .query(({ ctx, input }) => {
-      // If domain is "all", return all departments
-      if (input.domain === "all") {      return ctx.db.department.findMany({
-        orderBy: [{ domain: "asc" }, { name: "asc" }],
+    .query(async ({ ctx, input }) => {
+      // Get current user to check admin level and scope
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { 
+          adminLevel: true, 
+          adminScope: true,
+          domain: true,
+          departmentId: true,
+        },
       });
-      }      
+
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      // Build where clause based on admin level
+      const where: Record<string, unknown> = {};
+
+      if (currentUser.adminLevel === "DOMAIN") {
+        // Domain admins see only departments in their domain
+        if (currentUser.adminScope) {
+          where.domain = currentUser.adminScope;
+        }
+      } else if (currentUser.adminLevel === "DEPARTMENT") {
+        // Department admins see only their own department
+        if (currentUser.adminScope) {
+          where.id = currentUser.adminScope;
+        }
+      } else if (currentUser.adminLevel === "SITE") {
+        // Site admins can see all departments or filter by domain
+        if (input.domain !== "all") {
+          where.domain = input.domain;
+        }
+      }
+      // USER level shouldn't access this endpoint
+
       return ctx.db.department.findMany({
-        where: { domain: input.domain },
-        orderBy: { name: "asc" },
+        where,
+        orderBy: [{ domain: "asc" }, { name: "asc" }],
       });
     }),
   // Complete profile setup

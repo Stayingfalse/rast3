@@ -28,12 +28,18 @@ function DepartmentManagement() {
   const [newDepartmentDomain, setNewDepartmentDomain] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  // Get all departments and domains
+  // Get current user profile to check permissions
+  const { data: userProfile } = api.profile.getCurrentProfile.useQuery();
+  
+  // Get departments and domains (now scoped based on user's admin level)
   const { data: departments, refetch } = api.profile.getDepartmentsByDomain.useQuery({
     domain: "all",
   });
   
   const { data: domains } = api.domain.getAll.useQuery();
+
+  // Check if user can create departments (SITE or DOMAIN admins only)
+  const canCreateDepartments = userProfile?.adminLevel === "SITE" || userProfile?.adminLevel === "DOMAIN";
 
   const createDepartmentMutation = api.profile.createDepartment.useMutation({
     onSuccess: () => {
@@ -91,14 +97,16 @@ function DepartmentManagement() {
                 {(domain as { _count?: { departments: number } })._count?.departments ?? 0} departments
               </p>
             </div>
-          ))}
-        </div>
-      </div>{/* Create New Department */}
-      <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
-        <h2 className="mb-4 text-xl font-semibold text-white">
-          Add New Department
-        </h2>
-        <form onSubmit={handleCreateDepartment} className="space-y-4">
+          ))}        </div>
+      </div>
+
+      {/* Create New Department - Only for SITE and DOMAIN admins */}
+      {canCreateDepartments && (
+        <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
+          <h2 className="mb-4 text-xl font-semibold text-white">
+            Add New Department
+          </h2>
+          <form onSubmit={handleCreateDepartment} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="departmentName" className="block text-sm font-medium text-white">
@@ -148,9 +156,11 @@ function DepartmentManagement() {
             ) : (
               "Add Department"
             )}
-          </button>
-        </form>
-      </div>      {/* Departments by Domain */}
+          </button>        </form>
+        </div>
+      )}
+
+      {/* Departments by Domain */}
       <div className="space-y-6">
         {Object.entries(departmentsByDomain).map(([domainName, depts]) => {
           const domain = domains?.find((d) => d.name === domainName);

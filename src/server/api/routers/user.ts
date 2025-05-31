@@ -1,6 +1,35 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { User, Department } from "@prisma/client";
+
+// Define AdminLevelEnum to represent the possible admin level values
+type AdminLevelEnum = "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+
+type Department = {
+  id: string;
+  name: string;
+  domain: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type User = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  emailVerified?: Date | null;
+  image?: string | null;
+  amazonWishlistUrl?: string | null;
+  wishlistViews: number;
+  departmentId?: string | null;
+  domain?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileCompleted: boolean;
+  profileCompletedAt?: Date | null;
+  workEmail?: string | null;
+  adminLevel: AdminLevelEnum; // Changed from string to AdminLevelEnum
+  adminScope?: string | null;
+};
 
 type UserWithDepartment = User & {
   department: Department | null;
@@ -143,7 +172,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-
   // Update user's admin level and scope
   updateAdminLevel: protectedProcedure
     .input(z.object({
@@ -152,10 +180,27 @@ export const userRouter = createTRPCRouter({
       adminScope: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Get current user to check permissions
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { adminLevel: true }
+      });
+
+      if (!currentUser) {
+        throw new Error("Current user not found");
+      }
+
+      // DEPARTMENT admins can only promote to DEPARTMENT level, not DOMAIN
+      if (currentUser.adminLevel === "DEPARTMENT" && input.adminLevel === "DOMAIN") {
+        throw new Error("Department administrators can only promote users to department admin level");
+      }
+
       // Validate that adminScope is provided for DOMAIN and DEPARTMENT levels
       if ((input.adminLevel === "DOMAIN" || input.adminLevel === "DEPARTMENT") && !input.adminScope) {
         throw new Error("Admin scope is required for domain and department admin levels");
-      }      return ctx.db.user.update({
+      }
+
+      return ctx.db.user.update({
         where: { id: input.userId },
         data: {
           adminLevel: input.adminLevel,

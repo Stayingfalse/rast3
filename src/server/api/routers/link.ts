@@ -1,13 +1,59 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { Prisma } from "@prisma/client"; // Import Prisma namespace
+
+// Define types for better type safety
+type UserWithWishlist = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  amazonWishlistUrl?: string | null;
+  domain?: string | null;
+  departmentId?: string | null;
+  department?: {
+    id: string;
+    name: string;
+    domain: string;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
+};
 
 export const linkRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    // Fetch all users with a wishlist URL, including department info
-    const users = await ctx.db.user.findMany({
-      where: {
-        amazonWishlistUrl: { not: null },
+    // Get current user to check admin level and scope
+    const currentUser = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { 
+        adminLevel: true, 
+        adminScope: true,
+        domain: true,
+        departmentId: true,
       },
+    });
+
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    // Build where clause based on admin level
+    const where: Record<string, unknown> = {
+      amazonWishlistUrl: { not: null },
+    };
+
+    if (currentUser.adminLevel === "DOMAIN") {
+      where.domain = currentUser.adminScope;
+    } else if (currentUser.adminLevel === "DEPARTMENT") {
+      where.departmentId = currentUser.adminScope;
+    }
+    // SITE admins see all users (no additional filter)
+    // USER level shouldn't access this endpoint
+
+    // Fetch users with a wishlist URL, including department info
+    const users = await ctx.db.user.findMany({
+      where,
       include: {
         department: true,
       },
@@ -17,10 +63,8 @@ export const linkRouter = createTRPCRouter({
         { lastName: "asc" },
         { firstName: "asc" },
       ],
-    });
-
-    // For each user, fetch assignment and purchase counts, and errors
-    const userIds = users.map((u) => u.id);
+    });    // For each user, fetch assignment and purchase counts, and errors
+    const userIds = users.map((u: UserWithWishlist) => u.id);
     // Get assignment counts
     const assignments = await ctx.db.wishlistAssignment.groupBy({
       by: ["wishlistOwnerId"],
@@ -50,8 +94,8 @@ export const linkRouter = createTRPCRouter({
       }
     }
     // Simulate errors for demo: every 4th user gets a fake error
-    return users.map((user, idx) => {
-      const assignment = assignments.find((a) => a.wishlistOwnerId === user.id);
+    return users.map((user: UserWithWishlist, idx: number) => {
+      const assignment = assignments.find((a: { wishlistOwnerId: string; _count: { id: number } }) => a.wishlistOwnerId === user.id);
       const allocated = assignment?._count.id ?? 0;
       const purchased = purchasedCount[user.id] ?? 0;
       const errors = idx % 4 === 3 ? ["Simulated error: Invalid URL"] : [];

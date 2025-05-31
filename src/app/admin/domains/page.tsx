@@ -33,6 +33,9 @@ function DomainManagement() {
   const [newDomainName, setNewDomainName] = useState("");
   const [newDomainEnabled, setNewDomainEnabled] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+    // Get user profile to check permissions
+  const { data: userProfile } = api.profile.getCurrentProfile.useQuery();
+  
   // Get all domains
   const { data: domains, refetch } = api.domain.getAll.useQuery();
   
@@ -104,17 +107,22 @@ function DomainManagement() {
       deleteDomainMutation.mutate({ id: domain.id });
     }
   };
-
   const handleToggleEnabled = (domain: DomainWithCount) => {
     toggleEnabledMutation.mutate({ id: domain.id });
   };
+
+  // Check if user can create domains (only SITE admins)
+  const canCreateDomains = userProfile?.adminLevel === "SITE";
 
   return (
     <div className="w-full max-w-6xl">
       <h1 className="mb-8 text-3xl font-bold text-white">
         Domain Management
-      </h1>      {/* Create New Domain */}
-      <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
+      </h1>
+
+      {/* Create New Domain - Only show to SITE admins */}
+      {canCreateDomains && (
+        <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Domain
         </h2>
@@ -159,9 +167,11 @@ function DomainManagement() {
             ) : (
               "Add Domain"
             )}
-          </button>
-        </form>
-      </div>      {/* Existing Domains */}
+          </button>        </form>
+      </div>
+      )}
+
+      {/* Existing Domains */}
       <div className="rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Existing Domains

@@ -77,6 +77,10 @@ function UserStatsTooltip({ userId }: { userId: string }) {
 export default function UsersPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);  
+  
+  // Get current user's profile to check admin level
+  const { data: currentUser } = api.profile.getCurrentProfile.useQuery();
+  
   const { data: users = [], refetch } = api.user.getAll.useQuery();
   const { data: stats } = api.user.getStats.useQuery();
   const { data: domains = [] } = api.domain.getAll.useQuery();
@@ -152,11 +156,10 @@ export default function UsersPage() {
       adminLevel,
       adminScope,
     });
-  };
-  // Filter users by selected domain
+  };  // Filter users by selected domain
   const filteredUsers = selectedDomain === "all" 
     ? users 
-    : users.filter((user: User) => user.domain === selectedDomain);
+    : users.filter((user) => user.domain === selectedDomain);
 
   const handleToggleProfile = (userId: string, currentStatus: boolean) => {
     toggleProfileMutation.mutate({
@@ -301,7 +304,7 @@ export default function UsersPage() {
                   </th>
                 </tr>
               </thead>              <tbody className="divide-y divide-white/10">
-                {filteredUsers.map((user: User) => (
+                {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-white/5">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -382,8 +385,7 @@ export default function UsersPage() {
                             >
                               <option value="SITE">Site Admin</option>
                             </select>
-                          ) : (
-                            <select
+                          ) : (                            <select
                               value={user.adminLevel ?? "USER"}
                               onChange={(e) => {
                                 handleUpdateAdminLevel(
@@ -400,7 +402,10 @@ export default function UsersPage() {
                             >
                               <option value="USER">Regular User</option>
                               <option value="DEPARTMENT">Department Admin</option>
-                              <option value="DOMAIN">Domain Admin</option>
+                              {/* DOMAIN option only available to SITE and DOMAIN admins */}
+                              {(currentUser?.adminLevel === "SITE" || currentUser?.adminLevel === "DOMAIN") && (
+                                <option value="DOMAIN">Domain Admin</option>
+                              )}
                             </select>
                           )
                         ) : (

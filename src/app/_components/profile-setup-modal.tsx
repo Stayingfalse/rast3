@@ -175,8 +175,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
   if (!isOpen) return null;
   if (existingProfile === undefined) {
     return <Preloader message="Loading your profile..." />;
-  }
-  // Check if user has a disabled domain
+  }  // Check if user has a disabled domain (domain exists but is disabled)
   const isDomainDisabled = !!(existingProfile?.domain && existingProfile?.domainEnabled === false) && !forceEditEmail;
 
   if (!existingProfile && isOpen) {

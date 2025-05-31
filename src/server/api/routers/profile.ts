@@ -59,7 +59,7 @@ export const profileRouter = createTRPCRouter({
         where: { name: user.domain },
         select: { enabled: true },
       }) as DomainStatus | null;
-      domainEnabled = domain?.enabled ?? false;    }
+      domainEnabled = domain ? domain.enabled : null;    }
 
     return {
       ...user,

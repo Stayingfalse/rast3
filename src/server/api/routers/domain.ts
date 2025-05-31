@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { PrismaClient } from "@prisma/client";
 
 export const domainRouter = createTRPCRouter({  // Get all domains
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -38,9 +37,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
         },
       },
       orderBy: { name: "asc" },
-    });
-
-    // Get department counts for each domain manually
+    });    // Get department counts for each domain manually
     const domainsWithCounts = await Promise.all(
       domains.map(async (domain) => {
         const departmentCount = await ctx.db.department.count({

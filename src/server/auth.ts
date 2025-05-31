@@ -4,9 +4,7 @@ import Discord from "next-auth/providers/discord";
 import Twitch from "next-auth/providers/twitch";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
-import Email from "next-auth/providers/email";
 import { type DefaultSession } from "next-auth";
-import { LoopsClient } from "loops";
 import { db } from "~/server/db";
 
 // Augment Session type to include adminLevel and adminScope

@@ -9,9 +9,6 @@ type DomainWithCount = {
   id: string;
   name: string;
   enabled: boolean;
-  description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
   createdById: string | null;
   createdBy: {
     id: string;
@@ -34,7 +31,6 @@ export default function DomainsPage() {
 
 function DomainManagement() {
   const [newDomainName, setNewDomainName] = useState("");
-  const [newDomainDescription, setNewDomainDescription] = useState("");
   const [newDomainEnabled, setNewDomainEnabled] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   // Get all domains
@@ -45,7 +41,6 @@ function DomainManagement() {
   const createDomainMutation = api.domain.create.useMutation({
     onSuccess: () => {
       setNewDomainName("");
-      setNewDomainDescription("");
       setNewDomainEnabled(false);
       setIsCreating(false);
       void refetch();
@@ -83,13 +78,10 @@ function DomainManagement() {
 
   const handleCreateDomain = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDomainName.trim()) return;
-
-    setIsCreating(true);
+    if (!newDomainName.trim()) return;    setIsCreating(true);
     try {
       await createDomainMutation.mutateAsync({
         name: newDomainName.trim(),
-        description: newDomainDescription.trim() || undefined,
         enabled: newDomainEnabled,
       });    } catch {
       setIsCreating(false);
@@ -103,7 +95,6 @@ function DomainManagement() {
     try {      await updateDomainMutation.mutateAsync({
         id: editingDomain.id,
         name: editingDomain.name,
-        description: editingDomain.description ?? undefined,
         enabled: editingDomain.enabled,
       });    } catch {
       // Error handled in mutation
@@ -141,20 +132,7 @@ function DomainManagement() {
                 placeholder="e.g., company.com, example.org"
                 required
               />
-            </div>
-            <div>
-              <label htmlFor="domainDescription" className="block text-sm font-medium text-white">
-                Description
-              </label>              <input
-                type="text"
-                id="domainDescription"
-                value={newDomainDescription}
-                onChange={(e) => setNewDomainDescription(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 backdrop-blur-sm px-3 py-2 text-white placeholder-white/60 shadow-sm focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
-                placeholder="Optional description"
-              />
-            </div>
-          </div>
+            </div>          </div>
           
           <div className="flex items-center">            <input
               type="checkbox"
@@ -192,13 +170,9 @@ function DomainManagement() {
         {domains && domains.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                <tr>
+              <thead className="bg-white/5">                <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
                     Domain
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
-                    Description
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white/80">
                     Status
@@ -224,20 +198,7 @@ function DomainManagement() {
                         />
                       ) : (
                         domain.name
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/80">                      {editingDomain?.id === domain.id ? (
-                        <input
-                          type="text"
-                          value={editingDomain.description ?? ""}
-                          onChange={(e) => editingDomain && setEditingDomain({...editingDomain, description: e.target.value})}
-                          className="rounded border border-white/20 bg-black/85 backdrop-blur-sm px-2 py-1 text-white"
-                          placeholder="Description"
-                        />
-                      ) : (
-                        domain.description ?? "-"
-                      )}
-                    </td>
+                      )}                    </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                       {editingDomain?.id === domain.id ? (                        <label className="flex items-center">
                           <input

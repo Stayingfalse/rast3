@@ -87,17 +87,13 @@ function DepartmentManagement() {
                 }`}>
                   {domain.enabled ? "Enabled" : "Disabled"}
                 </span>
-              </div>              
-              <p className="mt-1 text-sm text-white/60">
+              </div>                <p className="mt-1 text-sm text-white/60">
                 {(domain as { _count?: { departments: number } })._count?.departments ?? 0} departments
               </p>
-              {domain.description && (
-                <p className="mt-1 text-xs text-white/50">{domain.description}</p>
-              )}
             </div>
           ))}
         </div>
-      </div>      {/* Create New Department */}
+      </div>{/* Create New Department */}
       <div className="mb-8 rounded-lg bg-black/85 backdrop-blur-sm p-6">
         <h2 className="mb-4 text-xl font-semibold text-white">
           Add New Department

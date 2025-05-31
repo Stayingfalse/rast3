@@ -157,29 +157,98 @@ export function WishlistManager() {
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Header with stats */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">🎄 Secret Santa Wishlist Manager</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">🎄 Santa&apos;s Wishlist Manager for {userProfile.domain} {userProfile.departmentId!==null ? `- ${userProfile.department?.name}` : ""}</h1>
         <p className="text-gray-600 mb-4">
           Shop from other people&apos;s wishlists and spread the holiday joy!
         </p>
-        
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-green-50 p-3 rounded-lg z-40">
-              <div className="text-2xl font-bold text-green-600">{stats.totalLinks ?? "-"}</div>
-              <div className="text-sm text-green-700">Total Links</div>
-            </div>
+          {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-auto gap-2 text-center">
+            {/* Dynamic stats based on user's domain/department status */}
+            {stats.totalUsers && (
+              <div className="bg-green-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-green-600">{stats.totalUsers}</div>
+                <div className="text-sm text-green-700">Total Users</div>
+              </div>
+            )}
+            
+            {/* Always show total links */}
             <div className="bg-blue-50 p-3 rounded-lg z-40">
-              <div className="text-2xl font-bold text-blue-600">{stats.departmentLinks ?? "-"}</div>
-              <div className="text-sm text-blue-700">Links in Your Department</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.totalLinks ?? "-"}</div>
+              <div className="text-sm text-blue-700">
+                {stats.totalLinksInDomain !== undefined || stats.totalLinksInDepartment !== undefined 
+                  ? "Total Links Site Wide" 
+                  : "Total Links"}
+              </div>
             </div>
-            <div className="bg-orange-50 p-3 rounded-lg z-40">
-              <div className="text-2xl font-bold text-orange-600">{stats.unallocatedLinks ?? "-"}</div>
-              <div className="text-sm text-orange-700">Unallocated Links</div>
-            </div>
-            <div className="bg-purple-50 p-3 rounded-lg z-40">
-              <div className="text-2xl font-bold text-purple-600">{stats.unallocatedDepartmentLinks ?? "-"}</div>
-              <div className="text-sm text-purple-700">Unallocated in Your Dept</div>
-            </div>
+            
+            {/* Domain-specific stats */}
+            {stats.usersInDomain !== undefined && (
+              <div className="bg-indigo-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-indigo-600">{stats.usersInDomain}</div>
+                <div className="text-sm text-indigo-700">Users in Domain</div>
+              </div>
+            )}
+            
+            {stats.totalLinksInDomain !== undefined && (
+              <div className="bg-purple-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-purple-600">{stats.totalLinksInDomain}</div>
+                <div className="text-sm text-purple-700">Total Links in Domain</div>
+              </div>
+            )}
+            
+            {stats.totalLinksInDepartment !== undefined && (
+              <div className="bg-cyan-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-cyan-600">{stats.totalLinksInDepartment}</div>
+                <div className="text-sm text-cyan-700">Total Links in Department</div>
+              </div>
+            )}
+            
+            {/* Unallocated links */}
+            {stats.totalUnallocatedLinks !== undefined && (
+              <div className="bg-orange-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-orange-600">{stats.totalUnallocatedLinks}</div>
+                <div className="text-sm text-orange-700">Total Unallocated Links</div>
+              </div>
+            )}
+            
+            {stats.totalUnallocatedLinksInDomain !== undefined && (
+              <div className="bg-amber-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-amber-600">{stats.totalUnallocatedLinksInDomain}</div>
+                <div className="text-sm text-amber-700">Unallocated Links in Domain</div>
+              </div>
+            )}
+            
+            {stats.totalUnallocatedLinksInDepartment !== undefined && (
+              <div className="bg-yellow-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-yellow-600">{stats.totalUnallocatedLinksInDepartment}</div>
+                <div className="text-sm text-yellow-700">Unallocated Links in Department</div>
+              </div>
+            )}
+            
+            {stats.totalGiftsSent !== undefined && (
+              <div className="bg-pink-50 p-3 rounded-lg z-40">
+                <div className="text-2xl font-bold text-pink-600">{stats.totalGiftsSent}</div>
+                <div className="text-sm text-pink-700">Total Gifts Sent</div>
+              </div>
+            )}
+            
+            {/* Fallback to legacy stats if new stats aren't available */}
+            {stats.totalUsers === undefined && stats.usersInDomain === undefined && (
+              <>
+                <div className="bg-blue-50 p-3 rounded-lg z-40">
+                  <div className="text-2xl font-bold text-blue-600">{stats.departmentLinks ?? "-"}</div>
+                  <div className="text-sm text-blue-700">Links in Your Department</div>
+                </div>
+                <div className="bg-orange-50 p-3 rounded-lg z-40">
+                  <div className="text-2xl font-bold text-orange-600">{stats.unallocatedLinks ?? "-"}</div>
+                  <div className="text-sm text-orange-700">Unallocated Links</div>
+                </div>
+                <div className="bg-purple-50 p-3 rounded-lg z-40">
+                  <div className="text-2xl font-bold text-purple-600">{stats.unallocatedDepartmentLinks ?? "-"}</div>
+                  <div className="text-sm text-purple-700">Unallocated in Your Dept</div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

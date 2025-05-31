@@ -53,11 +53,10 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     { domain },
     { enabled: !!domain }
   );
-
-  // Check domain status
+  // Check domain status - run for both new and existing profiles
   const { data: domainStatus } = api.profile.checkDomainStatus.useQuery(
     { domain },
-    { enabled: !!domain && !isEditing }
+    { enabled: !!domain }
   );
 
   const completeProfileMutation = api.profile.completeProfile.useMutation({
@@ -94,11 +93,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       setDomain(emailDomain ?? "");
     } else {
       setDomain("");
-    }
-  }, [formData.workEmail]);
-
-  // Show domain setup option when domain doesn't exist
-  const shouldShowDomainSetup = !isEditing && domain && domainStatus && !domainStatus.exists;
+    }  }, [formData.workEmail]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -210,10 +205,8 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
               </div>
             </div>
           </div>
-        )}
-
-        {/* Domain Doesn't Exist - Alternative to inline notification */}
-        {!isEditing && domain && domainStatus && !domainStatus.exists && !showDomainSetup && !isDomainDisabled && (
+        )}        {/* Domain Doesn't Exist - Show for all users when domain doesn't exist */}
+        {domain && domainStatus && !domainStatus.exists && !showDomainSetup && !isDomainDisabled && (
           <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -330,42 +323,6 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
               <p className="mt-1 text-sm text-red-600">{errors.workEmail}</p>
             )}            {domain && (
               <p className="mt-1 text-sm text-gray-500">Domain: {domain}</p>
-            )}
-              {/* Domain Setup Option - Inline notification */}
-            {shouldShowDomainSetup && !showDomainSetup && (
-              <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-4">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3 flex-1">                    <h3 className="text-sm font-medium text-blue-800">Domain Not Found</h3>
-                    <div className="mt-2 text-sm text-blue-700">
-                      <p>The domain &quot;{domain}&quot; isn&apos;t set up in our system yet.</p>
-                      <p className="mt-1"><strong>Recommended:</strong> Check with your employer first, or set it up yourself below.</p>
-                    </div>
-                    <div className="mt-4 flex gap-2">                      <button
-                        type="button"
-                        className="inline-block rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 font-medium shadow-sm"
-                        onClick={() => setShowDomainSetup(true)}
-                      >
-                        Set Up Domain
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-block rounded bg-white border border-blue-300 px-3 py-1 text-xs text-blue-700 hover:bg-blue-50 font-medium shadow-sm"
-                        onClick={() => {
-                          setForceEditEmail(true);
-                          setErrors({});
-                        }}
-                      >
-                        Use Different Email
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             )}
 
             {/* Domain Setup Form */}

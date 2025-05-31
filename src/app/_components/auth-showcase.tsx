@@ -11,7 +11,6 @@ export function AuthShowcase() {
   const { data: sessionData } = useSession();
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState(false);
-
   // Get current user profile - only runs for authenticated users
   const { data: userProfile, refetch: refetchProfile } = api.profile.getCurrentProfile.useQuery(
     undefined,
@@ -33,6 +32,11 @@ export function AuthShowcase() {
     refetch: () => void;
   };
 
+  // Check domain status for completed profiles with domains
+  const { data: domainStatus } = api.profile.checkDomainStatus.useQuery(
+    { domain: userProfile?.domain ?? "" },
+    { enabled: !!(sessionData?.user && userProfile?.profileCompleted && userProfile?.domain) }
+  );
   // Check if profile setup is needed when user signs in
   useEffect(() => {
     if (sessionData?.user && userProfile) {
@@ -40,12 +44,16 @@ export function AuthShowcase() {
       if (userProfile.profileCompleted && userProfile.domain && userProfile.domainEnabled === false) {
         setIsProfileSetupModalOpen(true);
       }
+      // If user has completed profile but domain doesn't exist in system, show profile modal
+      else if (userProfile.profileCompleted && userProfile.domain && domainStatus && !domainStatus.exists) {
+        setIsProfileSetupModalOpen(true);
+      }
       // If profile is not completed, show profile setup
       else if (!userProfile.profileCompleted) {
         setIsProfileSetupModalOpen(true);
       }
     }
-  }, [sessionData, userProfile]);
+  }, [sessionData, userProfile, domainStatus]);
 
   // Early return if user is not authenticated - prevents rendering authenticated content
   if (!sessionData?.user) {
@@ -95,11 +103,15 @@ export function AuthShowcase() {
                 ✓ Profile completed
                 {userProfile.workEmail && ` • ${userProfile.workEmail}`}
                 {userProfile.department && ` • ${userProfile.department.name}`}
-              </p>
-              {/* Domain status warning */}
+              </p>              {/* Domain status warnings */}
               {userProfile.domain && userProfile.domainEnabled === false && (
                 <p className="text-sm text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg border border-orange-500/20">
                   ⚠ Your organization&apos;s domain ({userProfile.domain}) is currently disabled. Contact your manager for access.
+                </p>
+              )}
+              {userProfile.domain && userProfile.domainEnabled !== false && domainStatus && !domainStatus.exists && (
+                <p className="text-sm text-blue-400 bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
+                  ⚠ Your organization&apos;s domain ({userProfile.domain}) isn&apos;t set up in our system. You can set it up or contact your employer.
                 </p>
               )}
             </div>

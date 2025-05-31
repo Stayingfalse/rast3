@@ -1,6 +1,7 @@
 import { AuthShowcase } from "~/app/_components/auth-showcase";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { HydrateClient } from "~/trpc/server";
+import KudosForm from "~/app/_components/kudos-form";
 
 export default async function Home() {
 
@@ -14,6 +15,9 @@ export default async function Home() {
             <AuthShowcase />
             <WishlistManager />
           </div>
+          <section className="my-8">
+            <KudosForm />
+          </section>
     </HydrateClient>
   );
 }

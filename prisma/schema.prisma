@@ -75,6 +75,7 @@ model User {
   ownedWishlist      WishlistAssignment[] @relation("WishlistOwner")
   reports            WishlistReport[]
   createdDomains     Domain[]
+  kudosGiven         Kudos[]
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -140,6 +141,7 @@ model Purchase {
   notes                String?
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   wishlistAssignment   WishlistAssignment @relation(fields: [wishlistAssignmentId], references: [id], onDelete: Cascade)
+  kudos                Kudos[]
 
   @@index([userId])
   @@index([wishlistAssignmentId])
@@ -161,6 +163,21 @@ model WishlistReport {
   @@index([wishlistAssignmentId])
   @@index([reportType])
   @@index([resolved])
+}
+
+model Kudos {
+  id          String   @id @default(cuid())
+  userId      String
+  purchaseId  String?
+  message     String
+  images      String   @db.Text // JSON-encoded array of image URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase    Purchase? @relation(fields: [purchaseId], references: [id])
+
+  @@index([userId])
+  @@index([purchaseId])
 }
 
 enum AdminLevel {

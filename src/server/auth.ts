@@ -3,7 +3,9 @@ import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 import Twitch from "next-auth/providers/twitch";
 import Google from "next-auth/providers/google";
+import Email from "next-auth/providers/email";
 import { type DefaultSession } from "next-auth";
+import { LoopsClient } from "loops";
 import { db } from "~/server/db";
 
 // Augment Session type to include adminLevel and adminScope
@@ -19,6 +21,7 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
+  trustHost: true, // Trust localhost during development
   providers: [
     Discord({
       clientId: process.env.AUTH_DISCORD_ID!,

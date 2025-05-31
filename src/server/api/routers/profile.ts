@@ -13,6 +13,12 @@ type DomainStatus = {
 // Amazon UK wishlist URL regex
 const amazonWishlistRegex =   /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
 
+// Helper function to normalize wishlist URL
+const normalizeWishlistUrl = (url: string | undefined): string | null => {
+  if (!url || url.trim() === "") return null;
+  return url.trim();
+};
+
 export const profileRouter = createTRPCRouter({
   // Get current user's profile with domain status
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -81,8 +87,9 @@ export const profileRouter = createTRPCRouter({
         amazonWishlistUrl: z
           .string()
           .optional()
+          .transform((val) => normalizeWishlistUrl(val))
           .refine(
-            (url) => !url || amazonWishlistRegex.test(url),
+            (url) => url === null || amazonWishlistRegex.test(url),
             "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)"
           ),
       })
@@ -112,14 +119,34 @@ export const profileRouter = createTRPCRouter({
       
       if (existingUser && existingUser.id !== ctx.session.user.id) {
         throw new Error("This work email is already registered by another user");
-      }      return ctx.db.user.update({
+      }
+
+      // Validate departmentId if provided
+      let validDepartmentId: string | null = null;
+      if (departmentId) {
+        const department = await ctx.db.department.findUnique({
+          where: { id: departmentId },
+        });
+        
+        if (!department) {
+          throw new Error("Selected department does not exist");
+        }
+        
+        if (department.domain !== domain) {
+          throw new Error("Selected department does not belong to your organization");
+        }
+        
+        validDepartmentId = departmentId;
+      }
+
+      return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           firstName,
           lastName,
           workEmail,
           domain,
-          departmentId,
+          departmentId: validDepartmentId,
           amazonWishlistUrl,
           profileCompleted: true,
           profileCompletedAt: new Date(),
@@ -141,8 +168,9 @@ export const profileRouter = createTRPCRouter({
         amazonWishlistUrl: z
           .string()
           .optional()
+          .transform((val) => normalizeWishlistUrl(val))
           .refine(
-            (url) => !url || amazonWishlistRegex.test(url),
+            (url) => url === null || amazonWishlistRegex.test(url),
             "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)"
           ),
       })
@@ -152,7 +180,8 @@ export const profileRouter = createTRPCRouter({
       
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
-        // Check if domain exists and is enabled
+      
+      // Check if domain exists and is enabled
       if (domain) {
         const domainRecord = await ctx.db.domain.findUnique({
           where: { name: domain },
@@ -173,6 +202,24 @@ export const profileRouter = createTRPCRouter({
         throw new Error("This work email is already registered by another user");
       }
 
+      // Validate departmentId if provided
+      let validDepartmentId: string | null = null;
+      if (departmentId) {
+        const department = await ctx.db.department.findUnique({
+          where: { id: departmentId },
+        });
+        
+        if (!department) {
+          throw new Error("Selected department does not exist");
+        }
+        
+        if (department.domain !== domain) {
+          throw new Error("Selected department does not belong to your organization");
+        }
+        
+        validDepartmentId = departmentId;
+      }
+
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
@@ -180,7 +227,7 @@ export const profileRouter = createTRPCRouter({
           lastName,
           workEmail,
           domain,
-          departmentId,
+          departmentId: validDepartmentId,
           amazonWishlistUrl,
         },
         include: {

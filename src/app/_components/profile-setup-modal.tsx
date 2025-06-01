@@ -28,15 +28,13 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     departmentId: "",
     amazonWishlistUrl: "",
   });
-  
-  const [domain, setDomain] = useState("");
+    const [domain, setDomain] = useState("");
+  const [domainForChecking, setDomainForChecking] = useState(""); // Domain state for API queries (only updated on blur)
   const [domainDescription, setDomainDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forceEditEmail, setForceEditEmail] = useState(false);
   const [showDomainSetup, setShowDomainSetup] = useState(false);
-  const isEditing = existingProfile?.profileCompleted ?? false;
-
-  // Initialize form data with existing profile when modal opens
+  const isEditing = existingProfile?.profileCompleted ?? false;  // Initialize form data with existing profile when modal opens
   useEffect(() => {
     if (isOpen && existingProfile) {
       setFormData({
@@ -46,17 +44,25 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
         departmentId: existingProfile.departmentId ?? "",
         amazonWishlistUrl: existingProfile.amazonWishlistUrl ?? "",
       });
+      
+      // Set initial domain for checking if workEmail exists
+      if (existingProfile.workEmail?.includes("@")) {
+        const emailDomain = existingProfile.workEmail.split("@")[1];
+        setDomainForChecking(emailDomain ?? "");
+      }
+    } else if (!isOpen) {
+      // Reset domain checking state when modal closes
+      setDomainForChecking("");
     }
-  }, [isOpen, existingProfile]);
-  // Get departments for the domain
+  }, [isOpen, existingProfile]);// Get departments for the domain
   const { data: departments = [] } = api.profile.getDepartmentsByDomain.useQuery(
-    { domain },
-    { enabled: !!domain }
+    { domain: domainForChecking },
+    { enabled: !!domainForChecking }
   );
-  // Check domain status - run for both new and existing profiles
+  // Check domain status - run for both new and existing profiles (only on blur)
   const { data: domainStatus } = api.profile.checkDomainStatus.useQuery(
-    { domain },
-    { enabled: !!domain }
+    { domain: domainForChecking },
+    { enabled: !!domainForChecking }
   );
 
   const completeProfileMutation = api.profile.completeProfile.useMutation({
@@ -85,15 +91,15 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
     },
   });
 
-  const currentMutation = showDomainSetup ? setupNewDomainMutation : (isEditing ? updateProfileMutation : completeProfileMutation);
-  // Extract domain when work email changes
+  const currentMutation = showDomainSetup ? setupNewDomainMutation : (isEditing ? updateProfileMutation : completeProfileMutation);  // Extract domain when work email changes (for display purposes only)
   useEffect(() => {
     if (formData.workEmail?.includes("@")) {
       const emailDomain = formData.workEmail.split("@")[1];
       setDomain(emailDomain ?? "");
     } else {
       setDomain("");
-    }  }, [formData.workEmail]);
+    }
+  }, [formData.workEmail]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -159,12 +165,21 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
       });
     }
   };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleEmailBlur = () => {
+    // Update domain for checking only when email field loses focus
+    if (formData.workEmail?.includes("@")) {
+      const emailDomain = formData.workEmail.split("@")[1];
+      setDomainForChecking(emailDomain ?? "");
+    } else {
+      setDomainForChecking("");
     }
   };
   if (!isOpen) return null;
@@ -206,7 +221,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
             </div>
           </div>
         )}        {/* Domain Doesn't Exist - Show for all users when domain doesn't exist */}
-        {domain && domainStatus && !domainStatus.exists && !showDomainSetup && !isDomainDisabled && (
+        {domainForChecking && domainStatus && !domainStatus.exists && !showDomainSetup && !isDomainDisabled && (
           <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -216,7 +231,7 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
               </div>
               <div className="ml-3">                <h3 className="text-sm font-medium text-blue-800">Organization Domain Not Set Up</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>The domain &quot;{domain}&quot; hasn&apos;t been set up in our system yet.</p>
+                  <p>The domain &quot;{domainForChecking}&quot; hasn&apos;t been set up in our system yet.</p>
                   <p className="mt-1"><strong>We recommend</strong> speaking to your employer or IT department first to see if they want to set this up.</p>
                   <p className="mt-1">Alternatively, if you&apos;d like to set it up yourself now, you can become the domain administrator.</p>
                 </div>
@@ -307,12 +322,12 @@ export function ProfileSetupModal({ isOpen, onComplete, onClose, existingProfile
           <div>
             <label htmlFor="workEmail" className="block text-sm font-medium text-gray-700">
               Work Email Address *
-            </label>
-            <input
+            </label>            <input
               type="email"
               id="workEmail"
               value={formData.workEmail}
               onChange={(e) => handleInputChange("workEmail", e.target.value)}
+              onBlur={handleEmailBlur}
               disabled={isDomainDisabled}
               className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.workEmail ? "border-red-500" : "border-gray-300"

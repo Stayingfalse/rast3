@@ -31,6 +31,87 @@ export default async function Home() {
       <div className="container mx-auto flex flex-col items-center justify-center gap-12 px-4 py-16">
         <HomeHeaderClientWrapper />
         
+        {/* Hero Explanation Section */}
+        <div className="w-full max-w-4xl">
+          {/* Main Value Proposition */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              🎁 Bring Secret Santa to Remote Teams 🎁
+            </h2>
+            <p className="text-xl text-red-100 mb-6 leading-relaxed">
+              Perfect for home workers and remote teams who want to share Christmas cheer 
+              but don't know each other's addresses. Anonymous gifting made simple!
+            </p>
+          </div>
+
+          {/* Key Benefits Grid */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+              <div className="text-3xl mb-3">⚡</div>
+              <h3 className="text-lg font-semibold text-white mb-2">Quick & Hassle-Free</h3>
+              <p className="text-red-100 text-sm">
+                Sign up in minutes, share your Amazon wishlist, and start spreading joy
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+              <div className="text-3xl mb-3">🎭</div>
+              <h3 className="text-lg font-semibold text-white mb-2">Completely Anonymous</h3>
+              <p className="text-red-100 text-sm">
+                Gifters never see your address - Amazon handles delivery privately
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+              <div className="text-3xl mb-3">🤗</div>
+              <h3 className="text-lg font-semibold text-white mb-2">Inclusive & No Pressure</h3>
+              <p className="text-red-100 text-sm">
+                Can't afford to give? No problem! Happy elves may still send you gifts
+              </p>
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="bg-green-600/20 backdrop-blur-sm rounded-xl p-8 border border-green-400/30 mb-8">
+            <h3 className="text-2xl font-bold text-white text-center mb-6">
+              🎅 How It Works
+            </h3>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">1</div>
+                <p className="text-green-100 text-sm font-medium">Sign up & join your company</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">2</div>
+                <p className="text-green-100 text-sm font-medium">Share your Amazon wishlist</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">3</div>
+                <p className="text-green-100 text-sm font-medium">Browse colleagues' wishlists</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">4</div>
+                <p className="text-green-100 text-sm font-medium">Send anonymous gifts & kudos!</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center">
+            <div className="bg-red-600/20 backdrop-blur-sm rounded-xl p-6 border border-red-400/30">
+              <h3 className="text-xl font-bold text-white mb-3">
+                🌟 Ready to spread some Christmas magic?
+              </h3>
+              <p className="text-red-100 mb-4">
+                Join thousands of remote workers making the holidays special for their colleagues
+              </p>
+              <div className="text-sm text-red-200">
+                👇 Sign up below to get started 👇
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div className="flex flex-col items-center gap-2">
           <AuthShowcase />
           <WishlistManager />

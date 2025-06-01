@@ -54,20 +54,28 @@ export function AuthShowcase() {
       }
     }
   }, [sessionData, userProfile, domainStatus]);
-
   // Early return if user is not authenticated - prevents rendering authenticated content
   if (!sessionData?.user) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4">
-        <p className="text-center text-2xl text-white">
-          {/* Show nothing for unauthenticated users */}
-        </p>
-        <div className="flex gap-3">
+      <div className="flex flex-col items-center justify-center gap-6">
+        {/* Main CTA Button */}
+        <button
+          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-xl px-12 py-4 rounded-2xl shadow-lg border-2 border-green-400 transition-all duration-200 transform hover:scale-105"
+          onClick={() => setIsSignInModalOpen(true)}
+        >
+          🎁 Start Your Secret Santa Journey 🎁
+        </button>
+        
+        {/* Secondary smaller button */}
+        <div className="text-center">
+          <p className="text-white/80 text-sm mb-3">
+            Already have an account?
+          </p>
           <button
-            className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+            className="rounded-full bg-white/10 hover:bg-white/20 px-8 py-2 font-semibold text-white border border-white/30 transition-all duration-200"
             onClick={() => setIsSignInModalOpen(true)}
           >
-            Sign in
+            Sign In
           </button>
         </div>
         

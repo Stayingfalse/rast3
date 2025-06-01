@@ -8,6 +8,7 @@ import Image from "next/image";
 import { TRPCReactProvider } from "~/trpc/react";
 import { AuthProvider } from "./_components/auth-provider";
 import AdminButton from "./_components/admin-button";
+import AuthButton from "./_components/auth-button";
 import { CookieConsent } from "./_components/cookie-consent";
 import { SessionProvider } from "next-auth/react";
 
@@ -30,10 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <SessionProvider>
-        <body>
-          <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-top bg-repeat bg-fixed bg-#13264D">
+        <body>          <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-top bg-repeat bg-fixed bg-#13264D">
             {/* Admin Button (top right) */}
             <AdminButton />
+            {/* Auth Button (top right, shows when not admin) */}
+            <AuthButton />
             {/* Header with SVG image */}
             <header className="absolute left-1/2 top-[-0.5rem] max-w-[150%] -translate-x-1/2 z-0 w-full flex justify-center pointer-events-none select-none">
               <Link href="/">

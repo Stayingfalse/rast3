@@ -94,19 +94,45 @@ export default async function Home() {
                 <p className="text-green-100 text-sm font-medium">Send anonymous gifts & kudos!</p>
               </div>
             </div>
-          </div>
-
-          {/* Call to Action */}
+          </div>          {/* Call to Action */}
           <div className="text-center">
-            <div className="bg-red-600/20 backdrop-blur-sm rounded-xl p-6 border border-red-400/30">
-              <h3 className="text-xl font-bold text-white mb-3">
-                🌟 Ready to spread some Christmas magic?
-              </h3>
-              <p className="text-red-100 mb-4">
-                Join thousands of remote workers making the holidays special for their colleagues
-              </p>
-              <div className="text-sm text-red-200">
-                👇 Sign up below to get started 👇
+            <div className="bg-gradient-to-br from-red-600/30 to-red-800/30 backdrop-blur-sm rounded-2xl p-8 border-2 border-red-400/40 shadow-2xl relative overflow-hidden">
+              {/* Sparkle effect */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-4 left-4 text-yellow-300 text-sm animate-pulse">✨</div>
+                <div className="absolute top-6 right-8 text-yellow-300 text-xs animate-pulse" style={{animationDelay: '0.5s'}}>⭐</div>
+                <div className="absolute bottom-6 left-8 text-yellow-300 text-xs animate-pulse" style={{animationDelay: '1s'}}>💫</div>
+                <div className="absolute bottom-4 right-4 text-yellow-300 text-sm animate-pulse" style={{animationDelay: '1.5s'}}>✨</div>
+              </div>
+              
+              <div className="relative z-10 mb-6">
+                <div className="text-4xl mb-3">🎅✨</div>
+                <h3 className="text-3xl font-bold text-white mb-4 leading-tight">
+                  Ready to spread some Christmas magic?
+                </h3>
+                <p className="text-xl text-red-100 mb-4 leading-relaxed">
+                  Join thousands of remote workers making the holidays special for their colleagues
+                </p>
+              </div>
+              
+              <div className="relative z-10 text-lg text-red-200 mb-6 font-medium">
+                👇 Click below to sign up and join the fun 👇
+              </div>
+              
+              {/* Trust indicators */}
+              <div className="relative z-10 flex justify-center items-center gap-6 text-sm text-red-200">
+                <div className="flex items-center gap-1">
+                  <span>🔒</span>
+                  <span>100% Anonymous</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>⚡</span>
+                  <span>Setup in 2 minutes</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>💝</span>
+                  <span>No obligation to spend</span>
+                </div>
               </div>
             </div>
           </div>

@@ -18,20 +18,28 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
   const inputRef = useRef<HTMLInputElement>(null);
 
   const createKudos = api.kudos.createKudos.useMutation();
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    if (files.length > 5) {
+      setError("Maximum 5 images allowed");
+      return;
+    }
+    setError(null);
     setImages(files);
     setPreviews(files.map((file) => URL.createObjectURL(file)));
   };
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter((file) =>
       file.type.startsWith("image/")
     );
+    if (files.length > 5) {
+      setError("Maximum 5 images allowed");
+      return;
+    }
     if (files.length) {
+      setError(null);
       setImages(files);
       setPreviews(files.map((file) => URL.createObjectURL(file)));
       if (inputRef.current) inputRef.current.value = "";
@@ -62,14 +70,20 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
             useWebWorker: true,
           })
         )
-      );
-      // Convert compressed images to base64
+      );      // Convert compressed images to base64
       const base64Images = await Promise.all(
         compressedImages.map(
           (file) =>
             new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
-              reader.onload = () => resolve((reader.result as string).split(",")[1]);
+              reader.onload = () => {
+                const result = reader.result as string;
+                if (result) {
+                  resolve(result.split(",")[1]!);
+                } else {
+                  reject(new Error("Failed to read file"));
+                }
+              };
               reader.onerror = reject;
               reader.readAsDataURL(file);
             })
@@ -94,7 +108,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
 
   return (
     <div className="min-md:w-3xl max-w-4xl mx-auto p-6 space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded bg-white rounded-lg shadow-md p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 border bg-white rounded-lg shadow-md p-6">
         <h2 className="text-lg font-bold">Say Thanks (Kudos)</h2>
         <textarea
           className="w-full border rounded p-2"
@@ -136,15 +150,19 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
                 strokeLinejoin="round"
                 d="M7 16V8a4 4 0 018 0v8m-4 4v-4m0 0H5m4 0h6"
               />
-            </svg>
-            <span className="text-gray-600 text-sm">
+            </svg>            <span className="text-gray-600 text-sm">
               Drag & drop images here, or{" "}
               <span className="underline">click to select</span>
+            </span>            <span className="text-xs text-gray-400 mt-1">
+              Maximum 5 images, 0.5MB each
+              {images.length > 0 && (
+                <span className={`ml-2 ${images.length === 5 ? 'text-red-500' : 'text-blue-500'}`}>
+                  ({images.length}/5)
+                </span>
+              )}
             </span>
-            <span className="text-xs text-gray-400 mt-1">Max 5 images, 0.5MB each</span>
           </div>
-        </div>
-        {previews.length > 0 && (
+        </div>        {previews.length > 0 && (
           <div className="flex gap-2 flex-wrap mt-2">
             {previews.map((src, i) => (
               <div key={i} className="relative group">
@@ -153,7 +171,19 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
                   alt="preview"
                   className="w-24 h-24 object-cover rounded border shadow"
                 />
-                {/* Optionally, add a remove button per image */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newImages = images.filter((_, index) => index !== i);
+                    const newPreviews = previews.filter((_, index) => index !== i);
+                    setImages(newImages);
+                    setPreviews(newPreviews);
+                    if (inputRef.current) inputRef.current.value = "";
+                  }}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>

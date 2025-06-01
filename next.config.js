@@ -13,11 +13,6 @@ const config = withBundleAnalyzer({
   reactStrictMode: true,
   output: "standalone",
   
-  // Turbopack optimizations (Turbopack is now stable)
-  turbopack: {
-    // Turbopack is now stable
-  },
-  
   // Optimize images for faster loading
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -29,22 +24,25 @@ const config = withBundleAnalyzer({
     removeConsole: process.env.NODE_ENV === 'production',
   },
   
-  // Optimize chunk splitting for better caching
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
+  // Webpack optimizations for production builds only
+  // Turbopack handles development mode automatically
+  ...(process.env.NODE_ENV === 'production' && {
+    webpack: (config, { isServer }) => {
+      if (!isServer) {
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
           },
-        },
-      };
-    }
-    return config;
-  },
+        };
+      }
+      return config;
+    },
+  }),
 });
 
 export default config;

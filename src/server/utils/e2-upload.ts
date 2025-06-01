@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 
 const E2_BUCKET = process.env.E2_BUCKET!;
@@ -28,4 +28,25 @@ export async function uploadToE2(buffer: Buffer, mimetype: string): Promise<stri
     })
   );
   return `${E2_ENDPOINT.replace(/\/$/, "")}/${E2_BUCKET}/${key}`;
+}
+
+export async function deleteFromE2(url: string): Promise<void> {
+  try {
+    // Extract the key from the URL
+    const key = url.split(`/${E2_BUCKET}/`)[1];
+    if (!key) {
+      console.warn('Could not extract key from URL:', url);
+      return;
+    }
+    
+    await e2Client.send(
+      new DeleteObjectCommand({
+        Bucket: E2_BUCKET,
+        Key: key,
+      })
+    );
+  } catch (error) {
+    console.error('Error deleting file from E2:', error);
+    // Don't throw - we don't want to fail the entire operation if file cleanup fails
+  }
 }

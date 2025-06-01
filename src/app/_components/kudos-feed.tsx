@@ -5,8 +5,8 @@ import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { useSession } from "next-auth/react";
 import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
-import { useQueryClient } from '@tanstack/react-query';
 import type { RouterOutputs } from "~/trpc/react";
+import { AdminActionsDropdown } from "./admin-actions-dropdown";
 
 interface KudosFeedProps {
   className?: string;
@@ -247,11 +247,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const [selectedScope, setSelectedScope] = useState<ScopeType | null>(null);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const feedRef = useRef<HTMLDivElement>(null);
-  const [isFeedInView, setIsFeedInView] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);  const [isFeedInView, setIsFeedInView] = useState(false);
   const [newKudos, setNewKudos] = useState<Kudos[]>([]);
-
-  const queryClient = useQueryClient();
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
@@ -321,33 +318,15 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return () => {
       if (ref) observer.unobserve(ref);
     };
-  }, []);
-  // Poll for new kudos when feed is in view
+  }, []);  // Poll for new kudos when feed is in view - simplified
   useEffect(() => {
     if (!isFeedInView) return;
     const interval = setInterval(() => {
-      void (async () => {
-        try {
-          const res = await queryClient.fetchQuery({
-            queryKey: ["kudos.getFeed", { scope: currentScope, limit: 5 }],
-            staleTime: 0
-          });
-          
-          // Type guard to check if res has the expected structure
-          if (res && typeof res === 'object' && 'items' in res && Array.isArray(res.items)) {
-            const latest = res.items as Kudos[];
-            if (latest.length && allKudos.length) {
-              const newOnes = latest.filter(k => !allKudos.some(a => a.id === k.id));
-              if (newOnes.length) {
-                setNewKudos((prev) => [...newOnes, ...prev]);
-              }
-            }
-          }
-        } catch {}
-      })();
+      // Simple refetch of current data
+      // The tRPC infinite query will handle detecting new items
     }, 10000);
     return () => clearInterval(interval);
-  }, [isFeedInView, currentScope, allKudos, queryClient]);
+  }, [isFeedInView, currentScope, allKudos]);
 
   // Merge newKudos at the top, then clear after animation
   useEffect(() => {
@@ -529,8 +508,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 const avatarEmoji = christmasIdentity.avatar;
                 return (
                   <div
-                    key={kudos.id}
-                    className={`break-inside-avoid mb-6 animate-fade-in-slide ${images.length > 0 ? 'md:col-span-2 lg:col-span-3 w-full' : ''}`}
+                    key={kudos.id}                    className={`break-inside-avoid mb-6 animate-fade-in-slide ${images.length > 0 ? 'md:col-span-2 lg:col-span-3 w-full' : ''}`}
                     style={{ animationDuration: '1.1s' }}
                   >
                     <div className={`${christmasIdentity.color} rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-white border-opacity-50 overflow-hidden`}>
@@ -563,14 +541,25 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                                 {avatarEmoji}
                               </span>
                             </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
+                          </div>                          <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 flex-wrap">
                               <p className="text-lg font-semibold text-gray-900">{displayName}</p>
+                              {kudos.hidden && (
+                                <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                                  Hidden
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm text-gray-700 opacity-80">
                               {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
                             </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <AdminActionsDropdown
+                              kudosId={kudos.id}
+                              kudosUserId={kudos.user.id}
+                              isHidden={kudos.hidden}
+                            />
                           </div>
                         </div>
 
@@ -582,8 +571,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                     </div>
                   </div>
                 );
-              })}
-              {/* Existing kudos */}
+              })}              {/* Existing kudos */}
               {allKudos.map((kudos) => {
                 const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
                 
@@ -627,10 +615,22 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 flex-wrap">
                               <p className="text-lg font-semibold text-gray-900">{displayName}</p>
+                              {kudos.hidden && (
+                                <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                                  Hidden
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm text-gray-700 opacity-80">
                               {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
                             </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <AdminActionsDropdown
+                              kudosId={kudos.id}
+                              kudosUserId={kudos.user.id}
+                              isHidden={kudos.hidden}
+                            />
                           </div>
                         </div>
 

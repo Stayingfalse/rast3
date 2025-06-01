@@ -2,7 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { db } from "~/server/db";
 import sharp from "sharp";
-import { uploadToE2 } from "~/server/utils/e2-upload";
+import { uploadToE2, deleteFromE2 } from "~/server/utils/e2-upload";
+import { checkAdminPermissions } from "~/server/utils/admin-permissions";
 
 export const kudosRouter = createTRPCRouter({
   createKudos: protectedProcedure
@@ -44,34 +45,82 @@ export const kudosRouter = createTRPCRouter({
         cursor: z.string().optional(),
       })
     )
-    .query(async ({ ctx, input }) => {      // For unauthenticated users, default to site scope
-      let whereClause: { user?: { departmentId?: string; domain?: string } } = {};
-
+    .query(async ({ ctx, input }) => {
+      // Check if current user has admin permissions
+      let currentUser = null;
+      let userPermissions = null;
+      
       if (ctx.session?.user?.id) {
-        const currentUser = await db.user.findUnique({
+        currentUser = await db.user.findUnique({
           where: { id: ctx.session.user.id },
           include: {
             department: true,
           },
         });
+        
+        userPermissions = await checkAdminPermissions(ctx.session.user.id);
+      }
 
-        if (currentUser && input.scope === "department" && currentUser.departmentId) {
-          // Get users in same department
+      // Build the where clause step by step
+      let whereClause: any = {};
+
+      // Step 1: Apply scope filtering (department/domain/site)
+      let scopeFilter: any = {};
+      if (currentUser && input.scope === "department" && currentUser.departmentId) {
+        scopeFilter = { user: { departmentId: currentUser.departmentId } };
+      } else if (currentUser && input.scope === "domain" && currentUser.domain) {
+        scopeFilter = { user: { domain: currentUser.domain } };
+      }
+      // For "site" scope or unauthenticated users, no scope filter needed
+
+      // Step 2: Apply hidden post visibility rules based on admin level
+      if (!userPermissions?.canModerate) {
+        // Regular users: only see non-hidden posts
+        whereClause = {
+          hidden: false,
+          ...scopeFilter
+        };
+      } else if (userPermissions.adminLevel === "SITE") {
+        // Site admins: see everything (all posts including hidden)
+        whereClause = scopeFilter;
+      } else {
+        // Domain/Department admins: complex filtering needed
+        if (userPermissions.adminLevel === "DOMAIN") {
+          // Domain admin: see all non-hidden posts + hidden posts only from their domain
           whereClause = {
-            user: {
-              departmentId: currentUser.departmentId,
-            },
+            OR: [
+              { 
+                hidden: false,
+                ...scopeFilter
+              },
+              { 
+                AND: [
+                  { hidden: true },
+                  { user: { domain: userPermissions.scope } },
+                  ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : [])
+                ]
+              }
+            ]
           };
-        } else if (currentUser && input.scope === "domain" && currentUser.domain) {
-          // Get users in same domain
+        } else if (userPermissions.adminLevel === "DEPARTMENT") {
+          // Department admin: see all non-hidden posts + hidden posts only from their department
           whereClause = {
-            user: {
-              domain: currentUser.domain,
-            },
+            OR: [
+              { 
+                hidden: false,
+                ...scopeFilter
+              },
+              { 
+                AND: [
+                  { hidden: true },
+                  { user: { departmentId: userPermissions.scope } },
+                  ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : [])
+                ]
+              }
+            ]
           };
         }
       }
-      // For "site" scope or unauthenticated users, no additional where clause needed (all kudos)
 
       const kudos = await db.kudos.findMany({
         where: {
@@ -130,6 +179,7 @@ export const kudosRouter = createTRPCRouter({
         hasNextPage,
       };
     }),
+
   getRecommendedScope: publicProcedure
     .query(async ({ ctx }) => {
       // For unauthenticated users, default to site
@@ -165,5 +215,88 @@ export const kudosRouter = createTRPCRouter({
 
       // Default to site
       return "site";
+    }),
+
+  // Admin: Hide/unhide a kudos post
+  adminHideKudos: protectedProcedure
+    .input(z.object({
+      kudosId: z.string(),
+      hidden: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // First get the kudos to check ownership
+      const kudos = await db.kudos.findUnique({
+        where: { id: input.kudosId },
+        include: { user: { select: { id: true } } },
+      });
+
+      if (!kudos) {
+        throw new Error("Kudos not found");
+      }
+
+      // Check admin permissions
+      const permissions = await checkAdminPermissions(ctx.session.user.id, kudos.user.id);
+      if (!permissions.canModerate) {
+        throw new Error("Insufficient permissions to moderate this content");
+      }
+
+      // Update the hidden status
+      return db.kudos.update({
+        where: { id: input.kudosId },
+        data: { 
+          hidden: input.hidden,
+          moderatedBy: ctx.session.user.id,
+          moderatedAt: new Date(),
+        },
+      });
+    }),
+
+  // Admin: Delete a kudos post and clean up files
+  adminDeleteKudos: protectedProcedure
+    .input(z.object({
+      kudosId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // First get the kudos to check ownership and get image URLs
+      const kudos = await db.kudos.findUnique({
+        where: { id: input.kudosId },
+        include: { user: { select: { id: true } } },
+      });
+
+      if (!kudos) {
+        throw new Error("Kudos not found");
+      }
+
+      // Check admin permissions
+      const permissions = await checkAdminPermissions(ctx.session.user.id, kudos.user.id);
+      if (!permissions.canModerate) {
+        throw new Error("Insufficient permissions to delete this content");
+      }
+
+      // Parse and clean up image files if they exist
+      if (kudos.images) {
+        try {
+          const imageUrls = JSON.parse(kudos.images) as string[];
+          // Delete each image from E2 storage
+          await Promise.all(imageUrls.map(url => deleteFromE2(url)));
+        } catch (error) {
+          console.error("Error cleaning up image files:", error);
+          // Continue with deletion even if file cleanup fails
+        }
+      }
+
+      // Delete the kudos record
+      return db.kudos.delete({
+        where: { id: input.kudosId },
+      });
+    }),
+
+  // Check if current user has admin permissions
+  checkAdminPermissions: protectedProcedure
+    .input(z.object({
+      targetUserId: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      return checkAdminPermissions(ctx.session.user.id, input.targetUserId);
     }),
 });

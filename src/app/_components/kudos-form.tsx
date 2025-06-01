@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { api } from "~/trpc/react";
 import imageCompression from "browser-image-compression";
 
@@ -17,9 +18,8 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const createKudos = api.kudos.createKudos.useMutation();
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const createKudos = api.kudos.createKudos.useMutation();  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
     if (files.length > 5) {
       setError("Maximum 5 images allowed");
       return;
@@ -97,10 +97,9 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
       setMessage("");
       setImages([]);
       setPreviews([]);
-      if (inputRef.current) inputRef.current.value = "";
-      if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setError(err?.message || "Failed to send Kudos");
+      if (inputRef.current) inputRef.current.value = "";      if (onSuccess) onSuccess();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to send Kudos");
     } finally {
       setLoading(false);
     }
@@ -163,14 +162,17 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
             </span>
           </div>
         </div>        {previews.length > 0 && (
-          <div className="flex gap-2 flex-wrap mt-2">
-            {previews.map((src, i) => (
+          <div className="flex gap-2 flex-wrap mt-2">            {previews.map((src, i) => (
               <div key={i} className="relative group">
-                <img
-                  src={src}
-                  alt="preview"
-                  className="w-24 h-24 object-cover rounded border shadow"
-                />
+                <div className="relative w-24 h-24">
+                  <Image
+                    src={src}
+                    alt="preview"
+                    fill
+                    className="object-cover rounded border shadow"
+                    sizes="96px"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {

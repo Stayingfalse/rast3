@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { Prisma } from "@prisma/client"; // Import Prisma namespace
 
 // Define types for better type safety
 type UserWithWishlist = {

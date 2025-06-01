@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { useSession } from "next-auth/react";
@@ -139,15 +140,17 @@ const ImageModal: React.FC<ImageModalProps> = ({
               </svg>
             </button>
           </>
-        )}
-
-        {/* Image */}
-        <img
-          src={getProxyImageUrl(images[currentIndex]!)}
-          alt={`Image ${currentIndex + 1}`}
-          className="max-w-full max-h-full object-contain rounded-lg"
-          onError={handleImageError}
-        />
+        )}        {/* Image */}
+        <div className="relative max-w-full max-h-full">
+          <Image
+            src={getProxyImageUrl(images[currentIndex]!)}
+            alt={`Image ${currentIndex + 1}`}
+            fill
+            className="object-contain rounded-lg"
+            onError={handleImageError}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+          />
+        </div>
 
         {/* Image counter */}
         {images.length > 1 && (
@@ -167,39 +170,36 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onImageClick }) =
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
-
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'left') {
-      handleNext();
-    } else {
-      handlePrev();
-    }
-  };
+  // Remove unused handleSwipe function
 
   if (images.length === 0) return null;  if (images.length === 1) {
     return (
       <div className="relative w-full h-full">
-        <img
+        <Image
           src={getProxyImageUrl(images[0]!)}
           alt="Kudos image"
-          className="w-full h-full object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+          fill
+          className="object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
           onClick={() => onImageClick(0)}
           onError={handleImageError}
+          sizes="(max-width: 768px) 50vw, 33vw"
         />
       </div>
     );
   }  return (
     <div className="relative w-full h-full">
-      <img
+      <Image
         src={getProxyImageUrl(images[currentIndex]!)}
         alt={`Image ${currentIndex + 1} of ${images.length}`}
-        className="w-full h-full object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+        fill
+        className="object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
         onClick={() => onImageClick(currentIndex)}
         onError={handleImageError}
+        sizes="(max-width: 768px) 50vw, 33vw"
       />
       
       {/* Navigation dots */}
@@ -252,9 +252,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
-  
-  // Use recommended scope if no scope is selected
-  const currentScope = selectedScope || recommendedScope || "site";
+    // Use recommended scope if no scope is selected
+  const currentScope = selectedScope ?? recommendedScope ?? "site";
 
   // Fetch feed data with infinite query for pagination
   const {
@@ -276,9 +275,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   );
 
   const allKudos = data?.pages.flatMap((page) => page.items) ?? [];
-
   // Modal handlers
-  const openModal = (images: string[], startIndex: number = 0) => {
+  const openModal = (images: string[], startIndex = 0) => {
     setModalImages(images);
     setModalCurrentIndex(startIndex);
     setIsModalOpen(true);
@@ -297,29 +295,28 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const prevModalImage = () => {
     setModalCurrentIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length);
   };
-
   // Intersection Observer for automatic loading
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0];
         if (target?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
+          void fetchNextPage();
         }
       },
-      {
-        threshold: 0.1,
+      {        threshold: 0.1,
         rootMargin: "100px",
       }
     );
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -354,9 +351,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return (
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>          <div className="space-y-4">
+            {Array.from({ length: 3 }, (_, i) => (
               <div key={i} className="border-b pb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className="h-10 w-10 bg-gray-200 rounded-full"></div>

@@ -44,9 +44,8 @@ export const kudosRouter = createTRPCRouter({
         cursor: z.string().optional(),
       })
     )
-    .query(async ({ ctx, input }) => {
-      // For unauthenticated users, default to site scope
-      let whereClause: any = {};
+    .query(async ({ ctx, input }) => {      // For unauthenticated users, default to site scope
+      let whereClause: { user?: { departmentId?: string; domain?: string } } = {};
 
       if (ctx.session?.user?.id) {
         const currentUser = await db.user.findUnique({

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { Prisma } from "@prisma/client";
 
 type UserWithDepartment = {
   id: string;

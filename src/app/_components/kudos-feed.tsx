@@ -46,7 +46,15 @@ const CHRISTMAS_AVATARS = [
   "🍭", "🧤", "🧣", "👑", "💎", "🎭", "🎨", "🎵", "🎶", "💫"
 ];
 
-// Function to generate consistent Christmas name and avatar based on user ID
+// Christmas-themed colors for user backgrounds
+const CHRISTMAS_COLORS = [
+  "bg-red-100", "bg-green-100", "bg-red-200", "bg-green-200", 
+  "bg-emerald-100", "bg-rose-100", "bg-lime-100", "bg-pink-100",
+  "bg-teal-100", "bg-amber-100", "bg-orange-100", "bg-yellow-100",
+  "bg-indigo-100", "bg-purple-100", "bg-cyan-100", "bg-slate-100"
+];
+
+// Function to generate consistent Christmas name, avatar, and color based on user ID
 const getChristmasIdentity = (userId: string) => {
   // Create a simple hash from the user ID for consistency
   let hash = 0;
@@ -55,13 +63,14 @@ const getChristmasIdentity = (userId: string) => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
-  
-  const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
+    const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
   const avatarIndex = Math.abs(hash >> 8) % CHRISTMAS_AVATARS.length;
+  const colorIndex = Math.abs(hash >> 16) % CHRISTMAS_COLORS.length;
   
   return {
     name: CHRISTMAS_NAMES[nameIndex]!,
-    avatar: CHRISTMAS_AVATARS[avatarIndex]!
+    avatar: CHRISTMAS_AVATARS[avatarIndex]!,
+    color: CHRISTMAS_COLORS[colorIndex]!
   };
 };
 
@@ -173,22 +182,22 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onImageClick }) =
 
   if (images.length === 0) return null;  if (images.length === 1) {
     return (
-      <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg aspect-square flex-shrink-0">
+      <div className="relative w-full h-full">
         <img
           src={getProxyImageUrl(images[0]!)}
           alt="Kudos image"
-          className="w-full h-full object-cover rounded-lg cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+          className="w-full h-full object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
           onClick={() => onImageClick(0)}
           onError={handleImageError}
         />
       </div>
     );
   }  return (
-    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg aspect-square flex-shrink-0">
+    <div className="relative w-full h-full">
       <img
         src={getProxyImageUrl(images[currentIndex]!)}
         alt={`Image ${currentIndex + 1} of ${images.length}`}
-        className="w-full h-full object-cover rounded-lg cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+        className="w-full h-full object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow"
         onClick={() => onImageClick(currentIndex)}
         onError={handleImageError}
       />
@@ -452,13 +461,11 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 // Get Christmas-themed anonymous identity
                 const christmasIdentity = getChristmasIdentity(kudos.user.id);
                 const displayName = christmasIdentity.name;
-                const avatarEmoji = christmasIdentity.avatar;
-
-                return (
-                  <div key={kudos.id} className="bg-gradient-to-r from-red-50 to-green-50 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow border border-red-100">
+                const avatarEmoji = christmasIdentity.avatar;                return (
+                  <div key={kudos.id} className="bg-gradient-to-r from-red-50 to-green-50 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-red-100 overflow-hidden">
                     {/* Purchase context */}
                     {kudos.purchase && (
-                      <div className="mb-3 p-3 bg-red-100 rounded-lg border-l-4 border-red-400">
+                      <div className="m-5 mb-3 p-3 bg-red-100 rounded-lg border-l-4 border-red-400">
                         <p className="text-sm text-red-800">
                           🎁 Thanking{" "}
                           <span className="font-medium">
@@ -467,9 +474,23 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                           for a gift
                         </p>
                       </div>
-                    )}                    <div className="flex flex-col lg:flex-row items-start lg:space-x-6 space-y-4 lg:space-y-0">
-                      {/* Left side: Avatar, name, message */}
-                      <div className="flex-1 min-w-0 w-full lg:w-1/2">
+                    )}
+
+                    <div className="flex flex-col lg:flex-row">
+                      {/* Left side: Images - Full height */}
+                      {images.length > 0 && (
+                        <div className="w-full lg:w-1/2 lg:h-auto">
+                          <div className="h-64 lg:h-full">
+                            <ImageCarousel
+                              images={images}
+                              onImageClick={(index) => openModal(images, index)}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Right side: Avatar, name, message */}
+                      <div className={`flex-1 p-5 ${images.length > 0 ? 'lg:w-1/2' : 'w-full'}`}>
                         {/* User info */}
                         <div className="flex items-center space-x-3 mb-3">
                           <div className="flex-shrink-0">
@@ -494,21 +515,11 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                           </div>
                         </div>
 
-                        {/* Message */}
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        {/* Message with user's color */}
+                        <div className={`${christmasIdentity.color} rounded-xl p-4 shadow-sm border border-gray-100`}>
                           <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
                         </div>
                       </div>
-
-                      {/* Right side: Images */}
-                      {images.length > 0 && (
-                        <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
-                          <ImageCarousel
-                            images={images}
-                            onImageClick={(index) => openModal(images, index)}
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 );

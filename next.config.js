@@ -13,7 +13,7 @@ const config = withBundleAnalyzer({
   reactStrictMode: true,
   output: "standalone",
   
-  // Turbopack optimizations (moved from experimental.turbo)
+  // Turbopack optimizations (Turbopack is now stable)
   turbopack: {
     // Turbopack is now stable
   },

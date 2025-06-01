@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 # Copy only the Prisma schema for dependency installation
 COPY prisma/schema.prisma ./prisma/
-RUN \
+RUN --mount=type=cache,target=/root/.npm \
   if [ -f package-lock.json ]; then npm ci --prefer-offline --no-audit --no-fund; \
   else echo "Lockfile not found." && exit 1; \
   fi
@@ -23,7 +23,7 @@ FROM base AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma/schema.prisma ./prisma/
-RUN \
+RUN --mount=type=cache,target=/root/.npm \
   if [ -f package-lock.json ]; then npm ci --only=production --prefer-offline --no-audit --no-fund && npm cache clean --force; \
   else echo "Lockfile not found." && exit 1; \
   fi

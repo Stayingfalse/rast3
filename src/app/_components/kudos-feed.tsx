@@ -10,18 +10,56 @@ interface KudosFeedProps {
   className?: string;
 }
 
-interface ImageModalProps {
-  images: string[];
-  currentIndex: number;
-  isOpen: boolean;
-  onClose: () => void;
-  onNext: () => void;
-  onPrev: () => void;
-}
-
 interface ImageCarouselProps {
   images: string[];
-  onImageClick: (index: number) => void;
+}
+
+// LightboxModal component for zoomed images
+interface LightboxModalProps {
+  images: string[];
+  initialIndex: number;
+  onClose: () => void;
+}
+
+const LightboxModal: React.FC<LightboxModalProps> = ({ images, initialIndex, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setCurrentIndex((i) => (i + 1) % images.length);
+      if (e.key === "ArrowLeft") setCurrentIndex((i) => (i - 1 + images.length) % images.length);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [images.length, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" ref={backdropRef} onClick={onClose}>
+      <div className="relative max-w-3xl w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-2 right-2 text-white text-2xl bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-80 transition z-10">&times;</button>
+        <div className="w-full flex items-center justify-center">
+          <Image
+            src={getProxyImageUrl(images[currentIndex]!)}
+            alt={`Zoomed image ${currentIndex + 1}`}
+            width={900}
+            height={900}
+            className="object-contain rounded-lg max-h-[80vh] max-w-full bg-black"
+            onError={handleImageError}
+            priority
+          />
+        </div>
+        {images.length > 1 && (
+          <div className="flex items-center justify-center mt-4 space-x-4">
+            <button onClick={() => setCurrentIndex((i) => (i - 1 + images.length) % images.length)} className="text-white text-2xl bg-black bg-opacity-40 rounded-full p-2 hover:bg-opacity-80 transition">&#8592;</button>
+            <span className="text-white text-lg">{currentIndex + 1} / {images.length}</span>
+            <button onClick={() => setCurrentIndex((i) => (i + 1) % images.length)} className="text-white text-2xl bg-black bg-opacity-40 rounded-full p-2 hover:bg-opacity-80 transition">&#8594;</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 type ScopeType = "department" | "domain" | "site";
@@ -64,7 +102,8 @@ const getChristmasIdentity = (userId: string) => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
-    const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
+  
+  const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
   const avatarIndex = Math.abs(hash >> 8) % CHRISTMAS_AVATARS.length;
   const colorIndex = Math.abs(hash >> 16) % CHRISTMAS_COLORS.length;
   
@@ -75,207 +114,95 @@ const getChristmasIdentity = (userId: string) => {
   };
 };
 
-// Image Modal Component
-const ImageModal: React.FC<ImageModalProps> = ({ 
-  images, 
-  currentIndex, 
-  isOpen, 
-  onClose, 
-  onNext, 
-  onPrev 
-}) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      
-      switch (e.key) {
-        case 'Escape':
-          onClose();
-          break;
-        case 'ArrowLeft':
-          onPrev();
-          break;
-        case 'ArrowRight':
-          onNext();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, onNext, onPrev]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="relative max-w-4xl max-h-screen p-4">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Navigation buttons */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={onPrev}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={onNext}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}        {/* Image */}
-        <div className="relative max-w-full max-h-full">
-          <Image
-            src={getProxyImageUrl(images[currentIndex]!)}
-            alt={`Image ${currentIndex + 1}`}
-            fill
-            className="object-contain rounded-lg"
-            onError={handleImageError}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-          />
-        </div>
-
-        {/* Image counter */}
-        {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-            {currentIndex + 1} / {images.length}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Image Carousel Component
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onImageClick }) => {
+// Image Carousel Component with max height enforced
+const ImageCarousel: React.FC<ImageCarouselProps & { onZoom?: (index: number) => void }> = ({ images, onZoom }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  const handleNext = () => setCurrentIndex((prev) => (prev + 1) % images.length);
+  const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  const handleImageClick = () => {
+    if (onZoom) onZoom(currentIndex);
   };
 
-  // Remove unused handleSwipe function
+  if (images.length === 0) return null;
 
-  if (images.length === 0) return null;  if (images.length === 1) {
+  // Single image: no fixed aspect, but limit height
+  if (images.length === 1) {
     return (
-      <div className="relative w-full aspect-square">
+      <div className="relative w-full flex justify-center items-center">
+        <div className="w-full max-w-full min-h-[180px] max-h-[400px] rounded-lg bg-black flex items-center justify-center overflow-hidden">
+          <Image
+            src={getProxyImageUrl(images[0]!)}
+            alt="Kudos image"
+            fill
+            className="cursor-pointer shadow-sm hover:shadow-md transition-shadow rounded-lg object-contain max-h-[400px]"
+            onClick={handleImageClick}
+            onError={handleImageError}
+            sizes="(max-width: 768px) 100vw, 800px"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Carousel: keep 1:1, but limit height
+  return (
+    <div className="relative w-full flex justify-center items-center">
+      <div className="relative w-full aspect-square min-h-[180px] max-h-[400px] rounded-lg bg-black flex items-center justify-center overflow-hidden">
         <Image
-          src={getProxyImageUrl(images[0]!)}
-          alt="Kudos image"
+          src={getProxyImageUrl(images[currentIndex]!)}
+          alt={`Image ${currentIndex + 1} of ${images.length}`}
           fill
-          className="object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow rounded-lg"
-          onClick={() => onImageClick(0)}
+          className="cursor-pointer shadow-sm hover:shadow-md transition-shadow rounded-lg object-contain max-h-[400px]"
+          onClick={handleImageClick}
           onError={handleImageError}
           sizes="(max-width: 768px) 50vw, 33vw"
-        />        {/* Full-size indicator overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black bg-opacity-20 rounded-lg">
-          <div className="bg-white bg-opacity-90 rounded-full p-2">
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-            </svg>
+        />
+        {/* Navigation dots */}
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(index);
+              }}
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${index === currentIndex ? 'bg-white' : 'bg-white bg-opacity-50'}`}
+            />
+          ))}
+        </div>
+        {/* Swipe overlay for mobile - with visual indicators */}
+        <div className="absolute inset-0 flex">
+          <div className="w-1/3 h-full cursor-pointer group flex items-center justify-start pl-2" onClick={(e) => { e.stopPropagation(); handlePrev(); }}>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-1">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </div>
           </div>
+          <div className="w-1/3 h-full cursor-pointer group flex items-center justify-center" onClick={handleImageClick}>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-2">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </div>
+          </div>
+          <div className="w-1/3 h-full cursor-pointer group flex items-center justify-end pr-2" onClick={(e) => { e.stopPropagation(); handleNext(); }}>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-1">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {/* Image counter */}
+        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 rounded z-10">
+          {currentIndex + 1}/{images.length}
         </div>
         {/* Click hint text */}
-        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
-          Click to view full size
+        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity z-10">
+          Click image to zoom
         </div>
-      </div>
-    );}
-  return (
-    <div className="relative w-full h-full">
-      <Image
-        src={getProxyImageUrl(images[currentIndex]!)}
-        alt={`Image ${currentIndex + 1} of ${images.length}`}
-        fill
-        className="object-cover cursor-pointer shadow-sm hover:shadow-md transition-shadow rounded-lg"
-        onClick={() => onImageClick(currentIndex)}
-        onError={handleImageError}
-        sizes="(max-width: 768px) 50vw, 33vw"
-      />
-      
-      {/* Navigation dots */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            onClick={(e) => {
-              e.stopPropagation();
-              setCurrentIndex(index);
-            }}
-            className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Swipe overlay for mobile - with visual indicators */}
-      <div className="absolute inset-0 flex">
-        <div 
-          className="w-1/3 h-full cursor-pointer group flex items-center justify-start pl-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePrev();
-          }}
-        >
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-1">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </div>
-        </div>
-        <div 
-          className="w-1/3 h-full cursor-pointer group flex items-center justify-center"
-          onClick={() => onImageClick(currentIndex)}
-        >
-          {/* Full-size view indicator overlay */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-2">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-            </svg>
-          </div>
-        </div>
-        <div 
-          className="w-1/3 h-full cursor-pointer group flex items-center justify-end pr-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleNext();
-          }}
-        >
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full p-1">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
-      </div>      {/* Image counter */}
-      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 rounded z-10">
-        {currentIndex + 1}/{images.length}
-      </div>
-      
-      {/* Click hint text */}
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity z-10">
-        Click center to view full size
       </div>
     </div>
   );
@@ -284,14 +211,13 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onImageClick }) =
 export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const { data: session } = useSession();
   const [selectedScope, setSelectedScope] = useState<ScopeType | null>(null);
-  const [modalImages, setModalImages] = useState<string[]>([]);
-  const [modalCurrentIndex, setModalCurrentIndex] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
-    // Use recommended scope if no scope is selected
+  
+  // Use recommended scope if no scope is selected
   const currentScope = selectedScope ?? recommendedScope ?? "site";
 
   // Fetch feed data with infinite query for pagination
@@ -314,26 +240,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   );
 
   const allKudos = data?.pages.flatMap((page) => page.items) ?? [];
-  // Modal handlers
-  const openModal = (images: string[], startIndex = 0) => {
-    setModalImages(images);
-    setModalCurrentIndex(startIndex);
-    setIsModalOpen(true);
-  };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setModalImages([]);
-    setModalCurrentIndex(0);
-  };
-
-  const nextModalImage = () => {
-    setModalCurrentIndex((prev) => (prev + 1) % modalImages.length);
-  };
-
-  const prevModalImage = () => {
-    setModalCurrentIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length);
-  };
   // Intersection Observer for automatic loading
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -343,7 +250,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
           void fetchNextPage();
         }
       },
-      {        threshold: 0.1,
+      {
+        threshold: 0.1,
         rootMargin: "100px",
       }
     );
@@ -390,7 +298,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return (
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>          <div className="space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-4">
             {Array.from({ length: 3 }, (_, i) => (
               <div key={i} className="border-b pb-4">
                 <div className="flex items-center space-x-3 mb-3">
@@ -420,95 +329,83 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       </div>
     );
   }
-  return (
-    <>
-      {/* Image Modal */}
-      <ImageModal
-        images={modalImages}
-        currentIndex={modalCurrentIndex}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onNext={nextModalImage}
-        onPrev={prevModalImage}
-      />
 
-      <div className={`bg-white rounded-lg shadow-md ${className}`}>
-        {/* Header with scope selection */}
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Kudos Feed</h2>
-            {/* Scope Selection Tabs */}
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {(["department", "domain", "site"] as ScopeType[])
-              .filter((scope) => {
-                // For unauthenticated users, only show site scope
-                if (!session) {
-                  return scope === "site";
-                }
-                // For authenticated users, show all scopes
-                return true;
-              })
-              .map((scope) => (
-                <button
-                  key={scope}
-                  onClick={() => setSelectedScope(scope)}
-                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
-                    currentScope === scope
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                  title={getScopeDescription(scope)}
-                >
-                  {getScopeDisplayName(scope)}
-                </button>
-              ))}
-          </div>
-          
-          {session && recommendedScope && !selectedScope && (
-            <p className="text-sm text-gray-500 mt-2">
-              Showing {getScopeDisplayName(recommendedScope).toLowerCase()} feed by default
-            </p>
-          )}
-          
-          {!session && (
-            <p className="text-sm text-gray-500 mt-2">
-              Showing all kudos. Sign in to see department and domain-specific feeds.
-            </p>
-          )}
-        </div>        
+  return (
+    <div className={`bg-white rounded-lg shadow-md ${className}`}>
+      {/* Header with scope selection */}
+      <div className="p-6 border-b">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Kudos Feed</h2>
         
-        {/* Feed Content */}
-        <div>
-          {allKudos.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <p className="text-lg font-medium">No kudos yet</p>
-              <p className="text-sm">Be the first to share some appreciation!</p>
+        {/* Scope Selection Tabs */}
+        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          {(["department", "domain", "site"] as ScopeType[])
+            .filter((scope) => {
+              // For unauthenticated users, only show site scope
+              if (!session) {
+                return scope === "site";
+              }
+              // For authenticated users, show all scopes
+              return true;
+            })
+            .map((scope) => (
+              <button
+                key={scope}
+                onClick={() => setSelectedScope(scope)}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                  currentScope === scope
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                title={getScopeDescription(scope)}
+              >
+                {getScopeDisplayName(scope)}
+              </button>
+            ))}
+        </div>
+        
+        {session && recommendedScope && !selectedScope && (
+          <p className="text-sm text-gray-500 mt-2">
+            Showing {getScopeDisplayName(recommendedScope).toLowerCase()} feed by default
+          </p>
+        )}
+        
+        {!session && (
+          <p className="text-sm text-gray-500 mt-2">
+            Showing all kudos. Sign in to see department and domain-specific feeds.
+          </p>
+        )}
+      </div>
+      
+      {/* Feed Content */}
+      <div>
+        {allKudos.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
+              <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+              </svg>
             </div>
-          ) : (            <div className="space-y-6 p-6">
-              {allKudos.map((kudos, index) => {
+            <p className="text-lg font-medium">No kudos yet</p>
+            <p className="text-sm">Be the first to share some appreciation!</p>
+          </div>
+        ) : (
+          <div className="p-6">
+            {/* Masonry Grid Container */}
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+              {allKudos.map((kudos) => {
                 const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
                 
                 // Get Christmas-themed anonymous identity
                 const christmasIdentity = getChristmasIdentity(kudos.user.id);
                 const displayName = christmasIdentity.name;
                 const avatarEmoji = christmasIdentity.avatar;
-                
-                // Alternate left/right alignment
-                const isEven = index % 2 === 0;
-                const alignmentClass = isEven ? 'flex-row' : 'flex-row-reverse';
-                const textAlignClass = isEven ? 'text-left' : 'text-right';
-                const marginClass = isEven ? 'mr-8' : 'ml-8';
 
                 return (
-                  <div key={kudos.id} className={`flex ${alignmentClass} ${marginClass}`}>
-                    <div className={`max-w-2xl ${christmasIdentity.color} rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-white border-opacity-50 overflow-hidden`}>
+                  <div key={kudos.id} className={`break-inside-avoid mb-6 ${images.length > 0 ? 'md:col-span-2 lg:col-span-3 w-full' : ''}`}>
+                    <div className={`${christmasIdentity.color} rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-white border-opacity-50 overflow-hidden`}>
                       {/* Purchase context */}
                       {kudos.purchase && (
-                        <div className="m-5 mb-3 p-3 bg-white bg-opacity-50 rounded-lg border-l-4 border-red-400">
+                        <div className="m-4 mb-3 p-3 bg-white bg-opacity-50 rounded-lg border-l-4 border-red-400">
                           <p className="text-sm text-red-800">
                             🎁 Thanking{" "}
                             <span className="font-medium">
@@ -517,51 +414,37 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                             for a gift
                           </p>
                         </div>
+                      )}                      {/* Images at the top */}
+                      {images.length > 0 && (
+                        <div className="w-full">
+                          <ImageCarousel images={images} onZoom={(index) => setLightbox({ images, index })} />
+                        </div>
                       )}
 
-                      <div className={`flex flex-col ${images.length > 0 ? 'lg:flex-row' : ''} ${!isEven && images.length > 0 ? 'lg:flex-row-reverse' : ''}`}>
-                        {/* Images */}
-                        {images.length > 0 && (
-                          <div className="w-full lg:w-1/2 lg:h-auto">
-                            <div className="aspect-square">
-                              <ImageCarousel
-                                images={images}
-                                onImageClick={(index) => openModal(images, index)}
-                              />
+                      {/* Content below image */}
+                      <div className="p-5">
+                        {/* User info */}
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="flex-shrink-0">
+                            <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-white border-opacity-70">
+                              <span className="text-2xl">
+                                {avatarEmoji}
+                              </span>
                             </div>
                           </div>
-                        )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 flex-wrap">
+                              <p className="text-lg font-semibold text-gray-900">{displayName}</p>
+                            </div>
+                            <p className="text-sm text-gray-700 opacity-80">
+                              {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
 
-                        {/* Content: Avatar, name, message */}
-                        <div className={`flex-1 p-5 ${images.length > 0 ? 'lg:w-1/2' : 'w-full'}`}>
-                          {/* User info */}
-                          <div className={`flex items-center space-x-3 mb-3 ${!isEven ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                            <div className="flex-shrink-0">
-                              <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-white border-opacity-70">
-                                <span className="text-2xl">
-                                  {avatarEmoji}
-                                </span>
-                              </div>
-                            </div>
-                            <div className={`flex-1 min-w-0 ${textAlignClass}`}>
-                              <div className={`flex items-center space-x-2 flex-wrap ${!isEven ? 'justify-end' : ''}`}>
-                                <p className="text-lg font-semibold text-gray-900">{displayName}</p>
-                                {kudos.user.department && (
-                                  <span className="text-xs text-white bg-white bg-opacity-30 px-2 py-1 rounded-full font-medium">
-                                    {kudos.user.department.name}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-700 opacity-80">
-                                {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Message */}
-                          <div className={`bg-white bg-opacity-40 rounded-xl p-4 shadow-sm border border-white border-opacity-30 ${textAlignClass}`}>
-                            <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
-                          </div>
+                        {/* Message */}
+                        <div className="bg-white bg-opacity-40 rounded-xl p-4 shadow-sm border border-white border-opacity-30">
+                          <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
                         </div>
                       </div>
                     </div>
@@ -569,35 +452,44 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 );
               })}
             </div>
-          )}          
-          
-          {/* Intersection Observer Target & Loading Indicator */}
-          {hasNextPage && (
-            <div 
-              ref={loadMoreRef}
-              className="p-4 text-center"
-            >
-              {isFetchingNextPage ? (
-                <div className="flex items-center justify-center space-x-2 text-gray-500">
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                  <span className="text-sm">Loading more kudos...</span>
-                </div>
-              ) : (
-                <button
-                  onClick={() => fetchNextPage()}
-                  className="text-sm text-blue-600 hover:text-blue-700 py-2 px-4 rounded-md hover:bg-blue-50 transition-colors"
-                >
-                  Load more kudos
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+        
+        {/* Lightbox Modal */}
+        {lightbox && (
+          <LightboxModal
+            images={lightbox.images}
+            initialIndex={lightbox.index}
+            onClose={() => setLightbox(null)}
+          />
+        )}
+        
+        {/* Intersection Observer Target & Loading Indicator */}
+        {hasNextPage && (
+          <div 
+            ref={loadMoreRef}
+            className="p-4 text-center"
+          >
+            {isFetchingNextPage ? (
+              <div className="flex items-center justify-center space-x-2 text-gray-500">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span className="text-sm">Loading more kudos...</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => fetchNextPage()}
+                className="text-sm text-blue-600 hover:text-blue-700 py-2 px-4 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                Load more kudos
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

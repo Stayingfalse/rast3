@@ -89,10 +89,40 @@ const CHRISTMAS_AVATARS = [
 
 // Christmas-themed colors for user backgrounds - more vibrant for full cards
 const CHRISTMAS_COLORS = [
-  "bg-red-200", "bg-green-200", "bg-red-300", "bg-green-300", 
-  "bg-emerald-200", "bg-rose-200", "bg-lime-200", "bg-pink-200",
-  "bg-teal-200", "bg-amber-200", "bg-orange-200", "bg-yellow-200",
-  "bg-indigo-200", "bg-purple-200", "bg-cyan-200", "bg-slate-200"
+    // Classic Christmas reds & greens
+    "bg-red-600",      // Santa red
+    "bg-green-600",    // Pine green
+    "bg-emerald-500",  // Emerald
+    "bg-lime-500",     // Holly green
+    "bg-rose-500",     // Holly berry red
+    "bg-green-800",    // Deep pine
+    "bg-red-800",      // Deep red
+
+    // Snowy & frosty blues
+    "bg-blue-500",     // Winter blue
+    "bg-sky-400",      // Frost blue
+    "bg-cyan-400",     // Icy blue
+    "bg-blue-800",     // Night sky
+
+    // Golds & yellows (bells, stars, lights)
+    "bg-yellow-400",   // Star yellow
+    "bg-amber-400",    // Golden bell
+    "bg-yellow-600",   // Warm gold
+
+    // Accents: festive purples, pinks, and silver
+    "bg-fuchsia-500",  // Festive pink
+    "bg-purple-500",   // Royal purple
+    "bg-indigo-500",   // Midnight
+    "bg-gray-200",     // Snow
+    "bg-white",        // Pure snow
+    "bg-slate-400",    // Silver tinsel
+
+    // Orange for gingerbread/cookies
+    "bg-orange-400",   // Gingerbread
+    "bg-orange-600",   // Toasty cookie
+
+    // Extra: teal for icy accents
+    "bg-teal-400",     // Icy teal
 ];
 
 // Function to generate consistent Christmas name, avatar, and color based on user ID

@@ -292,16 +292,16 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       if (ref) observer.unobserve(ref);
     };
   }, []);
-
   // Poll for new kudos when feed is in view
   useEffect(() => {
     if (!isFeedInView) return;
     const interval = setInterval(() => {
       void (async () => {
         try {
-          const res = await queryClient.fetchQuery([
-            ["kudos.getFeed", { scope: currentScope, limit: 5 }]
-          ], { staleTime: 0 });
+          const res = await queryClient.fetchQuery({
+            queryKey: ["kudos.getFeed", { scope: currentScope, limit: 5 }],
+            staleTime: 0
+          });
           
           // Type guard to check if res has the expected structure
           if (res && typeof res === 'object' && 'items' in res && Array.isArray(res.items)) {

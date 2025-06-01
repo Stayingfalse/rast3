@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { db } from "~/server/db";
 import sharp from "sharp";
 import { uploadToE2 } from "~/server/utils/e2-upload";
@@ -35,5 +35,136 @@ export const kudosRouter = createTRPCRouter({
         },
       });
       return kudos;
+    }),
+  getFeed: publicProcedure
+    .input(
+      z.object({
+        scope: z.enum(["department", "domain", "site"]),
+        limit: z.number().min(1).max(50).default(20),
+        cursor: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // For unauthenticated users, default to site scope
+      let whereClause: any = {};
+
+      if (ctx.session?.user?.id) {
+        const currentUser = await db.user.findUnique({
+          where: { id: ctx.session.user.id },
+          include: {
+            department: true,
+          },
+        });
+
+        if (currentUser && input.scope === "department" && currentUser.departmentId) {
+          // Get users in same department
+          whereClause = {
+            user: {
+              departmentId: currentUser.departmentId,
+            },
+          };
+        } else if (currentUser && input.scope === "domain" && currentUser.domain) {
+          // Get users in same domain
+          whereClause = {
+            user: {
+              domain: currentUser.domain,
+            },
+          };
+        }
+      }
+      // For "site" scope or unauthenticated users, no additional where clause needed (all kudos)
+
+      const kudos = await db.kudos.findMany({
+        where: {
+          ...whereClause,
+          ...(input.cursor && {
+            createdAt: {
+              lt: new Date(input.cursor),
+            },
+          }),
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              firstName: true,
+              lastName: true,
+              department: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          purchase: {
+            include: {
+              wishlistAssignment: {
+                include: {
+                  wishlistOwner: {
+                    select: {
+                      id: true,
+                      name: true,
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: input.limit + 1, // Take one extra to determine if there are more
+      });
+
+      const hasNextPage = kudos.length > input.limit;
+      const results = hasNextPage ? kudos.slice(0, -1) : kudos;
+      const nextCursor = hasNextPage ? results[results.length - 1]?.createdAt.toISOString() : undefined;
+
+      return {
+        items: results,
+        nextCursor,
+        hasNextPage,
+      };
+    }),
+  getRecommendedScope: publicProcedure
+    .query(async ({ ctx }) => {
+      // For unauthenticated users, default to site
+      if (!ctx.session?.user?.id) {
+        return "site";
+      }
+
+      const currentUser = await db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        include: {
+          department: true,
+        },
+      });
+
+      if (!currentUser) {
+        return "site";
+      }
+
+      // Check if user has a department and it's valid
+      if (currentUser.departmentId && currentUser.department) {
+        return "department";
+      }
+
+      // Check if user has a domain and it's enabled
+      if (currentUser.domain) {
+        const domain = await db.domain.findUnique({
+          where: { name: currentUser.domain },
+        });
+        if (domain?.enabled) {
+          return "domain";
+        }
+      }
+
+      // Default to site
+      return "site";
     }),
 });

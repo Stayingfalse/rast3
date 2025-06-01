@@ -27,8 +27,7 @@ export async function checkAdminPermissions(
       departmentId: true,
     },
   });
-
-  if (!currentUser || !currentUser.adminLevel || currentUser.adminLevel === "USER") {
+  if (!currentUser?.adminLevel || currentUser.adminLevel === "USER") {
     return { canModerate: false, adminLevel: "USER" };
   }
 
@@ -40,13 +39,12 @@ export async function checkAdminPermissions(
       scope: "site"
     };
   }
-
   // If no target user specified, just return their admin status
   if (!targetUserId) {
     return { 
       canModerate: true, 
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope || undefined
+      scope: currentUser.adminScope ?? undefined
     };
   }
 
@@ -62,24 +60,22 @@ export async function checkAdminPermissions(
   if (!targetUser) {
     return { canModerate: false, adminLevel: currentUser.adminLevel };
   }
-
   // DOMAIN admins can moderate users in their domain
   if (currentUser.adminLevel === "DOMAIN") {
     const canModerate = currentUser.adminScope === targetUser.domain;
     return { 
       canModerate, 
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope || undefined
+      scope: currentUser.adminScope ?? undefined
     };
   }
-
   // DEPARTMENT admins can moderate users in their department
   if (currentUser.adminLevel === "DEPARTMENT") {
     const canModerate = currentUser.adminScope === targetUser.departmentId;
     return { 
       canModerate, 
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope || undefined
+      scope: currentUser.adminScope ?? undefined
     };
   }
 

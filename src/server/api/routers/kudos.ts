@@ -59,13 +59,11 @@ export const kudosRouter = createTRPCRouter({
         });
         
         userPermissions = await checkAdminPermissions(ctx.session.user.id);
-      }
-
-      // Build the where clause step by step
-      let whereClause: any = {};
+      }      // Build the where clause step by step
+      let whereClause: Record<string, unknown> = {};
 
       // Step 1: Apply scope filtering (department/domain/site)
-      let scopeFilter: any = {};
+      let scopeFilter: Record<string, unknown> = {};
       if (currentUser && input.scope === "department" && currentUser.departmentId) {
         scopeFilter = { user: { departmentId: currentUser.departmentId } };
       } else if (currentUser && input.scope === "domain" && currentUser.domain) {

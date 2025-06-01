@@ -1,16 +1,21 @@
-﻿version: "3.9"
+version: "3.9"
 
+# Production-optimized Docker Compose configuration
 services:
   app:
+    image: t3-app:latest
     platform: "linux/amd64"
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.optimized
       args:
         NEXT_PUBLIC_CLIENTVAR: "clientvar"
         BUILDKIT_INLINE_CACHE: 1
       cache_from:
         - t3-app:latest
+        - t3-app:deps
+        - t3-app:builder
+      target: runner
     working_dir: /app
     ports:
       - "3000:3000"
@@ -22,6 +27,10 @@ services:
       - AUTH_DISCORD_SECRET=${AUTH_DISCORD_SECRET}
       - AUTH_TWITCH_ID=${AUTH_TWITCH_ID}
       - AUTH_TWITCH_SECRET=${AUTH_TWITCH_SECRET}
+      - E2_BUCKET=${E2_BUCKET}
+      - E2_ACCESS_KEY=${E2_ACCESS_KEY}
+      - E2_SECRET_KEY=${E2_SECRET_KEY}
+      - E2_ENDPOINT=${E2_ENDPOINT}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
@@ -29,3 +38,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    # Resource limits for better performance
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    # Security optimizations
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache

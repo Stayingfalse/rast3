@@ -1,7 +1,7 @@
 # Random Acts of Santa 2025 Docker Image
 # https://create.t3.gg/en/deployment/docker
 
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -11,9 +11,10 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
+# Copy only the Prisma schema for dependency installation
+COPY prisma/schema.prisma ./prisma/
 RUN \
-  if [ -f package-lock.json ]; then npm ci; \
+  if [ -f package-lock.json ]; then npm ci --prefer-offline --no-audit --no-fund; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -21,9 +22,9 @@ RUN \
 FROM base AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
+COPY prisma/schema.prisma ./prisma/
 RUN \
-  if [ -f package-lock.json ]; then npm ci --only=production && npm cache clean --force; \
+  if [ -f package-lock.json ]; then npm ci --only=production --prefer-offline --no-audit --no-fund && npm cache clean --force; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -35,8 +36,8 @@ COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# Disable telemetry during the build for faster builds
+ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN \
   if [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
@@ -48,8 +49,8 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# Disable telemetry during runtime for better performance
+ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

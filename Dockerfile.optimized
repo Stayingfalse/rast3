@@ -1,0 +1,101 @@
+# Multi-stage Docker build with advanced optimizations
+# syntax=docker/dockerfile:1.4
+
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Install system dependencies
+RUN apk add --no-cache libc6-compat dumb-init
+WORKDIR /app
+
+# Copy package files for better layer caching
+COPY package.json package-lock.json* ./
+COPY prisma/schema.prisma ./prisma/
+
+# Install dependencies with optimizations
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --no-fund --ignore-scripts
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Production dependencies stage
+FROM base AS prod-deps
+RUN apk add --no-cache libc6-compat dumb-init
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY prisma/schema.prisma ./prisma/
+
+# Install only production dependencies with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production --prefer-offline --no-audit --no-fund --ignore-scripts && \
+    npm cache clean --force
+
+# Generate Prisma client for production
+RUN npx prisma generate
+
+# Build stage
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma ./prisma
+
+# Copy source code
+COPY . .
+
+# Build optimizations
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Build with cache mounting for faster rebuilds
+RUN --mount=type=cache,target=/app/.next/cache \
+    SKIP_ENV_VALIDATION=1 npm run build
+
+# Production runtime stage
+FROM base AS runner
+WORKDIR /app
+
+# Security: Run as non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Install runtime dependencies
+RUN apk add --no-cache dumb-init
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy static assets
+COPY --from=builder /app/public ./public
+
+# Set correct permissions for Next.js cache
+RUN mkdir .next && chown nextjs:nodejs .next
+
+# Copy production dependencies
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]

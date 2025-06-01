@@ -170,7 +170,7 @@ model Kudos {
   id           String    @id @default(cuid())
   userId       String
   purchaseId   String?
-  message      String
+  message      String    @db.Text // Allow longer messages for WordPress imports
   images       String    @db.Text // JSON-encoded array of image URLs
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

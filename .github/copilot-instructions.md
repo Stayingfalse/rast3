@@ -3,7 +3,7 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
-This is a T3 stack Next.js project with the following technologies:
+This is a RAoSanta Next.js project with the following technologies:
 - **Next.js 14+** with App Router
 - **TypeScript** for type safety
 - **tRPC** for end-to-end typesafe APIs
@@ -15,7 +15,7 @@ This is a T3 stack Next.js project with the following technologies:
 
 ## Development Guidelines
 - Use TypeScript for all new files
-- Follow the T3 stack conventions and patterns
+- Follow the RAoSanta conventions and patterns
 - Use tRPC for API routes and client-side data fetching
 - Use Prisma for database operations
 - Use NextAuth.js for authentication flows

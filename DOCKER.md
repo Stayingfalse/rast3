@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide explains how to deploy your T3 Stack application using Docker.
+This guide explains how to deploy your RAoSanta application using Docker.
 
 ## Quick Start
 

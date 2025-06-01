@@ -2,7 +2,7 @@
 
 A modern holiday platform built to spread Christmas cheer through community-driven acts of kindness. This application helps organize and coordinate holiday giving within communities.
 
-Built with the [T3 Stack](https://create.t3.gg/) for a full-stack TypeScript experience.
+Built with RAoSanta architecture for a full-stack TypeScript experience.
 
 ## Features
 
@@ -73,7 +73,7 @@ AUTH_GOOGLE_SECRET="your-google-app-secret"
 
 ### Docker Deployment
 
-This project is optimized for Docker deployment following T3 Stack best practices.
+This project is optimized for Docker deployment following RAoSanta best practices.
 
 #### Quick Start with Docker:
 
@@ -117,7 +117,7 @@ npx prisma db push
 
 ## Technology Stack
 
-This application leverages modern web technologies for optimal performance and developer experience:
+This application leverages the RAoSanta architecture and modern web technologies for optimal performance and developer experience:
 
 - **[Next.js 14+](https://nextjs.org)** - React framework with App Router
 - **[TypeScript](https://typescriptlang.org)** - Type-safe development
@@ -143,7 +143,7 @@ We welcome contributions to make Random Acts of Santa even better! Whether it's 
 
 Join our community to get help, share ideas, or contribute to the project:
 
-- [T3 Stack Discord](https://t3.gg/discord) for technical questions
+- [RAoSanta Community](https://github.com/your-repo/random-acts-santa/discussions) for technical questions and community support
 - [GitHub Issues](https://github.com/your-repo/random-acts-santa/issues) for bug reports
 - [Discussions](https://github.com/your-repo/random-acts-santa/discussions) for feature requests
 
@@ -151,9 +151,9 @@ Join our community to get help, share ideas, or contribute to the project:
 
 Detailed deployment instructions for various platforms:
 
-- [Vercel Deployment](https://create.t3.gg/en/deployment/vercel)
-- [Docker Deployment](https://create.t3.gg/en/deployment/docker)
-- [Traditional VPS Setup](https://create.t3.gg/en/deployment/netlify)
+- [Vercel Deployment](https://vercel.com/docs/deploying-and-hosting)
+- [Docker Deployment](https://docs.docker.com/get-started/)
+- [Traditional VPS Setup](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-app-for-production-on-ubuntu-22-04)
 
 ---
 

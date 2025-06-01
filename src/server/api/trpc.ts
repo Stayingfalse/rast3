@@ -35,7 +35,7 @@ interface CreateContextOptions {
  * - testing, so we don't have to mock Next.js' req/res
  * - tRPC's `createSSGHelpers`, where we don't have req/res
  *
- * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts
+ * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts (RAoSanta uses tRPC for end-to-end typesafe APIs)
  */
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {

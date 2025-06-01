@@ -1,4 +1,4 @@
-import { createEnv } from "@t3-oss/env-nextjs";
+import { createEnv } from "@t3-oss/env-nextjs"; // Used in RAoSanta, package name retained for compatibility
 import { z } from "zod";
 
 export const env = createEnv({

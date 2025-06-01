@@ -5,6 +5,8 @@ import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { useSession } from "next-auth/react";
 import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
+import { useQueryClient } from '@tanstack/react-query';
+import type { RouterOutputs } from "~/trpc/react";
 
 interface KudosFeedProps {
   className?: string;
@@ -208,11 +210,18 @@ const ImageCarousel: React.FC<ImageCarouselProps & { onZoom?: (index: number) =>
   );
 };
 
+type Kudos = RouterOutputs["kudos"]["getFeed"]["items"][number];
+
 export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const { data: session } = useSession();
   const [selectedScope, setSelectedScope] = useState<ScopeType | null>(null);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
+  const [isFeedInView, setIsFeedInView] = useState(false);
+  const [newKudos, setNewKudos] = useState<Kudos[]>([]);
+
+  const queryClient = useQueryClient();
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
@@ -239,7 +248,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     }
   );
 
-  const allKudos = data?.pages.flatMap((page) => page.items) ?? [];
+  // Memoize allKudos to avoid useEffect dependency warning
+  const allKudos = React.useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
 
   // Intersection Observer for automatic loading
   useEffect(() => {
@@ -267,6 +277,56 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       }
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Intersection Observer for feed visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsFeedInView(entries[0]?.isIntersecting ?? false);
+      },
+      { threshold: 0.1 }
+    );
+    const ref = feedRef.current;
+    if (ref) observer.observe(ref);
+    return () => {
+      if (ref) observer.unobserve(ref);
+    };
+  }, []);
+
+  // Poll for new kudos when feed is in view
+  useEffect(() => {
+    if (!isFeedInView) return;
+    const interval = setInterval(() => {
+      void (async () => {
+        try {
+          const res = await queryClient.fetchQuery([
+            ["kudos.getFeed", { scope: currentScope, limit: 5 }]
+          ], { staleTime: 0 });
+          
+          // Type guard to check if res has the expected structure
+          if (res && typeof res === 'object' && 'items' in res && Array.isArray(res.items)) {
+            const latest = res.items as Kudos[];
+            if (latest.length && allKudos.length) {
+              const newOnes = latest.filter(k => !allKudos.some(a => a.id === k.id));
+              if (newOnes.length) {
+                setNewKudos((prev) => [...newOnes, ...prev]);
+              }
+            }
+          }
+        } catch {}
+      })();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [isFeedInView, currentScope, allKudos, queryClient]);
+
+  // Merge newKudos at the top, then clear after animation
+  useEffect(() => {
+    if (newKudos.length === 0) return;
+    const timeout = setTimeout(() => {
+      setNewKudos([]);
+    }, 1200);
+    return () => clearTimeout(timeout);
+  }, [newKudos]);
 
   const getScopeDisplayName = (scope: ScopeType) => {
     switch (scope) {
@@ -331,7 +391,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-md ${className}`}>
+    <div ref={feedRef} className={`bg-white rounded-lg shadow-md ${className}`}> 
       {/* Header with scope selection */}
       <div className="p-6 border-b">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Kudos Feed</h2>
@@ -392,6 +452,69 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
           <div className="p-6">
             {/* Masonry Grid Container */}
             <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+              {/* Animated new kudos at the top */}
+              {newKudos.map((kudos) => {
+                const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
+                const christmasIdentity = getChristmasIdentity(kudos.user.id);
+                const displayName = christmasIdentity.name;
+                const avatarEmoji = christmasIdentity.avatar;
+                return (
+                  <div
+                    key={kudos.id}
+                    className={`break-inside-avoid mb-6 animate-fade-in-slide ${images.length > 0 ? 'md:col-span-2 lg:col-span-3 w-full' : ''}`}
+                    style={{ animationDuration: '1.1s' }}
+                  >
+                    <div className={`${christmasIdentity.color} rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-white border-opacity-50 overflow-hidden`}>
+                      {/* Purchase context */}
+                      {kudos.purchase && (
+                        <div className="m-4 mb-3 p-3 bg-white bg-opacity-50 rounded-lg border-l-4 border-red-400">
+                          <p className="text-sm text-red-800">
+                            🎁 Thanking{" "}
+                            <span className="font-medium">
+                              {getChristmasIdentity(kudos.purchase.wishlistAssignment.wishlistOwner.id).name}
+                            </span>{" "}
+                            for a gift
+                          </p>
+                        </div>
+                      )}
+                      {/* Images at the top */}
+                      {images.length > 0 && (
+                        <div className="w-full">
+                          <ImageCarousel images={images} onZoom={(index) => setLightbox({ images, index })} />
+                        </div>
+                      )}
+
+                      {/* Content below image */}
+                      <div className="p-5">
+                        {/* User info */}
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="flex-shrink-0">
+                            <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-white border-opacity-70">
+                              <span className="text-2xl">
+                                {avatarEmoji}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 flex-wrap">
+                              <p className="text-lg font-semibold text-gray-900">{displayName}</p>
+                            </div>
+                            <p className="text-sm text-gray-700 opacity-80">
+                              {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Message */}
+                        <div className="bg-white bg-opacity-40 rounded-xl p-4 shadow-sm border border-white border-opacity-30">
+                          <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Existing kudos */}
               {allKudos.map((kudos) => {
                 const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
                 
@@ -494,3 +617,26 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
 };
 
 export default KudosFeed;
+
+// Animation for new kudos
+export const KudosFeedAnimations = () => (
+  <style jsx global>{`
+    @keyframes fade-in-slide {
+      0% {
+        opacity: 0;
+        transform: translateY(-32px);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-in-slide {
+      animation: fade-in-slide 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  `}</style>
+);

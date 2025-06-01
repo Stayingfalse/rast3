@@ -8,6 +8,7 @@ import Image from "next/image";
 import { TRPCReactProvider } from "~/trpc/react";
 import { AuthProvider } from "./_components/auth-provider";
 import AdminButton from "./_components/admin-button";
+import { CookieConsent } from "./_components/cookie-consent";
 import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({
@@ -46,12 +47,13 @@ export default function RootLayout({
                   priority
                 />
               </Link>
-            </header>
-            <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+            </header>            <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>
               </AuthProvider>
             </div>
+            {/* Cookie Consent Banner */}
+            <CookieConsent />
           </main>
         </body>
       </SessionProvider>

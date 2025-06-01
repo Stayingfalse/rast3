@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import Link from "next/link";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -114,10 +115,17 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
               </span>
 
             </button>
-          </div>
-
-          <p className="mt-6 text-sm text-gray-500">
-            By signing in, you agree to our terms of service and privacy policy.
+          </div>          <p className="mt-6 text-sm text-gray-500">
+            By signing in, you agree to our terms of service and{" "}
+            <Link 
+              href="/privacy" 
+              className="text-red-600 hover:text-red-700 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              privacy policy
+            </Link>
+            .
           </p>
         </div>
       </div>

@@ -47,12 +47,12 @@ const CHRISTMAS_AVATARS = [
   "🍭", "🧤", "🧣", "👑", "💎", "🎭", "🎨", "🎵", "🎶", "💫"
 ];
 
-// Christmas-themed colors for user backgrounds
+// Christmas-themed colors for user backgrounds - more vibrant for full cards
 const CHRISTMAS_COLORS = [
-  "bg-red-100", "bg-green-100", "bg-red-200", "bg-green-200", 
-  "bg-emerald-100", "bg-rose-100", "bg-lime-100", "bg-pink-100",
-  "bg-teal-100", "bg-amber-100", "bg-orange-100", "bg-yellow-100",
-  "bg-indigo-100", "bg-purple-100", "bg-cyan-100", "bg-slate-100"
+  "bg-red-200", "bg-green-200", "bg-red-300", "bg-green-300", 
+  "bg-emerald-200", "bg-rose-200", "bg-lime-200", "bg-pink-200",
+  "bg-teal-200", "bg-amber-200", "bg-orange-200", "bg-yellow-200",
+  "bg-indigo-200", "bg-purple-200", "bg-cyan-200", "bg-slate-200"
 ];
 
 // Function to generate consistent Christmas name, avatar, and color based on user ID
@@ -488,70 +488,80 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
               <p className="text-lg font-medium">No kudos yet</p>
               <p className="text-sm">Be the first to share some appreciation!</p>
             </div>
-          ) : (
-            <div className="space-y-4 p-6">
-              {allKudos.map((kudos) => {
+          ) : (            <div className="space-y-6 p-6">
+              {allKudos.map((kudos, index) => {
                 const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
                 
                 // Get Christmas-themed anonymous identity
                 const christmasIdentity = getChristmasIdentity(kudos.user.id);
                 const displayName = christmasIdentity.name;
-                const avatarEmoji = christmasIdentity.avatar;                return (
-                  <div key={kudos.id} className="bg-gradient-to-r from-red-50 to-green-50 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-red-100 overflow-hidden">
-                    {/* Purchase context */}
-                    {kudos.purchase && (
-                      <div className="m-5 mb-3 p-3 bg-red-100 rounded-lg border-l-4 border-red-400">
-                        <p className="text-sm text-red-800">
-                          🎁 Thanking{" "}
-                          <span className="font-medium">
-                            {getChristmasIdentity(kudos.purchase.wishlistAssignment.wishlistOwner.id).name}
-                          </span>{" "}
-                          for a gift
-                        </p>
-                      </div>
-                    )}
+                const avatarEmoji = christmasIdentity.avatar;
+                
+                // Alternate left/right alignment
+                const isEven = index % 2 === 0;
+                const alignmentClass = isEven ? 'flex-row' : 'flex-row-reverse';
+                const textAlignClass = isEven ? 'text-left' : 'text-right';
+                const marginClass = isEven ? 'mr-8' : 'ml-8';
 
-                    <div className="flex flex-col lg:flex-row">                      {/* Left side: Images - Full height with aspect ratio */}
-                      {images.length > 0 && (
-                        <div className="w-full lg:w-1/2 lg:h-auto">
-                          <div className="aspect-square">
-                            <ImageCarousel
-                              images={images}
-                              onImageClick={(index) => openModal(images, index)}
-                            />
-                          </div>
+                return (
+                  <div key={kudos.id} className={`flex ${alignmentClass} ${marginClass}`}>
+                    <div className={`max-w-2xl ${christmasIdentity.color} rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-white border-opacity-50 overflow-hidden`}>
+                      {/* Purchase context */}
+                      {kudos.purchase && (
+                        <div className="m-5 mb-3 p-3 bg-white bg-opacity-50 rounded-lg border-l-4 border-red-400">
+                          <p className="text-sm text-red-800">
+                            🎁 Thanking{" "}
+                            <span className="font-medium">
+                              {getChristmasIdentity(kudos.purchase.wishlistAssignment.wishlistOwner.id).name}
+                            </span>{" "}
+                            for a gift
+                          </p>
                         </div>
                       )}
 
-                      {/* Right side: Avatar, name, message */}
-                      <div className={`flex-1 p-5 ${images.length > 0 ? 'lg:w-1/2' : 'w-full'}`}>
-                        {/* User info */}
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="flex-shrink-0">
-                            <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-red-200">
-                              <span className="text-2xl">
-                                {avatarEmoji}
-                              </span>
+                      <div className={`flex flex-col ${images.length > 0 ? 'lg:flex-row' : ''} ${!isEven && images.length > 0 ? 'lg:flex-row-reverse' : ''}`}>
+                        {/* Images */}
+                        {images.length > 0 && (
+                          <div className="w-full lg:w-1/2 lg:h-auto">
+                            <div className="aspect-square">
+                              <ImageCarousel
+                                images={images}
+                                onImageClick={(index) => openModal(images, index)}
+                              />
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 flex-wrap">
-                              <p className="text-lg font-semibold text-gray-900">{displayName}</p>
-                              {kudos.user.department && (
-                                <span className="text-xs text-red-700 bg-red-200 px-2 py-1 rounded-full font-medium">
-                                  {kudos.user.department.name}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-500">
-                              {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
-                            </p>
-                          </div>
-                        </div>
+                        )}
 
-                        {/* Message with user's color */}
-                        <div className={`${christmasIdentity.color} rounded-xl p-4 shadow-sm border border-gray-100`}>
-                          <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
+                        {/* Content: Avatar, name, message */}
+                        <div className={`flex-1 p-5 ${images.length > 0 ? 'lg:w-1/2' : 'w-full'}`}>
+                          {/* User info */}
+                          <div className={`flex items-center space-x-3 mb-3 ${!isEven ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <div className="flex-shrink-0">
+                              <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-white border-opacity-70">
+                                <span className="text-2xl">
+                                  {avatarEmoji}
+                                </span>
+                              </div>
+                            </div>
+                            <div className={`flex-1 min-w-0 ${textAlignClass}`}>
+                              <div className={`flex items-center space-x-2 flex-wrap ${!isEven ? 'justify-end' : ''}`}>
+                                <p className="text-lg font-semibold text-gray-900">{displayName}</p>
+                                {kudos.user.department && (
+                                  <span className="text-xs text-white bg-white bg-opacity-30 px-2 py-1 rounded-full font-medium">
+                                    {kudos.user.department.name}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-700 opacity-80">
+                                {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Message */}
+                          <div className={`bg-white bg-opacity-40 rounded-xl p-4 shadow-sm border border-white border-opacity-30 ${textAlignClass}`}>
+                            <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{kudos.message}</p>
+                          </div>
                         </div>
                       </div>
                     </div>

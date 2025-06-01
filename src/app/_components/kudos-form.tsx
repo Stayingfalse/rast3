@@ -174,7 +174,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({ purchaseId, onSuccess }) =
   };
 
   return (
-    <div className="min-md:w-3xl max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         {/* Form: 2/3 on desktop, full on mobile */}
         <form

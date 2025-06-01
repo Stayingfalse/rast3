@@ -352,27 +352,77 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       default:
         return "";
     }
-  };
-
-  if (isLoading) {
+  };  if (isLoading) {
     return (
-      <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-4">
-            {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="border-b pb-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-                  <div className="space-y-1">
-                    <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    <div className="h-3 bg-gray-200 rounded w-16"></div>
+      <div ref={feedRef} className={`rounded-lg ${className}`}>
+        {/* Header skeleton */}
+        <div className="p-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4 animate-skeleton-shimmer"></div>
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+              {Array.from({ length: 3 }, (_, i) => (
+                <div 
+                  key={i} 
+                  className="flex-1 h-8 bg-gray-200 rounded-md animate-skeleton-shimmer"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Loading cards that match the actual feed layout */}
+        <div className="p-6">
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            {Array.from({ length: 6 }, (_, i) => {
+              const hasImage = i % 3 === 0; // Some cards have images
+              const colorIndex = i % CHRISTMAS_COLORS.length;
+              const bgColor = CHRISTMAS_COLORS[colorIndex];
+              
+              return (
+                <div
+                  key={i}
+                  className={`break-inside-avoid mb-6 animate-skeleton-pulse ${
+                    hasImage ? 'md:col-span-2 lg:col-span-3 w-full' : ''
+                  }`}
+                  style={{
+                    animationDelay: `${i * 150}ms`,
+                  }}
+                >
+                  <div className={`${bgColor} rounded-2xl shadow-sm border border-white border-opacity-50 overflow-hidden opacity-60`}>
+                    {/* Image placeholder for some cards */}
+                    {hasImage && (
+                      <div className="w-full aspect-square min-h-[180px] max-h-[400px] bg-gray-300 animate-skeleton-shimmer"></div>
+                    )}
+
+                    {/* Content */}
+                    <div className="p-5">
+                      {/* User info skeleton */}
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border-2 border-white border-opacity-70">
+                            <div className="w-6 h-6 bg-gray-200 rounded animate-skeleton-shimmer"></div>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="h-5 bg-gray-200 rounded w-32 animate-skeleton-shimmer" style={{ animationDelay: '200ms' }}></div>
+                          <div className="h-3 bg-gray-200 rounded w-20 animate-skeleton-shimmer" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                      </div>
+
+                      {/* Message skeleton */}
+                      <div className="bg-white bg-opacity-40 rounded-xl p-4 shadow-sm border border-white border-opacity-30">
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-full animate-skeleton-shimmer" style={{ animationDelay: '100ms' }}></div>
+                          <div className="h-4 bg-gray-200 rounded w-4/5 animate-skeleton-shimmer" style={{ animationDelay: '200ms' }}></div>
+                          <div className="h-4 bg-gray-200 rounded w-3/5 animate-skeleton-shimmer" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -391,13 +441,13 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   }
 
   return (
-    <div ref={feedRef} className={`bg-white rounded-lg shadow-md ${className}`}> 
-      {/* Header with scope selection */}
-      <div className="p-6 border-b">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Kudos Feed</h2>
+    <div ref={feedRef} className={`rounded-lg ${className}`}> 
+      {/* Header with scope selection */}      <div className="p-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Kudos Feed</h2>
         
-        {/* Scope Selection Tabs */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        {session && (
+          /* Scope Selection Tabs */
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
           {(["department", "domain", "site"] as ScopeType[])
             .filter((scope) => {
               // For unauthenticated users, only show site scope
@@ -422,17 +472,6 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
               </button>
             ))}
         </div>
-        
-        {session && recommendedScope && !selectedScope && (
-          <p className="text-sm text-gray-500 mt-2">
-            Showing {getScopeDisplayName(recommendedScope).toLowerCase()} feed by default
-          </p>
-        )}
-        
-        {!session && (
-          <p className="text-sm text-gray-500 mt-2">
-            Showing all kudos. Sign in to see department and domain-specific feeds.
-          </p>
         )}
       </div>
       

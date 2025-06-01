@@ -40,7 +40,7 @@ export default async function Home() {
               </h2>
               <p className="text-xl text-red-100 mb-6 leading-relaxed">
                 Perfect for home workers and remote teams who want to share Christmas cheer 
-                but don't know each other's addresses. Anonymous gifting made simple!
+                but don&apos;t know each other&apos;s addresses. Anonymous gifting made simple!
               </p>
             </div>
 
@@ -66,7 +66,7 @@ export default async function Home() {
                 <div className="text-3xl mb-3">🤗</div>
                 <h3 className="text-lg font-semibold text-white mb-2">Inclusive & No Pressure</h3>
                 <p className="text-red-100 text-sm">
-                  Can't afford to give? No problem! Happy elves may still send you gifts
+                  Can&apos;t afford to give? No problem! Happy elves may still send you gifts
                 </p>
               </div>
             </div>
@@ -79,7 +79,7 @@ export default async function Home() {
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">1</div>
-                  <p className="text-green-100 text-sm font-medium">Sign up & join your company</p>
+                  <p className="text-green-100 text-sm font-medium">Sign up &amp; join your company</p>
                 </div>
                 <div className="text-center">
                   <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">2</div>
@@ -87,7 +87,7 @@ export default async function Home() {
                 </div>
                 <div className="text-center">
                   <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">3</div>
-                  <p className="text-green-100 text-sm font-medium">Browse colleagues' wishlists</p>
+                  <p className="text-green-100 text-sm font-medium">Browse colleagues&apos; wishlists</p>
                 </div>
                 <div className="text-center">
                   <div className="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3 font-bold">4</div>

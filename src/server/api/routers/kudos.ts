@@ -209,11 +209,50 @@ export const kudosRouter = createTRPCRouter({
         if (domain?.enabled) {
           return "domain";
         }
-      }
-
-      // Default to site
+      }      // Default to site
       return "site";
     }),
+
+  // Check if a scope has content
+  departmentHasContent: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.session?.user?.id) return false;
+    
+    const user = await db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { departmentId: true }
+    });
+    
+    if (!user?.departmentId) return false;
+    
+    const count = await db.kudos.count({
+      where: {
+        user: { departmentId: user.departmentId },
+        hidden: false
+      }
+    });
+    
+    return count > 0;
+  }),
+
+  domainHasContent: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.session?.user?.id) return false;
+    
+    const user = await db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { domain: true }
+    });
+    
+    if (!user?.domain) return false;
+    
+    const count = await db.kudos.count({
+      where: {
+        user: { domain: user.domain },
+        hidden: false
+      }
+    });
+    
+    return count > 0;
+  }),
 
   // Admin: Hide/unhide a kudos post
   adminHideKudos: protectedProcedure

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
@@ -247,14 +247,66 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const [selectedScope, setSelectedScope] = useState<ScopeType | null>(null);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const feedRef = useRef<HTMLDivElement>(null);  const [isFeedInView, setIsFeedInView] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);
+  const [isFeedInView, setIsFeedInView] = useState(false);
   const [newKudos, setNewKudos] = useState<Kudos[]>([]);
+  const [actualDisplayScope, setActualDisplayScope] = useState<ScopeType | null>(null);
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
   
-  // Use recommended scope if no scope is selected
-  const currentScope = selectedScope ?? recommendedScope ?? "site";
+  // Check content availability for fallback logic
+  const { data: departmentHasContent } = api.kudos.departmentHasContent.useQuery(undefined, {
+    enabled: !!session
+  });
+  const { data: domainHasContent } = api.kudos.domainHasContent.useQuery(undefined, {
+    enabled: !!session
+  });
+  
+  // Determine current scope with fallback logic
+  const currentScope = useMemo(() => {
+    const requestedScope = selectedScope ?? recommendedScope ?? "site";
+    
+    // If the requested scope has content, use it
+    if (requestedScope === "department" && departmentHasContent) {
+      setActualDisplayScope("department");
+      return "department";
+    }
+    if (requestedScope === "domain" && domainHasContent) {
+      setActualDisplayScope("domain");
+      return "domain";
+    }
+    
+    // Fallback logic: try next available scope
+    if (requestedScope === "department" && !departmentHasContent) {
+      if (domainHasContent) {
+        setActualDisplayScope("domain");
+        return "domain";
+      } else {
+        setActualDisplayScope("site");
+        return "site";
+      }
+    }
+    
+    if (requestedScope === "domain" && !domainHasContent) {
+      setActualDisplayScope("site");
+      return "site";
+    }
+    
+    setActualDisplayScope(requestedScope);
+    return requestedScope;
+  }, [selectedScope, recommendedScope, departmentHasContent, domainHasContent]);
+
+  // Generate fallback message
+  const getFallbackMessage = () => {
+    const requestedScope = selectedScope ?? recommendedScope ?? "site";
+    if (actualDisplayScope !== requestedScope) {
+      const requestedName = getScopeDisplayName(requestedScope);
+      const actualName = getScopeDisplayName(actualDisplayScope!);
+      return `No kudos in ${requestedName} yet, showing ${actualName} kudos instead! 🎄`;
+    }
+    return null;
+  };
 
   // Fetch feed data with infinite query for pagination
   const {
@@ -483,18 +535,50 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
         </div>
         )}
       </div>
-      
-      {/* Feed Content */}
+        {/* Feed Content */}
       <div>
-        {allKudos.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-              <svg fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-              </svg>
+        {/* Fallback message */}
+        {getFallbackMessage() && (
+          <div className="px-6 pb-2">
+            <div className="bg-green-100 border border-green-200 rounded-lg p-3">
+              <p className="text-green-800 text-sm font-medium text-center">
+                {getFallbackMessage()}
+              </p>
             </div>
-            <p className="text-lg font-medium">No kudos yet</p>
-            <p className="text-sm">Be the first to share some appreciation!</p>
+          </div>
+        )}
+        
+        {allKudos.length === 0 ? (
+          <div className="p-6">
+            <div className="bg-red-600 rounded-2xl shadow-lg border border-white border-opacity-50 overflow-hidden">
+              <div className="p-8 text-center text-white">
+                {/* Santa Avatar */}
+                <div className="w-20 h-20 mx-auto mb-6 bg-white rounded-full shadow-lg flex items-center justify-center border-4 border-red-200">
+                  <span className="text-4xl">🎅</span>
+                </div>
+                
+                {/* Christmas-themed message */}
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold text-white">
+                    Ho ho ho! No kudos yet! 🎄
+                  </h3>                  <p className="text-red-100 text-lg">
+                    Santa&apos;s workshop is quiet here...
+                  </p>
+                  <p className="text-red-200">
+                    Be the first elf to spread some Christmas cheer and appreciation! ✨
+                  </p>
+                  
+                  {/* Christmas decorations */}
+                  <div className="flex justify-center space-x-4 text-2xl mt-6 opacity-75">
+                    <span>🎁</span>
+                    <span>⭐</span>
+                    <span>❄️</span>
+                    <span>🔔</span>
+                    <span>🎄</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="p-6">
@@ -506,8 +590,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 const christmasIdentity = getChristmasIdentity(kudos.user.id);
                 const displayName = christmasIdentity.name;
                 const avatarEmoji = christmasIdentity.avatar;
-                return (
-                  <div
+                return (                  <div
                     key={kudos.id}                    className={`break-inside-avoid mb-6 animate-fade-in-slide ${images.length > 0 ? 'md:col-span-2 lg:col-span-3 w-full' : ''}`}
                     style={{ animationDuration: '1.1s' }}
                   >
@@ -554,13 +637,15 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                               {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
                             </p>
                           </div>
-                          <div className="flex-shrink-0">
-                            <AdminActionsDropdown
-                              kudosId={kudos.id}
-                              kudosUserId={kudos.user.id}
-                              isHidden={kudos.hidden}
-                            />
-                          </div>
+                          {session && (
+                            <div className="flex-shrink-0">
+                              <AdminActionsDropdown
+                                kudosId={kudos.id}
+                                kudosUserId={kudos.user.id}
+                                isHidden={kudos.hidden}
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Message */}
@@ -569,8 +654,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
+                  </div>                );
               })}              {/* Existing kudos */}
               {allKudos.map((kudos) => {
                 const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
@@ -625,13 +709,15 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                               {formatDistanceToNow(new Date(kudos.createdAt), { addSuffix: true })}
                             </p>
                           </div>
-                          <div className="flex-shrink-0">
-                            <AdminActionsDropdown
-                              kudosId={kudos.id}
-                              kudosUserId={kudos.user.id}
-                              isHidden={kudos.hidden}
-                            />
-                          </div>
+                          {session && (
+                            <div className="flex-shrink-0">
+                              <AdminActionsDropdown
+                                kudosId={kudos.id}
+                                kudosUserId={kudos.user.id}
+                                isHidden={kudos.hidden}
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Message */}

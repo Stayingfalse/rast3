@@ -16,9 +16,9 @@ export default function PrivacyPolicyPage() {
 
           <div className="prose prose-gray max-w-none">
             <p className="text-lg mb-6">
-              Welcome to Random Acts of Santa 2025! This Privacy Policy explains how Random Acts of Santa 2025 ("we," "us," or "our") 
+              Welcome to Random Acts of Santa 2025! This Privacy Policy explains how Random Acts of Santa 2025 (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) 
               collects, uses, discloses, and protects your personal information when you visit our website and use our services 
-              (collectively, the "Services").
+              (collectively, the &quot;Services&quot;).
             </p>
 
             <p className="mb-6">
@@ -64,12 +64,12 @@ export default function PrivacyPolicyPage() {
             <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">c. Information from Third-Party Login Providers:</h3>
             <p className="mb-4">
               Our Services allow you to register and log in using your existing third-party social media accounts, such as Twitch, Discord, 
-              or Google (each a "Third-Party Login Provider").
+              or Google (each a &quot;Third-Party Login Provider&quot;).
             </p>
             <p className="mb-4">
               If you choose to register or log in to our Services using a Third-Party Login Provider, we will receive certain profile 
               information about you from that provider. The specific information we receive depends on the Third-Party Login Provider and 
-              your privacy settings on that provider's platform, but will typically include:
+              your privacy settings on that provider&apos;s platform, but will typically include:
             </p>
             <ul className="list-disc pl-6 mb-4">
               <li><strong>Twitch:</strong> Your Twitch username, email address (if you have permitted Twitch to share it), and Twitch User ID.</li>
@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
               You can manage your cookie preferences through our cookie consent banner.
             </p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">7. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">7. Children&apos;s Privacy</h2>
             <p className="mb-4">
               Our Services are not intended for use by children under the age of 13. We do not knowingly collect personal information from 
               children under this age.
@@ -141,13 +141,13 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">8. Changes to This Privacy Policy</h2>
             <p className="mb-4">
               We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on 
-              this page and updating the "Last Updated" date at the top of this Privacy Policy.
+              this page and updating the &quot;Last Updated&quot; date at the top of this Privacy Policy.
             </p>
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">9. Contact Us</h2>
             <p className="mb-4">
               If you have any questions or concerns about this Privacy Policy or our data practices, please contact us through our 
-              website's contact features.
+              website&apos;s contact features.
             </p>
 
             <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

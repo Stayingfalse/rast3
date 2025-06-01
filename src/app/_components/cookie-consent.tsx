@@ -113,7 +113,7 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({ className = "" }) 
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">🍪 Cookie Consent</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              We use essential cookies to make our site work. We'd also like to use optional cookies to enhance your experience 
+              We use essential cookies to make our site work. We&apos;d also like to use optional cookies to enhance your experience 
               and help us improve our services. You can manage your preferences below.{" "}
               <Link 
                 href="/privacy" 

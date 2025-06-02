@@ -4,6 +4,7 @@ import Discord from "next-auth/providers/discord";
 import Twitch from "next-auth/providers/twitch";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
+import Reddit from "next-auth/providers/reddit";
 import { type DefaultSession } from "next-auth";
 import { db } from "~/server/db";
 
@@ -20,7 +21,6 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  trustHost: true, // Trust localhost during development
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID!,
@@ -46,6 +46,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           Twitch({
             clientId: process.env.AUTH_TWITCH_ID,
             clientSecret: process.env.AUTH_TWITCH_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+    ...(process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET
+      ? [
+          Reddit({
+            clientId: process.env.AUTH_REDDIT_ID!,
+            clientSecret: process.env.AUTH_REDDIT_SECRET!,
             allowDangerousEmailAccountLinking: true,
           }),
         ]

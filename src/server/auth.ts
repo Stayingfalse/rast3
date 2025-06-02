@@ -5,6 +5,9 @@ import Twitch from "next-auth/providers/twitch";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Reddit from "next-auth/providers/reddit";
+import Instagram from "next-auth/providers/instagram";
+import Facebook from "next-auth/providers/facebook";
+import TikTok from "next-auth/providers/tiktok";
 import { type DefaultSession } from "next-auth";
 import { db } from "~/server/db";
 
@@ -94,7 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET
       ? [
         TikTok({
-        clientId: process.env.AUTH_TIKTOK_ID,github
+        clientId: process.env.AUTH_TIKTOK_ID,
         clientSecret: process.env.AUTH_TIKTOK_SECRET,
         allowDangerousEmailAccountLinking: true,
         }),

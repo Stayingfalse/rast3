@@ -29,11 +29,7 @@ export const env = createEnv({
    * isn't built with invalid env vars. To expose them to the client, prefix them with
    * `NEXT_PUBLIC_`.
    */  client: {
-    NEXT_PUBLIC_AUTH_DISCORD_ENABLED: z.string().optional(),
-    NEXT_PUBLIC_AUTH_GITHUB_ENABLED: z.string().optional(),
-    NEXT_PUBLIC_AUTH_TWITCH_ENABLED: z.string().optional(),
-    NEXT_PUBLIC_AUTH_GOOGLE_ENABLED: z.string().optional(),
-    NEXT_PUBLIC_AUTH_REDDIT_ENABLED: z.string().optional(),
+    // No auth provider enabled flags needed on client anymore
   },
 
   /**
@@ -50,11 +46,6 @@ export const env = createEnv({
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_AUTH_DISCORD_ENABLED: process.env.AUTH_DISCORD_ID ? "1" : "",
-    NEXT_PUBLIC_AUTH_GITHUB_ENABLED: process.env.AUTH_GITHUB_ID ? "1" : "",
-    NEXT_PUBLIC_AUTH_TWITCH_ENABLED: process.env.AUTH_TWITCH_ID ? "1" : "",
-    NEXT_PUBLIC_AUTH_GOOGLE_ENABLED: process.env.AUTH_GOOGLE_ID ? "1" : "",
-    NEXT_PUBLIC_AUTH_REDDIT_ENABLED: process.env.AUTH_REDDIT_ID ? "1" : "",
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

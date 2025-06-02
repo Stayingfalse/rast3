@@ -12,8 +12,8 @@ interface SignInModalProps {
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
-
   const handleSignIn = async (provider: string) => {
+    // Set loading state to the provider being signed in with
     setIsLoading(provider);
     try {
       await signIn(provider);

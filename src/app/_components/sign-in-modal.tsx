@@ -11,13 +11,23 @@ interface SignInModalProps {
   onClose: () => void;
 }
 
+interface Provider {
+  id: string;
+  name: string;
+  type: string;
+  signinUrl: string;
+  callbackUrl: string;
+}
+
+type ProvidersState = Record<string, Provider> | null;
+
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
-  const [providers, setProviders] = useState<any>(null);
+  const [providers, setProviders] = useState<ProvidersState>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (isOpen) {
-      getProviders().then(setProviders);
+      void getProviders().then(setProviders);
     }
   }, [isOpen]);
 
@@ -83,25 +93,23 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                   // Randomize providers order
                   const shuffled = Object.values(providers).sort(
                     () => Math.random() - 0.5
-                  );
-                  return shuffled.map((provider) => {
-                    const p = provider as any;
+                  );                  return shuffled.map((provider) => {
                     const style =
-                      providerStyles[p.id] ||
+                      providerStyles[provider.id] ??
                       "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
                     return (
                       <button
-                        key={p.id}
-                        onClick={() => handleSignIn(p.id)}
+                        key={provider.id}
+                        onClick={() => handleSignIn(provider.id)}
                         disabled={isLoading !== null}
                         className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition disabled:opacity-50 ${style}`}
                       >
-                        {isLoading === p.id ? (
+                        {isLoading === provider.id ? (
                           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         ) : (
                           <Image
-                            src={`https://authjs.dev/img/providers/${p.id}.svg`}
-                            alt={`${p.name} logo`}
+                            src={`https://authjs.dev/img/providers/${provider.id}.svg`}
+                            alt={`${provider.name} logo`}
                             height={24}
                             width={24}
                             className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
@@ -109,9 +117,9 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                           />
                         )}
                         <span className="font-medium">
-                          {isLoading === p.id
+                          {isLoading === provider.id
                             ? "Signing in..."
-                            : `Continue with ${p.name}`}
+                            : `Continue with ${provider.name}`}
                         </span>
                       </button>
                     );

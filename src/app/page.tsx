@@ -113,7 +113,7 @@ export default async function Home() {
                     Ready to spread some Christmas magic?
                   </h3>
                   <p className="text-xl text-red-100 mb-4 leading-relaxed">
-                    Join thousands of remote workers making the holidays special for their colleagues
+                    Join other remote workers making the holidays special for their colleagues
                   </p>
                 </div>
                 
@@ -169,15 +169,15 @@ export default async function Home() {
 
 
 
-        {/* Show kudos form only for authenticated users with enabled domains */}
-        {showKudosForm && (
-          <div className="w-full max-w-4xl">
-            <KudosForm />
-          </div>
-        )}
 
-        {/* Always show the kudos feed */}
-        <div className="w-full max-w-4xl">
+
+        
+        <div id="kudos-section" className="w-full max-w-4xl">
+        {/* Show kudos form only for authenticated users with enabled domains */}
+          {showKudosForm && (
+              <KudosForm />
+          )}
+          {/* Always show the kudos feed */}
           <KudosFeed />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Preloader } from "./preloader";
+import { ShoppingCartIcon, ChatBubbleLeftRightIcon, GlobeAltIcon } from "@heroicons/react/24/solid";
 
 type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 
@@ -153,6 +154,15 @@ export function WishlistManager() {
     });
   };
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const yOffset = -24; // adjust if you have a sticky header
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Feature Guide - compact stats, feature boxes below */}
@@ -183,33 +193,54 @@ export function WishlistManager() {
         </div>
         {/* Feature boxes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
-            <div className="text-3xl mb-3">🛒</div>
-            <h4 className="text-lg font-semibold text-white mb-2">Browse &amp; Gift</h4>
+          {/* Browse & Gift */}
+          <button
+            type="button"
+            onClick={() => scrollToSection('assignments-section')}
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20 focus:outline-none focus:ring-2 focus:ring-orange-300 transition cursor-pointer hover:bg-orange-100/10 group w-full"
+          >
+            <h4 className="text-lg font-semibold text-white mb-2 flex items-center justify-center gap-2">
+              <ShoppingCartIcon className="w-6 h-6 text-orange-300 group-hover:text-orange-400 transition" aria-hidden="true" />
+              Browse &amp; Gift
+            </h4>
             <p className="text-blue-100 text-sm">
               Browse up to <b>3</b> colleague wishlists at a time. Send anonymous gifts or request more links when ready!
             </p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
-            <div className="text-3xl mb-3">💌</div>
-            <h4 className="text-lg font-semibold text-white mb-2">Kudos &amp; Thanks</h4>
+          </button>
+          {/* Kudos & Thanks */}
+          <button
+            type="button"
+            onClick={() => scrollToSection('kudos-section')}
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-200 transition cursor-pointer hover:bg-pink-100/10 group w-full"
+          >
+            <h4 className="text-lg font-semibold text-white mb-2 flex items-center justify-center gap-2">
+              <ChatBubbleLeftRightIcon className="w-6 h-6 text-pink-200 group-hover:text-pink-300 transition" aria-hidden="true" />
+              Kudos &amp; Thanks
+            </h4>
             <p className="text-blue-100 text-sm">
               Share anonymous thank you messages when you receive gifts. Spread positivity and Christmas cheer!
             </p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
-            <div className="text-3xl mb-3">🌍</div>
-            <h4 className="text-lg font-semibold text-white mb-2">Help a Stranger</h4>
+          </button>
+          {/* Help a Stranger */}
+          <button
+            type="button"
+            onClick={() => scrollToSection('assignments-section')}
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-200 transition cursor-pointer hover:bg-blue-100/10 group w-full"
+          >
+            <h4 className="text-lg font-semibold text-white mb-2 flex items-center justify-center gap-2">
+              <GlobeAltIcon className="w-6 h-6 text-blue-200 group-hover:text-blue-300 transition" aria-hidden="true" />
+              Help a Stranger
+            </h4>
             <p className="text-blue-100 text-sm">
               You can request more assignments after gifting, or help a stranger if your company runs out of wishlists.
             </p>
-          </div>
+          </button>
         </div>
       </div>
       
       {/* Request Initial Assignments or Waiting for Users */}
-      {(!assignments || assignments.length === 0) && stats && (stats.totalLinks < 10 && stats.departmentLinks < 2) ? (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6 text-center">
+      {(!assignments || assignments.length === 0) && stats && (stats.totalLinks < 10 && (stats.totalLinksInDepartment ?? 0) < 2) ? (
+        <div id="assignments-section" className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6 text-center">
           <h2 className="text-2xl font-semibold text-yellow-800 mb-4">Waiting for More Participants</h2>
           <p className="text-yellow-700 mb-4">
             There aren&apos;t enough wishlists or participants yet to get started. Please check back later when more people have joined and set up their profiles!
@@ -261,7 +292,7 @@ export function WishlistManager() {
 
       {/* Current Assignments */}
       {assignments && assignments.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div id="assignments-section" className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">Your Wishlist Assignments ({assignments.length})</h2>
             {/* Show 'Try for More Assignments' if <3, else 'Request More' */}
@@ -285,7 +316,7 @@ export function WishlistManager() {
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {assignments?.map((assignment: WishlistAssignment) => {
+            {assignments.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
               // Fix: Only treat as stranger if wishlistDomain is defined and different from userDomain, or if either is missing (but not both missing)
@@ -341,11 +372,11 @@ export function WishlistManager() {
                     </a>
                     
                     {!hasPurchase && !hasReport && (
-                        <div className="flex gap-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
-                          setSelectedAssignment(assignment.id);
-                          setModalType("purchase");
+                            setSelectedAssignment(assignment.id);
+                            setModalType("purchase");
                           }}
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         >
@@ -356,8 +387,8 @@ export function WishlistManager() {
                         </button>
                         <button
                           onClick={() => {
-                          setSelectedAssignment(assignment.id);
-                          setModalType("report");
+                            setSelectedAssignment(assignment.id);
+                            setModalType("report");
                           }}
                           className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         >
@@ -603,6 +634,12 @@ export function WishlistManager() {
           </div>
         </div>
       )}
+
+      {/*
+        REMINDER: Ensure your Kudos section container has id="kudos-section" for smooth scroll navigation.
+        Example:
+        <div id="kudos-section"> ...kudos content... </div>
+      */}
     </div>
   );
 }

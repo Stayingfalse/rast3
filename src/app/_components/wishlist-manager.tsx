@@ -155,102 +155,56 @@ export function WishlistManager() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* Header with stats */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">🎄 Santa&apos;s Wishlist Manager for {userProfile.domain} {userProfile.departmentId!==null ? `- ${userProfile.department?.name}` : ""}</h1>
-        <p className="text-gray-600 mb-4">
-          Shop from other people&apos;s wishlists and spread the holiday joy!
-        </p>
-          {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-center">
-            {/* Dynamic stats based on user's domain/department status */}
-            {stats.totalUsers && (
-              <div className="bg-green-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-green-600">{stats.totalUsers}</div>
-                <div className="text-sm text-green-700">Total Users</div>
-              </div>
-            )}
-            
-            {/* Always show total links */}
-            <div className="bg-blue-50 p-3 rounded-lg z-40">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalLinks ?? "-"}</div>
-              <div className="text-sm text-blue-700">
-                {stats.totalLinksInDomain !== undefined || stats.totalLinksInDepartment !== undefined 
-                  ? "Total Links Site Wide" 
-                  : "Total Links"}
-              </div>
-            </div>
-            
-            {/* Domain-specific stats */}
-            {stats.usersInDomain !== undefined && (
-              <div className="bg-indigo-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-indigo-600">{stats.usersInDomain}</div>
-                <div className="text-sm text-indigo-700">Users in Domain</div>
-              </div>
-            )}
-            
-            {stats.totalLinksInDomain !== undefined && (
-              <div className="bg-purple-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalLinksInDomain}</div>
-                <div className="text-sm text-purple-700">Total Links in Domain</div>
-              </div>
-            )}
-            
-            {stats.totalLinksInDepartment !== undefined && (
-              <div className="bg-cyan-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-cyan-600">{stats.totalLinksInDepartment}</div>
-                <div className="text-sm text-cyan-700">Total Links in Department</div>
-              </div>
-            )}
-            
-            {/* Unallocated links */}
-            {stats.totalUnallocatedLinks !== undefined && (
-              <div className="bg-orange-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-orange-600">{stats.totalUnallocatedLinks}</div>
-                <div className="text-sm text-orange-700">Total Unallocated Links</div>
-              </div>
-            )}
-            
-            {stats.totalUnallocatedLinksInDomain !== undefined && (
-              <div className="bg-amber-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-amber-600">{stats.totalUnallocatedLinksInDomain}</div>
-                <div className="text-sm text-amber-700">Unallocated Links in Domain</div>
-              </div>
-            )}
-            
-            {stats.totalUnallocatedLinksInDepartment !== undefined && (
-              <div className="bg-yellow-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-yellow-600">{stats.totalUnallocatedLinksInDepartment}</div>
-                <div className="text-sm text-yellow-700">Unallocated Links in Department</div>
-              </div>
-            )}
-            
-            {stats.totalGiftsSent !== undefined && (
-              <div className="bg-pink-50 p-3 rounded-lg z-40">
-                <div className="text-2xl font-bold text-pink-600">{stats.totalGiftsSent}</div>
-                <div className="text-sm text-pink-700">Total Gifts Sent</div>
-              </div>
-            )}
-            
-            {/* Fallback to legacy stats if new stats aren't available */}
-            {stats.totalUsers === undefined && stats.usersInDomain === undefined && (
-              <>
-                <div className="bg-blue-50 p-3 rounded-lg z-40">
-                  <div className="text-2xl font-bold text-blue-600">{stats.departmentLinks ?? "-"}</div>
-                  <div className="text-sm text-blue-700">Links in Your Department</div>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-lg z-40">
-                  <div className="text-2xl font-bold text-orange-600">{stats.unallocatedLinks ?? "-"}</div>
-                  <div className="text-sm text-orange-700">Unallocated Links</div>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-lg z-40">
-                  <div className="text-2xl font-bold text-purple-600">{stats.unallocatedDepartmentLinks ?? "-"}</div>
-                  <div className="text-sm text-purple-700">Unallocated in Your Dept</div>
-                </div>
-              </>
-            )}
+      {/* Feature Guide - compact stats, feature boxes below */}
+      <div className="bg-blue-600/20 backdrop-blur-sm rounded-xl p-6 border border-blue-400/30 mb-6">
+        <h3 className="text-xl font-bold text-white text-center mb-4">
+          🎯 Your Secret Santa Dashboard
+        </h3>
+        {/* Compact stats line */}
+        <div className="flex flex-wrap justify-center gap-4 mb-6 text-blue-100 text-base font-medium">
+          {stats?.totalUsers !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-green-200">👥</span> {stats.totalUsers} users</span>
+          )}
+          {stats?.totalLinks !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-blue-200">🔗</span> {stats.totalLinks} wishlists</span>
+          )}
+          {stats?.totalGiftsSent !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-pink-200">🎁</span> {stats.totalGiftsSent} gifts sent</span>
+          )}
+          {stats?.totalLinksInDomain !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-purple-200">🏢</span> {stats.totalLinksInDomain} in your domain</span>
+          )}
+          {stats?.totalLinksInDepartment !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-cyan-200">🏬</span> {stats.totalLinksInDepartment} in your dept</span>
+          )}
+          {stats?.totalUnallocatedLinks !== undefined && (
+            <span className="flex items-center gap-1"><span className="text-orange-200">🕵️‍♂️</span> {stats.totalUnallocatedLinks} unallocated</span>
+          )}
+        </div>
+        {/* Feature boxes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+            <div className="text-3xl mb-3">🛒</div>
+            <h4 className="text-lg font-semibold text-white mb-2">Browse &amp; Gift</h4>
+            <p className="text-blue-100 text-sm">
+              Browse up to <b>3</b> colleague wishlists at a time. Send anonymous gifts or request more links when ready!
+            </p>
           </div>
-        )}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+            <div className="text-3xl mb-3">💌</div>
+            <h4 className="text-lg font-semibold text-white mb-2">Kudos &amp; Thanks</h4>
+            <p className="text-blue-100 text-sm">
+              Share anonymous thank you messages when you receive gifts. Spread positivity and Christmas cheer!
+            </p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20">
+            <div className="text-3xl mb-3">🌍</div>
+            <h4 className="text-lg font-semibold text-white mb-2">Help a Stranger</h4>
+            <p className="text-blue-100 text-sm">
+              You can request more assignments after gifting, or help a stranger if your company runs out of wishlists.
+            </p>
+          </div>
+        </div>
       </div>
       
       {/* Request Initial Assignments or Waiting for Users */}

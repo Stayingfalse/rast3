@@ -161,36 +161,13 @@ export default async function Home() {
             </div>
           </div>
         )}
-        
+
         <div className="flex flex-col items-center gap-2">
           <AuthShowcase />
           <WishlistManager />
         </div>
 
-        {/* Feature Guide for Logged-in Users */}
-        {session && (
-          <div className="w-full max-w-4xl">
-            <div className="bg-blue-600/20 backdrop-blur-sm rounded-xl p-6 border border-blue-400/30">
-              <h3 className="text-xl font-bold text-white text-center mb-4">
-                🎯 Your Secret Santa Dashboard
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                  <h4 className="font-semibold text-white mb-2">🎁 Wishlist Manager</h4>
-                  <p className="text-blue-100 text-sm">
-                    Browse up to 3 colleague wishlists at a time. Send anonymous gifts or request more links when ready!
-                  </p>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                  <h4 className="font-semibold text-white mb-2">💌 Kudos & Thanks</h4>
-                  <p className="text-blue-100 text-sm">
-                    Share anonymous thank you messages when you receive gifts. Spread positivity and Christmas cheer!
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Show kudos form only for authenticated users with enabled domains */}
         {showKudosForm && (

@@ -28,16 +28,18 @@ export const env = createEnv({
    * Specify your client-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars. To expose them to the client, prefix them with
    * `NEXT_PUBLIC_`.
-   */
-  client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+   */  client: {
+    NEXT_PUBLIC_AUTH_DISCORD_ENABLED: z.string().optional(),
+    NEXT_PUBLIC_AUTH_GITHUB_ENABLED: z.string().optional(),
+    NEXT_PUBLIC_AUTH_TWITCH_ENABLED: z.string().optional(),
+    NEXT_PUBLIC_AUTH_GOOGLE_ENABLED: z.string().optional(),
+    NEXT_PUBLIC_AUTH_REDDIT_ENABLED: z.string().optional(),
   },
 
   /**
    * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
    * middlewares) or client-side so we need to destruct manually.
-   */
-  runtimeEnv: {
+   */  runtimeEnv: {
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_URL: process.env.AUTH_URL,
     AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
@@ -48,6 +50,11 @@ export const env = createEnv({
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_AUTH_DISCORD_ENABLED: process.env.AUTH_DISCORD_ID ? "1" : "",
+    NEXT_PUBLIC_AUTH_GITHUB_ENABLED: process.env.AUTH_GITHUB_ID ? "1" : "",
+    NEXT_PUBLIC_AUTH_TWITCH_ENABLED: process.env.AUTH_TWITCH_ID ? "1" : "",
+    NEXT_PUBLIC_AUTH_GOOGLE_ENABLED: process.env.AUTH_GOOGLE_ID ? "1" : "",
+    NEXT_PUBLIC_AUTH_REDDIT_ENABLED: process.env.AUTH_REDDIT_ID ? "1" : "",
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

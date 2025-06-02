@@ -23,14 +23,13 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
       setIsLoading(null);
     }
   };
-
   // Helper to check provider env vars
   const providerEnabled = {
-    discord: Boolean(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET),
-    github: Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET),
-    twitch: Boolean(process.env.AUTH_TWITCH_ID && process.env.AUTH_TWITCH_SECRET),
-    google: Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
-    reddit: Boolean(process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET),
+    discord: Boolean(process.env.NEXT_PUBLIC_AUTH_DISCORD_ENABLED),
+    github: Boolean(process.env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED),
+    twitch: Boolean(process.env.NEXT_PUBLIC_AUTH_TWITCH_ENABLED),
+    google: Boolean(process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED),
+    reddit: Boolean(process.env.NEXT_PUBLIC_AUTH_REDDIT_ENABLED),
   };
 
   if (!isOpen) return null;

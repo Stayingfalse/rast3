@@ -17,21 +17,35 @@ declare module "next-auth" {
       adminScope?: string | null;
     } & DefaultSession["user"];
   }
+
+  // Augment User type to include admin fields
+  interface User {
+    adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
+    adminScope?: string | null;
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   providers: [
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID!,
-      clientSecret: process.env.AUTH_GITHUB_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
-    Discord({
-      clientId: process.env.AUTH_DISCORD_ID!,
-      clientSecret: process.env.AUTH_DISCORD_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
+    ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
+      ? [
+          GitHub({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET
+      ? [
+          Discord({
+            clientId: process.env.AUTH_DISCORD_ID,
+            clientSecret: process.env.AUTH_DISCORD_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
       ? [
           Google({
@@ -53,8 +67,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET
       ? [
           Reddit({
-            clientId: process.env.AUTH_REDDIT_ID!,
-            clientSecret: process.env.AUTH_REDDIT_SECRET!,
+            clientId: process.env.AUTH_REDDIT_ID,
+            clientSecret: process.env.AUTH_REDDIT_SECRET,
             allowDangerousEmailAccountLinking: true,
           }),
         ]
@@ -94,12 +108,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     session: async ({ session, user }) => {
-      // Add adminLevel and adminScope to session.user if present
-      const { id, adminLevel, adminScope } = user as {
-        id: string;
-        adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
-        adminScope?: string | null;
-      };
+      const { id } = user;
+      // We can safely access these fields since we've augmented the User type
+      const { adminLevel, adminScope } = user;
+
       return {
         ...session,
         user: {

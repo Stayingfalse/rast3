@@ -73,6 +73,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
+    ...(process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET
+      ? [
+        Instagram({
+        clientId: process.env.AUTH_INSTAGRAM_ID,
+        clientSecret: process.env.AUTH_INSTAGRAM_SECRET,
+        allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+      : []),
+    ...(process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET
+      ? [
+        Facebook({
+        clientId: process.env.AUTH_FACEBOOK_ID,
+        clientSecret: process.env.AUTH_FACEBOOK_SECRET,
+        allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+      : []),
+    ...(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET
+      ? [
+        TikTok({
+        clientId: process.env.AUTH_TIKTOK_ID,github
+        clientSecret: process.env.AUTH_TIKTOK_SECRET,
+        allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+      : []),
   ],
   cookies: {
     sessionToken: {

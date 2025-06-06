@@ -101,14 +101,22 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Sign in to your account
           </h2>          <div className="space-y-3">
-            {providers
-              ? (() => {
+            {isLoading ? (
+              // Show preloader when any authentication is in progress
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>
+                <p className="text-gray-600 font-medium">
+                  {isLoading === "email" ? "Sending magic link..." : "Signing you in..."}
+                </p>
+              </div>
+            ) : providers ? (
+              (() => {
                   // Separate email provider from OAuth providers
                   const allProviders = Object.values(providers);
                   const emailProvider = allProviders.find(p => p.id === "email");
                   const oauthProviders = allProviders.filter(p => p.id !== "email");
                   
-                  // Randomize OAuth providers order
+                  // Randomize OAuth providers order only once when not loading
                   const shuffledOAuth = oauthProviders.sort(() => Math.random() - 0.5);
                   
                   return (
@@ -116,10 +124,10 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                       {/* Email provider with special form */}
                       {emailProvider && (
                         <div className="space-y-3">
-                          {!showEmailForm ? (
-                            <button
+                          {!showEmailForm ? (                            <button
                               onClick={() => setShowEmailForm(true)}
-                              className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white border-0"
+                              disabled={isLoading !== null}
+                              className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white border-0 disabled:opacity-50"
                             >
                               <Image
                                 src={`https://authjs.dev/img/providers/email.svg`}
@@ -141,24 +149,23 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                                 required
                               />
-                              <div className="flex gap-2">
-                                <button
+                              <div className="flex gap-2">                                <button
                                   type="submit"
-                                  disabled={isLoading === "email" || !email}
+                                  disabled={isLoading !== null || !email}
                                   className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                                 >
                                   {isLoading === "email" ? (
                                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                   ) : null}
                                   {isLoading === "email" ? "Sending..." : "Send Magic Link"}
-                                </button>
-                                <button
+                                </button>                                <button
                                   type="button"
+                                  disabled={isLoading !== null}
                                   onClick={() => {
                                     setShowEmailForm(false);
                                     setEmail("");
                                   }}
-                                  className="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium"
+                                  className="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium disabled:opacity-50"
                                 >
                                   Cancel
                                 </button>
@@ -210,10 +217,11 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                           </button>
                         );
                       })}
-                    </>
-                  );
+                    </>                  );
                 })()
-              : "Loading providers..."}
+            ) : (
+              "Loading providers..."
+            )}
           </div>
           <p className="mt-6 text-sm text-gray-500">
             By signing in, you agree to our terms of service and{" "}

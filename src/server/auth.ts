@@ -8,6 +8,7 @@ import Reddit from "next-auth/providers/reddit";
 import Instagram from "next-auth/providers/instagram";
 import Facebook from "next-auth/providers/facebook";
 import TikTok from "next-auth/providers/tiktok";
+import Email from "next-auth/providers/email";
 import { type DefaultSession } from "next-auth";
 import { db } from "~/server/db";
 
@@ -93,8 +94,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         allowDangerousEmailAccountLinking: true,
         }),
       ]
-      : []),
-    ...(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET
+      : []),    ...(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET
       ? [
         TikTok({
         clientId: process.env.AUTH_TIKTOK_ID,
@@ -102,6 +102,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         allowDangerousEmailAccountLinking: true,
         }),
       ]
+      : []),
+    // Email provider for magic links
+    ...(process.env.EMAIL_SERVER_HOST
+      ? [
+          Email({
+            server: {
+              host: process.env.EMAIL_SERVER_HOST,
+              port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
+              auth: {
+                user: process.env.EMAIL_SERVER_USER,
+                pass: process.env.EMAIL_SERVER_PASSWORD,
+              },
+            },
+            from: process.env.EMAIL_FROM,
+          }),
+        ]
       : []),
   ],
   cookies: {

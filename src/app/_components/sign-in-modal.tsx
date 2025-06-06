@@ -11,40 +11,59 @@ interface SignInModalProps {
   onClose: () => void;
 }
 
+interface Provider {
+  id: string;
+  name: string;
+  type: string;
+  signinUrl: string;
+  callbackUrl: string;
+}
+
+type ProvidersState = Record<string, Provider> | null;
+
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
-  const [providers, setProviders] = useState<any>(null);
+  const [providers, setProviders] = useState<ProvidersState>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
-      getProviders().then(setProviders);
+      void getProviders().then(setProviders);
     }
-  }, [isOpen]);
-
-  const handleSignIn = async (providerId: string) => {
+  }, [isOpen]);  const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
-      await signIn(providerId);
+      if (providerId === "nodemailer" && email) {
+        await signIn(providerId, { email });
+      } else {
+        await signIn(providerId);
+      }
     } catch (error) {
       console.error("Sign in error:", error);
     } finally {
       setIsLoading(null);
     }
   };
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      await handleSignIn("nodemailer", email);
+    }
+  };
 
   if (!isOpen) return null;
-
   // Provider button color mapping
   const providerStyles: Record<string, string> = {
     github: "bg-gray-800 hover:bg-gray-900 text-white border border-gray-300",
-    google: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",
-    discord: "bg-[#5865F2] hover:bg-[#4752C4] text-white",
+    google: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",    discord: "bg-[#5865F2] hover:bg-[#4752C4] text-white",
     twitch: "bg-[#9147FF] hover:bg-[#772CE8] text-white",
     reddit: "bg-[#FF4500] hover:bg-[#D73600] text-white",
     facebook: "bg-[#1877F3] hover:bg-[#145DB2] text-white",
     instagram:
       "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white border-0",
     tiktok: "bg-black hover:bg-gray-900 text-white border-0",
+    nodemailer: "bg-green-600 hover:bg-green-700 text-white border-0",
   };
 
   return (
@@ -76,48 +95,125 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           </p>
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Sign in to your account
-          </h2>
-          <div className="space-y-3">
-            {providers
-              ? (() => {
-                  // Randomize providers order
-                  const shuffled = Object.values(providers).sort(
-                    () => Math.random() - 0.5
-                  );
-                  return shuffled.map((provider) => {
-                    const p = provider as any;
-                    const style =
-                      providerStyles[p.id] ||
-                      "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => handleSignIn(p.id)}
-                        disabled={isLoading !== null}
-                        className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition disabled:opacity-50 ${style}`}
-                      >
-                        {isLoading === p.id ? (
-                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        ) : (
-                          <Image
-                            src={`https://authjs.dev/img/providers/${p.id}.svg`}
-                            alt={`${p.name} logo`}
-                            height={24}
-                            width={24}
-                            className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
-                            loading="lazy"
-                          />
-                        )}
-                        <span className="font-medium">
-                          {isLoading === p.id
-                            ? "Signing in..."
-                            : `Continue with ${p.name}`}
-                        </span>
-                      </button>
-                    );
-                  });
+          </h2>          <div className="space-y-3">
+            {isLoading ? (
+              // Show preloader when any authentication is in progress
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>                <p className="text-gray-600 font-medium">
+                  {isLoading === "nodemailer" ? "Sending magic link..." : "Signing you in..."}
+                </p>
+              </div>
+            ) : providers ? (
+              (() => {                  // Separate nodemailer provider from OAuth providers
+                  const allProviders = Object.values(providers);
+                  const emailProvider = allProviders.find(p => p.id === "nodemailer");
+                  const oauthProviders = allProviders.filter(p => p.id !== "nodemailer");
+                  
+                  // Randomize OAuth providers order only once when not loading
+                  const shuffledOAuth = oauthProviders.sort(() => Math.random() - 0.5);
+                  
+                  return (
+                    <>
+                      {/* Email provider with special form */}
+                      {emailProvider && (
+                        <div className="space-y-3">
+                          {!showEmailForm ? (                            <button
+                              onClick={() => setShowEmailForm(true)}
+                              disabled={isLoading !== null}
+                              className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white border-0 disabled:opacity-50"
+                            >
+                              <Image
+                                src={`https://authjs.dev/img/providers/email.svg`}
+                                alt="Email logo"
+                                height={24}
+                                width={24}
+                                className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
+                                loading="lazy"
+                              />
+                              <span className="font-medium">Continue with Email</span>
+                            </button>
+                          ) : (
+                            <form onSubmit={handleEmailSubmit} className="space-y-3">
+                              <input
+                                type="email"
+                                placeholder="Enter your email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                required
+                              />
+                              <div className="flex gap-2">                                <button
+                                  type="submit"
+                                  disabled={isLoading !== null || !email}
+                                  className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                                >                                  {isLoading === "nodemailer" ? (
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                  ) : null}
+                                  {isLoading === "nodemailer" ? "Sending..." : "Send Magic Link"}
+                                </button>                                <button
+                                  type="button"
+                                  disabled={isLoading !== null}
+                                  onClick={() => {
+                                    setShowEmailForm(false);
+                                    setEmail("");
+                                  }}
+                                  className="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                          {oauthProviders.length > 0 && (
+                            <div className="relative">
+                              <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-gray-300" />
+                              </div>
+                              <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* OAuth providers */}
+                      {shuffledOAuth.map((provider) => {
+                        const style =
+                          providerStyles[provider.id] ??
+                          "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
+                        return (
+                          <button
+                            key={provider.id}
+                            onClick={() => handleSignIn(provider.id)}
+                            disabled={isLoading !== null}
+                            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition disabled:opacity-50 ${style}`}
+                          >
+                            {isLoading === provider.id ? (
+                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            ) : (
+                              <Image
+                                src={`https://authjs.dev/img/providers/${provider.id}.svg`}
+                                alt={`${provider.name} logo`}
+                                height={24}
+                                width={24}
+                                className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
+                                loading="lazy"
+                              />
+                            )}
+                            <span className="font-medium">
+                              {isLoading === provider.id
+                                ? "Signing in..."
+                                : `Continue with ${provider.name}`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </>                  );
                 })()
-              : "Loading providers..."}
+            ) : (
+              "Loading providers..."
+            )}
           </div>
           <p className="mt-6 text-sm text-gray-500">
             By signing in, you agree to our terms of service and{" "}

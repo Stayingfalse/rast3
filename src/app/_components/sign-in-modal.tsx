@@ -43,7 +43,6 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   };
 
   if (!isOpen) return null;
-
   // Provider button color mapping
   const providerStyles: Record<string, string> = {
     github: "bg-gray-800 hover:bg-gray-900 text-white border border-gray-300",
@@ -55,6 +54,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     instagram:
       "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white border-0",
     tiktok: "bg-black hover:bg-gray-900 text-white border-0",
+    email: "bg-green-600 hover:bg-green-700 text-white border-0",
   };
 
   return (

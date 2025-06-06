@@ -8,7 +8,7 @@ import Reddit from "next-auth/providers/reddit";
 import Instagram from "next-auth/providers/instagram";
 import Facebook from "next-auth/providers/facebook";
 import TikTok from "next-auth/providers/tiktok";
-import Email from "next-auth/providers/email";
+import Nodemailer from "next-auth/providers/nodemailer";
 import { type DefaultSession } from "next-auth";
 import { db } from "~/server/db";
 
@@ -102,11 +102,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         allowDangerousEmailAccountLinking: true,
         }),
       ]
-      : []),
-    // Email provider for magic links
+      : []),    // Nodemailer provider for magic links
     ...(process.env.EMAIL_SERVER_HOST
       ? [
-          Email({
+          Nodemailer({
             server: {
               host: process.env.EMAIL_SERVER_HOST,
               port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),

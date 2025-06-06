@@ -4,7 +4,7 @@ This document explains how to set up and use magic links email authentication in
 
 ## Overview
 
-Magic links allow users to sign in by clicking a link sent to their email address, eliminating the need for passwords. This feature is implemented using NextAuth.js's Email provider.
+Magic links allow users to sign in by clicking a link sent to their email address, eliminating the need for passwords. This feature is implemented using NextAuth.js's Nodemailer provider.
 
 ## Configuration
 

@@ -31,11 +31,10 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     if (isOpen) {
       void getProviders().then(setProviders);
     }
-  }, [isOpen]);
-  const handleSignIn = async (providerId: string, email?: string) => {
+  }, [isOpen]);  const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
-      if (providerId === "email" && email) {
+      if (providerId === "nodemailer" && email) {
         await signIn(providerId, { email });
       } else {
         await signIn(providerId);
@@ -46,16 +45,14 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
       setIsLoading(null);
     }
   };
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      await handleSignIn("email", email);
+      await handleSignIn("nodemailer", email);
     }
   };
 
   if (!isOpen) return null;
-
   // Provider button color mapping
   const providerStyles: Record<string, string> = {
     github: "bg-gray-800 hover:bg-gray-900 text-white border border-gray-300",
@@ -66,9 +63,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     instagram:
       "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white border-0",
     tiktok: "bg-black hover:bg-gray-900 text-white border-0",
-    email: "bg-green-600 hover:bg-green-700 text-white border-0",
-    sendgrid: "bg-blue-600 hover:bg-blue-700 text-white border-0",
-    resend: "bg-purple-600 hover:bg-purple-700 text-white border-0",
+    nodemailer: "bg-green-600 hover:bg-green-700 text-white border-0",
   };
 
   return (
@@ -104,17 +99,15 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
             {isLoading ? (
               // Show preloader when any authentication is in progress
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>
-                <p className="text-gray-600 font-medium">
-                  {isLoading === "email" ? "Sending magic link..." : "Signing you in..."}
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>                <p className="text-gray-600 font-medium">
+                  {isLoading === "nodemailer" ? "Sending magic link..." : "Signing you in..."}
                 </p>
               </div>
             ) : providers ? (
-              (() => {
-                  // Separate email provider from OAuth providers
+              (() => {                  // Separate nodemailer provider from OAuth providers
                   const allProviders = Object.values(providers);
-                  const emailProvider = allProviders.find(p => p.id === "email");
-                  const oauthProviders = allProviders.filter(p => p.id !== "email");
+                  const emailProvider = allProviders.find(p => p.id === "nodemailer");
+                  const oauthProviders = allProviders.filter(p => p.id !== "nodemailer");
                   
                   // Randomize OAuth providers order only once when not loading
                   const shuffledOAuth = oauthProviders.sort(() => Math.random() - 0.5);
@@ -153,11 +146,10 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                                   type="submit"
                                   disabled={isLoading !== null || !email}
                                   className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-                                >
-                                  {isLoading === "email" ? (
+                                >                                  {isLoading === "nodemailer" ? (
                                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                   ) : null}
-                                  {isLoading === "email" ? "Sending..." : "Send Magic Link"}
+                                  {isLoading === "nodemailer" ? "Sending..." : "Send Magic Link"}
                                 </button>                                <button
                                   type="button"
                                   disabled={isLoading !== null}

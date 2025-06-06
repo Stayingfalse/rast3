@@ -50,33 +50,34 @@ model Session {
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  name               String?
-  email              String?              @unique
-  emailVerified      DateTime?
-  image              String?
-  amazonWishlistUrl  String?
-  wishlistViews      Int                   @default(0)
-  departmentId       String?
-  domain             String?
-  firstName          String?
-  lastName           String?
-  profileCompleted   Boolean              @default(false)
-  profileCompletedAt DateTime?
-  workEmail          String?              @unique
-  adminLevel         AdminLevel           @default(USER)
-  adminScope         String?
-  accounts           Account[]
-  posts              Post[]
-  purchases          Purchase[]
-  sessions           Session[]
-  department         Department?          @relation(fields: [departmentId], references: [id])
-  assignedLinks      WishlistAssignment[] @relation("AssignedUser")
-  ownedWishlist      WishlistAssignment[] @relation("WishlistOwner")
-  reports            WishlistReport[]
-  createdDomains     Domain[]
-  kudosGiven         Kudos[]
-  moderatedKudos     Kudos[]              @relation("KudosModerator")
+  id                   String               @id @default(cuid())
+  name                 String?
+  email                String?              @unique
+  emailVerified        DateTime?
+  image                String?
+  amazonWishlistUrl    String?
+  wishlistViews        Int                  @default(0)
+  departmentId         String?
+  domain               String?
+  firstName            String?
+  lastName             String?
+  profileCompleted     Boolean              @default(false)
+  profileCompletedAt   DateTime?
+  workEmail            String?              @unique
+  adminLevel           AdminLevel           @default(USER)
+  adminScope           String?
+  accounts             Account[]
+  createdAuthProviders AuthProvider[]
+  createdDomains       Domain[]
+  moderatedKudos       Kudos[]              @relation("KudosModerator")
+  kudosGiven           Kudos[]
+  posts                Post[]
+  purchases            Purchase[]
+  sessions             Session[]
+  department           Department?          @relation(fields: [departmentId], references: [id])
+  assignedLinks        WishlistAssignment[] @relation("AssignedUser")
+  ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
+  reports              WishlistReport[]
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -140,9 +141,9 @@ model Purchase {
   wishlistAssignmentId String             @unique
   purchasedAt          DateTime           @default(now())
   notes                String?
+  kudos                Kudos[]
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   wishlistAssignment   WishlistAssignment @relation(fields: [wishlistAssignmentId], references: [id], onDelete: Cascade)
-  kudos                Kudos[]
 
   @@index([userId])
   @@index([wishlistAssignmentId])
@@ -167,24 +168,42 @@ model WishlistReport {
 }
 
 model Kudos {
-  id           String    @id @default(cuid())
-  userId       String
-  purchaseId   String?
-  message      String    @db.Text // Allow longer messages for WordPress imports
-  images       String    @db.Text // JSON-encoded array of image URLs
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  hidden       Boolean   @default(false)
-  moderatedBy  String?
-  moderatedAt  DateTime?
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  purchase     Purchase? @relation(fields: [purchaseId], references: [id])
-  moderator    User?     @relation("KudosModerator", fields: [moderatedBy], references: [id])
+  id          String    @id @default(cuid())
+  userId      String
+  purchaseId  String?
+  message     String    @db.Text
+  images      String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  hidden      Boolean   @default(false)
+  moderatedAt DateTime?
+  moderatedBy String?
+  moderator   User?     @relation("KudosModerator", fields: [moderatedBy], references: [id])
+  purchase    Purchase? @relation(fields: [purchaseId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([purchaseId])
   @@index([hidden])
   @@index([moderatedBy])
+}
+
+model AuthProvider {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  displayName     String
+  clientId        String?
+  clientSecret    String?
+  enabled         Boolean  @default(false)
+  isEmailProvider Boolean  @default(false)
+  emailConfig     Json?    // For email provider specific settings
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       String
+  creator         User     @relation(fields: [createdBy], references: [id])
+
+  @@index([enabled])
+  @@index([createdBy])
 }
 
 enum AdminLevel {

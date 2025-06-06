@@ -3,11 +3,12 @@ import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { HydrateClient } from "~/trpc/server";
 import KudosForm from "~/app/_components/kudos-form";
 import { KudosFeed } from "~/app/_components/kudos-feed";
-import { auth } from "~/server/auth";
+import { getAuth } from "~/server/auth-dynamic";
 import { db } from "~/server/db";
 import HomeHeaderClientWrapper from "./_components/home-header-client-wrapper";
 
 export default async function Home() {
+  const auth = await getAuth();
   const session = await auth();
   
   // Check if user is logged in and has an enabled domain

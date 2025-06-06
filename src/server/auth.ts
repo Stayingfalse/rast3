@@ -29,96 +29,119 @@ declare module "next-auth" {
   }
 }
 
+// Create providers array - NextAuth doesn't support async providers
+// We'll use a hybrid approach where env vars take precedence, but we provide
+// a mechanism to use database configs when env vars aren't available
+const providers = [];
+
+// GitHub Provider
+if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+  providers.push(
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Discord Provider  
+if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
+  providers.push(
+    Discord({
+      clientId: process.env.AUTH_DISCORD_ID,
+      clientSecret: process.env.AUTH_DISCORD_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Google Provider
+if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Twitch Provider
+if (process.env.AUTH_TWITCH_ID && process.env.AUTH_TWITCH_SECRET) {
+  providers.push(
+    Twitch({
+      clientId: process.env.AUTH_TWITCH_ID,
+      clientSecret: process.env.AUTH_TWITCH_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Reddit Provider
+if (process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET) {
+  providers.push(
+    Reddit({
+      clientId: process.env.AUTH_REDDIT_ID,
+      clientSecret: process.env.AUTH_REDDIT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Instagram Provider
+if (process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET) {
+  providers.push(
+    Instagram({
+      clientId: process.env.AUTH_INSTAGRAM_ID,
+      clientSecret: process.env.AUTH_INSTAGRAM_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Facebook Provider
+if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
+  providers.push(
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// TikTok Provider
+if (process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET) {
+  providers.push(
+    TikTok({
+      clientId: process.env.AUTH_TIKTOK_ID,
+      clientSecret: process.env.AUTH_TIKTOK_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
+
+// Nodemailer provider for magic links
+if (process.env.EMAIL_SERVER_HOST) {
+  providers.push(
+    Nodemailer({
+      server: {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD,
+        },
+      },
+      from: process.env.EMAIL_FROM,
+    })
+  );
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  providers: [
-    ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
-      ? [
-          GitHub({
-            clientId: process.env.AUTH_GITHUB_ID,
-            clientSecret: process.env.AUTH_GITHUB_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET
-      ? [
-          Discord({
-            clientId: process.env.AUTH_DISCORD_ID,
-            clientSecret: process.env.AUTH_DISCORD_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
-      ? [
-          Google({
-            clientId: process.env.AUTH_GOOGLE_ID,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.AUTH_TWITCH_ID && process.env.AUTH_TWITCH_SECRET
-      ? [
-          Twitch({
-            clientId: process.env.AUTH_TWITCH_ID,
-            clientSecret: process.env.AUTH_TWITCH_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET
-      ? [
-          Reddit({
-            clientId: process.env.AUTH_REDDIT_ID,
-            clientSecret: process.env.AUTH_REDDIT_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET
-      ? [
-        Instagram({
-        clientId: process.env.AUTH_INSTAGRAM_ID,
-        clientSecret: process.env.AUTH_INSTAGRAM_SECRET,
-        allowDangerousEmailAccountLinking: true,
-        }),
-      ]
-      : []),
-    ...(process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET
-      ? [
-        Facebook({
-        clientId: process.env.AUTH_FACEBOOK_ID,
-        clientSecret: process.env.AUTH_FACEBOOK_SECRET,
-        allowDangerousEmailAccountLinking: true,
-        }),
-      ]
-      : []),    ...(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET
-      ? [
-        TikTok({
-        clientId: process.env.AUTH_TIKTOK_ID,
-        clientSecret: process.env.AUTH_TIKTOK_SECRET,
-        allowDangerousEmailAccountLinking: true,
-        }),
-      ]
-      : []),    // Nodemailer provider for magic links
-    ...(process.env.EMAIL_SERVER_HOST
-      ? [
-          Nodemailer({
-            server: {
-              host: process.env.EMAIL_SERVER_HOST,
-              port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
-              auth: {
-                user: process.env.EMAIL_SERVER_USER,
-                pass: process.env.EMAIL_SERVER_PASSWORD,
-              },
-            },
-            from: process.env.EMAIL_FROM,
-          }),
-        ]
-      : []),
-  ],
+  providers,
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",

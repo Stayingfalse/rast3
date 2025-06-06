@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { type Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { Toaster } from "react-hot-toast";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { AuthProvider } from "./_components/auth-provider";
@@ -52,10 +53,21 @@ export default function RootLayout({
             </header>            <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>
-              </AuthProvider>
-            </div>
+              </AuthProvider>            </div>
             {/* Cookie Consent Banner */}
             <CookieConsent />
+            {/* Toast Notifications */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#1f2937',
+                  color: '#f9fafb',
+                  border: '1px solid #374151',
+                },
+              }}
+            />
           </main>
         </body>
       </SessionProvider>

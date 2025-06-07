@@ -1,9 +1,32 @@
 // Email templates for NextAuth.js magic links with Christmas/Secret Santa branding
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 interface EmailTemplateParams {
   url: string;
   host: string;
   email: string;
+}
+
+function encodeImageToBase64(filePath: string, mimeType: string): string {
+  try {
+    const imageBuffer = readFileSync(filePath);
+    const base64String = imageBuffer.toString('base64');
+    return `data:${mimeType};base64,${base64String}`;
+  } catch (error) {
+    console.error(`Error encoding image ${filePath}:`, error);
+    // Return a fallback transparent pixel
+    return `data:${mimeType};base64,`;
+  }
+}
+
+function getEncodedImages() {
+  const publicDir = join(process.cwd(), 'public');
+  
+  return {
+    headerSvg: encodeImageToBase64(join(publicDir, 'header.svg'), 'image/svg+xml'),
+    plaidPng: encodeImageToBase64(join(publicDir, 'plaid.png'), 'image/png'),
+  };
 }
 
 function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams): {
@@ -12,6 +35,9 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
   text: string;
 } {
   const subject = `🎅 Sign in to ${host} - Your Magic Link is Here!`;
+  
+  // Get embedded images as base64 data URIs
+  const images = getEncodedImages();
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -24,10 +50,9 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
       margin: 0;
       padding: 0;
       font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      line-height: 1.6;
-      color: #f9fafb;
+      line-height: 1.6;      color: #f9fafb;
       background-color: #13264D;
-      background-image: url('https://${host}/plaid.png');
+      background-image: url('${images.plaidPng}');
       background-repeat: repeat;
       background-attachment: fixed;
       background-position: top;
@@ -158,8 +183,7 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
   <div class="container">
     <div class="email-wrapper">
       <div class="header">
-        <img src="https://${host}/header.svg" alt="Random Acts of Santa 2025" class="header-logo">
-        <h1>Magic Link Ready!</h1>
+        <h1>Random Acts of Santa - 2025!</h1>
       </div>
       
       <div class="content">

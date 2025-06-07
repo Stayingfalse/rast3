@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  ChatBubbleLeftRightIcon,
-  GlobeAltIcon,
-  ShoppingCartIcon,
+    ChatBubbleLeftRightIcon,
+    GlobeAltIcon,
+    ShoppingCartIcon,
 } from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
 import { useState } from "react";

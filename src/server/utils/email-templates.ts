@@ -35,193 +35,168 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
   text: string;
 } {
   const subject = `🎅 Sign in to ${host} - Your Magic Link is Here!`;
-  
-  // Get embedded images as base64 data URIs
+    // Get embedded images as base64 data URIs
   const images = getEncodedImages();
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
+
+  const html = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
   <title>Sign in to ${host}</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      line-height: 1.6;      color: #f9fafb;
-      background-color: #13264D;
-      background-image: url('${images.plaidPng}');
-      background-repeat: repeat;
-      background-attachment: fixed;
-      background-position: top;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .email-wrapper {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-    }
-    .header {
-      background: #13264D;
-      padding: 40px 20px 30px;
-      text-align: center;
-      color: white;
-      position: relative;
-    }
-    .header-logo {
-      max-width: 400px;
-      width: 100%;
-      height: auto;
-      margin-bottom: 15px;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: bold;
-      color: #f9fafb;
-    }
-    .header .emoji {
-      font-size: 36px;
-      margin-bottom: 10px;
-      display: block;
-    }
-    .content {
-      padding: 40px 30px;
-      text-align: center;
-      background: white;
-      color: #1f2937;
-    }
-    .greeting {
-      font-size: 20px;
-      color: #1f2937;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-    .message {
-      font-size: 16px;
-      color: #4b5563;
-      margin-bottom: 30px;
-      line-height: 1.7;
-    }
-    .cta-button {
-      display: inline-block;
-      background: #dc2626;
-      color: white !important;
-      text-decoration: none;
-      padding: 16px 32px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 18px;
-      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
-      transition: all 0.3s ease;
-      margin: 20px 0;
-      border: none;
-    }
-    .cta-button:hover {
-      background: #b91c1c;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
-    }
-    .security-note {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 30px 0;
-      color: #166534;
-      font-size: 14px;
-    }
-    .security-note .icon {
-      color: #16a34a;
-      font-size: 18px;
-      margin-right: 8px;    }
-    .footer {
-      background: #1f2937;
-      padding: 20px 30px;
-      text-align: center;
-      border-top: 1px solid #374151;
-      color: #f9fafb;
-      font-size: 14px;
-    }
-    .footer-divider {
-      margin: 15px 0;
-      height: 1px;
-      background: #374151;
-    }
-    .christmas-decoration {
-      font-size: 24px;
-      margin: 20px 0;
-      opacity: 0.8;
-    }
-    @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-      .content {
-        padding: 30px 20px;
-      }
-      .cta-button {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .header-logo {
-        max-width: 300px;
-      }
-    }
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">
+    /* Email client resets */
+    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    
+    /* Outlook specific */
+    <!--[if mso]>
+    table { border-collapse: collapse; }
+    <![endif]-->
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="email-wrapper">
-      <div class="header">
-        <h1>Random Acts of Santa - 2025!</h1>
-      </div>
-      
-      <div class="content">
-        <div class="greeting">Ho ho ho! 🎄</div>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; background-color: #0f172a; width: 100% !important; min-width: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+  <!-- Background wrapper table -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0f172a; margin: 0; padding: 0;">
+    <tr>
+      <td align="center" style="padding: 0;">
+        <!-- Full-width header image section -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1e3a8a; margin: 0;">
+          <tr>
+            <td align="center" style="padding: 40px 20px 30px; text-align: center; color: #ffffff; font-family: Arial, Helvetica, sans-serif;">
+              <img src="${images.headerSvg}" alt="Random Acts of Santa" style="max-width: 600px; width: 100%; height: auto; margin: 0 auto 15px auto; display: block;" />
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #ffffff; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">Random Acts of Santa - 2025!</h1>
+            </td>
+          </tr>
+        </table>
         
-        <p class="message">
-          We've prepared your magic link to sign in to <strong>${host}</strong>. 
-          Just like Santa's sleigh, this link will take you straight to your destination!
-        </p>
+        <!-- Main container table -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; margin: 0 auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!--[if mso]>
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+          <td>
+          <![endif]-->
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px 30px; text-align: center; background-color: #ffffff; color: #1f2937; font-family: Arial, Helvetica, sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <h2 style="font-size: 20px; color: #1f2937; margin: 0 0 20px 0; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Ho ho ho! 🎄</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="font-size: 16px; color: #4b5563; margin: 0 0 30px 0; line-height: 1.7; font-family: Arial, Helvetica, sans-serif;">
+                      We've prepared your magic link to sign in to <strong>${host}</strong>. 
+                      Just like Santa's sleigh, this link will take you straight to your destination!
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <div style="font-size: 24px; margin: 20px 0; opacity: 0.8;">🎁 ❄️ 🔔 ❄️ 🎁</div>
+                  </td>                </tr>
+                <tr>
+                  <td align="center" style="padding: 20px 0;">
+                    <!-- Button table for better email client support -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td style="background-color: #dc2626; padding: 0; text-align: center;">
+                          <!--[if mso]>
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#dc2626">
+                          <w:anchorlock/>
+                          <center>
+                          <![endif]-->
+                          <a href="${url}" style="display: inline-block; background-color: #dc2626; color: #ffffff !important; text-decoration: none; padding: 16px 32px; font-weight: 600; font-size: 18px; font-family: Arial, Helvetica, sans-serif; border: none; text-align: center; line-height: 18px;">
+                            🎅 Sign In Now
+                          </a>
+                          <!--[if mso]>
+                          </center>
+                          </v:roundrect>
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </td>                </tr>
+                <tr>
+                  <td align="center" style="padding: 30px 0 0 0;">
+                    <!-- Security note -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0;">
+                      <tr>
+                        <td style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; color: #166534; font-size: 14px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+                          <span style="color: #16a34a; font-size: 18px; margin-right: 8px;">🔒</span>
+                          <strong>Security Note:</strong> This magic link will expire in 24 hours and can only be used once. 
+                          If you didn't request this email, you can safely ignore it.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 30px 0 0 0;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+                      Having trouble with the button? Copy and paste this link into your browser:<br>
+                      <span style="word-break: break-all; color: #dc2626;">${url}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #1f2937; padding: 20px 30px; text-align: center; border-top: 1px solid #374151; color: #ffffff; font-size: 14px; font-family: Arial, Helvetica, sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0 0 15px 0; color: #ffffff;">🎄 Happy holidays from the ${host} team! 🎄</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <div style="margin: 15px 0; height: 1px; background-color: #374151;"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0; color: #ffffff;">
+                      This email was sent to <strong>${email}</strong><br>
+                      If you have any questions, please contact our support team.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>          <!--[if mso]>
+          </td>
+          </tr>
+          </table>
+          <![endif]-->
+        </table>
         
-        <div class="christmas-decoration">🎁 ❄️ 🔔 ❄️ 🎁</div>
-          <a href="${url}" class="cta-button">
-          🎅 Sign In Now
-        </a>
-        
-        <div class="security-note">
-          <div>
-            <span class="icon">🔒</span>
-            <strong>Security Note:</strong> This magic link will expire in 24 hours and can only be used once. 
-            If you didn't request this email, you can safely ignore it.
-          </div>
-        </div>
-        
-        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-          Having trouble with the button? Copy and paste this link into your browser:<br>
-          <span style="word-break: break-all; color: #dc2626;">${url}</span>
-        </p>
-      </div>
-        <div class="footer">
-        <p>🎄 Happy holidays from the ${host} team! 🎄</p>
-        <div class="footer-divider"></div>
-        <p>
-          This email was sent to <strong>${email}</strong><br>
-          If you have any questions, please contact our support team.
-        </p>
-      </div>
-    </div>
-  </div>
+        <!-- Bottom spacing -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="height: 40px; line-height: 40px;">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 

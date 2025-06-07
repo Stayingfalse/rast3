@@ -18,9 +18,16 @@ import type { Provider } from "next-auth/providers";
 interface EmailConfig {
   host?: string;
   port?: number;
+  from?: string;
+  authType: 'basic' | 'oauth2';
+  // Basic auth fields
   user?: string;
   password?: string;
-  from?: string;
+  // OAuth2 fields
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
+  accessToken?: string;
 }
 
 // Cache for database providers to avoid repeated DB calls
@@ -183,16 +190,32 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
     );  } else {
     const dbProvider = dbProviders.find(p => p.name === "nodemailer" && p.isEmailProvider && p.enabled);
     if (dbProvider?.emailConfig) {
-      const emailConfig = dbProvider.emailConfig as EmailConfig;
+      const emailConfig = dbProvider.emailConfig as unknown as EmailConfig;
+        let authConfig;
+      if (emailConfig.authType === 'oauth2') {
+        // OAuth2 configuration (for Google Apps, etc.)
+        authConfig = {
+          type: 'OAuth2' as const,
+          user: emailConfig.user,
+          clientId: emailConfig.clientId,
+          clientSecret: emailConfig.clientSecret,
+          refreshToken: emailConfig.refreshToken,
+          accessToken: emailConfig.accessToken,
+        };
+      } else {
+        // Basic username/password authentication
+        authConfig = {
+          user: emailConfig.user,
+          pass: emailConfig.password,
+        };
+      }
+      
       providers.push(
         Nodemailer({
           server: {
             host: emailConfig.host,
             port: emailConfig.port,
-            auth: {
-              user: emailConfig.user,
-              pass: emailConfig.password,
-            },
+            auth: authConfig,
           },
           from: emailConfig.from,
         })

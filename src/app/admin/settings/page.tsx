@@ -6,6 +6,22 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import type { JsonValue } from "@prisma/client/runtime/library";
 
+// Email configuration interface to match the server-side interface
+interface EmailConfig {
+  host?: string;
+  port?: number;
+  from?: string;
+  authType: 'basic' | 'oauth2';
+  // Basic auth fields
+  user?: string;
+  password?: string;
+  // OAuth2 fields
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
+  accessToken?: string;
+}
+
 interface AuthProviderFormData {
   id?: string;
   name: string;
@@ -43,6 +59,7 @@ const DEFAULT_PROVIDERS = [
 export default function SettingsPage() {
   const [selectedProvider, setSelectedProvider] = useState<AuthProviderFormData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [emailAuthType, setEmailAuthType] = useState<'basic' | 'oauth2'>('basic');
   // Queries
   const { data: providers = [], refetch: refetchProviders } = api.authProvider.getAll.useQuery() as {
     data: AuthProviderData[] | undefined;
@@ -118,9 +135,17 @@ export default function SettingsPage() {
   };
   const isProviderInEnv = (providerName: string) => {
     return (envStatus as Record<string, boolean>)[providerName] ?? false;
-  };
-  const getProviderByName = (name: string): AuthProviderData | undefined => {
+  };  const getProviderByName = (name: string): AuthProviderData | undefined => {
     return providers.find((p: AuthProviderData) => p.name === name);
+  };
+
+  const getEmailConfigValue = (key: keyof EmailConfig, defaultValue = '') => {
+    if (selectedProvider?.emailConfig && selectedProvider.isEmailProvider) {
+      const emailConfig = selectedProvider.emailConfig as unknown as EmailConfig;
+      const value = emailConfig[key];
+      return (typeof value === 'string' || typeof value === 'number') ? String(value) : defaultValue;
+    }
+    return defaultValue;
   };
 
   return (
@@ -135,8 +160,7 @@ export default function SettingsPage() {
         {/* Authentication Providers Section */}
         <div className="bg-black/85 backdrop-blur-sm rounded-lg border border-white/20 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-white">Authentication Providers</h2>
-            <button              onClick={() => {
+            <h2 className="text-xl font-semibold text-white">Authentication Providers</h2>            <button              onClick={() => {
                 setSelectedProvider({
                   name: "",
                   displayName: "",
@@ -145,6 +169,7 @@ export default function SettingsPage() {
                   enabled: false,
                   isEmailProvider: false,
                 });
+                setEmailAuthType('basic'); // Default to basic auth for new providers
                 setIsEditing(true);
               }}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
@@ -191,26 +216,33 @@ export default function SettingsPage() {
                       : "Not configured"}
                   </div>
 
-                  <div className="flex gap-2">                    {!isInEnv && (
-                      <button
+                  <div className="flex gap-2">                    {!isInEnv && (                      <button
                         onClick={() => {
-                          setSelectedProvider(
-                            dbProvider ? {
-                              id: dbProvider.id,
-                              name: dbProvider.name,
-                              displayName: dbProvider.displayName,
-                              clientId: dbProvider.clientId,
-                              clientSecret: dbProvider.clientSecret,
-                              enabled: dbProvider.enabled,
-                              isEmailProvider: dbProvider.isEmailProvider,
-                              emailConfig: dbProvider.emailConfig,
-                            } : {
-                              ...defaultProvider,
-                              clientId: null,
-                              clientSecret: null,
-                              enabled: false,
-                            }
-                          );
+                          const providerData = dbProvider ? {
+                            id: dbProvider.id,
+                            name: dbProvider.name,
+                            displayName: dbProvider.displayName,
+                            clientId: dbProvider.clientId,
+                            clientSecret: dbProvider.clientSecret,
+                            enabled: dbProvider.enabled,
+                            isEmailProvider: dbProvider.isEmailProvider,
+                            emailConfig: dbProvider.emailConfig,
+                          } : {
+                            ...defaultProvider,
+                            clientId: null,
+                            clientSecret: null,
+                            enabled: false,
+                          };
+                          
+                          setSelectedProvider(providerData);
+                            // Set email auth type based on existing config
+                          if (dbProvider?.emailConfig && dbProvider.isEmailProvider) {
+                            const emailConfig = dbProvider.emailConfig as unknown as EmailConfig;
+                            setEmailAuthType(emailConfig.authType ?? 'basic');
+                          } else {
+                            setEmailAuthType('basic');
+                          }
+                          
                           setIsEditing(true);
                         }}
                         className="flex-1 px-3 py-1 text-sm bg-white/10 hover:bg-white/20 text-white rounded transition-colors"
@@ -278,6 +310,14 @@ export default function SettingsPage() {
                               isEmailProvider: provider.isEmailProvider,
                               emailConfig: provider.emailConfig,
                             });
+                              // Set email auth type based on existing config
+                            if (provider.emailConfig && provider.isEmailProvider) {
+                              const emailConfig = provider.emailConfig as unknown as EmailConfig;
+                              setEmailAuthType(emailConfig.authType ?? 'basic');
+                            } else {
+                              setEmailAuthType('basic');
+                            }
+                            
                             setIsEditing(true);
                           }}
                           className="flex-1 px-3 py-1 text-sm bg-white/10 hover:bg-white/20 text-white rounded transition-colors"
@@ -308,22 +348,45 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Provider Configuration Modal */}
-        {isEditing && selectedProvider && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-black/90 backdrop-blur-sm rounded-lg border border-white/20 p-6">              <h3 className="text-lg font-semibold text-white mb-4">
+        {/* Provider Configuration Modal */}        {isEditing && selectedProvider && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-black/90 backdrop-blur-sm rounded-lg border border-white/20 p-6"><h3 className="text-lg font-semibold text-white mb-4">
                 {selectedProvider.id ? "Edit Provider" : "Add Provider"}
               </h3>
 
               <form                onSubmit={(e) => {
                   e.preventDefault();
-                  const formData = new FormData(e.currentTarget);                  handleSaveProvider({
+                  const formData = new FormData(e.currentTarget);                  // Build email configuration if this is an email provider
+                  let emailConfig: JsonValue | null = null;
+                  if (formData.get("isEmailProvider") === "on") {
+                    const authType = emailAuthType;
+                    const config: EmailConfig = {
+                      authType,
+                      host: formData.get("emailHost") as string,
+                      port: parseInt(formData.get("emailPort") as string),
+                      from: formData.get("emailFrom") as string,
+                      user: formData.get("emailUser") as string,
+                    };
+
+                    if (authType === 'basic') {
+                      config.password = formData.get("emailPassword") as string;
+                    } else if (authType === 'oauth2') {
+                      config.clientId = formData.get("emailClientId") as string;
+                      config.clientSecret = formData.get("emailClientSecret") as string;
+                      config.refreshToken = formData.get("emailRefreshToken") as string;
+                      config.accessToken = formData.get("emailAccessToken") as string;                    }
+                    
+                    emailConfig = config as unknown as JsonValue;
+                  }
+
+                  handleSaveProvider({
                     name: formData.get("name") as string,
                     displayName: formData.get("displayName") as string,
                     clientId: (formData.get("clientId") as string) ?? null,
                     clientSecret: (formData.get("clientSecret") as string) ?? null,
                     enabled: formData.get("enabled") === "on",
                     isEmailProvider: formData.get("isEmailProvider") === "on",
+                    emailConfig,
                   });
                 }}
                 className="space-y-4"
@@ -354,9 +417,7 @@ export default function SettingsPage() {
                     placeholder="e.g., Custom OAuth"
                     required
                   />
-                </div>
-
-                {!selectedProvider.isEmailProvider && (
+                </div>                {!selectedProvider.isEmailProvider && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-1">
@@ -383,6 +444,181 @@ export default function SettingsPage() {
                       />
                     </div>
                   </>
+                )}
+
+                {selectedProvider.isEmailProvider && (
+                  <div className="space-y-4 border-t border-white/20 pt-4">
+                    <h4 className="text-md font-medium text-white">Email Configuration</h4>
+                    
+                    {/* Authentication Type Selector */}
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-2">
+                        Authentication Type
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="emailAuthType"
+                            value="basic"
+                            checked={emailAuthType === 'basic'}
+                            onChange={(e) => setEmailAuthType(e.target.value as 'basic' | 'oauth2')}
+                            className="w-4 h-4 text-purple-600"
+                          />
+                          <span className="text-sm text-white/80">Username/Password</span>
+                        </label>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="emailAuthType"
+                            value="oauth2"
+                            checked={emailAuthType === 'oauth2'}
+                            onChange={(e) => setEmailAuthType(e.target.value as 'basic' | 'oauth2')}
+                            className="w-4 h-4 text-purple-600"
+                          />
+                          <span className="text-sm text-white/80">OAuth2 (Gmail)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Common Email Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/80 mb-1">
+                          SMTP Host
+                        </label>                        <input
+                          name="emailHost"
+                          type="text"
+                          defaultValue={getEmailConfigValue('host', 'smtp.gmail.com')}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                          placeholder="e.g., smtp.gmail.com"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/80 mb-1">
+                          Port
+                        </label>
+                        <input
+                          name="emailPort"
+                          type="number"
+                          defaultValue={getEmailConfigValue('port', '587')}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                          placeholder="587"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-1">
+                        From Email Address
+                      </label>
+                      <input
+                        name="emailFrom"
+                        type="email"
+                        defaultValue={getEmailConfigValue('from')}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                        placeholder="noreply@yourdomain.com"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-1">
+                        Email Username
+                      </label>
+                      <input
+                        name="emailUser"
+                        type="email"
+                        defaultValue={getEmailConfigValue('user')}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                        placeholder="your-email@gmail.com"
+                        required
+                      />
+                    </div>
+
+                    {/* Basic Auth Fields */}
+                    {emailAuthType === 'basic' && (
+                      <div>
+                        <label className="block text-sm font-medium text-white/80 mb-1">
+                          Password / App Password
+                        </label>
+                        <input
+                          name="emailPassword"
+                          type="password"
+                          defaultValue={getEmailConfigValue('password')}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                          placeholder="Your email password or app password"
+                        />
+                        <p className="text-xs text-white/60 mt-1">
+                          For Gmail, use an App Password instead of your regular password
+                        </p>
+                      </div>
+                    )}
+
+                    {/* OAuth2 Fields */}
+                    {emailAuthType === 'oauth2' && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-white/80 mb-1">
+                              OAuth2 Client ID
+                            </label>
+                            <input
+                              name="emailClientId"
+                              type="text"
+                              defaultValue={getEmailConfigValue('clientId')}
+                              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                              placeholder="Google OAuth2 Client ID"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-white/80 mb-1">
+                              OAuth2 Client Secret
+                            </label>
+                            <input
+                              name="emailClientSecret"
+                              type="password"
+                              defaultValue={getEmailConfigValue('clientSecret')}
+                              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                              placeholder="Google OAuth2 Client Secret"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-white/80 mb-1">
+                            OAuth2 Refresh Token
+                          </label>
+                          <input
+                            name="emailRefreshToken"
+                            type="password"
+                            defaultValue={getEmailConfigValue('refreshToken')}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                            placeholder="OAuth2 Refresh Token"
+                          />
+                          <p className="text-xs text-white/60 mt-1">
+                            Generate this using Google OAuth2 Playground or your OAuth2 flow
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-white/80 mb-1">
+                            OAuth2 Access Token (Optional)
+                          </label>
+                          <input
+                            name="emailAccessToken"
+                            type="password"
+                            defaultValue={getEmailConfigValue('accessToken')}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-purple-500 focus:outline-none"
+                            placeholder="OAuth2 Access Token (auto-generated if empty)"
+                          />
+                          <p className="text-xs text-white/60 mt-1">
+                            Leave empty to auto-generate from refresh token
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
 
                 <div className="flex items-center gap-2">

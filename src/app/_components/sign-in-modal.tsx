@@ -1,8 +1,8 @@
 "use client";
 
 import { getProviders, signIn } from "next-auth/react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 interface SignInModalProps {

@@ -18,10 +18,13 @@ export default function AdminButton() {
   return (
     <button
       onClick={() => router.push("/admin")}
-      className="fixed top-4 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-800 hover:to-blue-950 text-white font-semibold px-4 py-2 rounded-lg shadow-xl border border-blue-900 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+      className="fixed top-4 right-6 z-50 flex items-center gap-2 rounded-lg border border-blue-900 bg-gradient-to-r from-blue-700 to-blue-900 px-4 py-2 font-semibold text-white shadow-xl transition-colors duration-150 hover:from-blue-800 hover:to-blue-950 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none"
       title="Go to Admin Dashboard"
     >
-      <ShieldCheckIcon className="w-5 h-5 text-blue-200 drop-shadow" aria-hidden="true" />
+      <ShieldCheckIcon
+        className="h-5 w-5 text-blue-200 drop-shadow"
+        aria-hidden="true"
+      />
       <span>Admin</span>
     </button>
   );

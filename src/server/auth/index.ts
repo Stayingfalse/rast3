@@ -1,1 +1,6 @@
-export { auth as getServerSession } from "~/server/auth"
+import { getAuth } from "~/server/auth-dynamic";
+
+export async function getServerSession() {
+  const auth = await getAuth();
+  return auth();
+}

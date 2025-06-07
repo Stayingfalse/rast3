@@ -3,7 +3,9 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
+
 This is a RAoSanta Next.js project with the following technologies:
+
 - **Next.js 14+** with App Router
 - **TypeScript** for type safety
 - **tRPC** for end-to-end typesafe APIs
@@ -14,6 +16,7 @@ This is a RAoSanta Next.js project with the following technologies:
 - **Docker** for containerized deployment
 
 ## Development Guidelines
+
 - Use TypeScript for all new files
 - Follow the RAoSanta conventions and patterns
 - Use tRPC for API routes and client-side data fetching
@@ -27,6 +30,7 @@ This is a RAoSanta Next.js project with the following technologies:
 - Consider Docker deployment when building features
 
 ## Docker Deployment
+
 - Project is configured for Docker following T3 official guidelines
 - Uses multi-stage builds for optimized images
 - Includes standalone output configuration for smaller images
@@ -34,6 +38,7 @@ This is a RAoSanta Next.js project with the following technologies:
 - Use `SKIP_ENV_VALIDATION=1` for Docker builds
 
 ## Code Style & Architecture
+
 - Use functional components with hooks
 - Prefer const assertions and proper TypeScript types
 - Use descriptive variable and function names
@@ -41,6 +46,7 @@ This is a RAoSanta Next.js project with the following technologies:
 - Use proper imports with the configured `@/*` alias
 
 ## TSX Best Practices - Separation of Concerns
+
 - **Separate logic from presentation**: Keep business logic in custom hooks or utility functions
 - **Component structure**: Components should primarily handle rendering, not complex logic
 - **Custom hooks**: Extract stateful logic, API calls, and side effects into reusable custom hooks
@@ -53,6 +59,7 @@ This is a RAoSanta Next.js project with the following technologies:
 - **Styling**: Prefer Tailwind utility classes, use component variants for reusable styles
 
 ## Component Organization Pattern
+
 ```tsx
 // 1. Imports
 // 2. Type definitions
@@ -63,6 +70,7 @@ This is a RAoSanta Next.js project with the following technologies:
 ```
 
 ## Preferred Patterns
+
 - Extract complex JSX into smaller sub-components
 - Use composition over complex prop drilling
 - Implement loading and error states consistently

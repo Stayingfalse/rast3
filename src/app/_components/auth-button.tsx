@@ -13,16 +13,16 @@ export default function AuthButton() {
     <>
       <button
         onClick={() => setIsSignInModalOpen(true)}
-        className="fixed top-4 right-6 z-40 flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-semibold px-6 py-2 rounded-lg shadow-xl border border-red-900 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+        className="fixed top-4 right-6 z-40 flex items-center gap-2 rounded-lg border border-red-900 bg-gradient-to-r from-red-600 to-red-800 px-6 py-2 font-semibold text-white shadow-xl transition-colors duration-150 hover:from-red-700 hover:to-red-900 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
         title="Sign in to get started"
       >
         <span className="text-lg">🎅</span>
         <span>Join Santa</span>
       </button>
-      
-      <SignInModal 
-        isOpen={isSignInModalOpen} 
-        onClose={() => setIsSignInModalOpen(false)} 
+
+      <SignInModal
+        isOpen={isSignInModalOpen}
+        onClose={() => setIsSignInModalOpen(false)}
       />
     </>
   );

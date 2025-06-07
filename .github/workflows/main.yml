@@ -7,7 +7,8 @@ name: Auto Deploy
 on:
   push:
     branches:
-      - main  # Change this if you want to trigger on a different branch
+      - main # Production deploy
+      - dev # Development deploy
 
 jobs:
   deploy:
@@ -15,6 +16,17 @@ jobs:
     steps:
       - name: Call Deployment Webhook
         env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          MAIN_WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          DEV_WEBHOOK_URL: ${{ secrets.DEV_WEBHOOK_URI }}
         run: |
-          curl -X POST "$WEBHOOK_URL" -H "Content-Type: application/json" -d '{"repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}'
+          case "${GITHUB_REF##*/}" in
+            main)
+              curl -X POST "$MAIN_WEBHOOK_URL" -H "Content-Type: application/json" -d '{"repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}'
+              ;;
+            dev)
+              curl -X POST "$DEV_WEBHOOK_URL" -H "Content-Type: application/json" -d '{"repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}'
+              ;;
+            *)
+              echo "No webhook configured for this branch."
+              ;;
+          esac

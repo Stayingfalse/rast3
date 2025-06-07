@@ -11,8 +11,10 @@ import Nodemailer from "next-auth/providers/nodemailer";
 import Reddit from "next-auth/providers/reddit";
 import TikTok from "next-auth/providers/tiktok";
 import Twitch from "next-auth/providers/twitch";
+import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
+import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 
 // Email configuration interface
 interface EmailConfig {
@@ -235,6 +237,29 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           },
         },
         from: process.env.EMAIL_FROM,
+        sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+          const { host } = new URL(url);
+          const transport = createTransport(provider.server);
+          
+          const { subject, html, text } = createMagicLinkEmailTemplate({
+            url,
+            host,
+            email,
+          });
+
+          try {
+            await transport.sendMail({
+              to: email,
+              from: provider.from,
+              subject,
+              text,
+              html,
+            });
+          } catch (error) {
+            console.error("Failed to send verification email:", error);
+            throw new Error("Failed to send verification email");
+          }
+        },
       }),
     );
   } else {
@@ -270,6 +295,29 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
             auth: authConfig,
           },
           from: emailConfig.from,
+          sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+            const { host } = new URL(url);
+            const transport = createTransport(provider.server);
+            
+            const { subject, html, text } = createMagicLinkEmailTemplate({
+              url,
+              host,
+              email,
+            });
+
+            try {
+              await transport.sendMail({
+                to: email,
+                from: provider.from,
+                subject,
+                text,
+                html,
+              });
+            } catch (error) {
+              console.error("Failed to send verification email:", error);
+              throw new Error("Failed to send verification email");
+            }
+          },
         }),
       );
     }

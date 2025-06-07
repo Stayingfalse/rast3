@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import { signIn, getProviders } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import Link from "next/link";
+import React, { useEffect, useState } from "react";
 
 interface SignInModalProps {
   isOpen: boolean;

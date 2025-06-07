@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
+import { api } from "~/trpc/react";
 
 // Define the type manually based on the Prisma include in the domain router
 type DomainWithCount = {

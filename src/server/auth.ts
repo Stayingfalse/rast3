@@ -9,7 +9,9 @@ import Nodemailer from "next-auth/providers/nodemailer";
 import Reddit from "next-auth/providers/reddit";
 import TikTok from "next-auth/providers/tiktok";
 import Twitch from "next-auth/providers/twitch";
+import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
+import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 
 // Augment Session type to include adminLevel and adminScope
 declare module "next-auth" {
@@ -142,6 +144,29 @@ if (process.env.EMAIL_SERVER_HOST) {
         },
       },
       from: process.env.EMAIL_FROM,
+      sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+        const { host } = new URL(url);
+        const transport = createTransport(provider.server);
+        
+        const { subject, html, text } = createMagicLinkEmailTemplate({
+          url,
+          host,
+          email,
+        });
+
+        try {
+          await transport.sendMail({
+            to: email,
+            from: provider.from,
+            subject,
+            text,
+            html,
+          });
+        } catch (error) {
+          console.error("Failed to send verification email:", error);
+          throw new Error("Failed to send verification email");
+        }
+      },
     }),
   );
 }

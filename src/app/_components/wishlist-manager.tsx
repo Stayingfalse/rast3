@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import {
+  ChatBubbleLeftRightIcon,
+  GlobeAltIcon,
+  ShoppingCartIcon,
+} from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Preloader } from "./preloader";
-import {
-  ShoppingCartIcon,
-  ChatBubbleLeftRightIcon,
-  GlobeAltIcon,
-} from "@heroicons/react/24/solid";
 
 type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 

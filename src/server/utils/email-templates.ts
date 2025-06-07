@@ -1,6 +1,4 @@
 // Email templates for NextAuth.js magic links with Christmas/Secret Santa branding
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 interface EmailTemplateParams {
   url: string;
@@ -8,35 +6,11 @@ interface EmailTemplateParams {
   email: string;
 }
 
-function encodeImageToBase64(filePath: string, mimeType: string): string {
-  try {
-    const imageBuffer = readFileSync(filePath);
-    const base64String = imageBuffer.toString('base64');
-    return `data:${mimeType};base64,${base64String}`;
-  } catch (error) {
-    console.error(`Error encoding image ${filePath}:`, error);
-    // Return a fallback transparent pixel
-    return `data:${mimeType};base64,`;
-  }
-}
-
-function getEncodedImages() {
-  const publicDir = join(process.cwd(), 'public');
-  
-  return {
-    headerSvg: encodeImageToBase64(join(publicDir, 'header.svg'), 'image/svg+xml'),
-    plaidPng: encodeImageToBase64(join(publicDir, 'plaid.png'), 'image/png'),
-  };
-}
-
 function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams): {
   subject: string;
   html: string;
   text: string;
-} {
-  const subject = `🎅 Sign in to ${host} - Your Magic Link is Here!`;
-    // Get embedded images as base64 data URIs
-  const images = getEncodedImages();
+} {  const subject = `🎅 Sign in to ${host} - Your Magic Link is Here!`;
 
   const html = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -72,12 +46,12 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0f172a; margin: 0; padding: 0;">
     <tr>
       <td align="center" style="padding: 0;">
-        <!-- Full-width header image section -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1e3a8a; margin: 0;">
+        <!-- Full-width header image section -->        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1e3a8a; margin: 0;">
           <tr>
             <td align="center" style="padding: 40px 20px 30px; text-align: center; color: #ffffff; font-family: Arial, Helvetica, sans-serif;">
-              <img src="${images.headerSvg}" alt="Random Acts of Santa" style="max-width: 600px; width: 100%; height: auto; margin: 0 auto 15px auto; display: block;" />
+              <div style="font-size: 32px; margin: 0 0 15px 0;">🎅🎄✨</div>
               <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #ffffff; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">Random Acts of Santa - 2025!</h1>
+              <div style="font-size: 16px; color: #dbeafe; margin: 10px 0 0 0;">Spreading joy, one gift at a time</div>
             </td>
           </tr>
         </table>

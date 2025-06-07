@@ -149,6 +149,9 @@ if (process.env.EMAIL_SERVER_HOST) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   providers,
+  pages: {
+    verifyRequest: "/auth/verify-request", // Custom verify-request page
+  },
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",

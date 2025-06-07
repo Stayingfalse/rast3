@@ -82,17 +82,39 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
+    } else {
+      // Reset states when modal is closed
+      setEmailSent(false);
+      setShowEmailForm(false);
+      setEmail("");
+      setIsLoading(null);
     }
   }, [isOpen]);
   const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
       if (providerId === "nodemailer" && email) {
-        await signIn(providerId, { email });
+        // Store email for the verify-request page as fallback
+        localStorage.setItem("magic-link-email", email);
+        const result = await signIn(providerId, { 
+          email, 
+          redirect: false,
+          callbackUrl: window.location.origin 
+        });
+        
+        // Check if sign-in was successful
+        if (result?.error) {
+          console.error("Magic link error:", result.error);
+          // You could show an error message here
+        } else {
+          // Show success state in modal
+          setEmailSent(true);
+        }
       } else {
         await signIn(providerId);
       }
@@ -129,7 +151,12 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
       <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={() => {
+            setEmailSent(false);
+            setShowEmailForm(false);
+            setEmail("");
+            onClose();
+          }}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <svg
@@ -148,13 +175,97 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
         </button>
         {/* Modal content */}
         <div className="text-center">
-          <p className="mb-2 text-sm text-gray-600">
-            Sign in with your favourite service
-          </p>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">
-            Sign in to your account
-          </h2>{" "}
-          <div className="space-y-3">
+          {emailSent ? (
+            // Email sent success state
+            <div className="space-y-6">
+              {/* Success Icon */}
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-gray-900">
+                Check your email
+              </h2>
+
+              {/* Description */}
+              <div className="text-gray-600 space-y-2">
+                <p>
+                  We've sent a magic link to{" "}
+                  <span className="font-medium text-gray-900">{email}</span>
+                </p>
+                <p className="text-sm">
+                  Click the link in the email to sign in to your account.
+                </p>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                <div className="text-sm text-blue-800 space-y-2">
+                  <p className="font-medium">Next steps:</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Check your email inbox</li>
+                    <li>Look for an email from our system</li>
+                    <li>Click the "Sign in" link in the email</li>
+                    <li>You'll be automatically signed in</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Troubleshooting */}
+              <div className="text-xs text-gray-500 space-y-1">
+                <p>
+                  <strong>Don't see the email?</strong> Check your spam folder.
+                </p>
+                <p>The link will expire in 24 hours for security.</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setEmailSent(false);
+                    setShowEmailForm(true);
+                    setEmail("");
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                >
+                  Send Another Link
+                </button>
+                <button
+                  onClick={() => {
+                    setEmailSent(false);
+                    setShowEmailForm(false);
+                    setEmail("");
+                  }}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
+                >
+                  Try Different Method
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Normal sign-in state
+            <>
+              <p className="mb-2 text-sm text-gray-600">
+                Sign in with your favourite service
+              </p>
+              <h2 className="mb-6 text-2xl font-bold text-gray-900">
+                Sign in to your account
+              </h2>
+              <div className="space-y-3">
             {isLoading ? (
               // Show preloader when any authentication is in progress
               <div className="flex flex-col items-center justify-center space-y-4 py-12">
@@ -293,19 +404,21 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
             ) : (
               "Loading providers..."
             )}
-          </div>
-          <p className="mt-6 text-sm text-gray-500">
-            By signing in, you agree to our terms of service and{" "}
-            <Link
-              href="/privacy"
-              className="text-red-600 underline hover:text-red-700"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              privacy policy
-            </Link>
-            .
-          </p>
+              </div>
+              <p className="mt-6 text-sm text-gray-500">
+                By signing in, you agree to our terms of service and{" "}
+                <Link
+                  href="/privacy"
+                  className="text-red-600 underline hover:text-red-700"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  privacy policy
+                </Link>
+                .
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

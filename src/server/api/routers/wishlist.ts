@@ -2,7 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
-export const wishlistRouter = createTRPCRouter({  // Get the current user's assigned wishlists (links they can shop from)
+export const wishlistRouter = createTRPCRouter({
+  // Get the current user's assigned wishlists (links they can shop from)
   getMyAssignments: protectedProcedure.query(async ({ ctx }) => {
     const assignments = await ctx.db.wishlistAssignment.findMany({
       where: {
@@ -34,19 +35,19 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         },
       },
       orderBy: {
-        assignedAt: 'asc',
+        assignedAt: "asc",
       },
     });
 
     return assignments;
-  }),  // Get statistics about assignments (dynamic based on user's domain/department status)
+  }), // Get statistics about assignments (dynamic based on user's domain/department status)
   getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {
     // Get current user with domain status
     const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { 
-        id: true, 
-        departmentId: true, 
+      select: {
+        id: true,
+        departmentId: true,
         domain: true,
       },
     });
@@ -96,11 +97,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           amazonWishlistUrl: { not: null },
         },
       });
-      
+
       const totalLinks = await ctx.db.user.count({
         where: { amazonWishlistUrl: { not: null } },
       });
-      
+
       const totalUnallocatedLinks = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
@@ -110,7 +111,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           },
         },
       });
-      
+
       const totalGiftsSent = await ctx.db.purchase.count();
 
       stats = {
@@ -124,7 +125,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
       const totalLinks = await ctx.db.user.count({
         where: { amazonWishlistUrl: { not: null } },
       });
-      
+
       const usersInDomain = await ctx.db.user.count({
         where: {
           domain,
@@ -132,14 +133,14 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           amazonWishlistUrl: { not: null },
         },
       });
-      
+
       const totalLinksInDomain = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
           domain,
         },
       });
-      
+
       const totalUnallocatedLinksInDomain = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
@@ -162,21 +163,21 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
       const totalLinks = await ctx.db.user.count({
         where: { amazonWishlistUrl: { not: null } },
       });
-      
+
       const totalLinksInDomain = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
           domain,
         },
       });
-      
+
       const totalLinksInDepartment = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
           departmentId,
         },
       });
-      
+
       const totalUnallocatedLinksInDomain = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
@@ -187,7 +188,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           },
         },
       });
-      
+
       const totalUnallocatedLinksInDepartment = await ctx.db.user.count({
         where: {
           amazonWishlistUrl: { not: null },
@@ -215,7 +216,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         amazonWishlistUrl: { not: null },
       },
     });
-    
+
     const departmentLinks = departmentId
       ? await ctx.db.user.count({
           where: {
@@ -251,7 +252,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
     const totalAssignments = await ctx.db.wishlistAssignment.count({
       where: { isActive: true },
     });
-    
+
     const usersWithAssignments = await ctx.db.user.count({
       where: {
         assignedLinks: {
@@ -259,8 +260,9 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         },
       },
     });
-    
-    const averageAssignments = totalUsers > 0 ? totalAssignments / totalUsers : 0;
+
+    const averageAssignments =
+      totalUsers > 0 ? totalAssignments / totalUsers : 0;
 
     return {
       ...stats,
@@ -299,7 +301,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
     if (!currentUser.domain || !currentUser.departmentId) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Please ensure your domain and department are set in your profile",
+        message:
+          "Please ensure your domain and department are set in your profile",
       });
     }
 
@@ -308,9 +311,12 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
       where: {
         assignedUserId: userId,
         isActive: true,
-      },      select: { wishlistOwnerId: true },
+      },
+      select: { wishlistOwnerId: true },
     });
-    const assignedUserIds = existingAssignments.map((a: { wishlistOwnerId: string }) => a.wishlistOwnerId);
+    const assignedUserIds = existingAssignments.map(
+      (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
+    );
 
     if (assignedUserIds.length >= 3) {
       throw new TRPCError({
@@ -338,19 +344,30 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           where: { isActive: true },
           select: { assignedUserId: true },
         },
-      },    });
+      },
+    });
 
     // Sort by assignment count (prioritize users with fewer assignments)
     const sortedUsers = eligibleUsers
-      .map((user: { id: string; name: string | null; ownedWishlist: { assignedUserId: string }[] }) => ({
-        ...user,
-        assignmentCount: user.ownedWishlist.length,
-      }))
-      .sort((a: { assignmentCount: number }, b: { assignmentCount: number }) => a.assignmentCount - b.assignmentCount);
+      .map(
+        (user: {
+          id: string;
+          name: string | null;
+          ownedWishlist: { assignedUserId: string }[];
+        }) => ({
+          ...user,
+          assignmentCount: user.ownedWishlist.length,
+        }),
+      )
+      .sort(
+        (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
+          a.assignmentCount - b.assignmentCount,
+      );
 
     // Select up to 3 users, avoiding duplicates
     const neededAssignments = 3 - assignedUserIds.length;
-    const selectedUsers = sortedUsers.slice(0, neededAssignments);    if (selectedUsers.length === 0) {
+    const selectedUsers = sortedUsers.slice(0, neededAssignments);
+    if (selectedUsers.length === 0) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "No eligible wishlists available for assignment",
@@ -376,8 +393,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
               },
             },
           },
-        })
-      )
+        }),
+      ),
     );
 
     return assignments;
@@ -385,9 +402,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Request additional assignments beyond the initial 3
   requestAdditionalAssignments: protectedProcedure
-    .input(z.object({
-      count: z.number().min(1).max(5).default(1),
-    }))
+    .input(
+      z.object({
+        count: z.number().min(1).max(5).default(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -403,7 +422,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
       if (!currentUser?.domain || !currentUser?.departmentId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "Please ensure your domain and department are set in your profile",
+          message:
+            "Please ensure your domain and department are set in your profile",
         });
       }
 
@@ -431,7 +451,9 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         select: { wishlistOwnerId: true },
       });
 
-      const assignedUserIds = existingAssignments.map((a: { wishlistOwnerId: string }) => a.wishlistOwnerId);      // Get eligible users (excluding already assigned ones, same domain/department only)
+      const assignedUserIds = existingAssignments.map(
+        (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
+      ); // Get eligible users (excluding already assigned ones, same domain/department only)
       const eligibleUsers = await ctx.db.user.findMany({
         where: {
           AND: [
@@ -455,11 +477,20 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
       // Sort by assignment count (prioritize users with fewer assignments)
       const sortedUsers = eligibleUsers
-        .map((user: { id: string; name: string | null; ownedWishlist: { assignedUserId: string }[] }) => ({
-          ...user,
-          assignmentCount: user.ownedWishlist.length,
-        }))
-        .sort((a: { assignmentCount: number }, b: { assignmentCount: number }) => a.assignmentCount - b.assignmentCount);
+        .map(
+          (user: {
+            id: string;
+            name: string | null;
+            ownedWishlist: { assignedUserId: string }[];
+          }) => ({
+            ...user,
+            assignmentCount: user.ownedWishlist.length,
+          }),
+        )
+        .sort(
+          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
+            a.assignmentCount - b.assignmentCount,
+        );
 
       const selectedUsers = sortedUsers.slice(0, input.count);
 
@@ -489,8 +520,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
                 },
               },
             },
-          })
-        )
+          }),
+        ),
       );
 
       return assignments;
@@ -498,9 +529,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Request cross-department assignments when same-department ones are not available
   requestCrossDepartmentAssignments: protectedProcedure
-    .input(z.object({
-      count: z.number().min(1).max(3).default(1),
-    }))
+    .input(
+      z.object({
+        count: z.number().min(1).max(3).default(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -526,9 +559,12 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           assignedUserId: userId,
           isActive: true,
         },
-        select: { wishlistOwnerId: true },      });
+        select: { wishlistOwnerId: true },
+      });
 
-      const assignedUserIds = existingAssignments.map((a: { wishlistOwnerId: string }) => a.wishlistOwnerId);
+      const assignedUserIds = existingAssignments.map(
+        (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
+      );
 
       // Get eligible users from same domain but different departments
       const eligibleUsers = await ctx.db.user.findMany({
@@ -554,15 +590,26 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
             where: { isActive: true },
             select: { assignedUserId: true },
           },
-        },      });
+        },
+      });
 
       // Sort by assignment count (prioritize users with fewer assignments)
       const sortedUsers = eligibleUsers
-        .map((user: { id: string; name: string | null; department: { name: string } | null; ownedWishlist: { assignedUserId: string }[] }) => ({
-          ...user,
-          assignmentCount: user.ownedWishlist.length,
-        }))
-        .sort((a: { assignmentCount: number }, b: { assignmentCount: number }) => a.assignmentCount - b.assignmentCount);
+        .map(
+          (user: {
+            id: string;
+            name: string | null;
+            department: { name: string } | null;
+            ownedWishlist: { assignedUserId: string }[];
+          }) => ({
+            ...user,
+            assignmentCount: user.ownedWishlist.length,
+          }),
+        )
+        .sort(
+          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
+            a.assignmentCount - b.assignmentCount,
+        );
 
       const selectedUsers = sortedUsers.slice(0, input.count);
 
@@ -571,7 +618,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           code: "NOT_FOUND",
           message: "No cross-department wishlists available for assignment",
         });
-      }      // Create assignments
+      } // Create assignments
       const assignments = await Promise.all(
         selectedUsers.map((user: { id: string }) =>
           ctx.db.wishlistAssignment.create({
@@ -595,8 +642,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
                 },
               },
             },
-          })
-        )
+          }),
+        ),
       );
 
       return assignments;
@@ -604,9 +651,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Request cross-domain (stranger) assignments when no more are available in user's domain
   requestCrossDomainAssignments: protectedProcedure
-    .input(z.object({
-      count: z.number().min(1).max(3).default(1),
-    }))
+    .input(
+      z.object({
+        count: z.number().min(1).max(3).default(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -631,7 +680,9 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         },
         select: { wishlistOwnerId: true },
       });
-      const assignedUserIds = existingAssignments.map((a: { wishlistOwnerId: string }) => a.wishlistOwnerId);
+      const assignedUserIds = existingAssignments.map(
+        (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
+      );
 
       // Get eligible users from a different domain
       const eligibleUsers = await ctx.db.user.findMany({
@@ -655,13 +706,25 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
             select: { assignedUserId: true },
           },
         },
-      });      // Sort by assignment count (prioritize users with fewer assignments)
+      }); // Sort by assignment count (prioritize users with fewer assignments)
       const sortedUsers = eligibleUsers
-        .map((user: { id: string; name: string | null; firstName: string | null; lastName: string | null; amazonWishlistUrl: string | null; ownedWishlist: { assignedUserId: string }[] }) => ({
-          ...user,
-          assignmentCount: user.ownedWishlist.length,
-        }))
-        .sort((a: { assignmentCount: number }, b: { assignmentCount: number }) => a.assignmentCount - b.assignmentCount);
+        .map(
+          (user: {
+            id: string;
+            name: string | null;
+            firstName: string | null;
+            lastName: string | null;
+            amazonWishlistUrl: string | null;
+            ownedWishlist: { assignedUserId: string }[];
+          }) => ({
+            ...user,
+            assignmentCount: user.ownedWishlist.length,
+          }),
+        )
+        .sort(
+          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
+            a.assignmentCount - b.assignmentCount,
+        );
 
       const selectedUsers = sortedUsers.slice(0, input.count);
 
@@ -670,7 +733,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           code: "NOT_FOUND",
           message: "No cross-domain wishlists available for assignment",
         });
-      }      // Create assignments (do not include department/domain info in return)
+      } // Create assignments (do not include department/domain info in return)
       const assignments = await Promise.all(
         selectedUsers.map((user: { id: string }) =>
           ctx.db.wishlistAssignment.create({
@@ -690,8 +753,8 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
                 },
               },
             },
-          })
-        )
+          }),
+        ),
       );
 
       return assignments;
@@ -699,10 +762,12 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Mark a purchase as completed
   markPurchase: protectedProcedure
-    .input(z.object({
-      assignmentId: z.string(),
-      notes: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        notes: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -763,11 +828,13 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Report an issue with a wishlist
   reportIssue: protectedProcedure
-    .input(z.object({
-      assignmentId: z.string(),
-      reportType: z.enum(["NO_ITEMS", "DOESNT_EXIST", "NO_ADDRESS", "OTHER"]),
-      description: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string(),
+        reportType: z.enum(["NO_ITEMS", "DOESNT_EXIST", "NO_ADDRESS", "OTHER"]),
+        description: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -815,9 +882,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Clear report when issue is fixed
   clearReport: protectedProcedure
-    .input(z.object({
-      assignmentId: z.string(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -848,9 +917,11 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
 
   // Undo purchase marking
   undoPurchase: protectedProcedure
-    .input(z.object({
-      assignmentId: z.string(),
-    }))
+    .input(
+      z.object({
+        assignmentId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -867,7 +938,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
           code: "FORBIDDEN",
           message: "You can only undo purchases for your own assignments",
         });
-      }      // Delete the purchase record
+      } // Delete the purchase record
       await ctx.db.purchase.deleteMany({
         where: {
           wishlistAssignmentId: input.assignmentId,
@@ -903,7 +974,7 @@ export const wishlistRouter = createTRPCRouter({  // Get the current user's assi
         },
       },
       orderBy: {
-        reportedAt: 'desc',
+        reportedAt: "desc",
       },
     });
 

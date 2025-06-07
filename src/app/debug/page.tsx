@@ -5,10 +5,13 @@ import { api } from "~/trpc/react";
 
 function DebugProfile() {
   const { data: sessionData } = useSession();
-  const { data: userProfile, isLoading, error } = api.profile.getCurrentProfile.useQuery(
-    undefined,
-    { enabled: !!sessionData?.user }
-  );
+  const {
+    data: userProfile,
+    isLoading,
+    error,
+  } = api.profile.getCurrentProfile.useQuery(undefined, {
+    enabled: !!sessionData?.user,
+  });
 
   if (!sessionData) {
     return <div>Not signed in</div>;
@@ -24,18 +27,18 @@ function DebugProfile() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">Profile Debug</h1>
-      
-      <div className="bg-gray-100 p-4 rounded-lg">
-        <h2 className="text-lg font-semibold mb-2">Session Data:</h2>
-        <pre className="text-sm bg-white p-2 rounded">
+      <h1 className="mb-4 text-2xl font-bold">Profile Debug</h1>
+
+      <div className="rounded-lg bg-gray-100 p-4">
+        <h2 className="mb-2 text-lg font-semibold">Session Data:</h2>
+        <pre className="rounded bg-white p-2 text-sm">
           {JSON.stringify(sessionData, null, 2)}
         </pre>
       </div>
-      
-      <div className="bg-gray-100 p-4 rounded-lg mt-4">
-        <h2 className="text-lg font-semibold mb-2">User Profile:</h2>
-        <pre className="text-sm bg-white p-2 rounded">
+
+      <div className="mt-4 rounded-lg bg-gray-100 p-4">
+        <h2 className="mb-2 text-lg font-semibold">User Profile:</h2>
+        <pre className="rounded bg-white p-2 text-sm">
           {JSON.stringify(userProfile, null, 2)}
         </pre>
       </div>

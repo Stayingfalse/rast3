@@ -7,16 +7,19 @@ Built with RAoSanta architecture for a full-stack TypeScript experience.
 ## Features
 
 ### 🎁 Community Gift Organization
+
 - Create and participate in holiday exchanges
 - Simple gift coordination system
 - Community-based giving initiatives
 
 ### 🔐 Secure Authentication
+
 - Multiple OAuth providers (Discord, Twitch, Google)
 - Secure user profiles and preferences
 - Privacy-focused design
 
 ### 🎯 Random Acts of Kindness
+
 - Community-driven kindness initiatives
 - Holiday spirit coordination
 - Seasonal giving activities
@@ -139,6 +142,16 @@ We welcome contributions to make Random Acts of Santa even better! Whether it's 
 - Write tests for new features
 - Follow the existing code style
 
+## Documentation
+
+Detailed documentation is available in the [`docs/`](./docs/) directory:
+
+- [Docker Deployment Guide](./docs/DOCKER.md)
+- [OAuth2 Configuration](./docs/OAUTH2_SIMPLIFIED_SETUP.md)
+- [Email Setup](./docs/MAGIC_LINKS.md)
+- [OAuth2 Troubleshooting](./docs/OAUTH2_TROUBLESHOOTING.md)
+- [And more...](./docs/README.md)
+
 ## Support & Community
 
 Join our community to get help, share ideas, or contribute to the project:
@@ -159,4 +172,4 @@ Detailed deployment instructions for various platforms:
 
 **Spread the holiday cheer! 🎄✨**
 
-*Version: 0.1.5*
+_Version: 0.1.5_

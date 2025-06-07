@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
-export const domainRouter = createTRPCRouter({  // Get all domains
+export const domainRouter = createTRPCRouter({
+  // Get all domains
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
@@ -37,7 +38,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
         },
       },
       orderBy: { name: "asc" },
-    });    // Get department counts for each domain manually
+    }); // Get department counts for each domain manually
     const domainsWithCounts = await Promise.all(
       domains.map(async (domain) => {
         const departmentCount = await ctx.db.department.count({
@@ -49,7 +50,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
             departments: departmentCount,
           },
         };
-      })
+      }),
     );
 
     return domainsWithCounts;
@@ -69,7 +70,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
         name: z.string().min(1, "Domain name is required"),
         description: z.string().optional(),
         enabled: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(({ ctx, input }) => {
       return ctx.db.domain.create({
@@ -80,26 +81,26 @@ export const domainRouter = createTRPCRouter({  // Get all domains
           createdById: ctx.session.user.id,
         },
       });
-    }),  // Create domain and become domain admin (for new users)
+    }), // Create domain and become domain admin (for new users)
   createAndBecomeDomainAdmin: protectedProcedure
     .input(
       z.object({
         name: z.string().min(1, "Domain name is required"),
         description: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const domainName = input.name.toLowerCase();
-      
+
       // Check if domain already exists
       const existingDomain = await ctx.db.domain.findUnique({
         where: { name: domainName },
       });
-      
+
       if (existingDomain) {
         throw new Error("Domain already exists");
       }
-      
+
       // Create the domain
       const domain = await ctx.db.domain.create({
         data: {
@@ -109,7 +110,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
           createdById: ctx.session.user.id,
         },
       });
-      
+
       // Make the user a domain admin
       const updatedUser = await ctx.db.user.update({
         where: { id: ctx.session.user.id },
@@ -118,7 +119,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
           adminScope: domainName,
         },
       });
-      
+
       return { domain, user: updatedUser };
     }),
 
@@ -130,7 +131,7 @@ export const domainRouter = createTRPCRouter({  // Get all domains
         name: z.string().min(1, "Domain name is required").optional(),
         description: z.string().optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(({ ctx, input }) => {
       const { id, ...updateData } = input;

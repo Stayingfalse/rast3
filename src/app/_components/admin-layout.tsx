@@ -15,7 +15,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { data: sessionData, status } = useSession();
   const { data: user, isLoading } = api.profile.getCurrentProfile.useQuery(
     undefined,
-    { enabled: !!sessionData?.user }
+    { enabled: !!sessionData?.user },
   );
 
   // Redirect logic in useEffect (client only)
@@ -29,7 +29,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
 
     // Not an admin
-    if (user && !["DEPARTMENT", "DOMAIN", "SITE"].includes(user.adminLevel || "")) {
+    if (
+      user &&
+      !["DEPARTMENT", "DOMAIN", "SITE"].includes(user.adminLevel || "")
+    ) {
       router.replace("/");
     }
   }, [status, isLoading, sessionData, user, router]);

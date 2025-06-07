@@ -32,7 +32,8 @@ type DomainStatus = {
 };
 
 // Amazon UK wishlist URL regex
-const amazonWishlistRegex =   /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
+const amazonWishlistRegex =
+  /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
 
 // Helper function to normalize wishlist URL
 const normalizeWishlistUrl = (url: string | undefined): string | null => {
@@ -43,23 +44,24 @@ const normalizeWishlistUrl = (url: string | undefined): string | null => {
 export const profileRouter = createTRPCRouter({
   // Get current user's profile with domain status
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.db.user.findUnique({
+    const user = (await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       include: {
         department: true,
       },
-    }) as UserWithDepartment | null;
+    })) as UserWithDepartment | null;
 
     if (!user) return null;
 
     // Get domain status if user has a domain
     let domainEnabled = null;
     if (user.domain) {
-      const domain = await ctx.db.domain.findUnique({
+      const domain = (await ctx.db.domain.findUnique({
         where: { name: user.domain },
         select: { enabled: true },
-      }) as DomainStatus | null;
-      domainEnabled = domain ? domain.enabled : null;    }
+      })) as DomainStatus | null;
+      domainEnabled = domain ? domain.enabled : null;
+    }
 
     return {
       ...user,
@@ -71,12 +73,13 @@ export const profileRouter = createTRPCRouter({
 
   // Check if a domain is enabled
   checkDomainStatus: protectedProcedure
-    .input(z.object({ domain: z.string() }))    .query(async ({ ctx, input }) => {
-      const domain = await ctx.db.domain.findUnique({
+    .input(z.object({ domain: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const domain = (await ctx.db.domain.findUnique({
         where: { name: input.domain },
         select: { enabled: true },
-      }) as DomainStatus | null;
-      
+      })) as DomainStatus | null;
+
       return {
         exists: !!domain,
         enabled: domain?.enabled ?? false,
@@ -89,8 +92,8 @@ export const profileRouter = createTRPCRouter({
       // Get current user to check admin level and scope
       const currentUser = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { 
-          adminLevel: true, 
+        select: {
+          adminLevel: true,
           adminScope: true,
           domain: true,
           departmentId: true,
@@ -141,35 +144,45 @@ export const profileRouter = createTRPCRouter({
           .transform((val) => normalizeWishlistUrl(val))
           .refine(
             (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)"
+            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
           ),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { firstName, lastName, workEmail, departmentId, amazonWishlistUrl } = input;
-      
+      const {
+        firstName,
+        lastName,
+        workEmail,
+        departmentId,
+        amazonWishlistUrl,
+      } = input;
+
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
-      
+
       // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await ctx.db.domain.findUnique({
+        const domainRecord = (await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        }) as DomainStatus | null;
-        
+        })) as DomainStatus | null;
+
         if (domainRecord && !domainRecord.enabled) {
-          throw new Error("Your organization's domain is currently disabled. Please contact your manager for access.");
+          throw new Error(
+            "Your organization's domain is currently disabled. Please contact your manager for access.",
+          );
         }
       }
-      
+
       // Check if another user already has this work email
       const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
       });
-      
+
       if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error("This work email is already registered by another user");
+        throw new Error(
+          "This work email is already registered by another user",
+        );
       }
 
       // Validate departmentId if provided
@@ -178,15 +191,17 @@ export const profileRouter = createTRPCRouter({
         const department = await ctx.db.department.findUnique({
           where: { id: departmentId },
         });
-        
+
         if (!department) {
           throw new Error("Selected department does not exist");
         }
-        
+
         if (department.domain !== domain) {
-          throw new Error("Selected department does not belong to your organization");
+          throw new Error(
+            "Selected department does not belong to your organization",
+          );
         }
-        
+
         validDepartmentId = departmentId;
       }
 
@@ -222,35 +237,45 @@ export const profileRouter = createTRPCRouter({
           .transform((val) => normalizeWishlistUrl(val))
           .refine(
             (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)"
+            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
           ),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { firstName, lastName, workEmail, departmentId, amazonWishlistUrl } = input;
-      
+      const {
+        firstName,
+        lastName,
+        workEmail,
+        departmentId,
+        amazonWishlistUrl,
+      } = input;
+
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
-      
+
       // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await ctx.db.domain.findUnique({
+        const domainRecord = (await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        }) as DomainStatus | null;
-        
+        })) as DomainStatus | null;
+
         if (domainRecord && !domainRecord.enabled) {
-          throw new Error("Your organization's domain is currently disabled. Please contact your manager for access.");
+          throw new Error(
+            "Your organization's domain is currently disabled. Please contact your manager for access.",
+          );
         }
       }
-      
+
       // Check if another user already has this work email
       const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
       });
-      
+
       if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error("This work email is already registered by another user");
+        throw new Error(
+          "This work email is already registered by another user",
+        );
       }
 
       // Validate departmentId if provided
@@ -259,15 +284,17 @@ export const profileRouter = createTRPCRouter({
         const department = await ctx.db.department.findUnique({
           where: { id: departmentId },
         });
-        
+
         if (!department) {
           throw new Error("Selected department does not exist");
         }
-        
+
         if (department.domain !== domain) {
-          throw new Error("Selected department does not belong to your organization");
+          throw new Error(
+            "Selected department does not belong to your organization",
+          );
         }
-        
+
         validDepartmentId = departmentId;
       }
 
@@ -293,8 +320,9 @@ export const profileRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1, "Department name is required"),
         domain: z.string().min(1, "Domain is required"),
-      })
-    )    .mutation(({ ctx, input }) => {
+      }),
+    )
+    .mutation(({ ctx, input }) => {
       return ctx.db.department.create({
         data: input,
       });
@@ -313,36 +341,47 @@ export const profileRouter = createTRPCRouter({
           .transform((val) => normalizeWishlistUrl(val))
           .refine(
             (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)"
+            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
           ),
         domainDescription: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { firstName, lastName, workEmail, departmentId, amazonWishlistUrl, domainDescription } = input;
-      
+      const {
+        firstName,
+        lastName,
+        workEmail,
+        departmentId,
+        amazonWishlistUrl,
+        domainDescription,
+      } = input;
+
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
       if (!domain) {
         throw new Error("Invalid email domain");
       }
-      
+
       // Check if domain already exists
       const existingDomain = await ctx.db.domain.findUnique({
         where: { name: domain },
       });
-      
+
       if (existingDomain) {
-        throw new Error("Domain already exists. Please contact your domain administrator.");
+        throw new Error(
+          "Domain already exists. Please contact your domain administrator.",
+        );
       }
-      
+
       // Check if another user already has this work email
       const existingUser = await ctx.db.user.findUnique({
         where: { workEmail },
       });
-      
+
       if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error("This work email is already registered by another user");
+        throw new Error(
+          "This work email is already registered by another user",
+        );
       }
 
       // Create domain
@@ -361,15 +400,17 @@ export const profileRouter = createTRPCRouter({
         const department = await ctx.db.department.findUnique({
           where: { id: departmentId },
         });
-        
+
         if (!department) {
           throw new Error("Selected department does not exist");
         }
-        
+
         if (department.domain !== domain) {
-          throw new Error("Selected department does not belong to your organization");
+          throw new Error(
+            "Selected department does not belong to your organization",
+          );
         }
-        
+
         validDepartmentId = departmentId;
       }
 

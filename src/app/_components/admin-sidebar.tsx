@@ -8,7 +8,7 @@ import {
   GlobeAltIcon,
   UsersIcon,
   Cog6ToothIcon,
-  LinkIcon
+  LinkIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -28,7 +28,7 @@ export function AdminSidebar() {
       <div className="flex h-16 shrink-0 items-center px-6">
         <h1 className="text-xl font-bold text-white">Admin Panel</h1>
       </div>
-      
+
       <nav className="flex flex-1 flex-col px-6 pb-4">
         <ul className="flex flex-1 flex-col gap-y-7">
           <li>
@@ -58,7 +58,7 @@ export function AdminSidebar() {
               })}
             </ul>
           </li>
-          
+
           <li className="mt-auto">
             <Link
               href="/"

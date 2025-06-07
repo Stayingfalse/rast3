@@ -82,8 +82,7 @@ function SafeIcon({
       height={24}
       className={className}
       loading="lazy"
-    />
-  );
+    />  );
 }
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
@@ -92,7 +91,6 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
@@ -181,8 +179,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
-        {/* Modal content */}
+        </button>        {/* Modal content */}
         <div className="text-center">
           {emailSent ? (
             // Email sent success state

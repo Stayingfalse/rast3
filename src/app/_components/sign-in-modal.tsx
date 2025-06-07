@@ -2,9 +2,8 @@
 
 import React from "react";
 import { signIn, getProviders } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -20,6 +19,63 @@ interface Provider {
 }
 
 type ProvidersState = Record<string, Provider> | null;
+
+function useIconDataUrl(providerId: string) {
+  const [dataUrl, setDataUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch(`/api/icons/${providerId}`)
+      .then((response) => response.text())
+      .then((url) => {
+        if (isMounted) {
+          setDataUrl(url);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [providerId]);
+
+  return { dataUrl, isLoading };
+}
+
+function SafeIcon({
+  providerId,
+  alt,
+  className,
+}: {
+  providerId: string;
+  alt: string;
+  className?: string;
+}) {
+  const { dataUrl, isLoading } = useIconDataUrl(providerId);
+
+  if (isLoading) {
+    return <div className={`${className} bg-gray-200 animate-pulse rounded`} />;
+  }
+
+  if (!dataUrl) {
+    return (
+      <div
+        className={`${className} bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500`}
+      >
+        ?
+      </div>
+    );
+  }
+
+  return <img src={dataUrl} alt={alt} className={className} loading="lazy" />;
+}
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [providers, setProviders] = useState<ProvidersState>(null);
@@ -120,9 +176,9 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                   (p) => p.id !== "nodemailer",
                 );
 
-                // Randomize OAuth providers order only once when not loading
-                const shuffledOAuth = oauthProviders.sort(
-                  () => Math.random() - 0.5,
+                // Keep OAuth providers in a consistent order (alphabetical by name)
+                const sortedOAuth = oauthProviders.sort((a, b) => 
+                  a.name.localeCompare(b.name)
                 );
 
                 return (
@@ -136,13 +192,10 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                             disabled={isLoading !== null}
                             className="flex w-full items-center justify-center gap-3 rounded-lg border-0 bg-green-600 px-4 py-3 font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
                           >
-                            <Image
-                              src={`https://authjs.dev/img/providers/email.svg`}
+                            <SafeIcon
+                              providerId="email"
                               alt="Email logo"
-                              height={24}
-                              width={24}
                               className="h-6 w-6 shadow-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
-                              loading="lazy"
                             />
                             <span className="font-medium">
                               Continue with Email
@@ -206,7 +259,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                     )}
 
                     {/* OAuth providers */}
-                    {shuffledOAuth.map((provider) => {
+                    {sortedOAuth.map((provider) => {
                       const style =
                         providerStyles[provider.id] ??
                         "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
@@ -220,13 +273,10 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                           {isLoading === provider.id ? (
                             <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           ) : (
-                            <Image
-                              src={`https://authjs.dev/img/providers/${provider.id}.svg`}
+                            <SafeIcon
+                              providerId={provider.id}
                               alt={`${provider.name} logo`}
-                              height={24}
-                              width={24}
                               className="h-6 w-6 shadow-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
-                              loading="lazy"
                             />
                           )}
                           <span className="font-medium">

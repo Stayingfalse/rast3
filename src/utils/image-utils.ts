@@ -6,14 +6,14 @@
 export function getProxyImageUrl(originalUrl: string): string {
   try {
     const url = new URL(originalUrl);
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    
+    const pathParts = url.pathname.split("/").filter(Boolean);
+
     // Remove bucket name from path if present (first segment after domain)
-    const imagePath = pathParts.slice(1).join('/');
-    
+    const imagePath = pathParts.slice(1).join("/");
+
     return `/api/images/${imagePath}`;
   } catch (error) {
-    console.error('Failed to parse image URL:', originalUrl, error);
+    console.error("Failed to parse image URL:", originalUrl, error);
     return originalUrl; // Fallback to original if parsing fails
   }
 }
@@ -22,8 +22,10 @@ export function getProxyImageUrl(originalUrl: string): string {
  * Handles image loading errors by hiding the image element
  * @param event - The error event from the img element
  */
-export function handleImageError(event: React.SyntheticEvent<HTMLImageElement>) {
+export function handleImageError(
+  event: React.SyntheticEvent<HTMLImageElement>,
+) {
   const target = event.currentTarget;
-  console.error('Failed to load image:', target.src);
-  target.style.display = 'none';
+  console.error("Failed to load image:", target.src);
+  target.style.display = "none";
 }

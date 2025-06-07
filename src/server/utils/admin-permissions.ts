@@ -14,14 +14,13 @@ export interface AdminUser {
  * Check if a user has admin permissions to moderate content within their scope
  */
 export async function checkAdminPermissions(
-  userId: string, 
-  targetUserId?: string
+  userId: string,
+  targetUserId?: string,
 ): Promise<{ canModerate: boolean; adminLevel: AdminLevel; scope?: string }> {
-  
   const currentUser = await db.user.findUnique({
     where: { id: userId },
-    select: { 
-      adminLevel: true, 
+    select: {
+      adminLevel: true,
       adminScope: true,
       domain: true,
       departmentId: true,
@@ -33,25 +32,25 @@ export async function checkAdminPermissions(
 
   // SITE admins can moderate everything
   if (currentUser.adminLevel === "SITE") {
-    return { 
-      canModerate: true, 
+    return {
+      canModerate: true,
       adminLevel: currentUser.adminLevel,
-      scope: "site"
+      scope: "site",
     };
   }
   // If no target user specified, just return their admin status
   if (!targetUserId) {
-    return { 
-      canModerate: true, 
+    return {
+      canModerate: true,
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined
+      scope: currentUser.adminScope ?? undefined,
     };
   }
 
   // Get target user's information for scope checking
   const targetUser = await db.user.findUnique({
     where: { id: targetUserId },
-    select: { 
+    select: {
       domain: true,
       departmentId: true,
     },
@@ -63,19 +62,19 @@ export async function checkAdminPermissions(
   // DOMAIN admins can moderate users in their domain
   if (currentUser.adminLevel === "DOMAIN") {
     const canModerate = currentUser.adminScope === targetUser.domain;
-    return { 
-      canModerate, 
+    return {
+      canModerate,
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined
+      scope: currentUser.adminScope ?? undefined,
     };
   }
   // DEPARTMENT admins can moderate users in their department
   if (currentUser.adminLevel === "DEPARTMENT") {
     const canModerate = currentUser.adminScope === targetUser.departmentId;
-    return { 
-      canModerate, 
+    return {
+      canModerate,
       adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined
+      scope: currentUser.adminScope ?? undefined,
     };
   }
 
@@ -86,5 +85,7 @@ export async function checkAdminPermissions(
  * Check if user can see admin actions (has any admin level)
  */
 export function canSeeAdminActions(adminLevel?: AdminLevel): boolean {
-  return adminLevel ? ["DEPARTMENT", "DOMAIN", "SITE"].includes(adminLevel) : false;
+  return adminLevel
+    ? ["DEPARTMENT", "DOMAIN", "SITE"].includes(adminLevel)
+    : false;
 }

@@ -31,7 +31,8 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     if (isOpen) {
       void getProviders().then(setProviders);
     }
-  }, [isOpen]);  const handleSignIn = async (providerId: string, email?: string) => {
+  }, [isOpen]);
+  const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
       if (providerId === "nodemailer" && email) {
@@ -56,7 +57,8 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   // Provider button color mapping
   const providerStyles: Record<string, string> = {
     github: "bg-gray-800 hover:bg-gray-900 text-white border border-gray-300",
-    google: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",    discord: "bg-[#5865F2] hover:bg-[#4752C4] text-white",
+    google: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",
+    discord: "bg-[#5865F2] hover:bg-[#4752C4] text-white",
     twitch: "bg-[#9147FF] hover:bg-[#772CE8] text-white",
     reddit: "bg-[#FF4500] hover:bg-[#D73600] text-white",
     facebook: "bg-[#1877F3] hover:bg-[#145DB2] text-white",
@@ -72,7 +74,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <svg
             className="h-6 w-6"
@@ -95,122 +97,149 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           </p>
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Sign in to your account
-          </h2>          <div className="space-y-3">
+          </h2>{" "}
+          <div className="space-y-3">
             {isLoading ? (
               // Show preloader when any authentication is in progress
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>                <p className="text-gray-600 font-medium">
-                  {isLoading === "nodemailer" ? "Sending magic link..." : "Signing you in..."}
+              <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-red-600"></div>{" "}
+                <p className="font-medium text-gray-600">
+                  {isLoading === "nodemailer"
+                    ? "Sending magic link..."
+                    : "Signing you in..."}
                 </p>
               </div>
             ) : providers ? (
-              (() => {                  // Separate nodemailer provider from OAuth providers
-                  const allProviders = Object.values(providers);
-                  const emailProvider = allProviders.find(p => p.id === "nodemailer");
-                  const oauthProviders = allProviders.filter(p => p.id !== "nodemailer");
-                  
-                  // Randomize OAuth providers order only once when not loading
-                  const shuffledOAuth = oauthProviders.sort(() => Math.random() - 0.5);
-                  
-                  return (
-                    <>
-                      {/* Email provider with special form */}
-                      {emailProvider && (
-                        <div className="space-y-3">
-                          {!showEmailForm ? (                            <button
-                              onClick={() => setShowEmailForm(true)}
-                              disabled={isLoading !== null}
-                              className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white border-0 disabled:opacity-50"
-                            >
-                              <Image
-                                src={`https://authjs.dev/img/providers/email.svg`}
-                                alt="Email logo"
-                                height={24}
-                                width={24}
-                                className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
-                                loading="lazy"
-                              />
-                              <span className="font-medium">Continue with Email</span>
-                            </button>
-                          ) : (
-                            <form onSubmit={handleEmailSubmit} className="space-y-3">
-                              <input
-                                type="email"
-                                placeholder="Enter your email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-                                required
-                              />
-                              <div className="flex gap-2">                                <button
-                                  type="submit"
-                                  disabled={isLoading !== null || !email}
-                                  className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-                                >                                  {isLoading === "nodemailer" ? (
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                  ) : null}
-                                  {isLoading === "nodemailer" ? "Sending..." : "Send Magic Link"}
-                                </button>                                <button
-                                  type="button"
-                                  disabled={isLoading !== null}
-                                  onClick={() => {
-                                    setShowEmailForm(false);
-                                    setEmail("");
-                                  }}
-                                  className="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium disabled:opacity-50"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </form>
-                          )}
-                          {oauthProviders.length > 0 && (
-                            <div className="relative">
-                              <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-gray-300" />
-                              </div>
-                              <div className="relative flex justify-center text-sm">
-                                <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* OAuth providers */}
-                      {shuffledOAuth.map((provider) => {
-                        const style =
-                          providerStyles[provider.id] ??
-                          "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
-                        return (
+              (() => {
+                // Separate nodemailer provider from OAuth providers
+                const allProviders = Object.values(providers);
+                const emailProvider = allProviders.find(
+                  (p) => p.id === "nodemailer",
+                );
+                const oauthProviders = allProviders.filter(
+                  (p) => p.id !== "nodemailer",
+                );
+
+                // Randomize OAuth providers order only once when not loading
+                const shuffledOAuth = oauthProviders.sort(
+                  () => Math.random() - 0.5,
+                );
+
+                return (
+                  <>
+                    {/* Email provider with special form */}
+                    {emailProvider && (
+                      <div className="space-y-3">
+                        {!showEmailForm ? (
                           <button
-                            key={provider.id}
-                            onClick={() => handleSignIn(provider.id)}
+                            onClick={() => setShowEmailForm(true)}
                             disabled={isLoading !== null}
-                            className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition disabled:opacity-50 ${style}`}
+                            className="flex w-full items-center justify-center gap-3 rounded-lg border-0 bg-green-600 px-4 py-3 font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
                           >
-                            {isLoading === provider.id ? (
-                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            ) : (
-                              <Image
-                                src={`https://authjs.dev/img/providers/${provider.id}.svg`}
-                                alt={`${provider.name} logo`}
-                                height={24}
-                                width={24}
-                                className="h-6 w-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] shadow-white"
-                                loading="lazy"
-                              />
-                            )}
+                            <Image
+                              src={`https://authjs.dev/img/providers/email.svg`}
+                              alt="Email logo"
+                              height={24}
+                              width={24}
+                              className="h-6 w-6 shadow-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+                              loading="lazy"
+                            />
                             <span className="font-medium">
-                              {isLoading === provider.id
-                                ? "Signing in..."
-                                : `Continue with ${provider.name}`}
+                              Continue with Email
                             </span>
                           </button>
-                        );
-                      })}
-                    </>                  );
-                })()
+                        ) : (
+                          <form
+                            onSubmit={handleEmailSubmit}
+                            className="space-y-3"
+                          >
+                            <input
+                              type="email"
+                              placeholder="Enter your email address"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                              required
+                            />
+                            <div className="flex gap-2">
+                              {" "}
+                              <button
+                                type="submit"
+                                disabled={isLoading !== null || !email}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+                              >
+                                {" "}
+                                {isLoading === "nodemailer" ? (
+                                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                ) : null}
+                                {isLoading === "nodemailer"
+                                  ? "Sending..."
+                                  : "Send Magic Link"}
+                              </button>{" "}
+                              <button
+                                type="button"
+                                disabled={isLoading !== null}
+                                onClick={() => {
+                                  setShowEmailForm(false);
+                                  setEmail("");
+                                }}
+                                className="px-4 py-3 font-medium text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                        {oauthProviders.length > 0 && (
+                          <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t border-gray-300" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                              <span className="bg-white px-2 text-gray-500">
+                                Or continue with
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* OAuth providers */}
+                    {shuffledOAuth.map((provider) => {
+                      const style =
+                        providerStyles[provider.id] ??
+                        "bg-gray-700 hover:bg-gray-800 text-white border border-gray-300";
+                      return (
+                        <button
+                          key={provider.id}
+                          onClick={() => handleSignIn(provider.id)}
+                          disabled={isLoading !== null}
+                          className={`flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition disabled:opacity-50 ${style}`}
+                        >
+                          {isLoading === provider.id ? (
+                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <Image
+                              src={`https://authjs.dev/img/providers/${provider.id}.svg`}
+                              alt={`${provider.name} logo`}
+                              height={24}
+                              width={24}
+                              className="h-6 w-6 shadow-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+                              loading="lazy"
+                            />
+                          )}
+                          <span className="font-medium">
+                            {isLoading === provider.id
+                              ? "Signing in..."
+                              : `Continue with ${provider.name}`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
+                );
+              })()
             ) : (
               "Loading providers..."
             )}
@@ -219,7 +248,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
             By signing in, you agree to our terms of service and{" "}
             <Link
               href="/privacy"
-              className="text-red-600 hover:text-red-700 underline"
+              className="text-red-600 underline hover:text-red-700"
               target="_blank"
               rel="noopener noreferrer"
             >

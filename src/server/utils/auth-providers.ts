@@ -21,7 +21,7 @@ export async function getDbAuthProviders(): Promise<AuthProviderConfig[]> {
       where: { enabled: true },
       orderBy: { displayName: "asc" },
     });
-      // Convert null values to undefined to match interface
+    // Convert null values to undefined to match interface
     return providers.map((provider) => ({
       id: provider.id,
       name: provider.name,
@@ -41,29 +41,34 @@ export async function getDbAuthProviders(): Promise<AuthProviderConfig[]> {
 /**
  * Get a specific provider configuration from database
  */
-export async function getDbAuthProvider(name: string): Promise<AuthProviderConfig | null> {
+export async function getDbAuthProvider(
+  name: string,
+): Promise<AuthProviderConfig | null> {
   try {
     const provider = await db.authProvider.findFirst({
-      where: { 
+      where: {
         name,
-        enabled: true 
+        enabled: true,
       },
     });
-    
+
     if (!provider) return null;
-    
+
     return {
       id: provider.id,
       name: provider.name,
       displayName: provider.displayName,
       clientId: provider.clientId ?? undefined,
       clientSecret: provider.clientSecret ?? undefined,
-          enabled: provider.enabled,
+      enabled: provider.enabled,
       isEmailProvider: provider.isEmailProvider,
       emailConfig: provider.emailConfig as Record<string, unknown> | undefined,
     };
   } catch (error) {
-    console.error(`Failed to fetch auth provider ${name} from database:`, error);
+    console.error(
+      `Failed to fetch auth provider ${name} from database:`,
+      error,
+    );
     return null;
   }
 }
@@ -84,9 +89,13 @@ export function isProviderInEnv(providerName: string): boolean {
     case "reddit":
       return !!(process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET);
     case "instagram":
-      return !!(process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET);
+      return !!(
+        process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET
+      );
     case "facebook":
-      return !!(process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET);
+      return !!(
+        process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET
+      );
     case "tiktok":
       return !!(process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET);
     case "nodemailer":

@@ -15,7 +15,7 @@ export function SiteAdminLayout({ children }: SiteAdminLayoutProps) {
   const { data: sessionData, status } = useSession();
   const { data: user, isLoading } = api.profile.getCurrentProfile.useQuery(
     undefined,
-    { enabled: !!sessionData?.user }
+    { enabled: !!sessionData?.user },
   );
 
   // Redirect logic in useEffect (client only)

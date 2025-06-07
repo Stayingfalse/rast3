@@ -1,15 +1,14 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import Discord from "next-auth/providers/discord";
-import Twitch from "next-auth/providers/twitch";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
-import Reddit from "next-auth/providers/reddit";
-import Instagram from "next-auth/providers/instagram";
 import Facebook from "next-auth/providers/facebook";
-import TikTok from "next-auth/providers/tiktok";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import Instagram from "next-auth/providers/instagram";
 import Nodemailer from "next-auth/providers/nodemailer";
-import { type DefaultSession } from "next-auth";
+import Reddit from "next-auth/providers/reddit";
+import TikTok from "next-auth/providers/tiktok";
+import Twitch from "next-auth/providers/twitch";
 import { db } from "~/server/db";
 
 // Augment Session type to include adminLevel and adminScope
@@ -41,18 +40,18 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
-// Discord Provider  
+// Discord Provider
 if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
   providers.push(
     Discord({
       clientId: process.env.AUTH_DISCORD_ID,
       clientSecret: process.env.AUTH_DISCORD_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -63,7 +62,15 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+      // Default scope for normal user authentication - no Gmail access
+      authorization: {
+        params: {
+          scope: "openid email profile",
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    }),
   );
 }
 
@@ -74,7 +81,7 @@ if (process.env.AUTH_TWITCH_ID && process.env.AUTH_TWITCH_SECRET) {
       clientId: process.env.AUTH_TWITCH_ID,
       clientSecret: process.env.AUTH_TWITCH_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -85,7 +92,7 @@ if (process.env.AUTH_REDDIT_ID && process.env.AUTH_REDDIT_SECRET) {
       clientId: process.env.AUTH_REDDIT_ID,
       clientSecret: process.env.AUTH_REDDIT_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -96,7 +103,7 @@ if (process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET) {
       clientId: process.env.AUTH_INSTAGRAM_ID,
       clientSecret: process.env.AUTH_INSTAGRAM_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -107,7 +114,7 @@ if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
       clientId: process.env.AUTH_FACEBOOK_ID,
       clientSecret: process.env.AUTH_FACEBOOK_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -118,7 +125,7 @@ if (process.env.AUTH_TIKTOK_ID && process.env.AUTH_TIKTOK_SECRET) {
       clientId: process.env.AUTH_TIKTOK_ID,
       clientSecret: process.env.AUTH_TIKTOK_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -135,7 +142,7 @@ if (process.env.EMAIL_SERVER_HOST) {
         },
       },
       from: process.env.EMAIL_FROM,
-    })
+    }),
   );
 }
 

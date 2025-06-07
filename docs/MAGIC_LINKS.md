@@ -24,6 +24,7 @@ EMAIL_FROM="your-email@gmail.com"
 ### SMTP Provider Examples
 
 #### Gmail
+
 ```bash
 EMAIL_SERVER_HOST="smtp.gmail.com"
 EMAIL_SERVER_PORT="587"
@@ -33,6 +34,7 @@ EMAIL_FROM="your-email@gmail.com"
 ```
 
 #### Outlook/Hotmail
+
 ```bash
 EMAIL_SERVER_HOST="smtp-mail.outlook.com"
 EMAIL_SERVER_PORT="587"
@@ -42,6 +44,7 @@ EMAIL_FROM="your-email@outlook.com"
 ```
 
 #### SendGrid
+
 ```bash
 EMAIL_SERVER_HOST="smtp.sendgrid.net"
 EMAIL_SERVER_PORT="587"
@@ -51,6 +54,7 @@ EMAIL_FROM="your-verified-sender@yourdomain.com"
 ```
 
 #### Custom SMTP
+
 ```bash
 EMAIL_SERVER_HOST="your-smtp-server.com"
 EMAIL_SERVER_PORT="587"

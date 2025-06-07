@@ -33,14 +33,19 @@ const HomeHeader: React.FC = () => {
   return (
     <div className="relative">
       <h1
-        className={`text-5xl font-extrabold tracking-tight text-white sm:text-[5rem] transition-transform duration-700 ${swingDone ? "skew-x-5 -rotate-12" : "swing-animate"}`}
+        className={`text-5xl font-extrabold tracking-tight text-white transition-transform duration-700 sm:text-[5rem] ${swingDone ? "-rotate-12 skew-x-5" : "swing-animate"}`}
         style={{ display: "inline-block" }}
         onAnimationEnd={() => setSwingDone(true)}
       >
-        Random <span className="text-[hsl(0,53%,31%)]">Acts<br /> Of</span> Santa
+        Random{" "}
+        <span className="text-[hsl(0,53%,31%)]">
+          Acts
+          <br /> Of
+        </span>{" "}
+        Santa
         {show2025 && (
           <span
-            className={`text-[hsl(0,53%,31%)] ml-3 inline-block align-middle transition-all duration-500 ${typed2025.length === 4 ? "" : "typewriter-cursor"}`}
+            className={`ml-3 inline-block align-middle text-[hsl(0,53%,31%)] transition-all duration-500 ${typed2025.length === 4 ? "" : "typewriter-cursor"}`}
             aria-label="2025"
           >
             {typed2025}
@@ -50,12 +55,24 @@ const HomeHeader: React.FC = () => {
       <span className="sr-only">2025</span>
       <style jsx global>{`
         @keyframes swing {
-          0% { transform: rotate(-8deg) skewX(-8deg); }
-          20% { transform: rotate(10deg) skewX(8deg); }
-          40% { transform: rotate(-6deg) skewX(-6deg); }
-          60% { transform: rotate(4deg) skewX(4deg); }
-          80% { transform: rotate(-2deg) skewX(-2deg); }
-          100% { transform: rotate(0deg) skewX(3deg); }
+          0% {
+            transform: rotate(-8deg) skewX(-8deg);
+          }
+          20% {
+            transform: rotate(10deg) skewX(8deg);
+          }
+          40% {
+            transform: rotate(-6deg) skewX(-6deg);
+          }
+          60% {
+            transform: rotate(4deg) skewX(4deg);
+          }
+          80% {
+            transform: rotate(-2deg) skewX(-2deg);
+          }
+          100% {
+            transform: rotate(0deg) skewX(3deg);
+          }
         }
         .swing-animate {
           animation: swing 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -71,19 +88,36 @@ const HomeHeader: React.FC = () => {
           font-weight: 400;
         }
         @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
+          0%,
+          50% {
+            opacity: 1;
+          }
+          51%,
+          100% {
+            opacity: 0;
+          }
         }
         .stamp-effect {
           animation: stamp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-          text-shadow: 0 2px 8px #fff7, 0 0 2px #fff7;
+          text-shadow:
+            0 2px 8px #fff7,
+            0 0 2px #fff7;
           letter-spacing: 0.08em;
           transform: scale(1.12) rotate(-2deg);
         }
         @keyframes stamp {
-          0% { opacity: 0; transform: scale(2) rotate(-12deg); }
-          60% { opacity: 1; transform: scale(1.1) rotate(2deg); }
-          100% { opacity: 1; transform: scale(1.12) rotate(-2deg); }
+          0% {
+            opacity: 0;
+            transform: scale(2) rotate(-12deg);
+          }
+          60% {
+            opacity: 1;
+            transform: scale(1.1) rotate(2deg);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1.12) rotate(-2deg);
+          }
         }
       `}</style>
     </div>

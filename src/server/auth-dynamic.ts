@@ -1,25 +1,25 @@
 // Dynamic authentication provider configuration
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type NextAuthConfig } from "next-auth";
+import type { Provider } from "next-auth/providers";
 import Discord from "next-auth/providers/discord";
-import Twitch from "next-auth/providers/twitch";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
-import Reddit from "next-auth/providers/reddit";
-import Instagram from "next-auth/providers/instagram";
 import Facebook from "next-auth/providers/facebook";
-import TikTok from "next-auth/providers/tiktok";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import Instagram from "next-auth/providers/instagram";
 import Nodemailer from "next-auth/providers/nodemailer";
+import Reddit from "next-auth/providers/reddit";
+import TikTok from "next-auth/providers/tiktok";
+import Twitch from "next-auth/providers/twitch";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
-import type { Provider } from "next-auth/providers";
 
 // Email configuration interface
 interface EmailConfig {
   host?: string;
   port?: number;
   from?: string;
-  authType: 'basic' | 'oauth2';
+  authType: "basic" | "oauth2";
   // Basic auth fields
   user?: string;
   password?: string;
@@ -31,7 +31,8 @@ interface EmailConfig {
 }
 
 // Cache for database providers to avoid repeated DB calls
-let dbProvidersCache: Awaited<ReturnType<typeof getDbAuthProviders>> | null = null;
+let dbProvidersCache: Awaited<ReturnType<typeof getDbAuthProviders>> | null =
+  null;
 let cacheExpiry = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -52,124 +53,172 @@ async function getCachedDbProviders() {
 
 export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   const providers: Provider[] = [];
-  
+
   // Get database providers for fallback
   const dbProviders = await getCachedDbProviders();
-  
+
   // Helper function to get provider config
-  const getProviderConfig = (providerName: string, envIdKey: string, envSecretKey: string) => {
+  const getProviderConfig = (
+    providerName: string,
+    envIdKey: string,
+    envSecretKey: string,
+  ) => {
     const envId = process.env[envIdKey];
     const envSecret = process.env[envSecretKey];
-    
+
     if (envId && envSecret) {
-      return { clientId: envId, clientSecret: envSecret, source: 'env' as const };
-    }
-    
-    const dbProvider = dbProviders.find(p => p.name === providerName && p.enabled);
-    if (dbProvider?.clientId && dbProvider?.clientSecret) {
-      return { 
-        clientId: dbProvider.clientId, 
-        clientSecret: dbProvider.clientSecret, 
-        source: 'db' as const 
+      return {
+        clientId: envId,
+        clientSecret: envSecret,
+        source: "env" as const,
       };
     }
-    
+
+    const dbProvider = dbProviders.find(
+      (p) => p.name === providerName && p.enabled,
+    );
+    if (dbProvider?.clientId && dbProvider?.clientSecret) {
+      return {
+        clientId: dbProvider.clientId,
+        clientSecret: dbProvider.clientSecret,
+        source: "db" as const,
+      };
+    }
+
     return null;
   };
 
   // GitHub Provider
-  const githubConfig = getProviderConfig("github", "AUTH_GITHUB_ID", "AUTH_GITHUB_SECRET");
+  const githubConfig = getProviderConfig(
+    "github",
+    "AUTH_GITHUB_ID",
+    "AUTH_GITHUB_SECRET",
+  );
   if (githubConfig) {
     providers.push(
       GitHub({
         clientId: githubConfig.clientId,
         clientSecret: githubConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
   // Discord Provider
-  const discordConfig = getProviderConfig("discord", "AUTH_DISCORD_ID", "AUTH_DISCORD_SECRET");
+  const discordConfig = getProviderConfig(
+    "discord",
+    "AUTH_DISCORD_ID",
+    "AUTH_DISCORD_SECRET",
+  );
   if (discordConfig) {
     providers.push(
       Discord({
         clientId: discordConfig.clientId,
         clientSecret: discordConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
-  }
-
-  // Google Provider
-  const googleConfig = getProviderConfig("google", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET");
+  } // Google Provider
+  const googleConfig = getProviderConfig(
+    "google",
+    "AUTH_GOOGLE_ID",
+    "AUTH_GOOGLE_SECRET",
+  );
   if (googleConfig) {
     providers.push(
       Google({
         clientId: googleConfig.clientId,
         clientSecret: googleConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+        // Default scope for normal user authentication - no Gmail access
+        authorization: {
+          params: {
+            scope: "openid email profile",
+            access_type: "offline",
+            prompt: "select_account",
+          },
+        },
+      }),
     );
   }
 
   // Twitch Provider
-  const twitchConfig = getProviderConfig("twitch", "AUTH_TWITCH_ID", "AUTH_TWITCH_SECRET");
+  const twitchConfig = getProviderConfig(
+    "twitch",
+    "AUTH_TWITCH_ID",
+    "AUTH_TWITCH_SECRET",
+  );
   if (twitchConfig) {
     providers.push(
       Twitch({
         clientId: twitchConfig.clientId,
         clientSecret: twitchConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
   // Reddit Provider
-  const redditConfig = getProviderConfig("reddit", "AUTH_REDDIT_ID", "AUTH_REDDIT_SECRET");
+  const redditConfig = getProviderConfig(
+    "reddit",
+    "AUTH_REDDIT_ID",
+    "AUTH_REDDIT_SECRET",
+  );
   if (redditConfig) {
     providers.push(
       Reddit({
         clientId: redditConfig.clientId,
         clientSecret: redditConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
   // Instagram Provider
-  const instagramConfig = getProviderConfig("instagram", "AUTH_INSTAGRAM_ID", "AUTH_INSTAGRAM_SECRET");
+  const instagramConfig = getProviderConfig(
+    "instagram",
+    "AUTH_INSTAGRAM_ID",
+    "AUTH_INSTAGRAM_SECRET",
+  );
   if (instagramConfig) {
     providers.push(
       Instagram({
         clientId: instagramConfig.clientId,
         clientSecret: instagramConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
   // Facebook Provider
-  const facebookConfig = getProviderConfig("facebook", "AUTH_FACEBOOK_ID", "AUTH_FACEBOOK_SECRET");
+  const facebookConfig = getProviderConfig(
+    "facebook",
+    "AUTH_FACEBOOK_ID",
+    "AUTH_FACEBOOK_SECRET",
+  );
   if (facebookConfig) {
     providers.push(
       Facebook({
         clientId: facebookConfig.clientId,
         clientSecret: facebookConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
   // TikTok Provider
-  const tiktokConfig = getProviderConfig("tiktok", "AUTH_TIKTOK_ID", "AUTH_TIKTOK_SECRET");
+  const tiktokConfig = getProviderConfig(
+    "tiktok",
+    "AUTH_TIKTOK_ID",
+    "AUTH_TIKTOK_SECRET",
+  );
   if (tiktokConfig) {
     providers.push(
       TikTok({
         clientId: tiktokConfig.clientId,
         clientSecret: tiktokConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
-      })
+      }),
     );
   }
 
@@ -186,16 +235,19 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           },
         },
         from: process.env.EMAIL_FROM,
-      })
-    );  } else {
-    const dbProvider = dbProviders.find(p => p.name === "nodemailer" && p.isEmailProvider && p.enabled);
+      }),
+    );
+  } else {
+    const dbProvider = dbProviders.find(
+      (p) => p.name === "nodemailer" && p.isEmailProvider && p.enabled,
+    );
     if (dbProvider?.emailConfig) {
       const emailConfig = dbProvider.emailConfig as unknown as EmailConfig;
-        let authConfig;
-      if (emailConfig.authType === 'oauth2') {
+      let authConfig;
+      if (emailConfig.authType === "oauth2") {
         // OAuth2 configuration (for Google Apps, etc.)
         authConfig = {
-          type: 'OAuth2' as const,
+          type: "OAuth2" as const,
           user: emailConfig.user,
           clientId: emailConfig.clientId,
           clientSecret: emailConfig.clientSecret,
@@ -209,7 +261,7 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           pass: emailConfig.password,
         };
       }
-      
+
       providers.push(
         Nodemailer({
           server: {
@@ -218,7 +270,7 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
             auth: authConfig,
           },
           from: emailConfig.from,
-        })
+        }),
       );
     }
   }

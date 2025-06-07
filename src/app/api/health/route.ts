@@ -7,7 +7,7 @@ export async function GET(_req: NextRequest) {
     // Test database connection
     const userCount = await db.user.count();
     const departmentCount = await db.department.count();
-    
+
     return NextResponse.json({
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest) {
         error: String(error),
         environment: process.env.NODE_ENV,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

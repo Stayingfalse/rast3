@@ -25,8 +25,8 @@ export const linkRouter = createTRPCRouter({
     // Get current user to check admin level and scope
     const currentUser = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { 
-        adminLevel: true, 
+      select: {
+        adminLevel: true,
         adminScope: true,
         domain: true,
         departmentId: true,
@@ -62,7 +62,7 @@ export const linkRouter = createTRPCRouter({
         { lastName: "asc" },
         { firstName: "asc" },
       ],
-    });    // For each user, fetch assignment and purchase counts, and errors
+    }); // For each user, fetch assignment and purchase counts, and errors
     const userIds = users.map((u: UserWithWishlist) => u.id);
     // Get assignment counts
     const assignments = await ctx.db.wishlistAssignment.groupBy({
@@ -94,7 +94,10 @@ export const linkRouter = createTRPCRouter({
     }
     // Simulate errors for demo: every 4th user gets a fake error
     return users.map((user: UserWithWishlist, idx: number) => {
-      const assignment = assignments.find((a: { wishlistOwnerId: string; _count: { id: number } }) => a.wishlistOwnerId === user.id);
+      const assignment = assignments.find(
+        (a: { wishlistOwnerId: string; _count: { id: number } }) =>
+          a.wishlistOwnerId === user.id,
+      );
       const allocated = assignment?._count.id ?? 0;
       const purchased = purchasedCount[user.id] ?? 0;
       const errors = idx % 4 === 3 ? ["Simulated error: Invalid URL"] : [];

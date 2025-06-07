@@ -7,8 +7,8 @@ name: Auto Deploy
 on:
   push:
     branches:
-      - main    # Production deploy
-      - dev     # Development deploy
+      - main # Production deploy
+      - dev # Development deploy
 
 jobs:
   deploy:

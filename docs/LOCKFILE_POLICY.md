@@ -7,6 +7,7 @@ This project uses a lockfile (`package-lock.json`) to ensure deterministic and s
 - **Faster CI/CD:** Dependency resolution is much faster with a lockfile.
 
 ## Best Practices
+
 - Always commit `package-lock.json` to version control.
 - Update dependencies using `npm install <package>@latest` and commit the updated lockfile.
 - Review lockfile changes in pull requests for unexpected dependency updates.

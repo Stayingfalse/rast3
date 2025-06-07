@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 // In-memory cache for icons (will be lost on rebuild, but that's fine)
 const iconCache = new Map<string, { data: Buffer; contentType: string; timestamp: number }>();
@@ -7,7 +7,7 @@ const iconCache = new Map<string, { data: Buffer; contentType: string; timestamp
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 // Cache statistics
-let cacheStats = {
+const cacheStats = {
   hits: 0,
   misses: 0,
   externalFetches: 0,
@@ -89,10 +89,8 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
     if (!response.ok) {
       console.warn(`Failed to fetch icon for provider ${provider}: ${response.status}`);
       return null;
-    }
-
-    const data = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/svg+xml';
+    }    const data = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') ?? 'image/svg+xml';
     
     // Validate that we got SVG content
     const textData = new TextDecoder().decode(data);
@@ -112,7 +110,7 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
 }
 
 function getFallbackIcon(provider: string): { data: Buffer; contentType: string } {
-  const svgContent = fallbackIcons[provider] || genericFallback;
+  const svgContent = fallbackIcons[provider] ?? genericFallback;
   return {
     data: Buffer.from(svgContent, 'utf-8'),
     contentType: 'image/svg+xml',

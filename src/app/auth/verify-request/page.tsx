@@ -56,14 +56,12 @@ function VerifyRequestContent() {
         {/* Description */}
         <div className="text-gray-600 mb-6 space-y-2">
           {isEmailProvider ? (
-            <>
-              <p>
-                We've sent a magic link to{" "}
+            <>              <p>
+                We&apos;ve sent a magic link to{" "}
                 {email && (
                   <span className="font-medium text-gray-900">{email}</span>
                 )}
-              </p>
-              <p className="text-sm">
+              </p><p className="text-sm">
                 Click the link in the email to sign in to your account.
               </p>
             </>
@@ -81,17 +79,15 @@ function VerifyRequestContent() {
             <p className="font-medium">Next steps:</p>
             <ul className="text-left space-y-1 list-disc list-inside">
               <li>Check your email inbox</li>
-              <li>Look for an email from our system</li>
-              <li>Click the "Sign in" link in the email</li>
-              <li>You'll be automatically signed in</li>
+              <li>Look for an email from our system</li>              <li>Click the &quot;Sign in&quot; link in the email</li>
+              <li>You&apos;ll be automatically signed in</li>
             </ul>
           </div>
         </div>
 
         {/* Troubleshooting */}
-        <div className="text-xs text-gray-500 space-y-2 mb-6">
-          <p>
-            <strong>Don't see the email?</strong> Check your spam folder or try
+        <div className="text-xs text-gray-500 space-y-2 mb-6">          <p>
+            <strong>Don&apos;t see the email?</strong> Check your spam folder or try
             requesting a new link.
           </p>
           <p>The link will expire in 24 hours for security reasons.</p>

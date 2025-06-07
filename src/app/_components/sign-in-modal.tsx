@@ -2,6 +2,7 @@
 
 import { getProviders, signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 interface SignInModalProps {
@@ -73,7 +74,16 @@ function SafeIcon({
     );
   }
 
-  return <img src={dataUrl} alt={alt} className={className} loading="lazy" />;
+  return (
+    <Image
+      src={dataUrl}
+      alt={alt}
+      width={24}
+      height={24}
+      className={className}
+      loading="lazy"
+    />
+  );
 }
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
@@ -202,7 +212,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
               {/* Description */}
               <div className="text-gray-600 space-y-2">
                 <p>
-                  We've sent a magic link to{" "}
+                  We&apos;ve sent a magic link to{" "}
                   <span className="font-medium text-gray-900">{email}</span>
                 </p>
                 <p className="text-sm">
@@ -217,8 +227,8 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                   <ul className="space-y-1 list-disc list-inside">
                     <li>Check your email inbox</li>
                     <li>Look for an email from our system</li>
-                    <li>Click the "Sign in" link in the email</li>
-                    <li>You'll be automatically signed in</li>
+                    <li>Click the &quot;Sign in&quot; link in the email</li>
+                    <li>You&apos;ll be automatically signed in</li>
                   </ul>
                 </div>
               </div>
@@ -226,7 +236,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
               {/* Troubleshooting */}
               <div className="text-xs text-gray-500 space-y-1">
                 <p>
-                  <strong>Don't see the email?</strong> Check your spam folder.
+                  <strong>Don&apos;t see the email?</strong> Check your spam folder.
                 </p>
                 <p>The link will expire in 24 hours for security.</p>
               </div>

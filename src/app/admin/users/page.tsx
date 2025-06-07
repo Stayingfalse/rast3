@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
 
@@ -148,13 +149,13 @@ export default function UsersPage() {
 
     if (adminLevel === "DEPARTMENT") {
       if (!user.departmentId) {
-        alert("User must be assigned to a department first");
+        toast.error("User must be assigned to a department first");
         return;
       }
       adminScope = user.departmentId;
     } else if (adminLevel === "DOMAIN") {
       if (!user.domain) {
-        alert("User must have a domain assigned first");
+        toast.error("User must have a domain assigned first");
         return;
       }
       adminScope = user.domain;
@@ -189,13 +190,29 @@ export default function UsersPage() {
   };
 
   const handleDeleteUser = (userId: string, userName: string) => {
-    if (
-      confirm(
-        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
-      )
-    ) {
-      deleteUserMutation.mutate({ userId });
-    }
+    // Using toast with a custom confirmation
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span>Are you sure you want to delete user &quot;{userName}&quot;? This action cannot be undone.</span>
+        <div className="flex gap-2">
+          <button
+            className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteUserMutation.mutate({ userId });
+            }}
+          >
+            Yes, Delete
+          </button>
+          <button
+            className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 
@@ -51,7 +52,7 @@ function DepartmentManagement() {
       void refetch();
     },
     onError: (error) => {
-      alert(`Failed to create department: ${error.message}`);
+      toast.error(`Failed to create department: ${error.message}`);
       setIsCreating(false);
     },
   });

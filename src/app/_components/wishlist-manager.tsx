@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "react-hot-toast";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Preloader } from "./preloader";
 import {
@@ -337,7 +338,7 @@ export function WishlistManager() {
             <button
               onClick={() => {
                 void navigator.clipboard.writeText(window.location.origin);
-                alert("Link copied!");
+                toast.success("Link copied!");
               }}
               className="rounded-lg bg-gray-600 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-700"
             >
@@ -537,15 +538,31 @@ export function WishlistManager() {
                         </div>
                         <button
                           onClick={() => {
-                            if (
-                              confirm(
-                                "Are you sure you want to undo this purchase? This will remove the purchase record.",
-                              )
-                            ) {
-                              undoPurchase.mutate({
-                                assignmentId: assignment.id,
-                              });
-                            }
+                            // Using toast with a custom confirmation
+                            toast((t) => (
+                              <div className="flex flex-col gap-3">
+                                <span>Are you sure you want to undo this purchase? This will remove the purchase record.</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+                                    onClick={() => {
+                                      toast.dismiss(t.id);
+                                      undoPurchase.mutate({
+                                        assignmentId: assignment.id,
+                                      });
+                                    }}
+                                  >
+                                    Yes, Undo
+                                  </button>
+                                  <button
+                                    className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+                                    onClick={() => toast.dismiss(t.id)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ), { duration: Infinity });
                           }}
                           disabled={undoPurchase.isPending}
                           className="w-full rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 disabled:bg-gray-400"
@@ -574,15 +591,31 @@ export function WishlistManager() {
                         </div>
                         <button
                           onClick={() => {
-                            if (
-                              confirm(
-                                "Mark this issue as fixed? This will remove the report.",
-                              )
-                            ) {
-                              clearReport.mutate({
-                                assignmentId: assignment.id,
-                              });
-                            }
+                            // Using toast with a custom confirmation
+                            toast((t) => (
+                              <div className="flex flex-col gap-3">
+                                <span>Mark this issue as fixed? This will remove the report.</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
+                                    onClick={() => {
+                                      toast.dismiss(t.id);
+                                      clearReport.mutate({
+                                        assignmentId: assignment.id,
+                                      });
+                                    }}
+                                  >
+                                    Yes, Mark Fixed
+                                  </button>
+                                  <button
+                                    className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+                                    onClick={() => toast.dismiss(t.id)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ), { duration: Infinity });
                           }}
                           disabled={clearReport.isPending}
                           className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 
@@ -51,7 +52,7 @@ function DomainManagement() {
       void refetch();
     },
     onError: (error) => {
-      alert(`Failed to create domain: ${error.message}`);
+      toast.error(`Failed to create domain: ${error.message}`);
       setIsCreating(false);
     },
   });
@@ -62,7 +63,7 @@ function DomainManagement() {
       void refetch();
     },
     onError: (error) => {
-      alert(`Failed to update domain: ${error.message}`);
+      toast.error(`Failed to update domain: ${error.message}`);
     },
   });
 
@@ -71,7 +72,7 @@ function DomainManagement() {
       void refetch();
     },
     onError: (error) => {
-      alert(`Failed to delete domain: ${error.message}`);
+      toast.error(`Failed to delete domain: ${error.message}`);
     },
   });
 
@@ -110,11 +111,29 @@ function DomainManagement() {
     }
   };
   const handleDeleteDomain = (domain: DomainWithCount) => {
-    if (
-      confirm(`Are you sure you want to delete the domain "${domain.name}"?`)
-    ) {
-      deleteDomainMutation.mutate({ id: domain.id });
-    }
+    // Using toast with a custom confirmation
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span>Are you sure you want to delete the domain &quot;{domain.name}&quot;?</span>
+        <div className="flex gap-2">
+          <button
+            className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteDomainMutation.mutate({ id: domain.id });
+            }}
+          >
+            Yes, Delete
+          </button>
+          <button
+            className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
   const handleToggleEnabled = (domain: DomainWithCount) => {
     toggleEnabledMutation.mutate({ id: domain.id });

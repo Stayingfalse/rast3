@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
 
 interface AdminActionsDropdownProps {
@@ -35,7 +36,7 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
     },
     onError: (error) => {
       console.error("Error hiding/unhiding kudos:", error);
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
     },
   });
 
@@ -49,7 +50,7 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
     },
     onError: (error) => {
       console.error("Error deleting kudos:", error);
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
       setIsConfirmingDelete(false);
     },
   });

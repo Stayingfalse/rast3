@@ -207,9 +207,29 @@ export default function SettingsPage() {
   };
 
   const handleDeleteProvider = (id: string) => {
-    if (confirm("Are you sure you want to delete this provider?")) {
-      deleteProvider.mutate({ id });
-    }
+    // Using toast with a custom confirmation
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span>Are you sure you want to delete this provider?</span>
+        <div className="flex gap-2">
+          <button
+            className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteProvider.mutate({ id });
+            }}
+          >
+            Yes, Delete
+          </button>
+          <button
+            className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const handleToggleProvider = (id: string, enabled: boolean) => {

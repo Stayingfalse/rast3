@@ -30,11 +30,9 @@ export function AddToHomeScreen() {
 
     // Check if it's iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    setIsIOS(iOS);
-
-    // Check if app is already installed (standalone mode)
+    setIsIOS(iOS);    // Check if app is already installed (standalone mode)
     const standalone = window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone ||
+      Boolean((window.navigator as { standalone?: boolean }).standalone) ||
       document.referrer.includes("android-app://");
     setIsStandalone(standalone);
 
@@ -144,7 +142,7 @@ export function AddToHomeScreen() {
             
             {isIOS ? (
               <div className="mt-2 text-xs text-gray-600">
-                <p>Tap the share button <span className="inline-block">⬆️</span> then "Add to Home Screen"</p>
+                <p>Tap the share button <span className="inline-block">⬆️</span> then &quot;Add to Home Screen&quot;</p>
               </div>
             ) : deferredPrompt ? (
               <div className="mt-2 text-xs text-gray-600">

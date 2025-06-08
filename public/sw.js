@@ -12,17 +12,16 @@ const STATIC_CACHE_URLS = [
 ];
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', /** @param {any} event */ (event) => {
   console.log('[SW] Install event');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_CACHE_URLS);
-      })
-      .then(() => {
+      })      .then(() => {
         console.log('[SW] Static assets cached successfully');
-        return self.skipWaiting();
+        return (/** @type {any} */ (self)).skipWaiting();
       })
       .catch((error) => {
         console.error('[SW] Error caching static assets:', error);
@@ -31,7 +30,7 @@ self.addEventListener('install', (event) => {
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', /** @param {any} event */ (event) => {
   console.log('[SW] Activate event');
   event.waitUntil(
     caches.keys()
@@ -44,16 +43,15 @@ self.addEventListener('activate', (event) => {
             }
           })
         );
-      })
-      .then(() => {
+      })      .then(() => {
         console.log('[SW] Service worker activated');
-        return self.clients.claim();
+        return (/** @type {any} */ (self)).clients.claim();
       })
   );
 });
 
 // Fetch event - serve from cache with network fallback
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', /** @param {any} event */ (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
     return;
@@ -108,10 +106,10 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Handle messages from the main thread
-self.addEventListener('message', (event) => {
+self.addEventListener('message', /** @param {any} event */ (event) => {
   console.log('[SW] Message received:', event.data);
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    (/** @type {any} */ (self)).skipWaiting();
   }
 });

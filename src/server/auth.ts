@@ -164,7 +164,10 @@ if (process.env.EMAIL_SERVER_HOST) {
             html,          });
         } catch (error) {
           // Safely extract server configuration for logging
-          const serverConfig = provider.server as any;
+          const serverConfig = provider.server as {
+            host?: string;
+            port?: number;
+          };
           const smtpHost = typeof serverConfig === 'object' && serverConfig?.host 
             ? String(serverConfig.host) 
             : 'unknown';

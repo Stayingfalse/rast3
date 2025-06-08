@@ -1,5 +1,5 @@
-import { createChildLogger } from "./logger";
 import { clientLogger, type ClientErrorData } from "./client-logger";
+import { createChildLogger } from "./logger";
 
 // Create a unified logger interface that works for both client and server
 const isClient = typeof window !== "undefined";

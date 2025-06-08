@@ -165,9 +165,15 @@ if (process.env.EMAIL_SERVER_HOST) {
         } catch (error) {
           logger.error({
             error: error instanceof Error ? error.message : String(error),
+            errorType: error instanceof Error ? error.constructor.name : 'Unknown',
             to: email,
-            subject
-          }, "Failed to send verification email");
+            subject,
+            smtpHost: provider.server?.host ?? 'unknown',
+            smtpPort: provider.server?.port ?? 'unknown',
+            fromAddress: provider.from,
+            operation: 'send_verification_email',
+            actionNeeded: 'Check SMTP configuration and email provider credentials'
+          }, `Failed to send verification email to ${email}: ${error instanceof Error ? error.message : String(error)}`);
           throw new Error("Failed to send verification email");
         }
       },

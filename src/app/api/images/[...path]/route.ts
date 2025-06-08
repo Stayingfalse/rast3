@@ -1,6 +1,6 @@
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('storage');

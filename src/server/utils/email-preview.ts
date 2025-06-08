@@ -1,8 +1,8 @@
 // Utility to preview email templates for development/testing
 import { writeFileSync } from "fs";
 import { join } from "path";
-import { createMagicLinkEmailTemplate } from "./email-templates";
 import { createChildLogger } from "~/utils/logger";
+import { createMagicLinkEmailTemplate } from "./email-templates";
 
 const logger = createChildLogger('server');
 

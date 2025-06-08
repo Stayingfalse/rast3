@@ -131,11 +131,31 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   const result = await next();
 
   const end = Date.now();
-  logger.info({
-    path,
-    duration: end - start,
-    unit: "ms"
-  }, "tRPC procedure execution time");
+  const duration = end - start;
+  
+  // Log at different levels based on performance and environment
+  if (duration > 1000) {
+    // Slow queries should be logged as warnings
+    logger.warn({
+      path,
+      duration,
+      unit: "ms"
+    }, "Slow tRPC procedure execution");
+  } else if (t._config.isDev) {
+    // In development, log all procedures at debug level
+    logger.debug({
+      path,
+      duration,
+      unit: "ms"
+    }, "tRPC procedure execution time");
+  } else {
+    // In production, only log timing at debug level (will be filtered out at info level)
+    logger.debug({
+      path,
+      duration,
+      unit: "ms"
+    }, "tRPC procedure execution time");
+  }
 
   return result;
 });

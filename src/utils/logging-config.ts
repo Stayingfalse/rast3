@@ -3,9 +3,9 @@
  * Handles log rotation, external service integration, and production logging
  */
 
-import { env } from "~/env";
-import type { LoggerOptions, Bindings } from 'pino';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { Bindings, LoggerOptions } from 'pino';
+import { env } from "~/env";
 
 // Type definitions for request and response objects
 interface LogRequest extends Partial<IncomingMessage> {
@@ -26,7 +26,7 @@ interface LogResponse extends Partial<ServerResponse> {
  * Optimized for structured logging, log aggregation, and monitoring
  */
 export const productionLoggerConfig: LoggerOptions = {
-  level: process.env.LOG_LEVEL ?? 'info',
+  level: process.env.LOG_LEVEL ?? 'warn', // Changed default from 'info' to 'warn'
   
   // Structured JSON output for production
   serializers: {
@@ -194,9 +194,9 @@ export const getLogLevel = (): string => {
     case 'test':
       return 'warn';
     case 'production':
-      return 'info';
+      return 'warn'; // Changed from 'info' to 'warn' to reduce verbosity
     default:
-      return 'info';
+      return 'warn';
   }
 };
 

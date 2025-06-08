@@ -14,10 +14,10 @@ import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
+import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('server');
-import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 
 // Email configuration interface
 interface EmailConfig {
@@ -48,8 +48,12 @@ async function getCachedDbProviders() {
       dbProvidersCache = await getDbAuthProviders();
       cacheExpiry = now + CACHE_DURATION;    } catch (error) {
       logger.error({
-        error: error instanceof Error ? error.message : String(error)
-      }, "Failed to fetch database providers");
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        operation: 'fetch_cached_db_providers',
+        cacheState: 'expired_or_missing',
+        actionNeeded: 'Check database connection and authProvider table'
+      }, `Failed to fetch database providers for auth configuration: ${error instanceof Error ? error.message : String(error)}`);
       // Return empty array if DB is unavailable
       return [];
     }
@@ -261,9 +265,15 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           } catch (error) {
             logger.error({
               error: error instanceof Error ? error.message : String(error),
+              errorType: error instanceof Error ? error.constructor.name : 'Unknown',
               to: email,
-              subject
-            }, "Failed to send verification email (env config)");
+              subject,
+              configSource: 'environment_variables',
+              smtpHost: process.env.EMAIL_SERVER_HOST ?? 'unknown',
+              smtpPort: process.env.EMAIL_SERVER_PORT ?? 'unknown',
+              operation: 'send_verification_email_env',
+              actionNeeded: 'Check EMAIL_SERVER_* environment variables and SMTP credentials'
+            }, `Failed to send verification email via env config to ${email}: ${error instanceof Error ? error.message : String(error)}`);
             throw new Error("Failed to send verification email");
           }
         },

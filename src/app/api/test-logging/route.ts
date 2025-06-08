@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { loggers, logUtils } from '~/utils/logger';
 import { testBetterStackConnection } from '~/utils/betterstack-logger';
+import { loggers, logUtils } from '~/utils/logger';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

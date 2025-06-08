@@ -33,15 +33,21 @@ const createPrismaClient = () => {
   prisma.$on('error', (e) => {
     logger.error({
       message: e.message,
-      target: e.target
-    }, 'Database error occurred');
+      target: e.target,
+      timestamp: new Date().toISOString(),
+      errorType: 'database_error',
+      actionNeeded: 'Check database connection and query syntax'
+    }, `Database error in ${e.target}: ${e.message}`);
   });
 
   prisma.$on('warn', (e) => {
     logger.warn({
       message: e.message,
-      target: e.target
-    }, 'Database warning');
+      target: e.target,
+      timestamp: new Date().toISOString(),
+      warningType: 'database_warning',
+      actionSuggested: 'Review query performance or schema issues'
+    }, `Database warning from ${e.target}: ${e.message}`);
   });
 
   prisma.$on('info', (e) => {

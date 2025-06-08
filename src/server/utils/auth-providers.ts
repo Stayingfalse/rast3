@@ -36,8 +36,12 @@ export async function getDbAuthProviders(): Promise<AuthProviderConfig[]> {
       emailConfig: provider.emailConfig as Record<string, unknown> | undefined,    }));
   } catch (error) {
     logger.error({
-      error: error instanceof Error ? error.message : String(error)
-    }, "Failed to fetch auth providers from database");
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      operation: 'fetch_all_auth_providers',
+      tableName: 'authProvider',
+      actionNeeded: 'Check database connection and authProvider table schema'
+    }, `Failed to fetch auth providers from database: ${error instanceof Error ? error.message : String(error)}`);
     return [];
   }
 }
@@ -70,8 +74,12 @@ export async function getDbAuthProvider(
   } catch (error) {
     logger.error({
       providerName: name,
-      error: error instanceof Error ? error.message : String(error)
-    }, "Failed to fetch auth provider from database");
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      operation: 'fetch_single_auth_provider',
+      tableName: 'authProvider',
+      actionNeeded: `Check if provider '${name}' exists and is enabled in database`
+    }, `Failed to fetch auth provider '${name}' from database: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 }

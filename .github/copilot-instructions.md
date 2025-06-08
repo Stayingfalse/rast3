@@ -71,10 +71,33 @@ To avoid common lint errors, always follow these rules when generating code:
 - **USE `void` operator** for intentionally unhandled promises (e.g., `void someAsyncFunction()`)
 - **NEVER leave floating promises** without proper handling
 
-### Logger Patterns
-- **SERVER-SIDE**: Use `createChildLogger('module-name')` and Pino signature: `logger.error({ data }, "message")`
-- **CLIENT-SIDE**: Use `clientLogger.error(error, context, data)` pattern
-- **NEVER mix server and client logger patterns** in the same file
+### Enhanced Logging Policy - CRITICAL
+
+The project uses a comprehensive logging system with BetterStack integration for production monitoring. Follow these logging patterns:
+
+#### Component-Specific Loggers (SERVER-SIDE)
+- **USE dedicated component loggers** for better organization and filtering
+- **IMPORT from loggers object**: `import { loggers } from "~/utils/logger"`
+- **AVAILABLE LOGGERS**: `auth`, `api`, `database`, `security`, `email`, `webhook`, `gift`, `performance`, `user`, `admin`, `social`, `notifications`
+
+#### Utility Functions for Common Patterns
+- **API REQUESTS**: Use `logUtils.logApiRequest(endpoint, method, statusCode, responseTime, userId, metadata)`
+- **PERFORMANCE**: Use `logUtils.logPerformance(operation, duration, metadata)` - Auto-warns if >1000ms
+- **SECURITY EVENTS**: Use `logUtils.logSecurityEvent(event, severity, userId, metadata)`
+- **DATABASE**: Use `logUtils.logDatabaseQuery(query, duration, result)` - Auto-warns if >1000ms
+- **ERRORS**: Use `logUtils.logError(error, context, metadata)` with enhanced context
+
+#### Log Levels & Production Optimization
+- **DEVELOPMENT**: All levels (trace, debug, info, warn, error, fatal)
+- **PRODUCTION**: warn and error only (optimized for performance)
+- **BETTERSTACK**: Aggregates warn+ logs in production for monitoring
+- **PREFER warn/error** in production code for important events
+
+#### Sensitive Data Protection
+- **NEVER log sensitive data**: passwords, tokens, PII, payment info
+- **USE redaction patterns**: The logger automatically redacts common sensitive fields
+- **SANITIZE user inputs** before logging
+- **AVOID logging full request/response** bodies containing sensitive data
 
 ### Safe Coding Patterns
 - **ALWAYS check for null/undefined** before accessing object properties
@@ -116,16 +139,108 @@ To avoid common lint errors, always follow these rules when generating code:
 
 ## Common Code Patterns - RAoSanta Specific
 
-### Logger Implementation
+## Enhanced Logging Implementation - RAoSanta Specific
+
+### Component-Specific Logging Patterns
 ```tsx
-// ✅ SERVER-SIDE (API routes, server components, server utilities)
+// ✅ COMPONENT-SPECIFIC LOGGERS (Recommended for better organization)
+import { loggers } from "~/utils/logger";
+
+// Authentication operations
+loggers.auth.info({ userId, provider }, "User login successful");
+loggers.auth.warn({ userId, attempts }, "Multiple failed login attempts");
+
+// API operations
+loggers.api.info({ endpoint: "/api/users", method: "GET", statusCode: 200 }, "API request completed");
+loggers.api.error({ endpoint, error: error.message }, "API request failed");
+
+// Database operations
+loggers.database.info({ query: "SELECT", duration: 150 }, "Database query executed");
+loggers.database.warn({ query: "UPDATE", duration: 1200 }, "Slow database query detected");
+
+// Security events
+loggers.security.warn({ userId, event: "SUSPICIOUS_LOGIN", ip }, "Suspicious login attempt detected");
+loggers.security.error({ event: "UNAUTHORIZED_ACCESS", resource }, "Unauthorized access attempt");
+```
+
+### Utility Functions for Common Operations
+```tsx
+// ✅ STRUCTURED UTILITY FUNCTIONS
+import { logUtils } from "~/utils/logger";
+
+// API request logging with automatic performance monitoring
+logUtils.logApiRequest("/api/users", "GET", 200, 150, userId, { userAgent });
+
+// Performance monitoring with automatic slow operation warnings
+logUtils.logPerformance("database-query", 850, { queryType: "SELECT", table: "users" });
+
+// Security event logging with severity levels
+logUtils.logSecurityEvent("FAILED_LOGIN", "medium", userId, { ip, userAgent });
+
+// Enhanced error logging with actionable context
+logUtils.logError(error, "User registration failed", {
+  userId,
+  email: "user@example.com", // Will be redacted automatically
+  step: "email-verification"
+});
+```
+
+### Client-Side Logging Patterns
+```tsx
+// ✅ CLIENT-SIDE ERROR TRACKING (Browser-only code)
+import { clientLogger } from "~/utils/client-logger";
+
+// Error tracking with context
+clientLogger.error(new Error("Component mount failed"), "UserProfile initialization", {
+  userId,
+  route: "/profile",
+  timestamp: Date.now()
+});
+
+// Performance monitoring
+clientLogger.performance("page-load", loadTime, { route, userId });
+
+// User interaction tracking
+clientLogger.info("Button clicked", "Navigation", { buttonId: "save-profile" });
+```
+
+### Production Logging Best Practices
+```tsx
+// ✅ PRODUCTION-OPTIMIZED PATTERNS
+
+// Use warn/error for important events that need monitoring
+loggers.api.warn({ endpoint, responseTime: 2000 }, "Slow API response detected");
+
+// Include actionable context for debugging
+loggers.database.error(
+  { 
+    error: error.message,
+    query: sanitizedQuery, // Remove sensitive data
+    duration,
+    affectedRows: 0 
+  }, 
+  "Database operation failed - check connection and query syntax"
+);
+
+// Security events with proper severity
+loggers.security.error(
+  { 
+    event: "DATA_BREACH_ATTEMPT",
+    severity: "critical",
+    userId,
+    resource: "user-data",
+    timestamp: new Date().toISOString()
+  }, 
+  "Critical security event detected - immediate attention required"
+);
+```
+
+### Legacy Pattern Support
+```tsx
+// ✅ LEGACY PATTERN (Still supported, but prefer component loggers)
 import { createChildLogger } from "~/utils/logger";
 const logger = createChildLogger('module-name');
 logger.error({ error: errorData, context: additionalContext }, "Error message");
-
-// ✅ CLIENT-SIDE (client components, browser-only code)
-import { clientLogger } from "~/utils/client-logger";
-clientLogger.error(new Error("message"), "Context description", { additionalData });
 ```
 
 ### Environment Variable Access
@@ -158,24 +273,114 @@ export interface ClientErrorData {
   timestamp?: string;
 }
 
+// ✅ LOGGING-SPECIFIC - Enhanced error context interfaces
+interface ApiErrorContext {
+  endpoint: string;
+  method: string;
+  statusCode?: number;
+  userId?: string;
+  retryAttempt?: number;
+}
+
+interface SecurityEventContext {
+  event: string;
+  severity: "low" | "medium" | "high" | "critical";
+  userId?: string;
+  ip?: string;
+  userAgent?: string;
+  resource?: string;
+}
+
+interface PerformanceContext {
+  operation: string;
+  duration: number;
+  queryType?: string;
+  table?: string;
+  resultCount?: number;
+}
+
 // ❌ AVOID - Using any
 const userData: any = getUserData();
 ```
 
-### Error Handling
+### Enhanced Error Handling with Structured Logging
 ```tsx
-// ✅ PROPER - Explicit error handling
+// ✅ STRUCTURED ERROR HANDLING with Enhanced Context
+import { loggers, logUtils } from "~/utils/logger";
+
 try {
   const result = await apiCall();
+  
+  // Log successful operations with performance context
+  logUtils.logApiRequest("/api/data", "GET", 200, responseTime, userId);
   return result;
 } catch (error) {
-  logger.error({ error: error instanceof Error ? error.message : String(error) }, "API call failed");
+  // Enhanced error logging with actionable context
+  logUtils.logError(error, "API call failed during user data fetch", {
+    userId,
+    endpoint: "/api/data",
+    retryAttempt: 1,
+    expectedResult: "user profile data"
+  });
+  
+  // Component-specific error logging
+  loggers.api.error(
+    { 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      userId,
+      endpoint: "/api/data"
+    }, 
+    "Critical API failure - check service status and retry logic"
+  );
+  
   throw error;
 }
 
-// ✅ PROPER - Void for intentional fire-and-forget
-void sendAnalytics(data); // Intentionally not awaited
+// ✅ PERFORMANCE MONITORING with automatic thresholds
+const startTime = Date.now();
+try {
+  const result = await databaseQuery();
+  const duration = Date.now() - startTime;
+  
+  // Automatic slow query detection (warns if >1000ms)
+  logUtils.logPerformance("database-query", duration, { 
+    queryType: "SELECT", 
+    table: "users",
+    resultCount: result.length 
+  });
+  
+  return result;
+} catch (error) {
+  loggers.database.error({ error: error.message, query: "users-fetch" }, "Database query failed");
+  throw error;
+}
 
-// ❌ AVOID - Floating promises
+// ✅ SECURITY EVENT LOGGING
+try {
+  await authenticateUser(credentials);
+} catch (error) {
+  // Log security events with appropriate severity
+  logUtils.logSecurityEvent("AUTHENTICATION_FAILURE", "medium", userId, {
+    ip: request.ip,
+    userAgent: request.headers["user-agent"],
+    timestamp: new Date().toISOString()
+  });
+  
+  loggers.security.warn({ 
+    userId, 
+    event: "AUTH_FAILURE", 
+    ip: request.ip 
+  }, "Authentication attempt failed - monitor for brute force");
+  
+  throw error;
+}
+
+// ✅ PROPER - Void for intentional fire-and-forget with logging
+void sendAnalytics(data).catch(error => {
+  loggers.performance.warn({ error: error.message }, "Analytics tracking failed - non-critical");
+});
+
+// ❌ AVOID - Floating promises without error handling
 sendAnalytics(data); // ESLint error: floating promise
 ```

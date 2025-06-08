@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Note: We can't import our logger here directly as middleware runs in Edge Runtime
 // Instead, we'll create a lightweight logging approach for middleware

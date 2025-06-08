@@ -1,5 +1,5 @@
-import pino, { type Bindings } from 'pino';
 import type { IncomingMessage, ServerResponse } from 'http';
+import pino, { type Bindings } from 'pino';
 
 /**
  * Turbopack-compatible logger configuration
@@ -35,7 +35,7 @@ const isDevelopment = () => getNodeEnv() === 'development';
 
 // Base logger configuration that works with Turbopack
 const createBaseLoggerConfig = () => ({
-  level: isDevelopment() ? 'debug' : 'info',
+  level: isDevelopment() ? 'debug' : 'warn', // Changed production level from 'info' to 'warn'
   
   // Serializers for consistent log formatting
   serializers: {

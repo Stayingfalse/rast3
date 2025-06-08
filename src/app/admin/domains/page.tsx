@@ -141,39 +141,36 @@ function DomainManagement() {
 
   // Check if user can create domains (only SITE admins)
   const canCreateDomains = userProfile?.adminLevel === "SITE";
-
   return (
-    <div className="w-full max-w-6xl">
-      <h1 className="mb-8 text-3xl font-bold text-white">Domain Management</h1>
+    <div className="w-full">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">Domain Management</h1>
+      </div>
 
       {/* Create New Domain - Only show to SITE admins */}
       {canCreateDomains && (
-        <div className="mb-8 rounded-lg bg-black/85 p-6 backdrop-blur-sm">
-          <h2 className="mb-4 text-xl font-semibold text-white">
+        <div className="mb-6 rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:mb-8 sm:p-6">          <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">
             Add New Domain
           </h2>
           <form onSubmit={handleCreateDomain} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="domainName"
-                  className="block text-sm font-medium text-white"
-                >
-                  Domain Name *
-                </label>{" "}
-                <input
-                  type="text"
-                  id="domainName"
-                  value={newDomainName}
-                  onChange={(e) => setNewDomainName(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 px-3 py-2 text-white placeholder-white/60 shadow-sm backdrop-blur-sm focus:border-purple-400 focus:ring-1 focus:ring-purple-400 focus:outline-none"
-                  placeholder="e.g., company.com, example.org"
-                  required
-                />
-              </div>{" "}
+            <div>
+              <label
+                htmlFor="domainName"
+                className="block text-sm font-medium text-white"
+              >
+                Domain Name *
+              </label>
+              <input
+                type="text"
+                id="domainName"
+                value={newDomainName}
+                onChange={(e) => setNewDomainName(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-white/20 bg-black/85 px-3 py-2 text-white placeholder-white/60 shadow-sm backdrop-blur-sm focus:border-purple-400 focus:ring-1 focus:ring-purple-400 focus:outline-none"
+                placeholder="e.g., company.com, example.org"
+                required
+              />
             </div>
             <div className="flex items-center">
-              {" "}
               <input
                 type="checkbox"
                 id="domainEnabled"
@@ -191,7 +188,7 @@ function DomainManagement() {
             <button
               type="submit"
               disabled={isCreating || !newDomainName.trim()}
-              className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full inline-flex justify-center items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {isCreating ? (
                 <>
@@ -204,43 +201,166 @@ function DomainManagement() {
             </button>{" "}
           </form>
         </div>
-      )}
-
-      {/* Existing Domains */}
-      <div className="rounded-lg bg-black/85 p-6 backdrop-blur-sm">
-        <h2 className="mb-4 text-xl font-semibold text-white">
+      )}      {/* Existing Domains */}
+      <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
+        <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">
           Existing Domains
         </h2>
 
         {domains && domains.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/5">
-                {" "}
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                    Domain
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                    Status
-                  </th>{" "}
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                    Departments
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                    Created By
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                    Actions
-                  </th>
-                </tr>
-              </thead>{" "}
-              <tbody className="divide-y divide-white/10">
-                {domains?.map((domain: DomainWithCount) => (
-                  <tr key={domain.id}>
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-white">
-                      {" "}
-                      {editingDomain?.id === domain.id ? (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                      Domain
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                      Departments
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                      Created By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {domains?.map((domain: DomainWithCount) => (
+                    <tr key={domain.id}>
+                      <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-white">
+                        {editingDomain?.id === domain.id ? (
+                          <input
+                            type="text"
+                            value={editingDomain.name}
+                            onChange={(e) =>
+                              editingDomain &&
+                              setEditingDomain({
+                                ...editingDomain,
+                                name: e.target.value,
+                              })
+                            }
+                            className="rounded border border-white/20 bg-black/85 px-2 py-1 text-white backdrop-blur-sm"
+                          />
+                        ) : (
+                          domain.name
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm whitespace-nowrap">
+                        {editingDomain?.id === domain.id ? (
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={editingDomain.enabled}
+                              onChange={(e) =>
+                                editingDomain &&
+                                setEditingDomain({
+                                  ...editingDomain,
+                                  enabled: e.target.checked,
+                                })
+                              }
+                              className="h-4 w-4 rounded border-white/20 bg-black/85 text-purple-600 backdrop-blur-sm"
+                            />
+                            <span className="ml-2 text-white">Enabled</span>
+                          </label>
+                        ) : (
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs ${
+                              domain.enabled
+                                ? "bg-green-600 text-white"
+                                : "bg-red-600 text-white"
+                            }`}
+                          >
+                            {domain.enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm whitespace-nowrap text-white/80">
+                        {domain._count?.departments ?? 0}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/80">
+                        {domain.createdBy ? (
+                          <div>
+                            <div className="font-medium">
+                              {domain.createdBy.firstName}{" "}
+                              {domain.createdBy.lastName}
+                            </div>
+                            {domain.createdBy.email && (
+                              <div className="text-xs text-white/60">
+                                {domain.createdBy.email}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-white/40 italic">Unknown</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm whitespace-nowrap">
+                        {editingDomain?.id === domain.id ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleUpdateDomain}
+                              className="text-green-400 hover:text-green-300"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingDomain(null)}
+                              className="text-gray-400 hover:text-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingDomain(domain)}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleToggleEnabled(domain)}
+                              className={
+                                domain.enabled
+                                  ? "text-red-400 hover:text-red-300"
+                                  : "text-green-400 hover:text-green-300"
+                              }
+                            >
+                              {domain.enabled ? "Disable" : "Enable"}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDomain(domain)}
+                              className="text-red-400 hover:text-red-300"
+                              disabled={(domain._count?.departments ?? 0) > 0}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="space-y-4 lg:hidden">
+              {domains?.map((domain: DomainWithCount) => (
+                <div key={domain.id} className="rounded-lg bg-white/5 p-4">
+                  {editingDomain?.id === domain.id ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/80 mb-2">
+                          Domain Name
+                        </label>
                         <input
                           type="text"
                           value={editingDomain.name}
@@ -251,14 +371,10 @@ function DomainManagement() {
                               name: e.target.value,
                             })
                           }
-                          className="rounded border border-white/20 bg-black/85 px-2 py-1 text-white backdrop-blur-sm"
+                          className="w-full rounded border border-white/20 bg-black/85 px-3 py-2 text-white backdrop-blur-sm"
                         />
-                      ) : (
-                        domain.name
-                      )}{" "}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      {editingDomain?.id === domain.id ? (
+                      </div>
+                      <div>
                         <label className="flex items-center">
                           <input
                             type="checkbox"
@@ -274,87 +390,91 @@ function DomainManagement() {
                           />
                           <span className="ml-2 text-white">Enabled</span>
                         </label>
-                      ) : (
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            domain.enabled
-                              ? "bg-green-600 text-white"
-                              : "bg-red-600 text-white"
-                          }`}
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={handleUpdateDomain}
+                          className="flex-1 rounded bg-green-600 px-3 py-2 text-sm text-white hover:bg-green-700"
                         >
-                          {domain.enabled ? "Enabled" : "Disabled"}
-                        </span>
-                      )}
-                    </td>{" "}
-                    <td className="px-6 py-4 text-sm whitespace-nowrap text-white/80">
-                      {domain._count?.departments ?? 0}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/80">
-                      {domain.createdBy ? (
-                        <div>
-                          <div className="font-medium">
-                            {domain.createdBy.firstName}{" "}
-                            {domain.createdBy.lastName}
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingDomain(null)}
+                          className="flex-1 rounded bg-gray-600 px-3 py-2 text-sm text-white hover:bg-gray-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-medium text-white truncate">
+                            {domain.name}
+                          </h3>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs ${
+                                domain.enabled
+                                  ? "bg-green-600 text-white"
+                                  : "bg-red-600 text-white"
+                              }`}
+                            >
+                              {domain.enabled ? "Enabled" : "Disabled"}
+                            </span>
+                            <span className="text-sm text-white/60">
+                              {domain._count?.departments ?? 0} departments
+                            </span>
                           </div>
+                        </div>
+                      </div>
+                      
+                      {domain.createdBy && (
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <p className="text-sm text-white/60">Created by</p>
+                          <p className="text-sm text-white">
+                            {domain.createdBy.firstName} {domain.createdBy.lastName}
+                          </p>
                           {domain.createdBy.email && (
-                            <div className="text-xs text-white/60">
+                            <p className="text-xs text-white/50">
                               {domain.createdBy.email}
-                            </div>
+                            </p>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-white/40 italic">Unknown</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      {editingDomain?.id === domain.id ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleUpdateDomain}
-                            className="text-green-400 hover:text-green-300"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingDomain(null)}
-                            className="text-gray-400 hover:text-gray-300"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setEditingDomain(domain)}
-                            className="text-blue-400 hover:text-blue-300"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleToggleEnabled(domain)}
-                            className={
-                              domain.enabled
-                                ? "text-red-400 hover:text-red-300"
-                                : "text-green-400 hover:text-green-300"
-                            }
-                          >
-                            {domain.enabled ? "Disable" : "Enable"}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteDomain(domain)}
-                            className="text-red-400 hover:text-red-300"
-                            disabled={(domain._count?.departments ?? 0) > 0}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setEditingDomain(domain)}
+                          className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleToggleEnabled(domain)}
+                          className={`rounded px-3 py-1.5 text-sm text-white ${
+                            domain.enabled
+                              ? "bg-red-600 hover:bg-red-700"
+                              : "bg-green-600 hover:bg-green-700"
+                          }`}
+                        >
+                          {domain.enabled ? "Disable" : "Enable"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDomain(domain)}
+                          className="rounded bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={(domain._count?.departments ?? 0) > 0}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="py-8 text-center">
             <p className="text-white/60">

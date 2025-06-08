@@ -214,24 +214,22 @@ export default function UsersPage() {
       </div>
     ), { duration: Infinity });
   };
-
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white">User Management</h1>
-          <p className="text-white/80">Manage user profiles and permissions</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">User Management</h1>
+          <p className="text-sm sm:text-base text-white/80">Manage user profiles and permissions</p>
         </div>
 
         {/* Statistics Cards */}
         {stats && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border border-white/20 bg-black/85 p-4 backdrop-blur-sm">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">            <div className="rounded-lg border border-white/20 bg-black/85 p-3 sm:p-4 backdrop-blur-sm">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg
-                    className="h-6 w-6 text-blue-400"
+                    className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
@@ -244,11 +242,11 @@ export default function UsersPage() {
                     />
                   </svg>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white/80">
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs sm:text-sm font-medium text-white/80">
                     Total Users
                   </p>
-                  <p className="text-lg font-semibold text-white">
+                  <p className="text-base sm:text-lg font-semibold text-white">
                     {stats.totalUsers}
                   </p>
                 </div>
@@ -337,11 +335,9 @@ export default function UsersPage() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Domain Filter */}
-        <div className="rounded-lg border border-white/20 bg-black/85 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
+        )}        {/* Domain Filter */}
+        <div className="rounded-lg border border-white/20 bg-black/85 p-3 sm:p-4 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <label
               htmlFor="domain-filter"
               className="text-sm font-medium text-white"
@@ -354,7 +350,6 @@ export default function UsersPage() {
               onChange={(e) => setSelectedDomain(e.target.value)}
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
-              {" "}
               <option value="all">All Domains</option>
               {domains.map((domain: { name: string; enabled: boolean }) => (
                 <option key={domain.name} value={domain.name}>
@@ -362,19 +357,18 @@ export default function UsersPage() {
                 </option>
               ))}
             </select>
-            <span className="text-sm text-white/60">
+            <span className="text-xs sm:text-sm text-white/60">
               Showing {filteredUsers.length} of {users.length} users
             </span>
           </div>
-        </div>
-
-        {/* Users Table */}
+        </div>        {/* Users Table/Cards */}
         <div className="rounded-lg border border-white/20 bg-black/85 backdrop-blur-sm">
-          <div className="border-b border-white/20 px-6 py-4">
-            <h2 className="text-lg font-semibold text-white">Users</h2>
+          <div className="border-b border-white/20 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-base sm:text-lg font-semibold text-white">Users</h2>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               {" "}
               <thead className="bg-white/5">
@@ -579,10 +573,103 @@ export default function UsersPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table>            {filteredUsers.length === 0 && (
+              <div className="px-6 py-8 text-center">
+                <p className="text-white/60">No users found</p>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden p-4 space-y-4">
+            {filteredUsers.map((user: User) => (
+              <div key={user.id} className="bg-white/5 rounded-lg p-4">
+                {/* User Header */}
+                <div className="flex items-center mb-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-sm font-medium text-white">
+                    {user.firstName?.[0] ?? user.name?.[0] ?? "?"}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <div className="text-sm font-medium text-white">
+                      {user.firstName && user.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : (user.name ?? "Unknown User")}
+                    </div>
+                    <div className="text-xs text-white/60">
+                      ID: {user.id.slice(0, 8)}...
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                      user.profileCompleted
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {user.profileCompleted ? "Complete" : "Pending"}
+                  </span>
+                </div>
+
+                {/* User Details */}
+                <div className="space-y-2 mb-4">
+                  <div>
+                    <span className="text-xs text-white/60 uppercase tracking-wide">Email & Domain</span>
+                    <div className="text-sm text-white">{user.workEmail ?? user.email ?? "No email"}</div>
+                    <div className="text-xs text-white/60">{user.domain ?? "No domain"}</div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-white/60 uppercase tracking-wide">Department</span>
+                    <div className="text-sm text-white">
+                      {user.department?.name ? (
+                        `${user.department.name} (${user.department.domain})`
+                      ) : (
+                        <span className="text-white/40">No Department</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-white/60 uppercase tracking-wide">Admin Role</span>
+                    <div className="text-sm text-white">{getAdminLevelDisplay(user)}</div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() =>
+                      handleToggleProfile(user.id, user.profileCompleted)
+                    }
+                    disabled={toggleProfileMutation.isPending}
+                    className={`flex-1 rounded px-3 py-2 text-xs ${
+                      user.profileCompleted
+                        ? "bg-yellow-600 text-white hover:bg-yellow-700"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    } disabled:opacity-50`}
+                  >
+                    {user.profileCompleted ? "Mark Pending" : "Mark Complete"}
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleDeleteUser(
+                        user.id,
+                        user.firstName && user.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : (user.name ?? "Unknown User"),
+                      )
+                    }
+                    disabled={deleteUserMutation.isPending}
+                    className="flex-1 rounded bg-red-600 px-3 py-2 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
 
             {filteredUsers.length === 0 && (
-              <div className="px-6 py-8 text-center">
+              <div className="py-8 text-center">
                 <p className="text-white/60">No users found</p>
               </div>
             )}

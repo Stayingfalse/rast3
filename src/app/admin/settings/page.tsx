@@ -260,23 +260,22 @@ export default function SettingsPage() {
     }
     return defaultValue;
   };
-
   return (
     <SiteAdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white">Site Settings</h1>
-          <p className="text-white/80">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Site Settings</h1>
+          <p className="text-sm sm:text-base text-white/80">
             Configure authentication providers and system settings
           </p>
         </div>
         {/* Authentication Providers Section */}
-        <div className="rounded-lg border border-white/20 bg-black/85 p-6 backdrop-blur-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">
+        <div className="rounded-lg border border-white/20 bg-black/85 p-4 sm:p-6 backdrop-blur-sm">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">
               Authentication Providers
-            </h2>{" "}
+            </h2>
             <button
               onClick={() => {
                 setSelectedProvider({
@@ -291,13 +290,13 @@ export default function SettingsPage() {
                 setOauthTokens({}); // Clear OAuth tokens for new provider
                 setIsEditing(true);
               }}
-              className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
+              className="w-full sm:w-auto rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
             >
               Add Custom Provider
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {" "}
             {DEFAULT_PROVIDERS.map((defaultProvider) => {
               const dbProvider = getProviderByName(defaultProvider.name);

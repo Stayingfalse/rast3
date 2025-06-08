@@ -79,20 +79,18 @@ function DepartmentManagement() {
       acc[domain].push(dept);
       return acc;
     }, {}) ?? {};
-
   return (
-    <div className="w-full max-w-6xl">
-      <h1 className="mb-8 text-3xl font-bold text-white">
+    <div className="w-full max-w-6xl p-4 sm:p-6">
+      <h1 className="mb-6 sm:mb-8 text-2xl sm:text-3xl font-bold text-white">
         Department Management
       </h1>{" "}
       {/* Domain Status Overview */}
-      <div className="mb-8 rounded-lg bg-black/85 p-6 backdrop-blur-sm">
-        <h2 className="mb-4 text-xl font-semibold text-white">Domain Status</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {domains?.map((domain) => (
-            <div key={domain.id} className="rounded-lg bg-white/5 p-4">
+      <div className="mb-6 sm:mb-8 rounded-lg bg-black/85 p-4 sm:p-6 backdrop-blur-sm">
+        <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-white">Domain Status</h2>
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">          {domains?.map((domain) => (
+            <div key={domain.id} className="rounded-lg bg-white/5 p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-white">{domain.name}</h3>
+                <h3 className="font-medium text-white text-sm sm:text-base">{domain.name}</h3>
                 <span
                   className={`rounded-full px-2 py-1 text-xs ${
                     domain.enabled
@@ -103,7 +101,7 @@ function DepartmentManagement() {
                   {domain.enabled ? "Enabled" : "Disabled"}
                 </span>
               </div>{" "}
-              <p className="mt-1 text-sm text-white/60">
+              <p className="mt-1 text-xs sm:text-sm text-white/60">
                 {(domain as { _count?: { departments: number } })._count
                   ?.departments ?? 0}{" "}
                 departments
@@ -111,15 +109,14 @@ function DepartmentManagement() {
             </div>
           ))}{" "}
         </div>
-      </div>
-      {/* Create New Department - Only for SITE and DOMAIN admins */}
+      </div>      {/* Create New Department - Only for SITE and DOMAIN admins */}
       {canCreateDepartments && (
-        <div className="mb-8 rounded-lg bg-black/85 p-6 backdrop-blur-sm">
-          <h2 className="mb-4 text-xl font-semibold text-white">
+        <div className="mb-6 sm:mb-8 rounded-lg bg-black/85 p-4 sm:p-6 backdrop-blur-sm">
+          <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-white">
             Add New Department
           </h2>
           <form onSubmit={handleCreateDepartment} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor="departmentName"
@@ -165,15 +162,14 @@ function DepartmentManagement() {
                     ))}
                 </select>
               </div>
-            </div>
-            <button
+            </div>            <button
               type="submit"
               disabled={
                 isCreating ||
                 !newDepartmentName.trim() ||
                 !newDepartmentDomain.trim()
               }
-              className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isCreating ? (
                 <>
@@ -191,13 +187,12 @@ function DepartmentManagement() {
       <div className="space-y-6">
         {Object.entries(departmentsByDomain).map(([domainName, depts]) => {
           const domain = domains?.find((d) => d.name === domainName);
-          return (
-            <div
+          return (            <div
               key={domainName}
-              className="rounded-lg bg-black/85 p-6 backdrop-blur-sm"
+              className="rounded-lg bg-black/85 p-4 sm:p-6 backdrop-blur-sm"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">
+              <div className="mb-3 sm:mb-4 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
                   {domainName}
                 </h2>
                 <span
@@ -212,59 +207,84 @@ function DepartmentManagement() {
               </div>
 
               {depts.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-white/20">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                          Department Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                          Created
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>{" "}
-                    <tbody className="divide-y divide-white/10">
-                      {depts.map((department: Department) => (
-                        <tr key={department.id}>
-                          <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-white">
-                            {department.name}
-                          </td>
-                          <td className="px-6 py-4 text-sm whitespace-nowrap text-white/80">
-                            {new Date(
-                              department.createdAt,
-                            ).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-sm whitespace-nowrap">
-                            <button className="mr-2 text-blue-400 hover:text-blue-300">
-                              Edit
-                            </button>
-                            <button className="text-red-400 hover:text-red-300">
-                              Delete
-                            </button>
-                          </td>
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-white/20">
+                      <thead className="bg-white/5">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                            Department Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                            Created
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-white/80 uppercase">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>{" "}
+                      <tbody className="divide-y divide-white/10">
+                        {depts.map((department: Department) => (
+                          <tr key={department.id}>
+                            <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-white">
+                              {department.name}
+                            </td>
+                            <td className="px-6 py-4 text-sm whitespace-nowrap text-white/80">
+                              {new Date(
+                                department.createdAt,
+                              ).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                              <button className="mr-2 text-blue-400 hover:text-blue-300">
+                                Edit
+                              </button>
+                              <button className="text-red-400 hover:text-red-300">
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-3">
+                    {depts.map((department: Department) => (
+                      <div key={department.id} className="bg-white/5 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-medium text-white text-lg">
+                            {department.name}
+                          </h3>
+                        </div>
+                        <div className="text-sm text-white/60 mb-3">
+                          Created: {new Date(department.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="flex gap-2">
+                          <button className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Edit
+                          </button>
+                          <button className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
-                <div className="py-4 text-center">
-                  <p className="text-white/60">
+                <div className="py-6 sm:py-4 text-center">
+                  <p className="text-white/60 text-sm sm:text-base">
                     No departments in this domain yet.
                   </p>
                 </div>
               )}
             </div>
           );
-        })}
-
-        {Object.keys(departmentsByDomain).length === 0 && (
-          <div className="py-8 text-center">
-            <p className="text-white/60">
+        })}        {Object.keys(departmentsByDomain).length === 0 && (
+          <div className="py-6 sm:py-8 text-center">
+            <p className="text-white/60 text-sm sm:text-base">
               No departments found. Create one above to get started.
             </p>
           </div>

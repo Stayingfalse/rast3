@@ -25,7 +25,7 @@ interface PerformanceData extends ClientLogData {
 }
 
 class ClientLogger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isDevelopment = typeof window !== 'undefined' && window.location.hostname === 'localhost';
   private apiEndpoint = '/api/logs'; // Future endpoint for log collection
 
   /**

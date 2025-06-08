@@ -29,7 +29,7 @@ const DebugAuthContext = createContext<DebugAuthContextType | null>(null);
 
 export function DebugAuthProvider({ children }: { children: ReactNode }) {
   const [debugUser, setDebugUser] = useState<DebugUser | null>(null);
-  const isDebugMode = process.env.NODE_ENV === "development";
+  const isDebugMode = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
   // Load debug user from localStorage on mount
   useEffect(() => {

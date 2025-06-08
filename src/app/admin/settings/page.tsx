@@ -937,10 +937,9 @@ export default function SettingsPage() {
           <h2 className="mb-4 text-xl font-semibold text-white">
             System Information
           </h2>
-          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
-            <div>
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">            <div>
               <span className="text-white/60">Environment:</span>
-              <span className="ml-2 text-white">{process.env.NODE_ENV}</span>
+              <span className="ml-2 text-white">{typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'development' : 'production'}</span>
             </div>
             <div>
               <span className="text-white/60">Total Providers:</span>

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { loggers } from "~/utils/logger";
 
 const s3Client = new S3Client({
   endpoint: process.env.E2_ENDPOINT!,
@@ -43,11 +44,13 @@ export async function GET(
     headers.set("Content-Type", response.ContentType ?? "image/jpeg");
     headers.set("Cache-Control", "public, max-age=31536000, immutable"); // Cache for 1 year
     headers.set("ETag", response.ETag ?? "");
-    headers.set("Content-Length", buffer.length.toString());
-
-    return new NextResponse(buffer, { headers });
+    headers.set("Content-Length", buffer.length.toString());    return new NextResponse(buffer, { headers });
   } catch (error) {
-    console.error("Error fetching image from e2 bucket:", error);
+    loggers.storage.error("Error fetching image from e2 bucket", {
+      error: error instanceof Error ? error.message : String(error),
+      imagePath: (await params).path.join("/"),
+      bucket: process.env.E2_BUCKET
+    });
     return new NextResponse("Error fetching image", { status: 500 });
   }
 }

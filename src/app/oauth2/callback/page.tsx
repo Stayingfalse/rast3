@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
+import { loggers } from "~/utils/logger";
 
 function OAuth2CallbackContent() {
   const searchParams = useSearchParams();
@@ -44,11 +45,15 @@ function OAuth2CallbackContent() {
         );
       }
 
-      // Close the popup window
-      window.close();
+      // Close the popup window      window.close();
     } else {
       // If no opener and not admin flow, something went wrong
-      console.error("OAuth2 callback received but no parent window found");
+      loggers.oauth.error("OAuth2 callback received but no parent window found", {
+        hasCode: !!code,
+        hasError: !!error,
+        state: state || undefined,
+        userAgent: navigator.userAgent
+      });
     }
   }, [searchParams]);
 

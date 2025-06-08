@@ -7,6 +7,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { loggers } from "~/utils/logger";
 
 interface DebugUser {
   id: string;
@@ -32,12 +33,14 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isDebugMode) {
       const savedDebugUser = localStorage.getItem("debugUser");
-      if (savedDebugUser) {
-        try {
+      if (savedDebugUser) {        try {
           const parsedUser = JSON.parse(savedDebugUser) as DebugUser;
           setDebugUser(parsedUser);
         } catch (error) {
-          console.error("Failed to parse debug user from localStorage:", error);
+          loggers.auth.error("Failed to parse debug user from localStorage", {
+            error: error instanceof Error ? error.message : String(error),
+            savedDebugUser: savedDebugUser.substring(0, 100) + "..." // Truncate for security
+          });
           localStorage.removeItem("debugUser");
         }
       }
@@ -65,10 +68,12 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           setDebugUser(debugUserData);
           localStorage.setItem("debugUser", JSON.stringify(debugUserData));
-        }
-      })
+        }      })
       .catch((error) => {
-        console.error("Failed to create debug user:", error);
+        loggers.auth.error("Failed to create debug user", {
+          error: error instanceof Error ? error.message : String(error),
+          debugUserId: debugUserData.id
+        });
       });
   };
 

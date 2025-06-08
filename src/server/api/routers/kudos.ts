@@ -4,6 +4,7 @@ import { db } from "~/server/db";
 import sharp from "sharp";
 import { uploadToE2, deleteFromE2 } from "~/server/utils/e2-upload";
 import { checkAdminPermissions } from "~/server/utils/admin-permissions";
+import { loggers } from "~/utils/logger";
 
 export const kudosRouter = createTRPCRouter({
   createKudos: protectedProcedure
@@ -327,16 +328,20 @@ export const kudosRouter = createTRPCRouter({
       );
       if (!permissions.canModerate) {
         throw new Error("Insufficient permissions to delete this content");
-      }
-
-      // Parse and clean up image files if they exist
+      }      // Parse and clean up image files if they exist
       if (kudos.images) {
+        let imageUrls: string[] = [];
         try {
-          const imageUrls = JSON.parse(kudos.images) as string[];
+          imageUrls = JSON.parse(kudos.images) as string[];
           // Delete each image from E2 storage
           await Promise.all(imageUrls.map((url) => deleteFromE2(url)));
         } catch (error) {
-          console.error("Error cleaning up image files:", error);
+          loggers.storage.error("Error cleaning up image files", {
+            error: error instanceof Error ? error.message : String(error),
+            kudosId: input.kudosId,
+            imageUrls,
+            operation: "admin_delete_kudos"
+          });
           // Continue with deletion even if file cleanup fails
         }
       }

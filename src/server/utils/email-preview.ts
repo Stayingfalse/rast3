@@ -2,6 +2,7 @@
 import { writeFileSync } from "fs";
 import { join } from "path";
 import { createMagicLinkEmailTemplate } from "./email-templates";
+import { loggers } from "~/utils/logger";
 
 function generateEmailPreview() {  const testData = {
     url: "http://localhost:3002/api/auth/callback/nodemailer?token=test-token&email=test@example.com",
@@ -46,13 +47,15 @@ function generateEmailPreview() {  const testData = {
   </div>
 </body>
 </html>`;
-
   // Write preview file
   const previewPath = join(process.cwd(), "email-preview.html");
   writeFileSync(previewPath, previewHtml);
   
-  console.log(`Email preview generated: ${previewPath}`);
-  console.log("Open this file in your browser to see the email template.");
+  loggers.email.info("Email preview generated", {
+    previewPath,
+    subject,
+    templateType: "magic-link"
+  });
   
   return { subject, html, text, previewPath };
 }

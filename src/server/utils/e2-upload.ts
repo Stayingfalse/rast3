@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
+import { loggers } from "~/utils/logger";
 
 const E2_BUCKET = process.env.E2_BUCKET!;
 const E2_ACCESS_KEY = process.env.E2_ACCESS_KEY!;
@@ -38,11 +39,10 @@ export async function uploadToE2(
 }
 
 export async function deleteFromE2(url: string): Promise<void> {
-  try {
-    // Extract the key from the URL
+  try {    // Extract the key from the URL
     const key = url.split(`/${E2_BUCKET}/`)[1];
     if (!key) {
-      console.warn("Could not extract key from URL:", url);
+      loggers.storage.warn("Could not extract key from URL", { url });
       return;
     }
 
@@ -50,10 +50,13 @@ export async function deleteFromE2(url: string): Promise<void> {
       new DeleteObjectCommand({
         Bucket: E2_BUCKET,
         Key: key,
-      }),
-    );
+      }),    );
   } catch (error) {
-    console.error("Error deleting file from E2:", error);
+    loggers.storage.error("Error deleting file from E2", {
+      error: error instanceof Error ? error.message : String(error),
+      url,
+      bucket: E2_BUCKET
+    });
     // Don't throw - we don't want to fail the entire operation if file cleanup fails
   }
 }

@@ -4,6 +4,7 @@ import { getProviders, signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { loggers } from "~/utils/logger";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -113,20 +114,32 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           redirect: false,
           callbackUrl: window.location.origin 
         });
-        
-        // Check if sign-in was successful
+          // Check if sign-in was successful
         if (result?.error) {
-          console.error("Magic link error:", result.error);
+          loggers.auth.error("Magic link sign-in error", {
+            error: result.error,
+            providerId,
+            email: email || undefined
+          });
           // You could show an error message here
         } else {
           // Show success state in modal
           setEmailSent(true);
+          loggers.auth.info("Magic link sent successfully", {
+            providerId,
+            email: email || undefined
+          });
         }
       } else {
         await signIn(providerId);
+        loggers.auth.info("OAuth sign-in initiated", { providerId });
       }
     } catch (error) {
-      console.error("Sign in error:", error);
+      loggers.auth.error("Sign in error", {
+        error: error instanceof Error ? error.message : String(error),
+        providerId,
+        email: email || undefined
+      });
     } finally {
       setIsLoading(null);
     }
@@ -148,9 +161,8 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     reddit: "bg-[#FF4500] hover:bg-[#D73600] text-white",
     facebook: "bg-[#1877F3] hover:bg-[#145DB2] text-white",
     instagram:
-      "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white border-0",
-    tiktok: "bg-black hover:bg-gray-900 text-white border-0",
-    nodemailer: "bg-green-600 hover:bg-green-700 text-white border-0",
+      "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white border-0",    tiktok: "bg-black hover:bg-gray-900 text-white border-0",
+    email: "bg-green-600 hover:bg-green-700 text-white border-0",
   };
 
   return (

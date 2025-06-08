@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { loggers, logUtils } from '~/utils/logger';
 
 // In-memory cache for icons (will be lost on rebuild, but that's fine)
 const iconCache = new Map<string, { data: Buffer; contentType: string; timestamp: number }>();
@@ -18,7 +19,13 @@ const cacheStats = {
 function logCacheStats() {
   const total = cacheStats.hits + cacheStats.misses;
   if (total > 0 && total % 50 === 0) {
-    console.log(`[IconCache] Stats: ${cacheStats.hits}/${total} hits (${((cacheStats.hits / total) * 100).toFixed(1)}%), ${cacheStats.externalFetches} external, ${cacheStats.fallbackUses} fallbacks`);
+    logUtils.logPerformance('icon-cache-hit-rate', ((cacheStats.hits / total) * 100), '%', {
+      totalRequests: total,
+      hits: cacheStats.hits,
+      misses: cacheStats.misses,
+      externalFetches: cacheStats.externalFetches,
+      fallbackUses: cacheStats.fallbackUses,
+    });
   }
 }
 
@@ -84,10 +91,12 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
       },
       // Add timeout to prevent hanging
       signal: AbortSignal.timeout(10000), // 10 seconds
-    });
-
-    if (!response.ok) {
-      console.warn(`Failed to fetch icon for provider ${provider}: ${response.status}`);
+    });    if (!response.ok) {
+      loggers.storage.warn(`Failed to fetch icon for provider`, {
+        provider,
+        status: response.status,
+        statusText: response.statusText
+      });
       return null;
     }    const data = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') ?? 'image/svg+xml';
@@ -95,16 +104,18 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
     // Validate that we got SVG content
     const textData = new TextDecoder().decode(data);
     if (!textData.includes('<svg')) {
-      console.warn(`Invalid SVG content for provider ${provider}`);
+      loggers.storage.warn(`Invalid SVG content for provider`, { provider });
       return null;
     }
     
     return {
       data: Buffer.from(data),
-      contentType,
-    };
+      contentType,    };
   } catch (error) {
-    console.warn(`Error fetching icon for provider ${provider}:`, error);
+    loggers.storage.warn(`Error fetching icon for provider`, {
+      provider,
+      error: error instanceof Error ? error.message : String(error)
+    });
     return null;
   }
 }
@@ -134,12 +145,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!provider) {
     return new NextResponse('Provider parameter is required', { status: 400 });
-  }
-
-  // Sanitize provider name (prevent path traversal)
+  }  // Sanitize provider name (prevent path traversal)
   const sanitizedProvider = provider.replace(/[^a-zA-Z0-9-_]/g, '');
   if (sanitizedProvider !== provider) {
-    console.warn(`Invalid provider name: ${provider}`);
+    loggers.security.warn(`Invalid provider name attempted`, {
+      originalProvider: provider,
+      sanitizedProvider,
+      clientIP: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    });
     return new NextResponse('Invalid provider name', { status: 400 });
   }
 

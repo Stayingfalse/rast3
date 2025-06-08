@@ -1,3 +1,5 @@
+import { loggers } from "./logger";
+
 /**
  * Converts an e2 bucket URL to a proxy URL that can be accessed through our API
  * @param originalUrl - The original e2 bucket URL
@@ -9,11 +11,12 @@ export function getProxyImageUrl(originalUrl: string): string {
     const pathParts = url.pathname.split("/").filter(Boolean);
 
     // Remove bucket name from path if present (first segment after domain)
-    const imagePath = pathParts.slice(1).join("/");
-
-    return `/api/images/${imagePath}`;
+    const imagePath = pathParts.slice(1).join("/");    return `/api/images/${imagePath}`;
   } catch (error) {
-    console.error("Failed to parse image URL:", originalUrl, error);
+    loggers.storage.error("Failed to parse image URL", {
+      originalUrl,
+      error: error instanceof Error ? error.message : String(error)
+    });
     return originalUrl; // Fallback to original if parsing fails
   }
 }
@@ -26,6 +29,9 @@ export function handleImageError(
   event: React.SyntheticEvent<HTMLImageElement>,
 ) {
   const target = event.currentTarget;
-  console.error("Failed to load image:", target.src);
+  loggers.storage.error("Failed to load image", {
+    src: target.src,
+    alt: target.alt || undefined
+  });
   target.style.display = "none";
 }

@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
+import { loggers } from "~/utils/logger";
 
 interface AdminActionsDropdownProps {
   kudosId: string;
@@ -32,10 +33,13 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
       setIsOpen(false);
       // Invalidate and refetch the feed to show updated state
       await utils.kudos.getFeed.invalidate();
-      onActionComplete?.();
-    },
+      onActionComplete?.();    },
     onError: (error) => {
-      console.error("Error hiding/unhiding kudos:", error);
+      loggers.admin.error("Error hiding/unhiding kudos", {
+        error: error.message,
+        kudosId,
+        action: "toggle_visibility"
+      });
       toast.error("Error: " + error.message);
     },
   });
@@ -46,10 +50,13 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
       setIsConfirmingDelete(false);
       // Invalidate and refetch the feed to remove deleted post
       await utils.kudos.getFeed.invalidate();
-      onActionComplete?.();
-    },
+      onActionComplete?.();    },
     onError: (error) => {
-      console.error("Error deleting kudos:", error);
+      loggers.admin.error("Error deleting kudos", {
+        error: error.message,
+        kudosId,
+        action: "delete"
+      });
       toast.error("Error: " + error.message);
       setIsConfirmingDelete(false);
     },

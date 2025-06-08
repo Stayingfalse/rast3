@@ -45,7 +45,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       links: [
         loggerLink({
           enabled: (op) =>
-            process.env.NODE_ENV === "development" ||
+            (typeof window !== "undefined" && window.location.hostname === "localhost") ||
             (op.direction === "down" && op.result instanceof Error),
         }),
         unstable_httpBatchStreamLink({
@@ -71,12 +71,11 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 function getBaseUrl() {
+  // Client-side: use current origin
   if (typeof window !== "undefined") return window.location.origin;
-  // Server-side only: these will never be called in browser
-  if (typeof process !== 'undefined' && process.env) {
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-    return `http://localhost:${process.env.PORT ?? 3000}`;
-  }
-  // Fallback for edge cases
-  return "http://localhost:3000";
+  
+  // Server-side: for Docker/self-hosted deployment
+  // Port is set in Dockerfile (ENV PORT 3000) or via environment
+  const port = process.env.PORT ?? "3000";
+  return `http://localhost:${port}`;
 }

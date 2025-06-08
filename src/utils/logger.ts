@@ -1,10 +1,10 @@
 import pino, { type Bindings } from 'pino';
-import { env } from '~/env';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 /**
  * Turbopack-compatible logger configuration
  * Simplified to avoid transport resolution issues during development
+ * Made client-safe by avoiding server-side environment imports at module level
  */
 
 // Type definitions for request and response objects
@@ -21,16 +21,28 @@ interface LogResponse extends Partial<ServerResponse> {
   headers?: Record<string, string | string[] | undefined>;
 }
 
+// Safe environment checking that only works on server-side
+const getNodeEnv = () => {
+  // Only access process.env on server-side
+  if (typeof window === 'undefined') {
+    return process.env.NODE_ENV ?? 'development';
+  }
+  return 'development'; // Default for client-side
+};
+
+const isProduction = () => getNodeEnv() === 'production';
+const isDevelopment = () => getNodeEnv() === 'development';
+
 // Base logger configuration that works with Turbopack
-const baseLoggerConfig = {
-  level: env.NODE_ENV === 'development' ? 'debug' : 'info',
+const createBaseLoggerConfig = () => ({
+  level: isDevelopment() ? 'debug' : 'info',
   
   // Serializers for consistent log formatting
   serializers: {
     req: (req: LogRequest) => ({
       method: req.method,
       url: req.url,
-      headers: env.NODE_ENV === 'production' ? {
+      headers: isProduction() ? {
         'user-agent': req.headers?.['user-agent'],
         'content-type': req.headers?.['content-type'],
         'authorization': req.headers?.authorization ? '[REDACTED]' : undefined
@@ -45,11 +57,10 @@ const baseLoggerConfig = {
     err: (err: Error) => ({
       type: err.constructor.name,
       message: err.message,
-      stack: env.NODE_ENV === 'development' ? err.stack : undefined
-    })
-  },
+      stack: isDevelopment() ? err.stack : undefined
+    })  },
   // Redact sensitive information in production
-  ...(env.NODE_ENV === 'production' && {
+  ...(isProduction() && {
     redact: {
       paths: [
         'password',
@@ -66,8 +77,7 @@ const baseLoggerConfig = {
         '*.token',
         '*.secret',
         'req.headers.authorization',
-        'req.headers.cookie'
-      ],
+        'req.headers.cookie'      ],
       censor: '[REDACTED]'
     }
   }),
@@ -78,36 +88,26 @@ const baseLoggerConfig = {
     bindings: (bindings: Bindings) => ({
       pid: bindings.pid as number | undefined,
       hostname: bindings.hostname as string | undefined,
-      environment: env.NODE_ENV,
+      environment: getNodeEnv(),
       service: 'raosanta'
     })
   }
-};
+});
 
 /**
  * Create the base logger with simplified configuration for Turbopack compatibility
  */
 const createBaseLogger = () => {
-  if (env.NODE_ENV === 'development') {
-    // Development: Simple pretty printing to avoid Turbopack issues
-    try {
-      return pino({
-        ...baseLoggerConfig,
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-            singleLine: false
-          }
-        }
-      });
-    } catch (error) {
-      // Fallback for Turbopack compatibility issues
-      console.warn('Pino transport failed, using basic logger:', error);
-      return pino(baseLoggerConfig);
-    }
+  const baseLoggerConfig = createBaseLoggerConfig();
+  
+  if (isDevelopment()) {
+    // Development: Use basic Pino without transport to avoid Turbopack issues
+    // The logs will be in JSON format but still readable in development
+    return pino({
+      ...baseLoggerConfig,
+      // Remove any transport configuration to avoid Turbopack worker issues
+      level: 'debug', // More verbose in development
+    });
   } else {
     // Production: Structured JSON logging
     return pino(baseLoggerConfig);
@@ -120,7 +120,7 @@ const baseLogger = createBaseLogger();
 import { createBetterStackWrapper } from './betterstack-logger';
 
 // Wrap the logger with BetterStack integration if in production
-const wrappedLogger = env.NODE_ENV === 'production' 
+const wrappedLogger = isProduction() 
   ? createBetterStackWrapper(baseLogger) 
   : baseLogger;
 
@@ -135,7 +135,7 @@ export const createChildLogger = (component: string, additionalContext?: Record<
   });
   
   // Wrap child loggers with BetterStack integration in production
-  return env.NODE_ENV === 'production' 
+  return isProduction() 
     ? createBetterStackWrapper(childLogger)
     : childLogger;
 };

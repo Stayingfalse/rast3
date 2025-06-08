@@ -8,9 +8,9 @@ import React from 'react';
  * Provides structured logging with automatic error reporting
  */
 
-type ClientLogData = Record<string, unknown>;
+export type ClientLogData = Record<string, unknown>;
 
-interface ClientErrorData extends ClientLogData {
+export interface ClientErrorData extends ClientLogData {
   userAgent?: string;
   url?: string;
   timestamp?: string;

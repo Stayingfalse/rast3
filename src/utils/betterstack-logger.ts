@@ -1,16 +1,27 @@
 /**
  * BetterStack Logging Integration
  * Separate module to handle BetterStack logging without Turbopack conflicts
+ * Made client-safe by avoiding server-side environment imports at module level
  */
 
-import { env } from '~/env';
 import type { Logger } from 'pino';
 
-// BetterStack configuration
-const BETTERSTACK_CONFIG = {
-  sourceToken: process.env.BETTERSTACK_SOURCE_TOKEN ?? 'fp5ZHG1xBxoPCoe3a6fSzCP6',
-  endpoint: process.env.BETTERSTACK_ENDPOINT ?? 'https://s1340543.eu-nbg-2.betterstackdata.com',
-  enabled: !!process.env.BETTERSTACK_SOURCE_TOKEN // Enable in any environment if token is provided
+// Safe environment access for server-side only
+const getBetterStackConfig = () => {
+  // Only access process.env on server-side
+  if (typeof window === 'undefined') {
+    return {
+      sourceToken: process.env.BETTERSTACK_SOURCE_TOKEN ?? 'fp5ZHG1xBxoPCoe3a6fSzCP6',
+      endpoint: process.env.BETTERSTACK_ENDPOINT ?? 'https://s1340543.eu-nbg-2.betterstackdata.com',
+      enabled: !!process.env.BETTERSTACK_SOURCE_TOKEN // Enable in any environment if token is provided
+    };
+  }
+  // Client-side - return disabled config
+  return {
+    sourceToken: '',
+    endpoint: '',
+    enabled: false
+  };
 };
 
 // Type definitions for log data
@@ -25,22 +36,25 @@ interface LogData {
  * Send logs to BetterStack via HTTP
  */
 export async function sendToBetterStack(logData: LogData): Promise<void> {
-  if (!BETTERSTACK_CONFIG.enabled) {
+  const config = getBetterStackConfig();
+  
+  if (!config.enabled) {
     return;
   }
 
   try {
-    const response = await fetch(BETTERSTACK_CONFIG.endpoint, {
+    const response = await fetch(config.endpoint, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${BETTERSTACK_CONFIG.sourceToken}`,
+        'Authorization': `Bearer ${config.sourceToken}`,
         'Content-Type': 'application/json',
-      },      body: JSON.stringify({
+      },
+      body: JSON.stringify({
         dt: new Date().toISOString(),
         level: logData.level ?? 'info',
         message: logData.msg ?? logData.message ?? '',
         service: 'raosanta',
-        environment: env.NODE_ENV,
+        environment: typeof window === 'undefined' ? (process.env.NODE_ENV ?? 'development') : 'client',
         ...logData
       })
     });
@@ -59,7 +73,8 @@ export async function sendToBetterStack(logData: LogData): Promise<void> {
 export function createBetterStackWrapper(baseLogger: Logger) {
   const shouldSendToBetterStack = (level: string) => {
     // Only send warn, error, and fatal logs to BetterStack to avoid spam
-    return ['warn', 'error', 'fatal'].includes(level) && BETTERSTACK_CONFIG.enabled;
+    const config = getBetterStackConfig();
+    return ['warn', 'error', 'fatal'].includes(level) && config.enabled;
   };
 
   return {
@@ -88,7 +103,9 @@ export function createBetterStackWrapper(baseLogger: Logger) {
     },    info: (obj: LogData | string, msg?: string, ...args: unknown[]) => {
       const result = baseLogger.info(obj, msg, ...args);
       // Optionally send critical info logs
-      if (env.NODE_ENV === 'production' && typeof obj === 'object' && obj?.critical && BETTERSTACK_CONFIG.enabled) {
+      const config = getBetterStackConfig();
+      const isProduction = typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+      if (isProduction && typeof obj === 'object' && obj?.critical && config.enabled) {
         const serializedMsg = msg ?? (typeof obj === 'string' ? obj : JSON.stringify(obj));
         void sendToBetterStack({ level: 'info', msg: serializedMsg, ...(typeof obj === 'object' ? obj : {}) });
       }
@@ -101,7 +118,8 @@ export function createBetterStackWrapper(baseLogger: Logger) {
  * Test BetterStack connection
  */
 export async function testBetterStackConnection() {
-  if (!BETTERSTACK_CONFIG.enabled) {
+  const config = getBetterStackConfig();
+  if (!config.enabled) {
     return { success: false, message: 'BetterStack not configured' };
   }
 
@@ -121,5 +139,3 @@ export async function testBetterStackConnection() {
     };
   }
 }
-
-export { BETTERSTACK_CONFIG };

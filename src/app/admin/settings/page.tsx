@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { SiteAdminLayout } from "~/app/_components/site-admin-layout";
 import { api } from "~/trpc/react";
-import { loggers } from "~/utils/logger";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 // Email configuration interface to match the server-side interface
 interface EmailConfig {
@@ -182,16 +184,15 @@ export default function SettingsPage() {
       return;
     }
 
-    try {
+      try {
       setIsOAuthInProgress(true);
       const redirectUri = `${window.location.origin}${window.location.pathname}`;
 
-      // Generate Gmail OAuth2 URL and redirect to Google      generateGmailOAuth2Url.mutate({ redirectUri });
+      // Generate Gmail OAuth2 URL and redirect to Google
+      generateGmailOAuth2Url.mutate({ redirectUri });
     } catch (error) {
-      setIsOAuthInProgress(false);
-      loggers.oauth.error("OAuth2 flow error", {
-        error: error instanceof Error ? error.message : String(error),
-        redirectUri: `${window.location.origin}${window.location.pathname}`
+      setIsOAuthInProgress(false);      logger.error("OAuth2 flow error", "OAuth2 flow error", {
+        error: error instanceof Error ? error.message : String(error)
       });
       // Error handling is done in the mutation's onError callback
     }

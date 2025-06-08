@@ -1,7 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
 import { env } from "~/env";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 const createPrismaClient = () => {
   const prisma = new PrismaClient({
@@ -20,33 +22,33 @@ const createPrismaClient = () => {
 
   // Set up event listeners for structured logging
   prisma.$on('query', (e) => {
-    loggers.database.debug('Database query executed', {
+    logger.debug({
       query: e.query,
       params: e.params,
       duration: e.duration,
       target: e.target
-    });
+    }, 'Database query executed');
   });
 
   prisma.$on('error', (e) => {
-    loggers.database.error('Database error occurred', {
+    logger.error({
       message: e.message,
       target: e.target
-    });
+    }, 'Database error occurred');
   });
 
   prisma.$on('warn', (e) => {
-    loggers.database.warn('Database warning', {
+    logger.warn({
       message: e.message,
       target: e.target
-    });
+    }, 'Database warning');
   });
 
   prisma.$on('info', (e) => {
-    loggers.database.info('Database info', {
+    logger.info({
       message: e.message,
       target: e.target
-    });
+    }, 'Database info');
   });
 
   return prisma;

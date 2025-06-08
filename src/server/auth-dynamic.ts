@@ -14,7 +14,9 @@ import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 
 // Email configuration interface
@@ -45,9 +47,9 @@ async function getCachedDbProviders() {
     try {
       dbProvidersCache = await getDbAuthProviders();
       cacheExpiry = now + CACHE_DURATION;    } catch (error) {
-      loggers.auth.error("Failed to fetch database providers", {
+      logger.error({
         error: error instanceof Error ? error.message : String(error)
-      });
+      }, "Failed to fetch database providers");
       // Return empty array if DB is unavailable
       return [];
     }
@@ -257,11 +259,11 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               html,
             });
           } catch (error) {
-            loggers.email.error("Failed to send verification email (env config)", {
+            logger.error({
               error: error instanceof Error ? error.message : String(error),
               to: email,
               subject
-            });
+            }, "Failed to send verification email (env config)");
             throw new Error("Failed to send verification email");
           }
         },
@@ -317,12 +319,12 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
                 html,
               });
             } catch (error) {
-              loggers.email.error("Failed to send verification email (db config)", {
+              logger.error({
                 error: error instanceof Error ? error.message : String(error),
                 to: email,
                 subject,
                 authType: emailConfig.authType
-              });
+              }, "Failed to send verification email (db config)");
               throw new Error("Failed to send verification email");
             }
           },

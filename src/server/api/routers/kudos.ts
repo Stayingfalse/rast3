@@ -4,7 +4,9 @@ import { db } from "~/server/db";
 import sharp from "sharp";
 import { uploadToE2, deleteFromE2 } from "~/server/utils/e2-upload";
 import { checkAdminPermissions } from "~/server/utils/admin-permissions";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('kudos');
 
 export const kudosRouter = createTRPCRouter({
   createKudos: protectedProcedure
@@ -336,12 +338,12 @@ export const kudosRouter = createTRPCRouter({
           // Delete each image from E2 storage
           await Promise.all(imageUrls.map((url) => deleteFromE2(url)));
         } catch (error) {
-          loggers.storage.error("Error cleaning up image files", {
+          logger.error({
             error: error instanceof Error ? error.message : String(error),
             kudosId: input.kudosId,
             imageUrls,
             operation: "admin_delete_kudos"
-          });
+          }, "Error cleaning up image files");
           // Continue with deletion even if file cleanup fails
         }
       }

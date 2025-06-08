@@ -7,7 +7,9 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { loggers } from "~/utils/logger";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 interface DebugUser {
   id: string;
@@ -35,10 +37,7 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
       const savedDebugUser = localStorage.getItem("debugUser");
       if (savedDebugUser) {        try {
           const parsedUser = JSON.parse(savedDebugUser) as DebugUser;
-          setDebugUser(parsedUser);
-        } catch (error) {
-          loggers.auth.error("Failed to parse debug user from localStorage", {
-            error: error instanceof Error ? error.message : String(error),
+          setDebugUser(parsedUser);        } catch {          logger.error("Failed to parse debug user from localStorage", "Debug user parse error", {
             savedDebugUser: savedDebugUser.substring(0, 100) + "..." // Truncate for security
           });
           localStorage.removeItem("debugUser");
@@ -68,10 +67,7 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           setDebugUser(debugUserData);
           localStorage.setItem("debugUser", JSON.stringify(debugUserData));
-        }      })
-      .catch((error) => {
-        loggers.auth.error("Failed to create debug user", {
-          error: error instanceof Error ? error.message : String(error),
+        }      })      .catch(() => {        logger.error("Failed to create debug user", "Debug user creation error", {
           debugUserId: debugUserData.id
         });
       });

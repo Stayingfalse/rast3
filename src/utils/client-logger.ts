@@ -8,7 +8,7 @@ import React from 'react';
  * Provides structured logging with automatic error reporting
  */
 
-type ClientLogData = Record<string, any>;
+type ClientLogData = Record<string, unknown>;
 
 interface ClientErrorData extends ClientLogData {
   userAgent?: string;
@@ -44,10 +44,8 @@ class ClientLogger {
 
     if (this.isDevelopment) {
       console.error('[CLIENT ERROR]', errorData);
-    }
-
-    // In production, we would send this to a logging service
-    this.sendToServer('error', errorData);
+    }    // In production, we would send this to a logging service
+    void this.sendToServer('error', errorData);
   }
 
   /**
@@ -66,7 +64,7 @@ class ClientLogger {
       console.log('[CLIENT PERFORMANCE]', perfData);
     }
 
-    this.sendToServer('performance', perfData);
+    void this.sendToServer('performance', perfData);
   }
 
   /**
@@ -85,7 +83,7 @@ class ClientLogger {
       console.log('[CLIENT INTERACTION]', interactionData);
     }
 
-    this.sendToServer('interaction', interactionData);
+    void this.sendToServer('interaction', interactionData);
   }
 
   /**
@@ -104,13 +102,12 @@ class ClientLogger {
       console.log('[CLIENT PAGE VIEW]', pageData);
     }
 
-    this.sendToServer('page_view', pageData);
+    void this.sendToServer('page_view', pageData);
   }
-
   /**
    * Send logs to server (placeholder for future implementation)
    */
-  private async sendToServer(type: string, data: any): Promise<void> {
+  private async sendToServer(_type: string, _data: ClientLogData): Promise<void> {
     // In development, we skip sending to server
     if (this.isDevelopment) return;
 
@@ -152,17 +149,11 @@ export function withErrorLogging<P extends object>(
   Component: React.ComponentType<P>
 ): React.ComponentType<P> {
   return function ErrorLoggedComponent(props: P) {
-    const handleError = (error: Error, errorInfo: any) => {
-      clientLogger.error(error, 'error_boundary', {
-        componentStack: errorInfo.componentStack,
-        errorBoundary: true
-      });
-    };
-
     if (typeof window !== 'undefined') {
       // Set up global error handler
       window.addEventListener('error', (event) => {
-        clientLogger.error(event.error || event.message, 'global_error', {
+        const error = event.error instanceof Error ? event.error : new Error(String(event.message));
+        clientLogger.error(error, 'global_error', {
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno
@@ -171,10 +162,8 @@ export function withErrorLogging<P extends object>(
 
       // Set up unhandled promise rejection handler
       window.addEventListener('unhandledrejection', (event) => {
-        clientLogger.error(
-          event.reason instanceof Error ? event.reason : String(event.reason),
-          'unhandled_promise_rejection'
-        );
+        const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+        clientLogger.error(error, 'unhandled_promise_rejection');
       });
     }
 
@@ -216,8 +205,7 @@ export const performance = {
         // Clean up marks
         window.performance.clearMarks(startMark);
         window.performance.clearMarks(endMark);
-        window.performance.clearMeasures(name);
-      } catch (error) {
+        window.performance.clearMeasures(name);      } catch {
         // Ignore performance API errors
       }
     }

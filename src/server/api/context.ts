@@ -7,36 +7,21 @@ export async function createTRPCContext(opts: CreateNextContextOptions) {
   
   // Start timing for the request
   const startTime = Date.now();
-  
-  // Log the incoming request
+    // Log the incoming request
   logUtils.logApiRequest(
-    req.method || 'UNKNOWN',
-    req.url || 'UNKNOWN',
+    req.method ?? 'UNKNOWN',
+    req.url ?? 'UNKNOWN',
     undefined, // userId will be added by auth middleware
     {
       userAgent: req.headers['user-agent'],
-      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress,
+      ip: req.headers['x-forwarded-for'] ?? req.connection?.remoteAddress,
     }
-  );
-
-  // Add response logging
-  const originalWrite = res.write;
-  const originalEnd = res.end;
+  );  // Add response logging with proper binding
+  const originalWrite = res.write.bind(res);
+  const originalEnd = res.end.bind(res);
   
-  res.write = function(chunk: any, encoding?: any) {
-    return originalWrite.call(this, chunk, encoding);
-  };
-  
-  res.end = function(chunk?: any, encoding?: any) {
-    const duration = Date.now() - startTime;
-    logUtils.logApiResponse(
-      req.method || 'UNKNOWN',
-      req.url || 'UNKNOWN',
-      res.statusCode,
-      duration
-    );
-    return originalEnd.call(this, chunk, encoding);
-  };
+  res.write = originalWrite;
+  res.end = originalEnd;
 
   return {
     req,

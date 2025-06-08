@@ -7,15 +7,15 @@ export async function GET(request: NextRequest) {
   
   try {
     // Log the test request
-    loggers.api.info('Test logging endpoint accessed', {
+    loggers.api.info({
       userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || 'unknown'
-    });
+      ip: request.headers.get('x-forwarded-for') ?? 'unknown'
+    }, 'Test logging endpoint accessed');
 
     // Test different log levels
-    loggers.auth.debug('Debug log test', { testId: 'debug-001' });
-    loggers.auth.info('Info log test', { testId: 'info-001' });
-    loggers.auth.warn('Warning log test', { testId: 'warn-001' });
+    loggers.auth.debug({ testId: 'debug-001' }, 'Debug log test');
+    loggers.auth.info({ testId: 'info-001' }, 'Info log test');
+    loggers.auth.warn({ testId: 'warn-001' }, 'Warning log test');
     
     // Test utility functions
     logUtils.logPerformance('test_endpoint_processing', 50, 'ms', {

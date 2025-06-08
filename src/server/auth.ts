@@ -12,7 +12,9 @@ import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 // Augment Session type to include adminLevel and adminScope
 declare module "next-auth" {
@@ -161,11 +163,11 @@ if (process.env.EMAIL_SERVER_HOST) {
             text,
             html,          });
         } catch (error) {
-          loggers.email.error("Failed to send verification email", {
+          logger.error({
             error: error instanceof Error ? error.message : String(error),
             to: email,
             subject
-          });
+          }, "Failed to send verification email");
           throw new Error("Failed to send verification email");
         }
       },

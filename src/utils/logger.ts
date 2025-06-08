@@ -1,10 +1,25 @@
-import pino from 'pino';
+import pino, { type Bindings } from 'pino';
 import { env } from '~/env';
+import type { IncomingMessage, ServerResponse } from 'http';
 
 /**
  * Turbopack-compatible logger configuration
  * Simplified to avoid transport resolution issues during development
  */
+
+// Type definitions for request and response objects
+interface LogRequest extends Partial<IncomingMessage> {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  remoteAddress?: string;
+  remotePort?: number;
+}
+
+interface LogResponse extends Partial<ServerResponse> {
+  statusCode?: number;
+  headers?: Record<string, string | string[] | undefined>;
+}
 
 // Base logger configuration that works with Turbopack
 const baseLoggerConfig = {
@@ -12,7 +27,7 @@ const baseLoggerConfig = {
   
   // Serializers for consistent log formatting
   serializers: {
-    req: (req: any) => ({
+    req: (req: LogRequest) => ({
       method: req.method,
       url: req.url,
       headers: env.NODE_ENV === 'production' ? {
@@ -23,7 +38,7 @@ const baseLoggerConfig = {
       remoteAddress: req.remoteAddress,
       remotePort: req.remotePort
     }),
-    res: (res: any) => ({
+    res: (res: LogResponse) => ({
       statusCode: res.statusCode,
       headers: res.headers
     }),
@@ -33,7 +48,6 @@ const baseLoggerConfig = {
       stack: env.NODE_ENV === 'development' ? err.stack : undefined
     })
   },
-
   // Redact sensitive information in production
   ...(env.NODE_ENV === 'production' && {
     redact: {
@@ -57,13 +71,13 @@ const baseLoggerConfig = {
       censor: '[REDACTED]'
     }
   }),
-
+  
   // Add environment metadata
   formatters: {
     level: (label: string) => ({ level: label }),
-    bindings: (bindings: any) => ({
-      pid: bindings.pid,
-      hostname: bindings.hostname,
+    bindings: (bindings: Bindings) => ({
+      pid: bindings.pid as number | undefined,
+      hostname: bindings.hostname as string | undefined,
       environment: env.NODE_ENV,
       service: 'raosanta'
     })
@@ -114,7 +128,7 @@ const wrappedLogger = env.NODE_ENV === 'production'
 export const logger = wrappedLogger;
 
 // Create specialized loggers for different components
-export const createChildLogger = (component: string, additionalContext?: Record<string, any>) => {
+export const createChildLogger = (component: string, additionalContext?: Record<string, unknown>) => {
   const childLogger = baseLogger.child({ 
     component,
     ...additionalContext 
@@ -162,7 +176,7 @@ export const loggers = {
 // Utility functions for common logging patterns
 export const logUtils = {
   // Log API requests with timing
-  logApiRequest: (method: string, endpoint: string, userId?: string, additionalData?: Record<string, any>) => {
+  logApiRequest: (method: string, endpoint: string, userId?: string, additionalData?: Record<string, unknown>) => {
     loggers.api.info({
       method,
       endpoint,
@@ -184,7 +198,7 @@ export const logUtils = {
   },
 
   // Log authentication events
-  logAuthEvent: (event: string, userId?: string, provider?: string, additionalData?: Record<string, any>) => {
+  logAuthEvent: (event: string, userId?: string, provider?: string, additionalData?: Record<string, unknown>) => {
     loggers.auth.info({
       event,
       userId,
@@ -194,16 +208,15 @@ export const logUtils = {
   },
 
   // Log OAuth events
-  logOAuthEvent: (event: string, provider: string, additionalData?: Record<string, any>) => {
+  logOAuthEvent: (event: string, provider: string, additionalData?: Record<string, unknown>) => {
     loggers.oauth.info({
       event,
       provider,
       ...additionalData,
     }, `OAuth Event: ${event} - ${provider}`);
   },
-
   // Log database operations
-  logDatabaseOperation: (operation: string, table: string, duration?: number, additionalData?: Record<string, any>) => {
+  logDatabaseOperation: (operation: string, table: string, duration?: number, additionalData?: Record<string, unknown>) => {
     loggers.database.debug({
       operation,
       table,
@@ -213,7 +226,7 @@ export const logUtils = {
   },
 
   // Log performance metrics
-  logPerformance: (metric: string, value: number, unit = 'ms', additionalData?: Record<string, any>) => {
+  logPerformance: (metric: string, value: number, unit = 'ms', additionalData?: Record<string, unknown>) => {
     loggers.performance.info({
       metric,
       value,
@@ -223,7 +236,7 @@ export const logUtils = {
   },
 
   // Log security events
-  logSecurityEvent: (event: string, severity: 'low' | 'medium' | 'high' | 'critical', additionalData?: Record<string, any>) => {
+  logSecurityEvent: (event: string, severity: 'low' | 'medium' | 'high' | 'critical', additionalData?: Record<string, unknown>) => {
     const level = severity === 'critical' ? 'error' : severity === 'high' ? 'warn' : 'info';
     loggers.security[level]({
       event,
@@ -231,9 +244,8 @@ export const logUtils = {
       ...additionalData,
     }, `Security Event: ${event} (${severity})`);
   },
-
   // Log errors with proper context
-  logError: (error: Error | unknown, context: string, additionalData?: Record<string, any>) => {
+  logError: (error: unknown, context: string, additionalData?: Record<string, unknown>) => {
     const errorObj = error instanceof Error ? {
       name: error.name,
       message: error.message,
@@ -244,11 +256,11 @@ export const logUtils = {
       ...errorObj,
       context,
       ...additionalData,
-    }, `Error in ${context}: ${errorObj.message || String(error)}`);
+    }, `Error in ${context}: ${errorObj.message ?? String(error)}`);
   },
 
   // Log admin actions
-  logAdminAction: (action: string, adminId: string, targetId?: string, additionalData?: Record<string, any>) => {
+  logAdminAction: (action: string, adminId: string, targetId?: string, additionalData?: Record<string, unknown>) => {
     loggers.admin.warn({
       action,
       adminId,

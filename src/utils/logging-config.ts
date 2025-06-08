@@ -4,18 +4,33 @@
  */
 
 import { env } from "~/env";
-import type { LoggerOptions } from 'pino';
+import type { LoggerOptions, Bindings } from 'pino';
+import type { IncomingMessage, ServerResponse } from 'http';
+
+// Type definitions for request and response objects
+interface LogRequest extends Partial<IncomingMessage> {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  remoteAddress?: string;
+  remotePort?: number;
+}
+
+interface LogResponse extends Partial<ServerResponse> {
+  statusCode?: number;
+  headers?: Record<string, string | string[] | undefined>;
+}
 
 /**
  * Production logging configuration
  * Optimized for structured logging, log aggregation, and monitoring
  */
 export const productionLoggerConfig: LoggerOptions = {
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL ?? 'info',
   
   // Structured JSON output for production
   serializers: {
-    req: (req: any) => ({
+    req: (req: LogRequest) => ({
       method: req.method,
       url: req.url,
       headers: {
@@ -26,7 +41,7 @@ export const productionLoggerConfig: LoggerOptions = {
       remoteAddress: req.remoteAddress,
       remotePort: req.remotePort
     }),
-    res: (res: any) => ({
+    res: (res: LogResponse) => ({
       statusCode: res.statusCode,
       headers: res.headers
     }),
@@ -59,15 +74,12 @@ export const productionLoggerConfig: LoggerOptions = {
       'req.headers.cookie'
     ],
     censor: '[REDACTED]'
-  },
-
-  // Add timestamp and hostname
+  },  // Add timestamp and hostname
   timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
   formatters: {
-    level: (label: string) => ({ level: label }),
-    bindings: (bindings: any) => ({
-      pid: bindings.pid,
-      hostname: bindings.hostname,
+    level: (label: string) => ({ level: label }),    bindings: (bindings: Bindings) => ({
+      pid: bindings.pid as number | undefined,
+      hostname: bindings.hostname as string | undefined,
       environment: env.NODE_ENV
     })
   }
@@ -97,7 +109,7 @@ export const developmentLoggerConfig: LoggerOptions = {
             50: '❌ ERROR',
             60: '💥 FATAL'
           };
-          return levels[logLevel] || logLevel;
+          return levels[logLevel] ?? logLevel;
         }
       }
     }
@@ -131,7 +143,7 @@ export const externalLoggingConfig = {
   betterstack: {
     enabled: !!process.env.BETTERSTACK_SOURCE_TOKEN,
     sourceToken: process.env.BETTERSTACK_SOURCE_TOKEN,
-    endpoint: process.env.BETTERSTACK_ENDPOINT || 'https://s1340543.eu-nbg-2.betterstackdata.com',
+    endpoint: process.env.BETTERSTACK_ENDPOINT ?? 'https://s1340543.eu-nbg-2.betterstackdata.com',
     // Additional BetterStack options
     options: {
       batchSize: 100,
@@ -139,7 +151,7 @@ export const externalLoggingConfig = {
       metadata: {
         service: 'raosanta',
         environment: env.NODE_ENV,
-        version: process.env.npm_package_version || '0.1.5'
+        version: process.env.npm_package_version ?? '0.1.5'
       }
     }
   },
@@ -158,7 +170,7 @@ export const externalLoggingConfig = {
     apiKey: process.env.DATADOG_API_KEY,
     service: 'raosanta',
     environment: env.NODE_ENV,
-    version: process.env.APP_VERSION || '1.0.0'
+    version: process.env.APP_VERSION ?? '1.0.0'
   },
 
   // Custom webhook for log aggregation
@@ -192,7 +204,7 @@ export const getLogLevel = (): string => {
  * Create log transport configuration based on environment
  */
 export const createLogTransports = () => {
-  const transports: any[] = [];
+  const transports: unknown[] = [];
 
   // BetterStack transport (enabled in all environments if token is provided)
   if (externalLoggingConfig.betterstack.enabled) {
@@ -298,7 +310,7 @@ export const securityConfig = {
     enabled: true,
     maxFailedLogins: 5,
     timeWindow: 300000, // 5 minutes
-    ipWhitelist: process.env.IP_WHITELIST?.split(',') || []
+    ipWhitelist: process.env.IP_WHITELIST?.split(',') ?? []
   },
 
   // Rate limiting logging

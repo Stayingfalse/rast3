@@ -14,7 +14,9 @@ import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('trpc');
 
 /**
  * 1. CONTEXT
@@ -57,9 +59,9 @@ export const createTRPCContext = async (_opts: { headers: Headers }) => {
   try {
     session = await auth();
   } catch (error) {
-    loggers.auth.error("Error getting session in tRPC context", {
+    logger.error({
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, "Error getting session in tRPC context");
     // Session remains null, which is fine for public procedures
   }
 
@@ -129,11 +131,11 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   const result = await next();
 
   const end = Date.now();
-  loggers.performance.info("tRPC procedure execution time", {
+  logger.info({
     path,
     duration: end - start,
     unit: "ms"
-  });
+  }, "tRPC procedure execution time");
 
   return result;
 });

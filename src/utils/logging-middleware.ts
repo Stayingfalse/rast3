@@ -1,7 +1,7 @@
 import { type NextRequest, type NextResponse } from 'next/server';
 import { logUtils } from '~/utils/logger';
 
-export function withLogging<T extends any[]>(
+export function withLogging<T extends unknown[]>(
   handler: (req: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (req: NextRequest, ...args: T): Promise<NextResponse> => {
@@ -11,7 +11,7 @@ export function withLogging<T extends any[]>(
     // Log incoming request
     logUtils.logApiRequest(method, url, undefined, {
       userAgent: headers.get('user-agent'),
-      ip: headers.get('x-forwarded-for') || headers.get('x-real-ip'),
+      ip: headers.get('x-forwarded-for') ?? headers.get('x-real-ip'),
       contentType: headers.get('content-type'),
     });
 
@@ -55,15 +55,14 @@ export function logMiddleware(req: NextRequest) {
   ) {
     return;
   }
-
   logUtils.logApiRequest(
     req.method,
     req.nextUrl.pathname + req.nextUrl.search,
     undefined,
     {
-      userAgent: req.headers.get('user-agent'),
-      ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip'),
-      referer: req.headers.get('referer'),
+      userAgent: req.headers.get('user-agent') ?? undefined,
+      ip: req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? undefined,
+      referer: req.headers.get('referer') ?? undefined,
     }
   );
 }

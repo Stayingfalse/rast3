@@ -1,4 +1,6 @@
-import { loggers } from "./logger";
+import { createChildLogger } from "./logger";
+
+const logger = createChildLogger('image-utils');
 
 /**
  * Converts an e2 bucket URL to a proxy URL that can be accessed through our API
@@ -13,10 +15,10 @@ export function getProxyImageUrl(originalUrl: string): string {
     // Remove bucket name from path if present (first segment after domain)
     const imagePath = pathParts.slice(1).join("/");    return `/api/images/${imagePath}`;
   } catch (error) {
-    loggers.storage.error("Failed to parse image URL", {
+    logger.error({
       originalUrl,
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, "Failed to parse image URL");
     return originalUrl; // Fallback to original if parsing fails
   }
 }
@@ -29,9 +31,9 @@ export function handleImageError(
   event: React.SyntheticEvent<HTMLImageElement>,
 ) {
   const target = event.currentTarget;
-  loggers.storage.error("Failed to load image", {
+  logger.error({
     src: target.src,
     alt: target.alt || undefined
-  });
+  }, "Failed to load image");
   target.style.display = "none";
 }

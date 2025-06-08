@@ -2,7 +2,9 @@
 import { writeFileSync } from "fs";
 import { join } from "path";
 import { createMagicLinkEmailTemplate } from "./email-templates";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 function generateEmailPreview() {  const testData = {
     url: "http://localhost:3002/api/auth/callback/nodemailer?token=test-token&email=test@example.com",
@@ -51,11 +53,11 @@ function generateEmailPreview() {  const testData = {
   const previewPath = join(process.cwd(), "email-preview.html");
   writeFileSync(previewPath, previewHtml);
   
-  loggers.email.info("Email preview generated", {
+  logger.info({
     previewPath,
     subject,
     templateType: "magic-link"
-  });
+  }, "Email preview generated");
   
   return { subject, html, text, previewPath };
 }

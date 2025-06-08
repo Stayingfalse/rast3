@@ -4,7 +4,9 @@ import { type NextRequest } from "next/server";
 import { env } from "~/env";
 import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('api');
 
 const handler = (req: NextRequest) =>
   fetchRequestHandler({
@@ -15,12 +17,12 @@ const handler = (req: NextRequest) =>
     onError:
       env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            loggers.api.error("tRPC request failed", {
+            logger.error({
               path: path ?? "<no-path>",
               error: error.message,
               code: error.code,
               stack: error.stack
-            });
+            }, "tRPC request failed");
           }
         : undefined,
   });

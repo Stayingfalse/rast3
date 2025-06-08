@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { loggers, logUtils } from '~/utils/logger';
+import { createChildLogger, logUtils } from '~/utils/logger';
+
+const logger = createChildLogger('icons');
 
 // In-memory cache for icons (will be lost on rebuild, but that's fine)
 const iconCache = new Map<string, { data: Buffer; contentType: string; timestamp: number }>();
@@ -92,30 +94,28 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
       // Add timeout to prevent hanging
       signal: AbortSignal.timeout(10000), // 10 seconds
     });    if (!response.ok) {
-      loggers.storage.warn(`Failed to fetch icon for provider`, {
+      logger.warn({
         provider,
         status: response.status,
         statusText: response.statusText
-      });
+      }, `Failed to fetch icon for provider`);
       return null;
     }    const data = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') ?? 'image/svg+xml';
     
     // Validate that we got SVG content
-    const textData = new TextDecoder().decode(data);
-    if (!textData.includes('<svg')) {
-      loggers.storage.warn(`Invalid SVG content for provider`, { provider });
+    const textData = new TextDecoder().decode(data);    if (!textData.includes('<svg')) {
+      logger.warn({ provider }, `Invalid SVG content for provider`);
       return null;
     }
     
     return {
       data: Buffer.from(data),
-      contentType,    };
-  } catch (error) {
-    loggers.storage.warn(`Error fetching icon for provider`, {
+      contentType,    };  } catch (error) {
+    logger.warn({
       provider,
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, `Error fetching icon for provider`);
     return null;
   }
 }
@@ -146,13 +146,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!provider) {
     return new NextResponse('Provider parameter is required', { status: 400 });
   }  // Sanitize provider name (prevent path traversal)
-  const sanitizedProvider = provider.replace(/[^a-zA-Z0-9-_]/g, '');
-  if (sanitizedProvider !== provider) {
-    loggers.security.warn(`Invalid provider name attempted`, {
+  const sanitizedProvider = provider.replace(/[^a-zA-Z0-9-_]/g, '');  if (sanitizedProvider !== provider) {
+    logger.warn({
       originalProvider: provider,
       sanitizedProvider,
-      clientIP: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-    });
+      clientIP: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown'
+    }, `Invalid provider name attempted`);
     return new NextResponse('Invalid provider name', { status: 400 });
   }
 

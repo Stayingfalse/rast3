@@ -1,5 +1,7 @@
 import { db } from "~/server/db";
-import { loggers } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 export interface AuthProviderConfig {
   id: string;
@@ -33,9 +35,9 @@ export async function getDbAuthProviders(): Promise<AuthProviderConfig[]> {
       isEmailProvider: provider.isEmailProvider,
       emailConfig: provider.emailConfig as Record<string, unknown> | undefined,    }));
   } catch (error) {
-    loggers.auth.error("Failed to fetch auth providers from database", {
+    logger.error({
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, "Failed to fetch auth providers from database");
     return [];
   }
 }
@@ -66,10 +68,10 @@ export async function getDbAuthProvider(
       isEmailProvider: provider.isEmailProvider,
       emailConfig: provider.emailConfig as Record<string, unknown> | undefined,    };
   } catch (error) {
-    loggers.auth.error("Failed to fetch auth provider from database", {
+    logger.error({
       providerName: name,
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, "Failed to fetch auth provider from database");
     return null;
   }
 }

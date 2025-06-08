@@ -1,7 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { loggers, logUtils } from "~/utils/logger";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('auth-provider');
 
 const authProviderSchema = z.object({
   name: z.string().min(1),
@@ -272,11 +274,11 @@ export const authProviderRouter = createTRPCRouter({
       authUrl.searchParams.set("access_type", "offline");
       authUrl.searchParams.set("prompt", "consent");      authUrl.searchParams.set("state", "admin_email_setup"); // Identify this as admin flow
       
-      loggers.oauth.info('Gmail OAuth2 URL generated for admin email setup', {
+      logger.info({
         redirectUri: input.redirectUri,
         authUrl: authUrl.toString(),
         scopes: "https://mail.google.com/"
-      });
+      }, 'Gmail OAuth2 URL generated for admin email setup');
 
       return { authUrl: authUrl.toString() };
     }),
@@ -309,11 +311,11 @@ export const authProviderRouter = createTRPCRouter({
             "Google OAuth2 is not configured. Please set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET in your environment variables.",
         });
       }      try {
-        loggers.oauth.info('Gmail token exchange started', {
+        logger.info({
           codePreview: input.code.substring(0, 20) + "...",
           redirectUri: input.redirectUri,
           operation: 'token_exchange'
-        });
+        }, 'Gmail token exchange started');
 
         const tokenResponse = await fetch(
           "https://oauth2.googleapis.com/token",
@@ -336,12 +338,12 @@ export const authProviderRouter = createTRPCRouter({
             error?: string;
           };
 
-          loggers.oauth.error('Gmail OAuth2 token exchange failed', {
+          logger.error({
             status: tokenResponse.status,
             statusText: tokenResponse.statusText,
             errorData,
             operation: 'token_exchange'
-          });
+          }, 'Gmail OAuth2 token exchange failed');
 
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -364,11 +366,11 @@ export const authProviderRouter = createTRPCRouter({
           tokenType: tokens.token_type,
           scope: tokens.scope,
         };      } catch (error) {
-        loggers.oauth.error('Gmail OAuth2 token exchange error', {
+        logger.error({
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           operation: 'token_exchange'
-        });
+        }, 'Gmail OAuth2 token exchange error');
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -406,7 +408,7 @@ export const authProviderRouter = createTRPCRouter({
       authUrl.searchParams.set("scope", "https://mail.google.com/");
       authUrl.searchParams.set("access_type", "offline");
       authUrl.searchParams.set("prompt", "consent");      // OAuth2 debug information
-      loggers.oauth.info('OAuth2 authorization URL generated', {
+      logger.info({
         clientId: input.clientId,
         isValidFormat: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(input.clientId),
         clientIdLength: input.clientId.length,
@@ -414,7 +416,7 @@ export const authProviderRouter = createTRPCRouter({
         authUrl: authUrl.toString(),
         scopes: "https://mail.google.com/",
         operation: 'auth_url_generation'
-      });
+      }, 'OAuth2 authorization URL generated');
 
       return { authUrl: authUrl.toString() };
     }),
@@ -442,7 +444,7 @@ export const authProviderRouter = createTRPCRouter({
         });
       }      try {
         // Log OAuth token exchange debug info
-        loggers.oauth.debug({
+        logger.debug({
           codePrefix: input.code.substring(0, 20) + "...",
           clientId: input.clientId,
           clientIdValid: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(
@@ -478,7 +480,7 @@ export const authProviderRouter = createTRPCRouter({
           };
 
           // Log OAuth token exchange failure
-          loggers.oauth.error({
+          logger.error({
             status: tokenResponse.status,
             statusText: tokenResponse.statusText,
             error: errorData.error,
@@ -499,7 +501,7 @@ export const authProviderRouter = createTRPCRouter({
           token_type: string;
         };
 
-        loggers.oauth.info({
+        logger.info({
           hasAccessToken: !!tokens.access_token,
           hasRefreshToken: !!tokens.refresh_token,
           expiresIn: tokens.expires_in,
@@ -513,12 +515,13 @@ export const authProviderRouter = createTRPCRouter({
           tokenType: tokens.token_type,
         };
       } catch (error) {
-        logUtils.logError(error, "OAuth2 token exchange", {
+        logger.error({
           provider: "google",
           hasCode: !!input.code,
           hasClientId: !!input.clientId,
           hasClientSecret: !!input.clientSecret,
-        });
+          error: error instanceof Error ? error.message : String(error)
+        }, "OAuth2 token exchange error");
         
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

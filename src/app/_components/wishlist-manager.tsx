@@ -1,9 +1,9 @@
 "use client";
 
 import {
-    ChatBubbleLeftRightIcon,
-    GlobeAltIcon,
-    ShoppingCartIcon,
+  ChatBubbleLeftRightIcon,
+  GlobeAltIcon,
+  ShoppingCartIcon,
 } from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -135,7 +135,7 @@ export function WishlistManager() {
       case "NO_ITEMS":
         return "No Items";
       case "DOESNT_EXIST":
-        return "Link Doesn&apos;t Work";
+        return "Link Doesn't Work";
       case "NO_ADDRESS":
         return "No Shipping Address";
       case "OTHER":
@@ -311,7 +311,7 @@ export function WishlistManager() {
             Waiting for More Participants
           </h2>
           <p className="mb-4 text-yellow-700">
-            There aren&apos;t enough wishlists or participants yet to get
+            There {"aren't"} enough wishlists or participants yet to get
             started. Please check back later when more people have joined and
             set up their profiles!
           </p>
@@ -619,10 +619,9 @@ export function WishlistManager() {
                           }}
                           disabled={clearReport.isPending}
                           className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
-                        >
-                          {clearReport.isPending
+                        >                          {clearReport.isPending
                             ? "Clearing..."
-                            : "It&apos;s Fixed"}
+                            : "It's Fixed"}
                         </button>
                       </div>
                     )}
@@ -701,7 +700,7 @@ export function WishlistManager() {
                 >
                   <option value="NO_ITEMS">Wishlist has no items</option>
                   <option value="DOESNT_EXIST">
-                    Wishlist link doesn&apos;t work
+                    Wishlist link {"doesn't"} work
                   </option>
                   <option value="NO_ADDRESS">No shipping address</option>
                   <option value="OTHER">Other issue</option>
@@ -756,7 +755,7 @@ export function WishlistManager() {
             </h3>
             <div className="space-y-4">
               <p className="text-gray-600">
-                We couldn&apos;t find any more wishlists from your department to
+                We {"couldn't"} find any more wishlists from your department to
                 assign to you. This might be because:
               </p>
               <ul className="list-inside list-disc space-y-1 text-sm text-gray-600">
@@ -764,10 +763,10 @@ export function WishlistManager() {
                   All colleagues in your department already have assignments
                 </li>
                 <li>
-                  Some colleagues haven&apos;t completed their profiles yet
+                  Some colleagues {"haven't"} completed their profiles yet
                 </li>
                 <li>
-                  You&apos;ve already been assigned all available wishlists
+                  {"You've"} already been assigned all available wishlists
                 </li>
               </ul>
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -778,7 +777,7 @@ export function WishlistManager() {
                   </strong>
                 </p>
                 <p className="text-xs text-blue-600">
-                  This will be highlighted differently to show it&apos;s from a
+                  This will be highlighted differently to show {"it's"} from a
                   different department.
                 </p>
               </div>
@@ -835,10 +834,9 @@ export function WishlistManager() {
                   onClick={() => requestCrossDomain?.mutate({ count: 1 })}
                   disabled={requestCrossDomain?.isPending}
                   className="flex-1 rounded-lg bg-pink-600 px-4 py-2 font-medium text-white hover:bg-pink-700 disabled:bg-gray-400"
-                >
-                  {requestCrossDomain?.isPending
+                >                  {requestCrossDomain?.isPending
                     ? "Finding..."
-                    : "Get a Stranger&apos;s Wishlist"}
+                    : "Get a Stranger's Wishlist"}
                 </button>
                 <button
                   onClick={() => setStrangerModal(false)}

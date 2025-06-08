@@ -1,9 +1,12 @@
 import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
+    DeleteObjectCommand,
+    PutObjectCommand,
+    S3Client,
 } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 const E2_BUCKET = process.env.E2_BUCKET!;
 const E2_ACCESS_KEY = process.env.E2_ACCESS_KEY!;
@@ -38,11 +41,16 @@ export async function uploadToE2(
 }
 
 export async function deleteFromE2(url: string): Promise<void> {
-  try {
-    // Extract the key from the URL
+  try {    // Extract the key from the URL
     const key = url.split(`/${E2_BUCKET}/`)[1];
     if (!key) {
-      console.warn("Could not extract key from URL:", url);
+      logger.warn({ 
+        url, 
+        bucket: E2_BUCKET,
+        expectedFormat: `https://[endpoint]/${E2_BUCKET}/[file-key]`,
+        urlLength: url.length,
+        actionNeeded: 'Check URL format for E2 bucket extraction'
+      }, `Could not extract file key from E2 URL. Expected format: https://[endpoint]/${E2_BUCKET}/[file-key], got: ${url}`);
       return;
     }
 
@@ -50,10 +58,17 @@ export async function deleteFromE2(url: string): Promise<void> {
       new DeleteObjectCommand({
         Bucket: E2_BUCKET,
         Key: key,
-      }),
-    );
+      }),    );
   } catch (error) {
-    console.error("Error deleting file from E2:", error);
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      url,
+      bucket: E2_BUCKET,
+      key: url.split(`/${E2_BUCKET}/`)[1] ?? 'unknown',
+      operation: 'delete_file_from_e2',
+      actionSuggested: 'Check E2 credentials and bucket permissions'
+    }, `Error deleting file from E2 bucket '${E2_BUCKET}': ${error instanceof Error ? error.message : String(error)}`);
     // Don't throw - we don't want to fail the entire operation if file cleanup fails
   }
 }

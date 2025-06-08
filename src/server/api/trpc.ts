@@ -14,6 +14,9 @@ import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('trpc');
 
 /**
  * 1. CONTEXT
@@ -56,7 +59,9 @@ export const createTRPCContext = async (_opts: { headers: Headers }) => {
   try {
     session = await auth();
   } catch (error) {
-    console.error("[TRPC] Error getting session:", error);
+    logger.error({
+      error: error instanceof Error ? error.message : String(error)
+    }, "Error getting session in tRPC context");
     // Session remains null, which is fine for public procedures
   }
 
@@ -126,7 +131,31 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   const result = await next();
 
   const end = Date.now();
-  console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+  const duration = end - start;
+  
+  // Log at different levels based on performance and environment
+  if (duration > 1000) {
+    // Slow queries should be logged as warnings
+    logger.warn({
+      path,
+      duration,
+      unit: "ms"
+    }, "Slow tRPC procedure execution");
+  } else if (t._config.isDev) {
+    // In development, log all procedures at debug level
+    logger.debug({
+      path,
+      duration,
+      unit: "ms"
+    }, "tRPC procedure execution time");
+  } else {
+    // In production, only log timing at debug level (will be filtered out at info level)
+    logger.debug({
+      path,
+      duration,
+      unit: "ms"
+    }, "tRPC procedure execution time");
+  }
 
   return result;
 });

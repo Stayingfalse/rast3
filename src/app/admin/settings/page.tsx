@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { SiteAdminLayout } from "~/app/_components/site-admin-layout";
 import { api } from "~/trpc/react";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 // Email configuration interface to match the server-side interface
 interface EmailConfig {
@@ -181,15 +184,16 @@ export default function SettingsPage() {
       return;
     }
 
-    try {
+      try {
       setIsOAuthInProgress(true);
       const redirectUri = `${window.location.origin}${window.location.pathname}`;
 
       // Generate Gmail OAuth2 URL and redirect to Google
       generateGmailOAuth2Url.mutate({ redirectUri });
     } catch (error) {
-      setIsOAuthInProgress(false);
-      console.error("OAuth2 flow error:", error);
+      setIsOAuthInProgress(false);      logger.error("OAuth2 flow error", "OAuth2 flow error", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       // Error handling is done in the mutation's onError callback
     }
   };
@@ -933,10 +937,9 @@ export default function SettingsPage() {
           <h2 className="mb-4 text-xl font-semibold text-white">
             System Information
           </h2>
-          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
-            <div>
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">            <div>
               <span className="text-white/60">Environment:</span>
-              <span className="ml-2 text-white">{process.env.NODE_ENV}</span>
+              <span className="ml-2 text-white">{typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'development' : 'production'}</span>
             </div>
             <div>
               <span className="text-white/60">Total Providers:</span>

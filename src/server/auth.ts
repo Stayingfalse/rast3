@@ -12,6 +12,9 @@ import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 // Augment Session type to include adminLevel and adminScope
 declare module "next-auth" {
@@ -152,18 +155,37 @@ if (process.env.EMAIL_SERVER_HOST) {
           url,
           host,
           email,
-        });
-
-        try {
+        });        try {
           await transport.sendMail({
             to: email,
             from: provider.from,
             subject,
             text,
-            html,
-          });
+            html,          });
         } catch (error) {
-          console.error("Failed to send verification email:", error);
+          // Safely extract server configuration for logging
+          const serverConfig = provider.server as {
+            host?: string;
+            port?: number;
+          };
+          const smtpHost = typeof serverConfig === 'object' && serverConfig?.host 
+            ? String(serverConfig.host) 
+            : 'unknown';
+          const smtpPort = typeof serverConfig === 'object' && serverConfig?.port 
+            ? String(serverConfig.port) 
+            : 'unknown';
+            
+          logger.error({
+            error: error instanceof Error ? error.message : String(error),
+            errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+            to: email,
+            subject,
+            smtpHost,
+            smtpPort,
+            fromAddress: provider.from,
+            operation: 'send_verification_email',
+            actionNeeded: 'Check SMTP configuration and email provider credentials'
+          }, `Failed to send verification email to ${email}: ${error instanceof Error ? error.message : String(error)}`);
           throw new Error("Failed to send verification email");
         }
       },

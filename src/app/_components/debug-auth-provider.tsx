@@ -1,12 +1,15 @@
 "use client";
 
 import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    type ReactNode,
 } from "react";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 interface DebugUser {
   id: string;
@@ -26,18 +29,17 @@ const DebugAuthContext = createContext<DebugAuthContextType | null>(null);
 
 export function DebugAuthProvider({ children }: { children: ReactNode }) {
   const [debugUser, setDebugUser] = useState<DebugUser | null>(null);
-  const isDebugMode = process.env.NODE_ENV === "development";
+  const isDebugMode = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
   // Load debug user from localStorage on mount
   useEffect(() => {
     if (isDebugMode) {
       const savedDebugUser = localStorage.getItem("debugUser");
-      if (savedDebugUser) {
-        try {
+      if (savedDebugUser) {        try {
           const parsedUser = JSON.parse(savedDebugUser) as DebugUser;
-          setDebugUser(parsedUser);
-        } catch (error) {
-          console.error("Failed to parse debug user from localStorage:", error);
+          setDebugUser(parsedUser);        } catch {          logger.error("Failed to parse debug user from localStorage", "Debug user parse error", {
+            savedDebugUser: savedDebugUser.substring(0, 100) + "..." // Truncate for security
+          });
           localStorage.removeItem("debugUser");
         }
       }
@@ -65,10 +67,9 @@ export function DebugAuthProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           setDebugUser(debugUserData);
           localStorage.setItem("debugUser", JSON.stringify(debugUserData));
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to create debug user:", error);
+        }      })      .catch(() => {        logger.error("Failed to create debug user", "Debug user creation error", {
+          debugUserId: debugUserData.id
+        });
       });
   };
 

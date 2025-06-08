@@ -1,7 +1,10 @@
 // Utility to preview email templates for development/testing
 import { writeFileSync } from "fs";
 import { join } from "path";
+import { createChildLogger } from "~/utils/logger";
 import { createMagicLinkEmailTemplate } from "./email-templates";
+
+const logger = createChildLogger('server');
 
 function generateEmailPreview() {  const testData = {
     url: "http://localhost:3002/api/auth/callback/nodemailer?token=test-token&email=test@example.com",
@@ -46,13 +49,15 @@ function generateEmailPreview() {  const testData = {
   </div>
 </body>
 </html>`;
-
   // Write preview file
   const previewPath = join(process.cwd(), "email-preview.html");
   writeFileSync(previewPath, previewHtml);
   
-  console.log(`Email preview generated: ${previewPath}`);
-  console.log("Open this file in your browser to see the email template.");
+  logger.info({
+    previewPath,
+    subject,
+    templateType: "magic-link"
+  }, "Email preview generated");
   
   return { subject, html, text, previewPath };
 }

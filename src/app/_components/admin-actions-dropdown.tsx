@@ -2,6 +2,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 interface AdminActionsDropdownProps {
   kudosId: string;
@@ -29,13 +32,14 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
   // Admin mutations
   const hideKudosMutation = api.kudos.adminHideKudos.useMutation({
     onSuccess: async () => {
-      setIsOpen(false);
-      // Invalidate and refetch the feed to show updated state
+      setIsOpen(false);      // Invalidate and refetch the feed to show updated state
       await utils.kudos.getFeed.invalidate();
       onActionComplete?.();
-    },
-    onError: (error) => {
-      console.error("Error hiding/unhiding kudos:", error);
+    },    onError: (error) => {
+      logger.error(error.message, "Error hiding/unhiding kudos", {
+        kudosId,
+        action: "toggle_visibility"
+      });
       toast.error("Error: " + error.message);
     },
   });
@@ -43,13 +47,14 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
   const deleteKudosMutation = api.kudos.adminDeleteKudos.useMutation({
     onSuccess: async () => {
       setIsOpen(false);
-      setIsConfirmingDelete(false);
-      // Invalidate and refetch the feed to remove deleted post
+      setIsConfirmingDelete(false);      // Invalidate and refetch the feed to remove deleted post
       await utils.kudos.getFeed.invalidate();
       onActionComplete?.();
-    },
-    onError: (error) => {
-      console.error("Error deleting kudos:", error);
+    },    onError: (error) => {
+      logger.error(error.message, "Error deleting kudos", {
+        kudosId,
+        action: "delete"
+      });
       toast.error("Error: " + error.message);
       setIsConfirmingDelete(false);
     },

@@ -1,6 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('auth-provider');
 
 const authProviderSchema = z.object({
   name: z.string().min(1),
@@ -269,10 +272,13 @@ export const authProviderRouter = createTRPCRouter({
       authUrl.searchParams.set("response_type", "code");
       authUrl.searchParams.set("scope", "https://mail.google.com/"); // Gmail scope for email sending
       authUrl.searchParams.set("access_type", "offline");
-      authUrl.searchParams.set("prompt", "consent");
-      authUrl.searchParams.set("state", "admin_email_setup"); // Identify this as admin flow      console.log('🔍 Gmail OAuth2 URL generated for admin email setup');
-      console.log("Redirect URI:", input.redirectUri);
-      console.log("Generated Auth URL:", authUrl.toString());
+      authUrl.searchParams.set("prompt", "consent");      authUrl.searchParams.set("state", "admin_email_setup"); // Identify this as admin flow
+      
+      logger.info({
+        redirectUri: input.redirectUri,
+        authUrl: authUrl.toString(),
+        scopes: "https://mail.google.com/"
+      }, 'Gmail OAuth2 URL generated for admin email setup');
 
       return { authUrl: authUrl.toString() };
     }),
@@ -304,12 +310,12 @@ export const authProviderRouter = createTRPCRouter({
           message:
             "Google OAuth2 is not configured. Please set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET in your environment variables.",
         });
-      }
-
-      try {
-        console.log("🔍 Gmail Token Exchange Debug Info:");
-        console.log("Code received:", input.code.substring(0, 20) + "...");
-        console.log("Redirect URI:", input.redirectUri);
+      }      try {
+        logger.info({
+          codePreview: input.code.substring(0, 20) + "...",
+          redirectUri: input.redirectUri,
+          operation: 'token_exchange'
+        }, 'Gmail token exchange started');
 
         const tokenResponse = await fetch(
           "https://oauth2.googleapis.com/token",
@@ -326,18 +332,18 @@ export const authProviderRouter = createTRPCRouter({
               grant_type: "authorization_code",
             }),
           },
-        );
-
-        if (!tokenResponse.ok) {
+        );        if (!tokenResponse.ok) {
           const errorData = (await tokenResponse.json()) as {
             error_description?: string;
             error?: string;
           };
 
-          console.error("❌ Gmail OAuth2 Token Exchange Failed:");
-          console.error("Status:", tokenResponse.status);
-          console.error("Status Text:", tokenResponse.statusText);
-          console.error("Error Data:", errorData);
+          logger.error({
+            status: tokenResponse.status,
+            statusText: tokenResponse.statusText,
+            errorData,
+            operation: 'token_exchange'
+          }, 'Gmail OAuth2 token exchange failed');
 
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -359,9 +365,12 @@ export const authProviderRouter = createTRPCRouter({
           expiresIn: tokens.expires_in,
           tokenType: tokens.token_type,
           scope: tokens.scope,
-        };
-      } catch (error) {
-        console.error("Gmail OAuth2 token exchange error:", error);
+        };      } catch (error) {
+        logger.error({
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          operation: 'token_exchange'
+        }, 'Gmail OAuth2 token exchange error');
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -398,19 +407,16 @@ export const authProviderRouter = createTRPCRouter({
       authUrl.searchParams.set("response_type", "code");
       authUrl.searchParams.set("scope", "https://mail.google.com/");
       authUrl.searchParams.set("access_type", "offline");
-      authUrl.searchParams.set("prompt", "consent");
-
-      // Debug logging (remove in production)
-      console.log("🔍 OAuth2 Debug Info:");
-      console.log("Client ID format check:", {
+      authUrl.searchParams.set("prompt", "consent");      // OAuth2 debug information
+      logger.info({
         clientId: input.clientId,
-        isValidFormat: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(
-          input.clientId,
-        ),
-        length: input.clientId.length,
-      });
-      console.log("Redirect URI:", input.redirectUri);
-      console.log("Generated Auth URL:", authUrl.toString());
+        isValidFormat: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(input.clientId),
+        clientIdLength: input.clientId.length,
+        redirectUri: input.redirectUri,
+        authUrl: authUrl.toString(),
+        scopes: "https://mail.google.com/",
+        operation: 'auth_url_generation'
+      }, 'OAuth2 authorization URL generated');
 
       return { authUrl: authUrl.toString() };
     }),
@@ -436,23 +442,19 @@ export const authProviderRouter = createTRPCRouter({
           code: "FORBIDDEN",
           message: "Only site administrators can use OAuth2 flow",
         });
-      }
-      try {
-        // Debug logging (remove in production)
-        console.log("🔍 Token Exchange Debug Info:");
-        console.log("Code received:", input.code.substring(0, 20) + "...");
-        console.log("Client ID format check:", {
+      }      try {
+        // Log OAuth token exchange debug info
+        logger.debug({
+          codePrefix: input.code.substring(0, 20) + "...",
           clientId: input.clientId,
-          isValidFormat: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(
+          clientIdValid: /^[0-9]+-[a-zA-Z0-9]+\.googleusercontent\.com$/.test(
             input.clientId,
           ),
-        });
-        console.log("Client Secret format check:", {
           hasSecret: !!input.clientSecret,
           secretLength: input.clientSecret.length,
-          isValidFormat: /^[a-zA-Z0-9_-]{24,}$/.test(input.clientSecret),
-        });
-        console.log("Redirect URI:", input.redirectUri);
+          secretValid: /^[a-zA-Z0-9_-]{24,}$/.test(input.clientSecret),
+          redirectUri: input.redirectUri,
+        }, "Starting OAuth2 token exchange");
 
         const tokenResponse = await fetch(
           "https://oauth2.googleapis.com/token",
@@ -470,17 +472,21 @@ export const authProviderRouter = createTRPCRouter({
             }),
           },
         );
+        
         if (!tokenResponse.ok) {
           const errorData = (await tokenResponse.json()) as {
             error_description?: string;
             error?: string;
           };
 
-          // Enhanced error logging
-          console.error("❌ OAuth2 Token Exchange Failed:");
-          console.error("Status:", tokenResponse.status);
-          console.error("Status Text:", tokenResponse.statusText);
-          console.error("Error Data:", errorData);
+          // Log OAuth token exchange failure
+          logger.error({
+            status: tokenResponse.status,
+            statusText: tokenResponse.statusText,
+            error: errorData.error,
+            errorDescription: errorData.error_description,
+            provider: "google",
+          }, "OAuth2 token exchange failed");
 
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -495,6 +501,13 @@ export const authProviderRouter = createTRPCRouter({
           token_type: string;
         };
 
+        logger.info({
+          hasAccessToken: !!tokens.access_token,
+          hasRefreshToken: !!tokens.refresh_token,
+          expiresIn: tokens.expires_in,
+          provider: "google",
+        }, "OAuth2 token exchange successful");
+
         return {
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
@@ -502,7 +515,14 @@ export const authProviderRouter = createTRPCRouter({
           tokenType: tokens.token_type,
         };
       } catch (error) {
-        console.error("OAuth2 token exchange error:", error);
+        logger.error({
+          provider: "google",
+          hasCode: !!input.code,
+          hasClientId: !!input.clientId,
+          hasClientSecret: !!input.clientSecret,
+          error: error instanceof Error ? error.message : String(error)
+        }, "OAuth2 token exchange error");
+        
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to exchange authorization code for tokens",

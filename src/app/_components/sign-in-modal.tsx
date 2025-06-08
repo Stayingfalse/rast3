@@ -4,6 +4,9 @@ import { getProviders, signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { clientLogger } from "~/utils/client-logger";
+
+const logger = clientLogger;
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -113,20 +116,27 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           redirect: false,
           callbackUrl: window.location.origin 
         });
-        
-        // Check if sign-in was successful
+          // Check if sign-in was successful
         if (result?.error) {
-          console.error("Magic link error:", result.error);
+          logger.error(result.error, "Magic link sign-in error", {
+            providerId,
+            email: email ?? undefined
+          });
           // You could show an error message here
         } else {
           // Show success state in modal
           setEmailSent(true);
+          // Magic link sent successfully - client-side info logging not needed
         }
       } else {
         await signIn(providerId);
+        // OAuth sign-in initiated - client-side info logging not needed
       }
     } catch (error) {
-      console.error("Sign in error:", error);
+      logger.error(error instanceof Error ? error.message : String(error), "Sign in error", {
+        providerId,
+        email: email ?? undefined
+      });
     } finally {
       setIsLoading(null);
     }

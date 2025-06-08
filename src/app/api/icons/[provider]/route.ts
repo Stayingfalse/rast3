@@ -1,4 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { createChildLogger, logUtils } from '~/utils/logger';
+
+const logger = createChildLogger('icons');
 
 // In-memory cache for icons (will be lost on rebuild, but that's fine)
 const iconCache = new Map<string, { data: Buffer; contentType: string; timestamp: number }>();
@@ -18,7 +21,13 @@ const cacheStats = {
 function logCacheStats() {
   const total = cacheStats.hits + cacheStats.misses;
   if (total > 0 && total % 50 === 0) {
-    console.log(`[IconCache] Stats: ${cacheStats.hits}/${total} hits (${((cacheStats.hits / total) * 100).toFixed(1)}%), ${cacheStats.externalFetches} external, ${cacheStats.fallbackUses} fallbacks`);
+    logUtils.logPerformance('icon-cache-hit-rate', ((cacheStats.hits / total) * 100), '%', {
+      totalRequests: total,
+      hits: cacheStats.hits,
+      misses: cacheStats.misses,
+      externalFetches: cacheStats.externalFetches,
+      fallbackUses: cacheStats.fallbackUses,
+    });
   }
 }
 
@@ -84,27 +93,39 @@ async function fetchExternalIcon(provider: string): Promise<{ data: Buffer; cont
       },
       // Add timeout to prevent hanging
       signal: AbortSignal.timeout(10000), // 10 seconds
-    });
-
-    if (!response.ok) {
-      console.warn(`Failed to fetch icon for provider ${provider}: ${response.status}`);
+    });    if (!response.ok) {
+      logger.warn({
+        provider,
+        status: response.status,
+        statusText: response.statusText,
+        url,
+        fallbackAction: fallbackIcons[provider] ? 'using_built_in_fallback' : 'using_generic_fallback'
+      }, `External icon fetch failed for provider "${provider}" (${response.status}). ${fallbackIcons[provider] ? 'Using built-in fallback icon' : 'Using generic fallback icon'}`);
       return null;
-    }    const data = await response.arrayBuffer();
+    }const data = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') ?? 'image/svg+xml';
-    
-    // Validate that we got SVG content
-    const textData = new TextDecoder().decode(data);
-    if (!textData.includes('<svg')) {
-      console.warn(`Invalid SVG content for provider ${provider}`);
+      // Validate that we got SVG content
+    const textData = new TextDecoder().decode(data);    if (!textData.includes('<svg')) {
+      logger.warn({ 
+        provider, 
+        url,
+        contentLength: textData.length,
+        preview: textData.slice(0, 100),
+        fallbackAction: fallbackIcons[provider] ? 'using_built_in_fallback' : 'using_generic_fallback'
+      }, `Invalid SVG content received for provider "${provider}". ${fallbackIcons[provider] ? 'Using built-in fallback icon' : 'Using generic fallback icon'}`);
       return null;
     }
     
     return {
       data: Buffer.from(data),
-      contentType,
-    };
-  } catch (error) {
-    console.warn(`Error fetching icon for provider ${provider}:`, error);
+      contentType,    };  } catch (error) {
+    logger.warn({
+      provider,
+      url: `https://authjs.dev/img/providers/${provider}.svg`,
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      fallbackAction: fallbackIcons[provider] ? 'using_built_in_fallback' : 'using_generic_fallback'
+    }, `Network error fetching icon for provider "${provider}": ${error instanceof Error ? error.message : String(error)}. ${fallbackIcons[provider] ? 'Using built-in fallback icon' : 'Using generic fallback icon'}`);
     return null;
   }
 }
@@ -134,12 +155,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!provider) {
     return new NextResponse('Provider parameter is required', { status: 400 });
-  }
-
-  // Sanitize provider name (prevent path traversal)
-  const sanitizedProvider = provider.replace(/[^a-zA-Z0-9-_]/g, '');
-  if (sanitizedProvider !== provider) {
-    console.warn(`Invalid provider name: ${provider}`);
+  }  // Sanitize provider name (prevent path traversal)
+  const sanitizedProvider = provider.replace(/[^a-zA-Z0-9-_]/g, '');  if (sanitizedProvider !== provider) {
+    logger.warn({
+      originalProvider: provider,
+      sanitizedProvider,
+      clientIP: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown'
+    }, `Invalid provider name attempted`);
     return new NextResponse('Invalid provider name', { status: 400 });
   }
 
@@ -198,13 +220,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
   }
-
   // Use fallback icon
   cacheStats.fallbackUses++;
   const fallback = getFallbackIcon(provider);
   const svgContent = fallback.data.toString('utf-8');
   const dataUrl = svgToDataUrl(svgContent);
   const dataUrlBuffer = Buffer.from(dataUrl);
+  
+  // Log fallback usage for monitoring (but only at debug level unless it's frequent)
+  if (cacheStats.fallbackUses % 10 === 1) { // Log every 10th fallback use
+    logger.info({ 
+      provider, 
+      fallbackType: fallbackIcons[provider] ? 'built_in' : 'generic',
+      totalFallbackUses: cacheStats.fallbackUses,
+      cacheStats
+    }, `Using fallback icon for provider "${provider}" (${fallbackIcons[provider] ? 'built-in' : 'generic'}). Total fallback uses: ${cacheStats.fallbackUses}`);
+  }
   
   // Cache fallback data URL (shorter duration)
   iconCache.set(provider, {

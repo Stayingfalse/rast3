@@ -15,6 +15,9 @@ import { createTransport } from "nodemailer";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
+import { createChildLogger } from "~/utils/logger";
+
+const logger = createChildLogger('server');
 
 // Email configuration interface
 interface EmailConfig {
@@ -43,9 +46,14 @@ async function getCachedDbProviders() {
   if (!dbProvidersCache || now > cacheExpiry) {
     try {
       dbProvidersCache = await getDbAuthProviders();
-      cacheExpiry = now + CACHE_DURATION;
-    } catch (error) {
-      console.error("Failed to fetch database providers:", error);
+      cacheExpiry = now + CACHE_DURATION;    } catch (error) {
+      logger.error({
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        operation: 'fetch_cached_db_providers',
+        cacheState: 'expired_or_missing',
+        actionNeeded: 'Check database connection and authProvider table'
+      }, `Failed to fetch database providers for auth configuration: ${error instanceof Error ? error.message : String(error)}`);
       // Return empty array if DB is unavailable
       return [];
     }
@@ -240,8 +248,7 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
         sendVerificationRequest: async ({ identifier: email, url, provider }) => {
           const { host } = new URL(url);
           const transport = createTransport(provider.server);
-          
-          const { subject, html, text } = createMagicLinkEmailTemplate({
+            const { subject, html, text } = createMagicLinkEmailTemplate({
             url,
             host,
             email,
@@ -256,7 +263,17 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               html,
             });
           } catch (error) {
-            console.error("Failed to send verification email:", error);
+            logger.error({
+              error: error instanceof Error ? error.message : String(error),
+              errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+              to: email,
+              subject,
+              configSource: 'environment_variables',
+              smtpHost: process.env.EMAIL_SERVER_HOST ?? 'unknown',
+              smtpPort: process.env.EMAIL_SERVER_PORT ?? 'unknown',
+              operation: 'send_verification_email_env',
+              actionNeeded: 'Check EMAIL_SERVER_* environment variables and SMTP credentials'
+            }, `Failed to send verification email via env config to ${email}: ${error instanceof Error ? error.message : String(error)}`);
             throw new Error("Failed to send verification email");
           }
         },
@@ -303,9 +320,7 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               url,
               host,
               email,
-            });
-
-            try {
+            });            try {
               await transport.sendMail({
                 to: email,
                 from: provider.from,
@@ -314,7 +329,12 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
                 html,
               });
             } catch (error) {
-              console.error("Failed to send verification email:", error);
+              logger.error({
+                error: error instanceof Error ? error.message : String(error),
+                to: email,
+                subject,
+                authType: emailConfig.authType
+              }, "Failed to send verification email (db config)");
               throw new Error("Failed to send verification email");
             }
           },

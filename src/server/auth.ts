@@ -163,13 +163,22 @@ if (process.env.EMAIL_SERVER_HOST) {
             text,
             html,          });
         } catch (error) {
+          // Safely extract server configuration for logging
+          const serverConfig = provider.server as any;
+          const smtpHost = typeof serverConfig === 'object' && serverConfig?.host 
+            ? String(serverConfig.host) 
+            : 'unknown';
+          const smtpPort = typeof serverConfig === 'object' && serverConfig?.port 
+            ? String(serverConfig.port) 
+            : 'unknown';
+            
           logger.error({
             error: error instanceof Error ? error.message : String(error),
             errorType: error instanceof Error ? error.constructor.name : 'Unknown',
             to: email,
             subject,
-            smtpHost: provider.server?.host ?? 'unknown',
-            smtpPort: provider.server?.port ?? 'unknown',
+            smtpHost,
+            smtpPort,
             fromAddress: provider.from,
             operation: 'send_verification_email',
             actionNeeded: 'Check SMTP configuration and email provider credentials'

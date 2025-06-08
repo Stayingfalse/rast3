@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { AdminLayout } from "../../_components/admin-layout";
+import { useMemo, useState } from "react";
 import { api } from "../../../trpc/react";
+import { AdminLayout } from "../../_components/admin-layout";
 
 // Define types based on what's returned from the API
 type UserWithWishlist = {
@@ -170,21 +170,20 @@ export default function AdminLinksPage() {
       </tr>
     );
   }
-
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white">Wishlist Management</h1>
-          <p className="mb-4 text-white/80">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Wishlist Management</h1>
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base text-white/80">
             Manage and monitor all shared Amazon wishlists. Grouped by domain
             and department.
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-white/20 bg-black/85 p-4 backdrop-blur-sm">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -262,17 +261,15 @@ export default function AdminLinksPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Domain Filter */}
-        <div className="rounded-lg border border-white/20 bg-black/85 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
+        </div>        {/* Domain Filter */}
+        <div className="rounded-lg border border-white/20 bg-black/85 p-3 sm:p-4 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <label
               htmlFor="domain-filter"
               className="text-sm font-medium text-white"
             >
               Filter by Domain:
-            </label>{" "}
+            </label>
             <select
               id="domain-filter"
               value={selectedDomain}
@@ -287,7 +284,7 @@ export default function AdminLinksPage() {
                 </option>
               ))}
             </select>
-            <span className="text-sm text-white/60">
+            <span className="text-xs sm:text-sm text-white/60">
               Showing {stats.total} wishlists
             </span>
           </div>
@@ -304,20 +301,21 @@ export default function AdminLinksPage() {
         ) : stats.total === 0 ? (
           <div className="py-8 text-center text-white/60">
             No wishlists found.
-          </div>
-        ) : (
-          <div className="space-y-8">
+          </div>        ) : (
+          <div className="space-y-6 sm:space-y-8">
             {Object.entries(grouped).map(([domain, depts]) => (
               <div key={domain}>
-                <h2 className="mb-2 text-xl font-semibold text-blue-300">
+                <h2 className="mb-3 sm:mb-2 text-lg sm:text-xl font-semibold text-blue-300">
                   {domain}
                 </h2>
                 {Object.entries(depts).map(([dept, users]) => (
-                  <div key={dept} className="mb-6">
-                    <h3 className="mb-1 text-lg font-medium text-white/80">
+                  <div key={dept} className="mb-4 sm:mb-6">
+                    <h3 className="mb-2 sm:mb-1 text-base sm:text-lg font-medium text-white/80">
                       {dept}
                     </h3>
-                    <div className="overflow-x-auto rounded-lg border border-white/20 bg-black/85 backdrop-blur-sm">
+                    
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto rounded-lg border border-white/20 bg-black/85 backdrop-blur-sm">
                       <table className="min-w-full divide-y divide-white/10">
                         <thead className="bg-white/5">
                           <tr>
@@ -337,13 +335,93 @@ export default function AdminLinksPage() {
                               Errors
                             </th>
                           </tr>
-                        </thead>{" "}
+                        </thead>
                         <tbody className="divide-y divide-white/10">
                           {users.map((user: UserWithWishlist) => (
                             <WishlistRow key={user.id} user={user} />
                           ))}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3">
+                      {users.map((user: UserWithWishlist) => {
+                        const stats = user.amazonWishlistUrlStats ?? {};
+                        const errorCount = stats.errors?.length ?? 0;
+                        return (
+                          <div key={user.id} className="bg-black/85 rounded-lg border border-white/20 p-4 backdrop-blur-sm">
+                            <div className="mb-3">
+                              <h4 className="font-medium text-white text-lg">
+                                {user.firstName ?? user.name ?? user.email ?? user.id}
+                              </h4>
+                            </div>
+                            
+                            <div className="space-y-2 mb-4">
+                              <div>
+                                <span className="text-xs text-white/60 uppercase tracking-wide">Wishlist URL</span>
+                                <div className="text-sm">
+                                  {user.amazonWishlistUrl ? (
+                                    <a
+                                      href={user.amazonWishlistUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="break-all text-blue-300 underline"
+                                    >
+                                      {truncateUrl(user.amazonWishlistUrl, 50)}
+                                    </a>
+                                  ) : (
+                                    <span className="text-gray-400">No URL</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <span className="text-xs text-white/60 uppercase tracking-wide">Allocated</span>
+                                  <div className="text-sm text-white">{stats.allocated ?? 1}</div>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-white/60 uppercase tracking-wide">Purchased</span>
+                                  <div className="text-sm text-white">{stats.purchased ?? 0}</div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <span className="text-xs text-white/60 uppercase tracking-wide">Status</span>
+                                <div className="text-sm">
+                                  {errorCount === 0 ? (
+                                    <span className="flex items-center text-green-400">
+                                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                      No errors
+                                    </span>
+                                  ) : (
+                                    <div>
+                                      <span className="flex items-center text-red-400 mb-2">
+                                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        {errorCount} error{errorCount > 1 ? 's' : ''}
+                                      </span>
+                                      {stats.errors && stats.errors.length > 0 && (
+                                        <div className="bg-red-900/50 rounded p-2 text-xs text-red-200">
+                                          <ul className="list-disc pl-4">
+                                            {stats.errors.map((err: string, i: number) => (
+                                              <li key={i}>{err}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

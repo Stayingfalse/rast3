@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { XMarkIcon, PlusIcon, DevicePhoneMobileIcon } from "@heroicons/react/24/solid";
+import { DevicePhoneMobileIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { useEffect, useState } from "react";
 import { clientLogger } from "~/utils/client-logger";
 
 interface BeforeInstallPromptEvent extends Event {

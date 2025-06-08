@@ -1,19 +1,19 @@
 import "~/styles/globals.css";
 
-import { Inter } from "next/font/google";
 import { type Metadata, type Viewport } from "next";
-import Link from "next/link";
+import { Inter } from "next/font/google";
 import Image from "next/image";
+import Link from "next/link";
 import { Toaster } from "react-hot-toast";
 
+import { SessionProvider } from "next-auth/react";
 import { TRPCReactProvider } from "~/trpc/react";
-import { AuthProvider } from "./_components/auth-provider";
+import { AddToHomeScreen } from "./_components/add-to-home-screen";
 import AdminButton from "./_components/admin-button";
 import AuthButton from "./_components/auth-button";
+import { AuthProvider } from "./_components/auth-provider";
 import { CookieConsent } from "./_components/cookie-consent";
-import { AddToHomeScreen } from "./_components/add-to-home-screen";
 import { ServiceWorkerRegistration } from "./_components/service-worker-registration";
-import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,14 +60,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#0a1c40",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  return (
+}>) {
+  return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <head>
         {/* PWA Meta Tags */}

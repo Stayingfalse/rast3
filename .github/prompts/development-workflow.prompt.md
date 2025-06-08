@@ -1,54 +1,38 @@
-# Development Workflow Complete
+# Development Workflow - Streamlined
 
-Execute the complete development workflow for this RAoSanta Next.js project:
+Execute the streamlined development workflow for this RAoSanta Next.js project:
 
 ## 1. **Lint & Fix** 
-Run ESLint and fix any linting issues found in the codebase:
-- Check TypeScript files in `src/` directory
-- Fix any import/export issues
-- Resolve React/JSX formatting problems
-- Ensure consistent code style
+Run ESLint and automatically fix any issues:
+- Execute `npm run lint` to check for issues
+- If linting errors found, run `npm run lint -- --fix` to auto-fix
+- Manually fix any remaining issues that can't be auto-fixed
+- Focus on TypeScript files in `src/` directory
 
 ## 2. **Build Verification**
-Execute a production build to ensure no build errors exist:
+Execute a production build to ensure no compilation errors:
 - Run `npm run build` to verify TypeScript compilation
-- Check for any missing dependencies
-- Validate Next.js app router functionality
-- Ensure all tRPC routes compile correctly
+- Ensure all components and pages compile correctly
+- Check that tRPC routes and API endpoints are valid
+- Verify no missing dependencies or import errors
 
-## 3. **Stage & Commit**
-Add all changes to staging and commit with an appropriate message:
-- Stage modified files including:
+## 3. **Commit & Push**
+If lint and build are successful, commit and push changes:
+- Stage all modified files with `git add .`
 - Create descriptive commit message following project conventions
-- Ensure commit includes all related changes
+- Check current Git branch and push to appropriate remote
+- Default to `dev` branch unless specified otherwise
 
-## 4. **Cleanup**
-Save all open files and close unused terminals:
-- Save any unsaved editor files
-- Close background terminal processes that are no longer needed
-- Keep only essential development servers running
-- Organize workspace for next development session
+## Quality Gates (Must Pass to Proceed)
+- ✅ **Lint Check**: No ESLint errors or warnings
+- ✅ **Build Check**: Successful TypeScript compilation and Next.js build
+- ✅ **Git Push**: All changes committed and synced to remote repository
 
-## 5. **Sync Check**
-Check current Git branch status:
-- If on `dev` branch: sync directly to remote
-- If on feature branch or uncertain: ask which branch to use
-- Verify branch is up to date with remote before pushing
-- Handle any merge conflicts if they exist
-
-## 6. **Push Changes**
-Sync all committed changes to the remote repository:
-- Push to appropriate branch (default: dev)
-- Verify successful push to GitHub
-- Confirm all changes are reflected in remote repository
-
-## Quality Gates
-- ✅ No ESLint errors or warnings
-- ✅ Successful TypeScript compilation  
-- ✅ Clean production build
-- ✅ All changes committed with meaningful message
-- ✅ Workspace cleaned and organized
-- ✅ Changes synced to remote repository
+## Workflow Rules
+- **Stop immediately** if any quality gate fails
+- **Fix issues** before proceeding to next step
+- **No cleanup steps** that could cause workflow loops
+- **Focus on core tasks**: Lint → Build → Commit → Push
 
 ## Project Context
 This is a **RAoSanta Next.js project** with:
@@ -61,11 +45,10 @@ This is a **RAoSanta Next.js project** with:
 - Docker for containerized deployment
 
 ## Important Files
-- [Package.json](../package.json) - Project dependencies and scripts
-- [Next Config](../next.config.js) - Next.js configuration
-- [ESLint Config](../eslint.config.js) - Linting rules
-- [TypeScript Config](../tsconfig.json) - TypeScript settings
-- [Workflow Documentation](../DEVELOPMENT_WORKFLOW.md) - Detailed workflow guide
+- **package.json** - Project dependencies and scripts
+- **next.config.js** - Next.js configuration
+- **eslint.config.js** - Linting rules
+- **tsconfig.json** - TypeScript settings
 
 ---
 

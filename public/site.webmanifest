@@ -4,8 +4,8 @@
   "description": "Bring Secret Santa to remote teams! Anonymous gift exchanges made simple for home workers.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#13264D",
+  "background_color": "#363030",
+  "theme_color": "#0a1c40",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

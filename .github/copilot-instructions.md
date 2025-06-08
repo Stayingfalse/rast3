@@ -45,6 +45,43 @@ This is a RAoSanta Next.js project with the following technologies:
 - Follow ESLint rules configured in the project
 - Use proper imports with the configured `@/*` alias
 
+## ESLint Best Practices - CRITICAL
+
+To avoid common lint errors, always follow these rules when generating code:
+
+### Type Safety Rules
+- **NEVER use `any` type** - Always define proper interfaces or use specific types
+- **NEVER use `unknown` without type guards** - Use proper type assertions or guards
+- **ALWAYS use proper TypeScript interfaces** - Define `interface` or `type` for object structures
+- **EXPORT types when needed** - If a type is used across files, export it properly
+
+### Nullish Coalescing & Optional Chaining
+- **ALWAYS use `??` instead of `||`** for null/undefined checks
+- **ALWAYS use `?.` for optional chaining** when accessing nested properties
+- **NEVER use `||` for default values** unless dealing with falsy values intentionally
+
+### Environment Variables & Client Safety
+- **NEVER access `process.env` at module level in client-side code**
+- **ALWAYS wrap `process.env` access in runtime checks** like `typeof window === "undefined"`
+- **USE `getBaseUrl()` functions** instead of direct environment variable access in client code
+- **SEPARATE client and server environment access** with proper guards
+
+### Promise Handling
+- **ALWAYS handle promises** - Use `await` or `.catch()` for error handling
+- **USE `void` operator** for intentionally unhandled promises (e.g., `void someAsyncFunction()`)
+- **NEVER leave floating promises** without proper handling
+
+### Logger Patterns
+- **SERVER-SIDE**: Use `createChildLogger('module-name')` and Pino signature: `logger.error({ data }, "message")`
+- **CLIENT-SIDE**: Use `clientLogger.error(error, context, data)` pattern
+- **NEVER mix server and client logger patterns** in the same file
+
+### Safe Coding Patterns
+- **ALWAYS check for null/undefined** before accessing object properties
+- **USE type guards** for runtime type checking instead of type assertions
+- **AVOID unsafe member access** - check if properties exist before accessing
+- **SERIALIZE objects safely** using `JSON.stringify()` instead of `String()` conversion
+
 ## TSX Best Practices - Separation of Concerns
 
 - **Separate logic from presentation**: Keep business logic in custom hooks or utility functions
@@ -76,3 +113,69 @@ This is a RAoSanta Next.js project with the following technologies:
 - Implement loading and error states consistently
 - Prefer server components for data fetching when possible
 - Use client components only when necessary (interactivity, browser APIs)
+
+## Common Code Patterns - RAoSanta Specific
+
+### Logger Implementation
+```tsx
+// ✅ SERVER-SIDE (API routes, server components, server utilities)
+import { createChildLogger } from "~/utils/logger";
+const logger = createChildLogger('module-name');
+logger.error({ error: errorData, context: additionalContext }, "Error message");
+
+// ✅ CLIENT-SIDE (client components, browser-only code)
+import { clientLogger } from "~/utils/client-logger";
+clientLogger.error(new Error("message"), "Context description", { additionalData });
+```
+
+### Environment Variable Access
+```tsx
+// ✅ SAFE - Runtime detection
+const getConfig = () => {
+  if (typeof window === "undefined") {
+    return process.env.SERVER_VAR ?? "default";
+  }
+  return "client-default";
+};
+
+// ❌ UNSAFE - Module-level access in client code
+const config = process.env.SERVER_VAR; // Will cause client-side errors
+```
+
+### Type Definitions
+```tsx
+// ✅ PROPER - Specific interfaces
+interface UserData {
+  id: string;
+  name: string;
+  email?: string;
+}
+
+// ✅ PROPER - Export when used across files
+export interface ClientErrorData {
+  userAgent?: string;
+  url?: string;
+  timestamp?: string;
+}
+
+// ❌ AVOID - Using any
+const userData: any = getUserData();
+```
+
+### Error Handling
+```tsx
+// ✅ PROPER - Explicit error handling
+try {
+  const result = await apiCall();
+  return result;
+} catch (error) {
+  logger.error({ error: error instanceof Error ? error.message : String(error) }, "API call failed");
+  throw error;
+}
+
+// ✅ PROPER - Void for intentional fire-and-forget
+void sendAnalytics(data); // Intentionally not awaited
+
+// ❌ AVOID - Floating promises
+sendAnalytics(data); // ESLint error: floating promise
+```

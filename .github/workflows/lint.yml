@@ -36,7 +36,6 @@ jobs:
           branch: ${{ github.event.pull_request.head.ref }}
           skip_fetch: true
           commit_options: '--no-verify --signoff'
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Check for uncommitted changes
         run: |

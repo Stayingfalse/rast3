@@ -47,7 +47,12 @@ export default function AdminKudosPage() {
           <select
             className="rounded border border-white/20 bg-black/70 px-3 py-1 text-white"
             value={scope}
-            onChange={e => setScope(e.target.value as typeof scope)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "department" || value === "domain" || value === "site") {
+                setScope(value);
+              }
+            }}
           >
             <option value="site">Site</option>
             <option value="domain">Domain</option>

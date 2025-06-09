@@ -1,14 +1,12 @@
-      - name: Copy dummy .env for CI
-        run: cp .env .env.local
 name: Lint Code
 
 on:
   pull_request:
     branches:
-      - main # Or your default branch like 'master', 'develop', etc.
+      - main
   push:
     branches:
-      - main # Also run on push to main to ensure it's always clean
+      - main
 
 jobs:
   lint:
@@ -19,9 +17,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-
-      - name: Copy dummy .env for CI
-        run: cp .env .env.local
+      - name: Create dummy .env for CI
+        run: |
+          echo "AUTH_SECRET=dummysecret" > .env
+          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummydb" >> .env
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

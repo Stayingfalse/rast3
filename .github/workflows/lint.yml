@@ -38,7 +38,6 @@ jobs:
           skip_fetch: true
           commit_options: '--no-verify --signoff'
           repository: ${{ github.event.pull_request.head.repo.full_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for uncommitted changes
         run: |

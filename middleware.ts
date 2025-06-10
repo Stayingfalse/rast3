@@ -7,12 +7,10 @@ import { NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   // Start timing for performance logging
   const startTime = Date.now();
-  
-  // Get request details
+    // Get request details
   const { pathname, search } = request.nextUrl;
   const method = request.method;
-  const userAgent = request.headers.get('user-agent') || '';
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
   
   // Skip logging for static assets and Next.js internals
   const shouldSkipLogging = pathname.startsWith('/_next/') || 

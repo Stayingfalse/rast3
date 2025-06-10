@@ -1,0 +1,50 @@
+name: Lint Code
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Create dummy .env for CI
+        run: |
+          echo "AUTH_SECRET=dummysecret" > .env
+          echo "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummydb" >> .env
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate environment (warn only)
+        run: npm run lint -- --fix || (echo "::warning file=lint.yml::Environment validation failed (expected in CI). Ignoring for lint check." && exit 0)
+        continue-on-error: true
+
+      - name: Run ESLint (fail on real lint errors)
+        run: npx eslint . --ext .js,.ts,.tsx
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Fix(ci): Auto-fix linting issues"
+          branch: ${{ github.event.pull_request.head.ref }}
+          skip_fetch: true
+          commit_options: '--no-verify --signoff'
+
+      - name: Check for uncommitted changes
+        run: |
+          git diff --exit-code || { echo "::error file=lint.yml::Linting issues found and fixed. Please review the changes and commit them."; exit 1; }

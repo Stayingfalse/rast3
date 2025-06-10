@@ -1,16 +1,17 @@
-// Admin Kudos Management Page
-// 1. Imports
-import { api } from "@/trpc/react";
+"use client";
+
+import { api } from "~/trpc/react";
 import { useState } from "react";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { loggers } from "~/utils/logger";
+import Image from "next/image";
 
-// 2. Type definitions
+// Type definitions
 interface AdminKudosItem {
   id: string;
   message: string;
-  images: string[];
-  createdAt: string;
+  images: string; // JSON string, not array
+  createdAt: Date; // Date object, not string
   hidden: boolean;
   user: {
     id: string;
@@ -22,16 +23,16 @@ interface AdminKudosItem {
   };
 }
 
-// 3. Custom hooks and utilities
+// Custom hooks and utilities
 function useAdminKudosFeed(scope: "department" | "domain" | "site") {
-  const { data, isLoading, error, refetch } = api.kudos.getFeed.useQuery({
+  const result = api.kudos.getFeed.useQuery({
     scope,
     limit: 30,
   });
-  return { data, isLoading, error, refetch };
+  return result;
 }
 
-// 4. Main component function
+// Main component function
 export default function AdminKudosPage() {
   const [scope, setScope] = useState<"department" | "domain" | "site">("site");
   const { data, isLoading, error, refetch } = useAdminKudosFeed(scope);
@@ -47,6 +48,7 @@ export default function AdminKudosPage() {
           <select
             className="rounded border border-white/20 bg-black/70 px-3 py-1 text-white"
             value={scope}
+            title="Select scope for kudos management"
             onChange={(e) => {
               const value = e.target.value;
               if (value === "department" || value === "domain" || value === "site") {
@@ -76,7 +78,7 @@ export default function AdminKudosPage() {
   );
 }
 
-// 5. Helper functions (component-specific)
+// Helper functions (component-specific)
 function KudosTable({
   items,
   loading,
@@ -159,9 +161,11 @@ function KudosRow({ kudos, refetch }: { kudos: AdminKudosItem; refetch: () => vo
       <td className="px-3 py-2">
         <div className="flex items-center gap-2">
           {kudos.user.image && (
-            <img
+            <Image
               src={kudos.user.image}
               alt={kudos.user.name ?? "User"}
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-full object-cover"
             />
           )}
@@ -177,21 +181,28 @@ function KudosRow({ kudos, refetch }: { kudos: AdminKudosItem; refetch: () => vo
       </td>
       <td className="px-3 py-2 max-w-xs truncate whitespace-pre-line">
         {kudos.message}
-      </td>
-      <td className="px-3 py-2">
+      </td>      <td className="px-3 py-2">
         <div className="flex gap-1 flex-wrap">
-          {kudos.images?.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt="Kudos image"
-              className="h-10 w-10 rounded object-cover border border-white/10"
-            />
-          ))}
+          {(() => {
+            try {
+              const images = kudos.images ? JSON.parse(kudos.images) as string[] : [];
+              return images.map((img, i) => (
+                <Image
+                  key={i}
+                  src={img}
+                  alt="Kudos image"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded object-cover border border-white/10"
+                />
+              ));
+            } catch {
+              return null;
+            }
+          })()}
         </div>
-      </td>
-      <td className="px-3 py-2 whitespace-nowrap">
-        {new Date(kudos.createdAt).toLocaleString()}
+      </td>      <td className="px-3 py-2 whitespace-nowrap">
+        {kudos.createdAt.toLocaleString()}
       </td>
       <td className="px-3 py-2">
         {kudos.hidden ? (
@@ -219,5 +230,3 @@ function KudosRow({ kudos, refetch }: { kudos: AdminKudosItem; refetch: () => vo
     </tr>
   );
 }
-
-// 6. Default export is above

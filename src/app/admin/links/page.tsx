@@ -95,7 +95,7 @@ export default function AdminLinksPage() {
       <tr key={user.id} className="hover:bg-white/5">
         <td className="px-6 py-4 font-medium text-white">
           {user.firstName ?? user.name ?? user.email ?? user.id}
-        </td>{" "}
+        </td>
         <td className="px-6 py-4">
           {user.amazonWishlistUrl ? (
             <a
@@ -155,7 +155,7 @@ export default function AdminLinksPage() {
                   />
                 </svg>
               </button>
-              {showErrors && (
+              {showErrors && errorCount > 0 && (
                 <div className="z-10 mt-2 rounded bg-red-900/90 p-2 text-xs text-red-100 shadow-lg">
                   <ul className="list-disc pl-4">
                     {stats.errors?.map((err: string, i: number) => (

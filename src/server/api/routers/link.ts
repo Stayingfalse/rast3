@@ -92,15 +92,57 @@ export const linkRouter = createTRPCRouter({
         purchasedCount[ownerId] = (purchasedCount[ownerId] ?? 0) + p._count.id;
       }
     }
-    // Simulate errors for demo: every 4th user gets a fake error
-    return users.map((user: UserWithWishlist, idx: number) => {
+    // Fetch all wishlist assignments for these users (as owners)
+    const wishlistAssignments = await ctx.db.wishlistAssignment.findMany({
+      where: { wishlistOwnerId: { in: userIds } },
+      select: { id: true, wishlistOwnerId: true },
+    });
+
+    // Map ownerId to their assignment IDs
+    const ownerToAssignmentIds: Record<string, string[]> = {};
+    for (const wa of wishlistAssignments) {
+      (ownerToAssignmentIds[wa.wishlistOwnerId] ??= []).push(wa.id);
+    }
+
+    // Fetch all unresolved reports for these assignments
+    const allAssignmentIds = wishlistAssignments.map((wa) => wa.id);
+    const reports = await ctx.db.wishlistReport.findMany({
+      where: {
+        wishlistAssignmentId: { in: allAssignmentIds },
+        resolved: false,
+      },
+      select: {
+        wishlistAssignmentId: true,
+        reportType: true,
+        description: true,
+      },
+    });
+
+    // Map assignmentId to its reports
+    const assignmentIdToReports: Record<string, { reportType: string; description: string | null }[]> = {};
+    for (const r of reports) {
+      (assignmentIdToReports[r.wishlistAssignmentId] ??= []).push({ reportType: r.reportType, description: r.description });
+    }
+
+    // For each user, aggregate all error messages from their assignments
+    return users.map((user: UserWithWishlist) => {
       const assignment = assignments.find(
         (a: { wishlistOwnerId: string; _count: { id: number } }) =>
           a.wishlistOwnerId === user.id,
       );
       const allocated = assignment?._count.id ?? 0;
       const purchased = purchasedCount[user.id] ?? 0;
-      const errors = idx % 4 === 3 ? ["Simulated error: Invalid URL"] : [];
+      // Gather all unresolved reports for this user's assignments
+      const assignmentIds = ownerToAssignmentIds[user.id] ?? [];
+      const errors: string[] = [];
+      for (const aid of assignmentIds) {
+        const reports = assignmentIdToReports[aid] ?? [];
+        for (const rep of reports) {
+          let msg = rep.reportType;
+          if (rep.description) msg += ': ' + rep.description;
+          errors.push(msg);
+        }
+      }
       return {
         ...user,
         amazonWishlistUrlStats: {

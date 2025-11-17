@@ -89,7 +89,8 @@ export default function AdminLinksPage() {
   // Row component for each user
   function WishlistRow({ user }: { user: UserWithWishlist }) {
     const stats = user.amazonWishlistUrlStats ?? {};
-    const errorCount = stats.errors?.length ?? 0;
+    const errors = Array.isArray(stats.errors) ? stats.errors.filter(e => !!e) : [];
+    const errorCount = errors.length;
     const [showErrors, setShowErrors] = useState(false);
     return (
       <tr key={user.id} className="hover:bg-white/5">
@@ -158,7 +159,7 @@ export default function AdminLinksPage() {
               {showErrors && errorCount > 0 && (
                 <div className="z-10 mt-2 rounded bg-red-900/90 p-2 text-xs text-red-100 shadow-lg">
                   <ul className="list-disc pl-4">
-                    {stats.errors?.map((err: string, i: number) => (
+                    {errors.map((err: string, i: number) => (
                       <li key={i}>{err}</li>
                     ))}
                   </ul>

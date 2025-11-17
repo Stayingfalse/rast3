@@ -139,8 +139,9 @@ export default function AdminLinksPage() {
               <button
                 type="button"
                 onClick={() => setShowErrors((v) => !v)}
-                className="focus:outline-none"
-                title="Show errors"
+                className="focus:outline-none inline-flex items-center gap-2"
+                title={`Show ${errorCount} reported error${errorCount > 1 ? "s" : ""}`}
+                aria-label={`Show ${errorCount} reported error${errorCount > 1 ? "s" : ""}`}
               >
                 <svg
                   className="inline h-5 w-5 text-red-400"
@@ -155,6 +156,9 @@ export default function AdminLinksPage() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
+                <span className="ml-0 inline-flex items-center justify-center rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-medium text-white">
+                  {errorCount}
+                </span>
               </button>
               {showErrors && errorCount > 0 && (
                 <div className="z-10 mt-2 rounded bg-red-900/90 p-2 text-xs text-red-100 shadow-lg">

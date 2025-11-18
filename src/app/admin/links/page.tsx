@@ -9,6 +9,7 @@ type UserWithWishlist = {
   id: string;
   name?: string | null;
   email?: string | null;
+  workEmail?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   amazonWishlistUrl?: string | null;
@@ -101,7 +102,12 @@ export default function AdminLinksPage() {
     const [showErrors, setShowErrors] = useState(false);
     const ownerEmail = user.workEmail ?? user.email ?? "";
     const mailSubject = `Action required: ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} on your shared wishlist`;
-    const mailBody = `Hi ${user.firstName ?? user.name ?? "there"},\n\nOur system has detected ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} with your shared Amazon wishlist${user.amazonWishlistUrl ? `:\n${user.amazonWishlistUrl}` : "."}\n\nPlease review the wishlist and update or remove any unavailable items so the reported issues can be resolved. If you need help, reply to this message or contact the site admin team.\n\nThanks,\nSite Admin Team`;
+    const urlPart = user.amazonWishlistUrl ? ":\n" + user.amazonWishlistUrl : ".";
+    const mailBody =
+      `Hi ${user.firstName ?? user.name ?? "there"},\n\n` +
+      `Our system has detected ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} with your shared Amazon wishlist${urlPart}\n\n` +
+      `Please review the wishlist and update or remove any unavailable items so the reported issues can be resolved. If you need help, reply to this message or contact the site admin team.\n\n` +
+      `Thanks,\nSite Admin Team`;
     const mailtoHref = ownerEmail
       ? `mailto:${ownerEmail}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`
       : null;

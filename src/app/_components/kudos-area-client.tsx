@@ -19,10 +19,14 @@ export default function KudosAreaClient() {
       return;
     }
 
-    // Fetch server-side decision about domain.enabled
-    void fetch("/api/kudos/allowed").then(async (res) => {
+    // Fetch server-side decision about domain.enabled. Ensure cookies are sent.
+    void fetch("/api/kudos/allowed", { credentials: "same-origin" }).then(async (res) => {
       if (!mounted) return;
       try {
+        if (!res.ok) {
+          setAllowed(false);
+          return;
+        }
         const data: { allowed?: boolean } = (await res.json()) as { allowed?: boolean };
         setAllowed(Boolean(data.allowed));
       } catch {

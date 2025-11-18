@@ -79,6 +79,10 @@ function UserStatsTooltip({ userId }: { userId: string }) {
 
 export default function UsersPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [groupBy, setGroupBy] = useState<"none" | "department" | "status" | "role">("none");
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 
   // Get current user's profile to check admin level
@@ -166,11 +170,38 @@ export default function UsersPage() {
       adminLevel,
       adminScope,
     });
-  }; // Filter users by selected domain
-  const filteredUsers =
-    selectedDomain === "all"
-      ? users
-      : users.filter((user) => user.domain === selectedDomain);
+  }; // end updateAdminLevel
+
+  // Client-side filtering
+  const filteredUsers = users
+    .filter((user) => (selectedDomain === "all" ? true : user.domain === selectedDomain))
+    .filter((user) => (selectedDepartment === "all" ? true : user.departmentId === selectedDepartment))
+    .filter((user) => {
+      if (selectedStatus === "all") return true;
+      if (selectedStatus === "complete") return user.profileCompleted === true;
+      if (selectedStatus === "pending") return user.profileCompleted === false;
+      return true;
+    })
+    .filter((user) => (selectedRole === "all" ? true : (user.adminLevel ?? "USER") === selectedRole));
+
+  // Grouping helper (only used if groupBy !== 'none')
+  const groupedUsers: Record<string, User[]> = {};
+  if (groupBy === "department") {
+    for (const u of filteredUsers) {
+      const key = u.department?.name ?? "No Department";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  } else if (groupBy === "status") {
+    for (const u of filteredUsers) {
+      const key = u.profileCompleted ? "Complete" : "Pending";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  } else if (groupBy === "role") {
+    for (const u of filteredUsers) {
+      const key = u.adminLevel ?? "USER";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  }
 
   const handleToggleProfile = (userId: string, currentStatus: boolean) => {
     toggleProfileMutation.mutate({
@@ -346,6 +377,7 @@ export default function UsersPage() {
             </label>
             <select
               id="domain-filter"
+              aria-label="Filter by domain"
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
@@ -357,6 +389,62 @@ export default function UsersPage() {
                 </option>
               ))}
             </select>
+            <label htmlFor="department-filter" className="sr-only">Filter by department</label>
+            <select
+              id="department-filter"
+              aria-label="Filter by department"
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((d: Department) => (
+                <option key={d.id} value={d.id}>{d.name} ({d.domain})</option>
+              ))}
+            </select>
+
+            <label htmlFor="status-filter" className="sr-only">Filter by status</label>
+            <select
+              id="status-filter"
+              aria-label="Filter by status"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="complete">Complete</option>
+              <option value="pending">Pending</option>
+            </select>
+
+            <label htmlFor="role-filter" className="sr-only">Filter by role</label>
+            <select
+              id="role-filter"
+              aria-label="Filter by role"
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Roles</option>
+              <option value="USER">Regular User</option>
+              <option value="DEPARTMENT">Department Admin</option>
+              <option value="DOMAIN">Domain Admin</option>
+              <option value="SITE">Site Admin</option>
+            </select>
+
+            <label htmlFor="group-by" className="sr-only">Group users by</label>
+            <select
+              id="group-by"
+              aria-label="Group users by"
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as "none" | "department" | "status" | "role")}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="none">No Grouping</option>
+              <option value="department">Group by Department</option>
+              <option value="status">Group by Status</option>
+              <option value="role">Group by Role</option>
+            </select>
+
             <span className="text-xs sm:text-sm text-white/60">
               Showing {filteredUsers.length} of {users.length} users
             </span>
@@ -433,9 +521,10 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {editingDepartmentUserId === user.id ? (
+                        {editingDepartmentUserId === user.id ? (
                         <select
                           value={user.departmentId ?? ""}
+                          title="Select department"
                           onChange={(e) => {
                             handleUpdateDepartment(
                               user.id,
@@ -477,6 +566,7 @@ export default function UsersPage() {
                           user.adminLevel === "SITE" ? (
                             <select
                               value="SITE"
+                              title="Site admin"
                               disabled
                               className="cursor-not-allowed rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
                             >
@@ -485,6 +575,7 @@ export default function UsersPage() {
                           ) : (
                             <select
                               value={user.adminLevel ?? "USER"}
+                              title="Select admin role"
                               onChange={(e) => {
                                 handleUpdateAdminLevel(
                                   user.id,

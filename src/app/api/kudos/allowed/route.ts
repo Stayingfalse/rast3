@@ -23,7 +23,7 @@ export async function GET() {
     const domain = await db.domain.findUnique({ where: { name: user.domain } });
 
     return NextResponse.json({ allowed: domain?.enabled ?? false });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ allowed: false });
   }
 }

@@ -23,9 +23,9 @@ export default function KudosAreaClient() {
     void fetch("/api/kudos/allowed").then(async (res) => {
       if (!mounted) return;
       try {
-        const json = await res.json();
-        setAllowed(Boolean(json?.allowed));
-      } catch (e) {
+        const data: { allowed?: boolean } = (await res.json()) as { allowed?: boolean };
+        setAllowed(Boolean(data.allowed));
+      } catch {
         setAllowed(false);
       }
     });

@@ -35,6 +35,7 @@ type GroupedUsers = Record<string, Record<string, UserWithWishlist[]>>;
 
 export default function AdminLinksPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all"); // Fetch all users with wishlist URLs
+  const [onlyReported, setOnlyReported] = useState<boolean>(false);
   const { data: users = [], isLoading, isError } = api.link.getAll.useQuery();
   const { data: domains = [], isLoading: isDomainsLoading } =
     api.domain.getAll.useQuery();
@@ -46,31 +47,37 @@ export default function AdminLinksPage() {
 
   // Stats
   const stats = useMemo(() => {
-    const filtered =
+    let filtered =
       selectedDomain === "all"
         ? wishlists
-        : wishlists.filter(
-            (u: UserWithWishlist) => u.domain === selectedDomain,
-          );
+        : wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
+    if (onlyReported) {
+      filtered = filtered.filter(
+        (u: UserWithWishlist) => (u.amazonWishlistUrlStats?.errors?.length ?? 0) > 0,
+      );
+    }
     return {
       total: filtered.length,
       domains: Array.from(
-        new Set(wishlists.map((u: UserWithWishlist) => u.domain)),
+        new Set(filtered.map((u: UserWithWishlist) => u.domain)),
       ).length,
       departments: Array.from(
         new Set(filtered.map((u: UserWithWishlist) => u.department?.name)),
       ).length,
     };
-  }, [wishlists, selectedDomain]);
+  }, [wishlists, selectedDomain, onlyReported]);
 
   // Group by domain and department
   const grouped: GroupedUsers = useMemo(() => {
-    const filtered =
+    let filtered =
       selectedDomain === "all"
         ? wishlists
-        : wishlists.filter(
-            (u: UserWithWishlist) => u.domain === selectedDomain,
-          );
+        : wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
+    if (onlyReported) {
+      filtered = filtered.filter(
+        (u: UserWithWishlist) => (u.amazonWishlistUrlStats?.errors?.length ?? 0) > 0,
+      );
+    }
     const result: GroupedUsers = {};
     for (const user of filtered) {
       const domain = user.domain ?? "(No Domain)";
@@ -80,7 +87,7 @@ export default function AdminLinksPage() {
       result[domain][dept].push(user);
     }
     return result;
-  }, [wishlists, selectedDomain]);
+  }, [wishlists, selectedDomain, onlyReported]);
 
   // Helper: Truncate URL
   function truncateUrl(url: string, max = 40) {
@@ -92,6 +99,12 @@ export default function AdminLinksPage() {
     const errors = Array.isArray(stats.errors) ? stats.errors.filter(e => !!e) : [];
     const errorCount = errors.length;
     const [showErrors, setShowErrors] = useState(false);
+    const ownerEmail = user.workEmail ?? user.email ?? "";
+    const mailSubject = `Action required: ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} on your shared wishlist`;
+    const mailBody = `Hi ${user.firstName ?? user.name ?? "there"},\n\nOur system has detected ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} with your shared Amazon wishlist${user.amazonWishlistUrl ? `:\n${user.amazonWishlistUrl}` : "."}\n\nPlease review the wishlist and update or remove any unavailable items so the reported issues can be resolved. If you need help, reply to this message or contact the site admin team.\n\nThanks,\nSite Admin Team`;
+    const mailtoHref = ownerEmail
+      ? `mailto:${ownerEmail}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`
+      : null;
     return (
       <tr key={user.id} className="hover:bg-white/5">
         <td className="px-6 py-4 font-medium text-white">
@@ -168,6 +181,20 @@ export default function AdminLinksPage() {
                       <li key={i}>{err}</li>
                     ))}
                   </ul>
+                  <div className="mt-2 flex items-center gap-3">
+                    {mailtoHref ? (
+                      <a
+                        href={mailtoHref}
+                        className="inline-flex items-center rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                        title={`Email ${ownerEmail} about ${errorCount} reported issue${errorCount !== 1 ? "s" : ""}`}
+                        aria-label={`Email owner about ${errorCount} reported issue${errorCount !== 1 ? "s" : ""}`}
+                      >
+                        Email owner
+                      </a>
+                    ) : (
+                      <span className="text-xs text-white/60">No email available</span>
+                    )}
+                  </div>
                 </div>
               )}
             </span>
@@ -290,6 +317,16 @@ export default function AdminLinksPage() {
                 </option>
               ))}
             </select>
+            <label className="inline-flex items-center gap-2">
+              <input
+                id="reported-only"
+                type="checkbox"
+                checked={onlyReported}
+                onChange={(e) => setOnlyReported(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-white/80">Only show with reports</span>
+            </label>
             <span className="text-xs sm:text-sm text-white/60">
               Showing {stats.total} wishlists
             </span>

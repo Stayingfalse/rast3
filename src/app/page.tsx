@@ -3,7 +3,8 @@ import { KudosFeed } from "~/app/_components/kudos-feed";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { HydrateClient } from "~/trpc/server";
 import HomeHeaderClientWrapper from "./_components/home-header-client-wrapper";
-import HomeMarketing from "./_components/home-marketing";
+import HomeMarketingServer from "./_components/home-marketing-server";
+import HideMarketingIfAuthenticated from "./_components/hide-marketing-if-authenticated";
 import KudosAreaClient from "./_components/kudos-area-client";
 
 export default async function Home() {
@@ -13,7 +14,8 @@ export default async function Home() {
       <div className="container mx-auto flex flex-col items-center justify-center gap-12 px-4 py-16">
         {" "}
         <HomeHeaderClientWrapper />
-        <HomeMarketing />
+        <HomeMarketingServer />
+        <HideMarketingIfAuthenticated />
         <div className="flex flex-col items-center gap-2">
           <AuthShowcase />
           <WishlistManager />

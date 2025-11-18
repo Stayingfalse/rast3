@@ -1,44 +1,9 @@
-"use client";
-
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-
-export default function HomeMarketing() {
-  const { data: session, status } = useSession();
-  const [showMarketing, setShowMarketing] = useState(false);
-
-  useEffect(() => {
-    // Do not show anything while session status is loading
-    if (status === "loading") {
-      setShowMarketing(false);
-      return;
-    }
-
-    // If the user is authenticated, never show marketing
-    if (session) {
-      setShowMarketing(false);
-      return;
-    }
-
-    // Only show marketing if the client session has settled to unauthenticated
-    // Add a small delay to avoid transient 'unauthenticated' states flashing
-    if (status === "unauthenticated") {
-      const t = setTimeout(() => setShowMarketing(true), 300);
-      return () => clearTimeout(t);
-    }
-
-    setShowMarketing(false);
-  }, [session, status]);
-
-  if (!showMarketing) return null;
-
+export default function HomeMarketingServer() {
   return (
-    <div className="w-full max-w-4xl">
+    <div id="home-marketing" className="w-full max-w-4xl">
       {/* Main Value Proposition */}
       <div className="mb-8 text-center">
-        <h2 className="mb-4 text-3xl font-bold text-white">
-          🎁 Bring Secret Santa to Remote Teams 🎁
-        </h2>
+        <h2 className="mb-4 text-3xl font-bold text-white">🎁 Bring Secret Santa to Remote Teams 🎁</h2>
         <p className="mb-6 text-xl leading-relaxed text-red-100">
           Perfect for home workers and remote teams who want to share
           Christmas cheer but don&apos;t know each other&apos;s addresses.

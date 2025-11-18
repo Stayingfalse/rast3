@@ -145,6 +145,7 @@ export default function AdminLinksPage() {
               >
                 <svg
                   className="inline h-5 w-5 text-red-400"
+                  
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth="2"

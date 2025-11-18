@@ -1,10 +1,10 @@
 import { AuthShowcase } from "~/app/_components/auth-showcase";
+import { KudosFeed } from "~/app/_components/kudos-feed";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { HydrateClient } from "~/trpc/server";
-import { KudosFeed } from "~/app/_components/kudos-feed";
-import KudosAreaClient from "./_components/kudos-area-client";
 import HomeHeaderClientWrapper from "./_components/home-header-client-wrapper";
 import HomeMarketing from "./_components/home-marketing";
+import KudosAreaClient from "./_components/kudos-area-client";
 
 export default async function Home() {
 

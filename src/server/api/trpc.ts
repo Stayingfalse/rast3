@@ -14,7 +14,6 @@ import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { checkAdminPermissions } from "~/server/utils/admin-permissions";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('trpc');
@@ -64,53 +63,6 @@ export const createTRPCContext = async (_opts: { headers: Headers }) => {
       error: error instanceof Error ? error.message : String(error)
     }, "Error getting session in tRPC context");
     // Session remains null, which is fine for public procedures
-  }
-
-  // Check for impersonation cookie in incoming headers. If present and the current session
-  // belongs to a SITE admin, override the session to act as the impersonated user.
-  try {
-    const cookieHeader = _opts.headers.get("cookie") ?? "";
-    const match = cookieHeader.match(/(?:^|; )impersonate_user=([^;]+)/);
-    const impersonateId = match ? decodeURIComponent(match[1]) : null;
-    if (impersonateId && session?.user) {
-      // Verify current user is SITE admin
-      const adminCheck = await checkAdminPermissions(session.user.id);
-      if (adminCheck.canModerate && adminCheck.adminLevel === "SITE") {
-        const targetUser = await db.user.findUnique({
-          where: { id: impersonateId },
-          select: {
-            id: true,
-            name: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            adminLevel: true,
-            departmentId: true,
-            domain: true,
-          },
-        });
-        if (targetUser) {
-          // Create a shallow cloned session and replace user fields with target user's info
-          session = {
-            ...session,
-            user: {
-              ...session.user,
-              id: targetUser.id,
-              name: targetUser.name ?? session.user.name,
-              email: targetUser.email ?? session.user.email,
-              // Attach minimal impersonation metadata
-              impersonatorId: session.user.id,
-              adminLevel: targetUser.adminLevel as unknown as string | undefined,
-              departmentId: targetUser.departmentId ?? undefined,
-              domain: targetUser.domain ?? undefined,
-            } as unknown as Session["user"],
-          };
-        }
-      }
-    }
-  } catch (e) {
-    // Non-fatal; continue with original session
-    logger.debug({ err: e instanceof Error ? e.message : String(e) }, "Impersonation check failed");
   }
 
   return createInnerTRPCContext({

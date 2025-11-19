@@ -8,7 +8,7 @@ import { api } from "~/trpc/react";
 function getPreviewCookie() {
   try {
     return document.cookie.split(";").map((c) => c.trim()).find((c) => c.startsWith("impersonate_preview="));
-  } catch (e) {
+  } catch {
     return undefined;
   }
 }
@@ -73,7 +73,17 @@ export default function AdminButton() {
                 if (res.ok) {
                   window.location.reload();
                 } else {
-                  const data = await res.json().catch(() => ({ error: undefined } as { error?: string }));
+                  // Safely parse JSON response without using `any`.
+                  let data: { error?: string } = { error: undefined };
+                  try {
+                    const parsed = await res.json();
+                    if (parsed && typeof parsed === "object" && "error" in parsed) {
+                      const errVal = (parsed as Record<string, unknown>)["error"];
+                      data.error = typeof errVal === "string" ? errVal : String(errVal ?? "");
+                    }
+                  } catch {
+                    // ignore parse errors
+                  }
                   alert(`Failed to start preview: ${data.error ?? res.statusText}`);
                 }
               }}

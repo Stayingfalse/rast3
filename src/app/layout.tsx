@@ -68,6 +68,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side: read impersonation preview cookie to show banner
+  let impersonatePreview: string | null = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: next/headers types in server components
+    const { cookies } = require("next/headers");
+    const c = cookies().get("impersonate_preview");
+    impersonatePreview = c?.value ?? null;
+  } catch (e) {
+    impersonatePreview = null;
+  }
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <head>
@@ -111,7 +122,15 @@ export default function RootLayout({
             </header>{" "}
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
               <AuthProvider>
-                <TRPCReactProvider>{children}</TRPCReactProvider>
+                <TRPCReactProvider>
+                  {/* Preview banner for impersonation */}
+                  {impersonatePreview && (
+                    <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-400 text-black py-3 text-center font-semibold">
+                      PREVIEW MODE: You are viewing the site as {impersonatePreview}
+                    </div>
+                  )}
+                  {children}
+                </TRPCReactProvider>
               </AuthProvider>{" "}
             </div>            {/* Cookie Consent Banner */}
             <CookieConsent />

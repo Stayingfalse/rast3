@@ -1,8 +1,8 @@
 "use client";
+import { ShieldCheckIcon } from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ShieldCheckIcon } from "@heroicons/react/24/solid";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 
 function getPreviewCookie() {

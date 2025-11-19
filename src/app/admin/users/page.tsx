@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "react-hot-toast";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
@@ -79,6 +79,10 @@ function UserStatsTooltip({ userId }: { userId: string }) {
 
 export default function UsersPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [groupBy, setGroupBy] = useState<"none" | "department" | "status" | "role">("none");
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 
   // Get current user's profile to check admin level
@@ -166,11 +170,38 @@ export default function UsersPage() {
       adminLevel,
       adminScope,
     });
-  }; // Filter users by selected domain
-  const filteredUsers =
-    selectedDomain === "all"
-      ? users
-      : users.filter((user) => user.domain === selectedDomain);
+  }; // end updateAdminLevel
+
+  // Client-side filtering
+  const filteredUsers = users
+    .filter((user) => (selectedDomain === "all" ? true : user.domain === selectedDomain))
+    .filter((user) => (selectedDepartment === "all" ? true : user.departmentId === selectedDepartment))
+    .filter((user) => {
+      if (selectedStatus === "all") return true;
+      if (selectedStatus === "complete") return user.profileCompleted === true;
+      if (selectedStatus === "pending") return user.profileCompleted === false;
+      return true;
+    })
+    .filter((user) => (selectedRole === "all" ? true : (user.adminLevel ?? "USER") === selectedRole));
+
+  // Grouping helper (only used if groupBy !== 'none')
+  const groupedUsers: Record<string, User[]> = {};
+  if (groupBy === "department") {
+    for (const u of filteredUsers) {
+      const key = u.department?.name ?? "No Department";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  } else if (groupBy === "status") {
+    for (const u of filteredUsers) {
+      const key = u.profileCompleted ? "Complete" : "Pending";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  } else if (groupBy === "role") {
+    for (const u of filteredUsers) {
+      const key = u.adminLevel ?? "USER";
+      (groupedUsers[key] ??= []).push(u);
+    }
+  }
 
   const handleToggleProfile = (userId: string, currentStatus: boolean) => {
     toggleProfileMutation.mutate({
@@ -346,6 +377,7 @@ export default function UsersPage() {
             </label>
             <select
               id="domain-filter"
+              aria-label="Filter by domain"
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
@@ -357,6 +389,62 @@ export default function UsersPage() {
                 </option>
               ))}
             </select>
+            <label htmlFor="department-filter" className="sr-only">Filter by department</label>
+            <select
+              id="department-filter"
+              aria-label="Filter by department"
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((d: Department) => (
+                <option key={d.id} value={d.id}>{d.name} ({d.domain})</option>
+              ))}
+            </select>
+
+            <label htmlFor="status-filter" className="sr-only">Filter by status</label>
+            <select
+              id="status-filter"
+              aria-label="Filter by status"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="complete">Complete</option>
+              <option value="pending">Pending</option>
+            </select>
+
+            <label htmlFor="role-filter" className="sr-only">Filter by role</label>
+            <select
+              id="role-filter"
+              aria-label="Filter by role"
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="all">All Roles</option>
+              <option value="USER">Regular User</option>
+              <option value="DEPARTMENT">Department Admin</option>
+              <option value="DOMAIN">Domain Admin</option>
+              <option value="SITE">Site Admin</option>
+            </select>
+
+            <label htmlFor="group-by" className="sr-only">Group users by</label>
+            <select
+              id="group-by"
+              aria-label="Group users by"
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as "none" | "department" | "status" | "role")}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="none">No Grouping</option>
+              <option value="department">Group by Department</option>
+              <option value="status">Group by Status</option>
+              <option value="role">Group by Role</option>
+            </select>
+
             <span className="text-xs sm:text-sm text-white/60">
               Showing {filteredUsers.length} of {users.length} users
             </span>
@@ -394,184 +482,380 @@ export default function UsersPage() {
                 </tr>
               </thead>{" "}
               <tbody className="divide-y divide-white/10">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-white/5">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-sm font-medium text-white">
-                          {user.firstName?.[0] ?? user.name?.[0] ?? "?"}
-                        </div>
-                        <div className="ml-3">
-                          <div className="relative text-sm font-medium text-white">
-                            <span
-                              onMouseEnter={() => setHoveredUserId(user.id)}
-                              onMouseLeave={() => setHoveredUserId(null)}
-                              className="cursor-pointer hover:text-blue-400"
-                            >
-                              {user.firstName && user.lastName
-                                ? `${user.firstName} ${user.lastName}`
-                                : (user.name ?? "Unknown User")}
-                            </span>
-                            {hoveredUserId === user.id && (
-                              <div className="absolute top-6 left-0 z-50">
-                                <UserStatsTooltip userId={user.id} />
-                              </div>
-                            )}
+                {groupBy === "none" ? (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-white/5">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-sm font-medium text-white">
+                            {user.firstName?.[0] ?? user.name?.[0] ?? "?"}
                           </div>
-                          <div className="text-sm text-white/60">
-                            ID: {user.id.slice(0, 8)}...
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">
-                        {user.workEmail ?? user.email ?? "No email"}
-                      </div>
-                      <div className="text-sm text-white/60">
-                        {user.domain ?? "No domain"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {editingDepartmentUserId === user.id ? (
-                        <select
-                          value={user.departmentId ?? ""}
-                          onChange={(e) => {
-                            handleUpdateDepartment(
-                              user.id,
-                              e.target.value ?? null,
-                            );
-                            setEditingDepartmentUserId(null);
-                          }}
-                          onBlur={() => setEditingDepartmentUserId(null)}
-                          autoFocus
-                          className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                          disabled={updateDepartmentMutation.isPending}
-                        >
-                          <option value="">No Department</option>{" "}
-                          {departments.map((dept: Department) => (
-                            <option key={dept.id} value={dept.id}>
-                              {dept.name} ({dept.domain})
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div
-                          className="min-h-[28px] cursor-pointer text-sm break-words whitespace-normal text-white"
-                          onDoubleClick={() =>
-                            setEditingDepartmentUserId(user.id)
-                          }
-                          title="Double-click to edit department"
-                        >
-                          {user.department?.name ? (
-                            `${user.department.name} (${user.department.domain})`
-                          ) : (
-                            <span className="text-white/40">No Department</span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        {editingAdminUserId === user.id ? (
-                          user.adminLevel === "SITE" ? (
-                            <select
-                              value="SITE"
-                              disabled
-                              className="cursor-not-allowed rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
-                            >
-                              <option value="SITE">Site Admin</option>
-                            </select>
-                          ) : (
-                            <select
-                              value={user.adminLevel ?? "USER"}
-                              onChange={(e) => {
-                                handleUpdateAdminLevel(
-                                  user.id,
-                                  e.target.value as
-                                    | "USER"
-                                    | "DEPARTMENT"
-                                    | "DOMAIN",
-                                  user,
-                                );
-                                setEditingAdminUserId(null);
-                              }}
-                              onBlur={() => setEditingAdminUserId(null)}
-                              autoFocus
-                              className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                              disabled={updateAdminLevelMutation.isPending}
-                            >
-                              <option value="USER">Regular User</option>
-                              <option value="DEPARTMENT">
-                                Department Admin
-                              </option>
-                              {/* DOMAIN option only available to SITE and DOMAIN admins */}
-                              {(currentUser?.adminLevel === "SITE" ||
-                                currentUser?.adminLevel === "DOMAIN") && (
-                                <option value="DOMAIN">Domain Admin</option>
+                          <div className="ml-3">
+                            <div className="relative text-sm font-medium text-white">
+                              <span
+                                onMouseEnter={() => setHoveredUserId(user.id)}
+                                onMouseLeave={() => setHoveredUserId(null)}
+                                className="cursor-pointer hover:text-blue-400"
+                              >
+                                {user.firstName && user.lastName
+                                  ? `${user.firstName} ${user.lastName}`
+                                  : (user.name ?? "Unknown User")}
+                              </span>
+                              {hoveredUserId === user.id && (
+                                <div className="absolute top-6 left-0 z-50">
+                                  <UserStatsTooltip userId={user.id} />
+                                </div>
                               )}
-                            </select>
-                          )
+                            </div>
+                            <div className="text-sm text-white/60">
+                              ID: {user.id.slice(0, 8)}...
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-white">
+                          {user.workEmail ?? user.email ?? "No email"}
+                        </div>
+                        <div className="text-sm text-white/60">
+                          {user.domain ?? "No domain"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {editingDepartmentUserId === user.id ? (
+                          <select
+                            value={user.departmentId ?? ""}
+                            title="Select department"
+                            onChange={(e) => {
+                              handleUpdateDepartment(
+                                user.id,
+                                e.target.value ?? null,
+                              );
+                              setEditingDepartmentUserId(null);
+                            }}
+                            onBlur={() => setEditingDepartmentUserId(null)}
+                            autoFocus
+                            className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            disabled={updateDepartmentMutation.isPending}
+                          >
+                            <option value="">No Department</option>{" "}
+                            {departments.map((dept: Department) => (
+                              <option key={dept.id} value={dept.id}>
+                                {dept.name} ({dept.domain})
+                              </option>
+                            ))}
+                          </select>
                         ) : (
                           <div
                             className="min-h-[28px] cursor-pointer text-sm break-words whitespace-normal text-white"
-                            onDoubleClick={() => setEditingAdminUserId(user.id)}
-                            title="Double-click to edit admin role"
+                            onDoubleClick={() =>
+                              setEditingDepartmentUserId(user.id)
+                            }
+                            title="Double-click to edit department"
                           >
-                            {getAdminLevelDisplay(user)}
+                            {user.department?.name ? (
+                              `${user.department.name} (${user.department.domain})`
+                            ) : (
+                              <span className="text-white/40">No Department</span>
+                            )}
                           </div>
                         )}
-                        <div className="text-xs text-white/60">
-                          {/* Optionally show more info here if needed */}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          user.profileCompleted
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {user.profileCompleted ? "Complete" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            handleToggleProfile(user.id, user.profileCompleted)
-                          }
-                          disabled={toggleProfileMutation.isPending}
-                          className={`rounded px-2 py-1 text-xs ${
-                            user.profileCompleted
-                              ? "bg-yellow-600 text-white hover:bg-yellow-700"
-                              : "bg-green-600 text-white hover:bg-green-700"
-                          } disabled:opacity-50`}
-                        >
-                          {user.profileCompleted
-                            ? "Mark Pending"
-                            : "Mark Complete"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteUser(
-                              user.id,
-                              user.firstName && user.lastName
-                                ? `${user.firstName} ${user.lastName}`
-                                : (user.name ?? "Unknown User"),
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          {editingAdminUserId === user.id ? (
+                            user.adminLevel === "SITE" ? (
+                              <select
+                                value="SITE"
+                                title="Site admin"
+                                disabled
+                                className="cursor-not-allowed rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
+                              >
+                                <option value="SITE">Site Admin</option>
+                              </select>
+                            ) : (
+                              <select
+                                value={user.adminLevel ?? "USER"}
+                                title="Select admin role"
+                                onChange={(e) => {
+                                  handleUpdateAdminLevel(
+                                    user.id,
+                                    e.target.value as
+                                      | "USER"
+                                      | "DEPARTMENT"
+                                      | "DOMAIN",
+                                    user,
+                                  );
+                                  setEditingAdminUserId(null);
+                                }}
+                                onBlur={() => setEditingAdminUserId(null)}
+                                autoFocus
+                                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                disabled={updateAdminLevelMutation.isPending}
+                              >
+                                <option value="USER">Regular User</option>
+                                <option value="DEPARTMENT">
+                                  Department Admin
+                                </option>
+                                {/* DOMAIN option only available to SITE and DOMAIN admins */}
+                                {(currentUser?.adminLevel === "SITE" ||
+                                  currentUser?.adminLevel === "DOMAIN") && (
+                                  <option value="DOMAIN">Domain Admin</option>
+                                )}
+                              </select>
                             )
-                          }
-                          disabled={deleteUserMutation.isPending}
-                          className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                          ) : (
+                            <div
+                              className="min-h-[28px] cursor-pointer text-sm break-words whitespace-normal text-white"
+                              onDoubleClick={() => setEditingAdminUserId(user.id)}
+                              title="Double-click to edit admin role"
+                            >
+                              {getAdminLevelDisplay(user)}
+                            </div>
+                          )}
+                          <div className="text-xs text-white/60">
+                            {/* Optionally show more info here if needed */}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            user.profileCompleted
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
                         >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {user.profileCompleted ? "Complete" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              handleToggleProfile(user.id, user.profileCompleted)
+                            }
+                            disabled={toggleProfileMutation.isPending}
+                            className={`rounded px-2 py-1 text-xs ${
+                              user.profileCompleted
+                                ? "bg-yellow-600 text-white hover:bg-yellow-700"
+                                : "bg-green-600 text-white hover:bg-green-700"
+                            } disabled:opacity-50`}
+                          >
+                            {user.profileCompleted
+                              ? "Mark Pending"
+                              : "Mark Complete"}
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteUser(
+                                user.id,
+                                user.firstName && user.lastName
+                                  ? `${user.firstName} ${user.lastName}`
+                                  : (user.name ?? "Unknown User"),
+                              )
+                            }
+                            disabled={deleteUserMutation.isPending}
+                            className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  Object.entries(groupedUsers).map(([group, items]) => (
+                    <Fragment key={group}>
+                      <tr className="bg-white/3">
+                        <td colSpan={6} className="px-6 py-3 text-sm font-semibold text-white/80">
+                          {group} <span className="ml-2 text-xs text-white/60">({items.length})</span>
+                        </td>
+                      </tr>
+                      {items.map((user) => (
+                        <tr key={user.id} className="hover:bg-white/5">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-sm font-medium text-white">
+                                {user.firstName?.[0] ?? user.name?.[0] ?? "?"}
+                              </div>
+                              <div className="ml-3">
+                                <div className="relative text-sm font-medium text-white">
+                                  <span
+                                    onMouseEnter={() => setHoveredUserId(user.id)}
+                                    onMouseLeave={() => setHoveredUserId(null)}
+                                    className="cursor-pointer hover:text-blue-400"
+                                  >
+                                    {user.firstName && user.lastName
+                                      ? `${user.firstName} ${user.lastName}`
+                                      : (user.name ?? "Unknown User")}
+                                  </span>
+                                  {hoveredUserId === user.id && (
+                                    <div className="absolute top-6 left-0 z-50">
+                                      <UserStatsTooltip userId={user.id} />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-sm text-white/60">
+                                  ID: {user.id.slice(0, 8)}...
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-white">
+                              {user.workEmail ?? user.email ?? "No email"}
+                            </div>
+                            <div className="text-sm text-white/60">
+                              {user.domain ?? "No domain"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {editingDepartmentUserId === user.id ? (
+                              <select
+                                value={user.departmentId ?? ""}
+                                title="Select department"
+                                onChange={(e) => {
+                                  handleUpdateDepartment(
+                                    user.id,
+                                    e.target.value ?? null,
+                                  );
+                                  setEditingDepartmentUserId(null);
+                                }}
+                                onBlur={() => setEditingDepartmentUserId(null)}
+                                autoFocus
+                                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                disabled={updateDepartmentMutation.isPending}
+                              >
+                                <option value="">No Department</option>{" "}
+                                {departments.map((dept: Department) => (
+                                  <option key={dept.id} value={dept.id}>
+                                    {dept.name} ({dept.domain})
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div
+                                className="min-h-[28px] cursor-pointer text-sm break-words whitespace-normal text-white"
+                                onDoubleClick={() =>
+                                  setEditingDepartmentUserId(user.id)
+                                }
+                                title="Double-click to edit department"
+                              >
+                                {user.department?.name ? (
+                                  `${user.department.name} (${user.department.domain})`
+                                ) : (
+                                  <span className="text-white/40">No Department</span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1">
+                              {editingAdminUserId === user.id ? (
+                                user.adminLevel === "SITE" ? (
+                                  <select
+                                    value="SITE"
+                                    title="Site admin"
+                                    disabled
+                                    className="cursor-not-allowed rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-500"
+                                  >
+                                    <option value="SITE">Site Admin</option>
+                                  </select>
+                                ) : (
+                                  <select
+                                    value={user.adminLevel ?? "USER"}
+                                    title="Select admin role"
+                                    onChange={(e) => {
+                                      handleUpdateAdminLevel(
+                                        user.id,
+                                        e.target.value as
+                                          | "USER"
+                                          | "DEPARTMENT"
+                                          | "DOMAIN",
+                                        user,
+                                      );
+                                      setEditingAdminUserId(null);
+                                    }}
+                                    onBlur={() => setEditingAdminUserId(null)}
+                                    autoFocus
+                                    className="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                    disabled={updateAdminLevelMutation.isPending}
+                                  >
+                                    <option value="USER">Regular User</option>
+                                    <option value="DEPARTMENT">
+                                      Department Admin
+                                    </option>
+                                    {/* DOMAIN option only available to SITE and DOMAIN admins */}
+                                    {(currentUser?.adminLevel === "SITE" ||
+                                      currentUser?.adminLevel === "DOMAIN") && (
+                                      <option value="DOMAIN">Domain Admin</option>
+                                    )}
+                                  </select>
+                                )
+                              ) : (
+                                <div
+                                  className="min-h-[28px] cursor-pointer text-sm break-words whitespace-normal text-white"
+                                  onDoubleClick={() => setEditingAdminUserId(user.id)}
+                                  title="Double-click to edit admin role"
+                                >
+                                  {getAdminLevelDisplay(user)}
+                                </div>
+                              )}
+                              <div className="text-xs text-white/60">
+                                {/* Optionally show more info here if needed */}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                user.profileCompleted
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {user.profileCompleted ? "Complete" : "Pending"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  handleToggleProfile(user.id, user.profileCompleted)
+                                }
+                                disabled={toggleProfileMutation.isPending}
+                                className={`rounded px-2 py-1 text-xs ${
+                                  user.profileCompleted
+                                    ? "bg-yellow-600 text-white hover:bg-yellow-700"
+                                    : "bg-green-600 text-white hover:bg-green-700"
+                                } disabled:opacity-50`}
+                              >
+                                {user.profileCompleted
+                                  ? "Mark Pending"
+                                  : "Mark Complete"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteUser(
+                                    user.id,
+                                    user.firstName && user.lastName
+                                      ? `${user.firstName} ${user.lastName}`
+                                      : (user.name ?? "Unknown User"),
+                                  )
+                                }
+                                disabled={deleteUserMutation.isPending}
+                                className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))
+                )}
               </tbody>
             </table>            {filteredUsers.length === 0 && (
               <div className="px-6 py-8 text-center">

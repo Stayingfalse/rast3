@@ -1,6 +1,5 @@
 const CACHE_NAME = 'raosanta-v1';
 const STATIC_CACHE_URLS = [
-  '/',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
   '/apple-touch-icon.png',
@@ -50,7 +49,9 @@ self.addEventListener('activate', /** @param {any} event */ (event) => {
   );
 });
 
-// Fetch event - serve from cache with network fallback
+// Fetch event - use network-first for navigations and API requests,
+// and cache static assets only. This prevents serving stale HTML or API
+// responses on soft refreshes.
 self.addEventListener('fetch', /** @param {any} event */ (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -62,43 +63,59 @@ self.addEventListener('fetch', /** @param {any} event */ (event) => {
     return;
   }
 
+  const requestUrl = new URL(event.request.url);
+  const isApi = requestUrl.pathname.startsWith('/api/');
+  const isNavigation = event.request.mode === 'navigate' || (event.request.headers.get('accept') || '').includes('text/html');
+
+  // Network-first for navigation requests (HTML) to avoid stale home page HTML
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // If successful, return network response (don't cache HTML)
+          if (networkResponse && networkResponse.ok) {
+            return networkResponse;
+          }
+          // Fallback to cached root if available
+          return caches.match('/').then((cached) => cached || networkResponse);
+        })
+        .catch(() => caches.match('/'))
+    );
+    return;
+  }
+
+  // Network-only for API requests (do not cache API responses)
+  if (isApi) {
+    event.respondWith(
+      fetch(event.request, { credentials: 'same-origin' }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // For static assets, serve from cache then network and cache new responses
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
-        // Return cached version if available
         if (cachedResponse) {
-          console.log('[SW] Serving from cache:', event.request.url);
           return cachedResponse;
         }
 
-        // Otherwise, fetch from network
-        console.log('[SW] Fetching from network:', event.request.url);
         return fetch(event.request)
           .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response since it can only be consumed once
+            if (!response || !response.ok) return response;
             const responseToCache = response.clone();
-
-            // Cache successful responses for static assets
-            if (event.request.url.includes('/static/') || 
-                event.request.url.includes('.png') || 
-                event.request.url.includes('.svg') ||
-                event.request.url.includes('.ico')) {
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  cache.put(event.request, responseToCache);
-                });
+            // Cache common static assets
+            if (event.request.url.includes('/static/') ||
+                event.request.url.endsWith('.png') ||
+                event.request.url.endsWith('.svg') ||
+                event.request.url.endsWith('.ico') ||
+                event.request.url.endsWith('.webmanifest')) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
             }
-
             return response;
           })
           .catch((error) => {
-            console.error('[SW] Fetch failed:', error);
-            // Could return a fallback page here
+            console.error('[SW] Fetch failed for asset:', event.request.url, error);
             throw error;
           });
       })

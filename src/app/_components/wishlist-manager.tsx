@@ -327,14 +327,6 @@ export function WishlistManager() {
             >
               Invite by Email
             </a>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent("Join our Secret Santa! Sign up here: " + window.location.origin)}`}
-              className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Share on WhatsApp
-            </a>
             <button
               onClick={() => {
                 void navigator.clipboard.writeText(window.location.origin);

@@ -20,14 +20,7 @@ export default function AdminButton() {
 
   // Use profile query as authoritative source for adminLevel (some sessions may not include it)
   const { data: profile } = api.profile.getCurrentProfile.useQuery(undefined, { enabled: !!session?.user });
-
-  // Show nothing if not authenticated or loading
-  if (status !== "authenticated" || !session?.user) return null;
-
-  const adminLevels = ["DEPARTMENT", "DOMAIN", "SITE"];
-  const userAdminLevel = profile?.adminLevel ?? session.user.adminLevel;
-  if (!userAdminLevel || !adminLevels.includes(userAdminLevel)) return null;
-
+  // Run preview cookie detection unconditionally (hooks must run in same order)
   useEffect(() => {
     const match = getPreviewCookie();
     if (match) {
@@ -35,6 +28,13 @@ export default function AdminButton() {
       setPreviewName(val || null);
     }
   }, []);
+
+  // Show nothing if not authenticated or loading
+  if (status !== "authenticated" || !session?.user) return null;
+
+  const adminLevels = ["DEPARTMENT", "DOMAIN", "SITE"];
+  const userAdminLevel = profile?.adminLevel ?? session.user.adminLevel;
+  if (!userAdminLevel || !adminLevels.includes(userAdminLevel)) return null;
 
   return (
     <div className="fixed top-4 right-6 z-50 flex items-center gap-2">
@@ -73,8 +73,8 @@ export default function AdminButton() {
                 if (res.ok) {
                   window.location.reload();
                 } else {
-                  const data = await res.json().catch(() => ({}));
-                  alert(`Failed to start preview: ${data?.error ?? res.statusText}`);
+                  const data = await res.json().catch(() => ({ error: undefined } as { error?: string }));
+                  alert(`Failed to start preview: ${data.error ?? res.statusText}`);
                 }
               }}
               className="rounded-lg border border-amber-600 bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-600"

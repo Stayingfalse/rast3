@@ -1,29 +1,3 @@
-import React from 'react'
-import StopImpersonation from '~/app/_components/stop-impersonation'
-import WishlistReportsAlert from '~/app/_components/wishlist-reports-alert'
-import "~/styles/globals.css"
-import './globals.css'
-
-export const metadata = {
-  title: 'RAoSanta',
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <div className="min-h-screen bg-background text-foreground">
-          <div className="container mx-auto px-4">
-            <WishlistReportsAlert />
-            {children}
-          </div>
-          <StopImpersonation />
-        </div>
-      </body>
-    </html>
-  )
-}
-
 import { type Metadata, type Viewport } from "next"
 import { Inter } from "next/font/google"
 import Image from "next/image"
@@ -38,6 +12,8 @@ import AuthButton from "./_components/auth-button"
 import { AuthProvider } from "./_components/auth-provider"
 import { CookieConsent } from "./_components/cookie-consent"
 import { ServiceWorkerRegistration } from "./_components/service-worker-registration"
+import StopImpersonation from "./_components/stop-impersonation"
+import WishlistReportsAlert from "./_components/wishlist-reports-alert"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -134,6 +110,7 @@ export default function RootLayout({
               </Link>
             </header>{" "}
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+              <WishlistReportsAlert />
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>
               </AuthProvider>{" "}
@@ -143,6 +120,8 @@ export default function RootLayout({
             <AddToHomeScreen />
             {/* Service Worker Registration */}
             <ServiceWorkerRegistration />
+            {/* Stop Impersonation Control */}
+            <StopImpersonation />
             {/* Toast Notifications */}
             <Toaster
               position="top-right"

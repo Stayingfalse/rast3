@@ -247,8 +247,11 @@ export default function UsersPage() {
     ), { duration: Infinity });
   };
 
-  const handleImpersonate = async (userId: string) => {
-    if (!confirm("Impersonate this user? You will be signed in as them in this browser.")) return;
+  const handleImpersonate = async (userId: string, userDisplayName: string) => {
+    const ok = confirm(
+      `Impersonate ${userDisplayName}? You will be signed in as them in this browser.`,
+    );
+    if (!ok) return;
     try {
       const resp = await fetch("/api/admin/impersonate", {
         method: "POST",
@@ -680,7 +683,14 @@ export default function UsersPage() {
                           </button>
                             {currentUser?.adminLevel === "SITE" && (
                               <button
-                                onClick={() => void handleImpersonate(user.id)}
+                                onClick={() =>
+                                  void handleImpersonate(
+                                    user.id,
+                                    user.firstName && user.lastName
+                                      ? `${user.firstName} ${user.lastName}`
+                                      : user.name ?? user.email ?? "Unknown User",
+                                  )
+                                }
                                 className="rounded border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/5"
                               >
                                 Sign in as
@@ -976,7 +986,14 @@ export default function UsersPage() {
                   </button>
                   {currentUser?.adminLevel === "SITE" && (
                     <button
-                      onClick={() => void handleImpersonate(user.id)}
+                      onClick={() =>
+                        void handleImpersonate(
+                          user.id,
+                          user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : user.name ?? user.email ?? "Unknown User",
+                        )
+                      }
                       className="flex-1 rounded border border-white/20 px-3 py-2 text-xs text-white hover:bg-white/5"
                     >
                       Sign in as

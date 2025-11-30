@@ -5,11 +5,20 @@ import { toast } from "react-hot-toast";
 
 export default function StopImpersonation() {
   const [isImpersonating, setIsImpersonating] = useState(false);
+  const [impersonatedName, setImpersonatedName] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const cookies = document.cookie || "";
       setIsImpersonating(cookies.includes("__is_impersonating=1"));
+      const match = cookies.match(/(?:^|; )__impersonated_user=([^;]+)/);
+      if (match && match[1]) {
+        try {
+          setImpersonatedName(decodeURIComponent(match[1]));
+        } catch (e) {
+          setImpersonatedName(match[1]);
+        }
+      }
     } catch (e) {
       setIsImpersonating(false);
     }
@@ -36,11 +45,11 @@ export default function StopImpersonation() {
   return (
     <div className="fixed bottom-4 right-4 z-50 rounded shadow-lg bg-red-600 px-4 py-3 text-white">
       <div className="flex items-center gap-3">
-        <div className="text-sm font-semibold">You are impersonating another user</div>
-        <button onClick={stop} className="ml-2 rounded bg-white/10 px-2 py-1 text-xs">
-          Stop impersonating
-        </button>
-      </div>
+          <div className="text-sm font-semibold">You are impersonating {impersonatedName ?? 'another user'}</div>
+          <button onClick={stop} className="ml-2 rounded bg-white/10 px-2 py-1 text-xs">
+            Stop impersonating
+          </button>
+        </div>
     </div>
   );
 }

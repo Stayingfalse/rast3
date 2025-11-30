@@ -167,6 +167,24 @@ model WishlistReport {
   @@index([resolved])
 }
 
+model ImpersonationAudit {
+  id                 String   @id @default(cuid())
+  adminId            String
+  targetUserId       String
+  startedAt          DateTime @default(now())
+  stoppedAt          DateTime?
+  startSessionToken  String?
+  stopSessionToken   String?
+  adminSessionToken  String?
+  metadata           Json?
+
+  admin  User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  target User @relation(fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([targetUserId])
+}
+
 model Kudos {
   id          String    @id @default(cuid())
   userId      String

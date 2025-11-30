@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     });
 
     const displayName = targetUser
-      ? [targetUser.firstName, targetUser.lastName].filter(Boolean).join(" ") || targetUser.name ?? targetUser.email ?? targetUser.id
+      ? ([targetUser.firstName, targetUser.lastName].filter(Boolean).join(" ") || targetUser.name) ?? targetUser.email ?? targetUser.id
       : targetUserId;
 
     const res = NextResponse.json({ ok: true, userId: targetUserId, displayName });

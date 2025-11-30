@@ -1,3 +1,5 @@
+import "~/styles/globals.css"
+
 import { type Metadata, type Viewport } from "next"
 import { Inter } from "next/font/google"
 import Image from "next/image"

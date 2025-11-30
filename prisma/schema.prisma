@@ -78,6 +78,8 @@ model User {
   assignedLinks        WishlistAssignment[] @relation("AssignedUser")
   ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
   reports              WishlistReport[]
+  impersonationsAsAdmin ImpersonationAudit[] @relation("ImpersonationAdmin")
+  impersonationsAsTarget ImpersonationAudit[] @relation("ImpersonationTarget")
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -178,8 +180,8 @@ model ImpersonationAudit {
   adminSessionToken  String?
   metadata           Json?
 
-  admin  User @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  target User @relation(fields: [targetUserId], references: [id], onDelete: Cascade)
+  admin  User @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  target User @relation("ImpersonationTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@index([adminId])
   @@index([targetUserId])

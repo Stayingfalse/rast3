@@ -85,8 +85,7 @@ export default function WishlistReportsAlert() {
   if (loading) return null;
   if (!groups || groups.length === 0) return null;
 
-  const userName = session.user.name ?? session.user.email ?? "there";
-  const firstName = userName.split(" ")[0] ?? userName;
+  const firstName = session.user.name?.split(" ")[0] ?? "there";
 
   return (
     <>

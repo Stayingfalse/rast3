@@ -1,6 +1,8 @@
-import './globals.css'
 import React from 'react'
 import WishlistReportsAlert from '~/app/_components/wishlist-reports-alert'
+import StopImpersonation from '~/app/_components/stop-impersonation'
+import "~/styles/globals.css"
+import './globals.css'
 
 export const metadata = {
   title: 'RAoSanta',
@@ -15,27 +17,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <WishlistReportsAlert />
             {children}
           </div>
+          <StopImpersonation />
         </div>
       </body>
     </html>
   )
 }
-import "~/styles/globals.css";
 
-import { type Metadata, type Viewport } from "next";
-import { Inter } from "next/font/google";
-import Image from "next/image";
-import Link from "next/link";
-import { Toaster } from "react-hot-toast";
+import { type Metadata, type Viewport } from "next"
+import { Inter } from "next/font/google"
+import Image from "next/image"
+import Link from "next/link"
+import { Toaster } from "react-hot-toast"
 
-import { SessionProvider } from "next-auth/react";
-import { TRPCReactProvider } from "~/trpc/react";
-import { AddToHomeScreen } from "./_components/add-to-home-screen";
-import AdminButton from "./_components/admin-button";
-import AuthButton from "./_components/auth-button";
-import { AuthProvider } from "./_components/auth-provider";
-import { CookieConsent } from "./_components/cookie-consent";
-import { ServiceWorkerRegistration } from "./_components/service-worker-registration";
+import { SessionProvider } from "next-auth/react"
+import { TRPCReactProvider } from "~/trpc/react"
+import { AddToHomeScreen } from "./_components/add-to-home-screen"
+import AdminButton from "./_components/admin-button"
+import AuthButton from "./_components/auth-button"
+import { AuthProvider } from "./_components/auth-provider"
+import { CookieConsent } from "./_components/cookie-consent"
+import { ServiceWorkerRegistration } from "./_components/service-worker-registration"
 
 const inter = Inter({
   subsets: ["latin"],

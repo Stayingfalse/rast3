@@ -4,6 +4,7 @@ import { Fragment, useState } from "react";
 import { toast } from "react-hot-toast";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
+import React from "react";
 
 // Type definitions with admin fields
 type User = {
@@ -244,6 +245,23 @@ export default function UsersPage() {
         </div>
       </div>
     ), { duration: Infinity });
+  };
+
+  const handleImpersonate = async (userId: string) => {
+    if (!confirm("Impersonate this user? You will be signed in as them in this browser.")) return;
+    try {
+      const resp = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start", targetUserId: userId }),
+      });
+      if (!resp.ok) throw new Error("Failed to impersonate");
+      // reload to pick up the impersonated session
+      window.location.href = "/";
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to start impersonation");
+    }
   };
   return (
     <AdminLayout>
@@ -660,6 +678,14 @@ export default function UsersPage() {
                           >
                             Delete
                           </button>
+                            {currentUser?.adminLevel === "SITE" && (
+                              <button
+                                onClick={() => void handleImpersonate(user.id)}
+                                className="rounded border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/5"
+                              >
+                                Sign in as
+                              </button>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -948,6 +974,14 @@ export default function UsersPage() {
                   >
                     Delete
                   </button>
+                  {currentUser?.adminLevel === "SITE" && (
+                    <button
+                      onClick={() => void handleImpersonate(user.id)}
+                      className="flex-1 rounded border border-white/20 px-3 py-2 text-xs text-white hover:bg-white/5"
+                    >
+                      Sign in as
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

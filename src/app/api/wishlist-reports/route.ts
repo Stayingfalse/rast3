@@ -14,9 +14,11 @@ export async function GET(req: NextRequest) {
 
   const where: {
     resolved: boolean;
+    userId: string;
     wishlistAssignmentId?: string;
   } = {
     resolved: false,
+    userId: session.user.id,
   };
 
   if (wishlistId) {

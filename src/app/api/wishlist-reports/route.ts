@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerAuthSession } from "~/server/auth";
-import { prisma } from "~/server/db";
+import { auth } from "~/server/auth";
+import { db } from "~/server/db";
 
 // GET - return grouped unresolved reports for the current user's wishlists
 export async function GET(req: NextRequest) {
-  const session = await getServerAuthSession();
+  const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     where.wishlistId = wishlistId;
   }
 
-  const reports = await prisma.report.findMany({
+  const reports = await db.report.findMany({
     where,
     select: {
       id: true,
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
   // POST - resolve provided report ids (mark resolved)
 export async function POST(req: NextRequest) {
-  const session = await getServerAuthSession();
+  const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ensure the current user owns the wishlists for these reports before resolving
-  const result = await prisma.report.updateMany({
+  const result = await db.report.updateMany({
     where: {
       id: { in: reportIds },
       wishlist: { ownerId: session.user.id },

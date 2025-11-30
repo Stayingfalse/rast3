@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "~/server/auth";
+import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
 const SESSION_COOKIE_NAME = "next-auth.session-token";
@@ -22,7 +22,7 @@ function makePublicCookieString(name: string, value: string, maxAge = 3600) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession();
+  const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();

@@ -1,6 +1,6 @@
 import React from 'react'
-import WishlistReportsAlert from '~/app/_components/wishlist-reports-alert'
 import StopImpersonation from '~/app/_components/stop-impersonation'
+import WishlistReportsAlert from '~/app/_components/wishlist-reports-alert'
 import "~/styles/globals.css"
 import './globals.css'
 

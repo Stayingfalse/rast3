@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { db } from "~/server/db";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "~/server/auth";
+import { db } from "~/server/db";
 
 const SESSION_COOKIE_NAME = "next-auth.session-token";
 const IMPO_COOKIE = "__impersonation_admin_session";

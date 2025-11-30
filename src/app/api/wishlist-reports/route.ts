@@ -14,11 +14,15 @@ export async function GET(req: NextRequest) {
 
   const where: {
     resolved: boolean;
-    userId: string;
+    wishlistAssignment: {
+      wishlistOwnerId: string;
+    };
     wishlistAssignmentId?: string;
   } = {
     resolved: false,
-    userId: session.user.id,
+    wishlistAssignment: {
+      wishlistOwnerId: session.user.id,
+    },
   };
 
   if (wishlistId) {
@@ -73,7 +77,9 @@ export async function POST(req: NextRequest) {
   const result = await db.wishlistReport.updateMany({
     where: {
       id: { in: reportIds },
-      userId: session.user.id,
+      wishlistAssignment: {
+        wishlistOwnerId: session.user.id,
+      },
     },
     data: { resolved: true },
   });

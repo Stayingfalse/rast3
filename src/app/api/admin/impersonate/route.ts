@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const action = body?.action;
+  const body = (await req.json()) as { action?: string; targetUserId?: string };
+  const action = body.action;
 
   // Only site admins may impersonate
   if (action === "start") {
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const targetUserId: string | undefined = body?.targetUserId;
+    const targetUserId = body.targetUserId;
     if (!targetUserId) return NextResponse.json({ error: "targetUserId required" }, { status: 400 });
 
     // Capture original session token from cookies
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     });
 
     const displayName = targetUser
-      ? [targetUser.firstName, targetUser.lastName].filter(Boolean).join(" ") || targetUser.name || targetUser.email || targetUser.id
+      ? [targetUser.firstName, targetUser.lastName].filter(Boolean).join(" ") || targetUser.name ?? targetUser.email ?? targetUser.id
       : targetUserId;
 
     const res = NextResponse.json({ ok: true, userId: targetUserId, displayName });
@@ -111,13 +111,13 @@ export async function POST(req: NextRequest) {
           where: { startSessionToken: currentToken, stoppedAt: null },
           data: { stoppedAt: new Date(), stopSessionToken: currentToken },
         });
-      } catch (e) {
-        console.error("Failed to update impersonation audit on stop", e);
+      } catch (err) {
+        console.error("Failed to update impersonation audit on stop", err);
       }
 
       try {
         await db.session.deleteMany({ where: { sessionToken: currentToken } });
-      } catch (e) {
+      } catch {
         // ignore
       }
     }

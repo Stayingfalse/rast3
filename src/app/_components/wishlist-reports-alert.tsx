@@ -33,7 +33,7 @@ export default function WishlistReportsAlert() {
       try {
         const resp = await fetch("/api/wishlist-reports", { credentials: "same-origin" });
         if (!resp.ok) throw new Error("Failed to load reports");
-        const data = await resp.json();
+        const data = (await resp.json()) as Group[];
         if (mounted) setGroups(data ?? []);
       } catch (err) {
         console.error("Failed to fetch wishlist reports", err);
@@ -44,7 +44,7 @@ export default function WishlistReportsAlert() {
 
     void fetchReports();
     return () => void (mounted = false);
-  }, [session?.user?.id]);
+  }, [session?.user]);
 
   const resolveGroup = async (ids: string[]) => {
     if (ids.length === 0) return;
@@ -58,7 +58,7 @@ export default function WishlistReportsAlert() {
       });
 
       if (!resp.ok) throw new Error("resolve failed");
-      const json = await resp.json();
+      const json = (await resp.json()) as { count: number };
       // remove resolved ids from state
       setGroups((prev) =>
         (prev ?? []).map((g) => ({ ...g, ids: g.ids.filter((id) => !ids.includes(id)), count: g.count - ids.filter((id) => g.ids.includes(id)).length }))

@@ -11,15 +11,15 @@ export default function StopImpersonation() {
     try {
       const cookies = document.cookie || "";
       setIsImpersonating(cookies.includes("__is_impersonating=1"));
-      const match = cookies.match(/(?:^|; )__impersonated_user=([^;]+)/);
-      if (match && match[1]) {
+      const match = /(?:^|; )__impersonated_user=([^;]+)/.exec(cookies);
+      if (match?.[1]) {
         try {
           setImpersonatedName(decodeURIComponent(match[1]));
-        } catch (e) {
+        } catch {
           setImpersonatedName(match[1]);
         }
       }
-    } catch (e) {
+    } catch {
       setIsImpersonating(false);
     }
   }, []);

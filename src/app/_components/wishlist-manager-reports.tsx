@@ -24,9 +24,9 @@ export default function WishlistManagerReports({ wishlistId }: { wishlistId: str
       try {
         const resp = await fetch(`/api/wishlist-reports?wishlistId=${encodeURIComponent(wishlistId)}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
-        const groups = await resp.json();
+        const groups = (await resp.json()) as Array<{ items?: ReportItem[] }>;
         // flatten all items
-        const allItems: ReportItem[] = groups.flatMap((g: any) => g.items ?? []);
+        const allItems: ReportItem[] = groups.flatMap((g) => g.items ?? []);
         if (mounted) setItems(allItems);
       } catch (err) {
         console.error(err);

@@ -6,43 +6,42 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
  * - getForCurrentUser: returns grouped, unresolved reports affecting the current user's wishlist
  * - resolveByIds: marks provided report ids as resolved
  *
- * NOTE: this assumes a Prisma model named `Report` with at minimum fields:
+ * NOTE: this assumes a Prisma model named `WishlistReport` with at minimum fields:
  *   - id: string
- *   - type: string
+ *   - reportType: ReportType (enum)
  *   - resolved: boolean
- *   - wishlistId?: string
- *   - createdAt: Date
- *   - message?: string
+ *   - wishlistAssignmentId?: string
+ *   - reportedAt: Date
+ *   - description?: string
  */
 export const wishlistReportsRouter = createTRPCRouter({
   getForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
     // Find reports that affect wishlists owned by this user and are unresolved.
-    // We conservatively query `report` and join wishlist owner via prisma relations.
-    const reports = await ctx.prisma.report.findMany({
+    // We conservatively query `wishlistReport` and join wishlist owner via prisma relations.
+    const reports = await ctx.db.wishlistReport.findMany({
       where: {
         resolved: false,
-        wishlist: {
-          ownerId: userId,
-        },
+        userId: userId,
       },
       select: {
         id: true,
-        type: true,
+        reportType: true,
         resolved: true,
-        wishlistId: true,
-        message: true,
-        createdAt: true,
+        wishlistAssignmentId: true,
+        description: true,
+        reportedAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { reportedAt: "desc" },
     });
 
     // Group by type
-    const groups: Record<string, any[]> = {};
+    type ReportItem = typeof reports[number];
+    const groups: Record<string, ReportItem[]> = {};
     for (const r of reports) {
-      groups[r.type] = groups[r.type] ?? [];
-      groups[r.type].push(r);
+      groups[r.reportType] = groups[r.reportType] ?? [];
+      groups[r.reportType]?.push(r);
     }
 
     return Object.entries(groups).map(([type, items]) => ({
@@ -56,7 +55,7 @@ export const wishlistReportsRouter = createTRPCRouter({
   resolveByIds: protectedProcedure
     .input(z.object({ reportIds: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
-      const result = await ctx.prisma.report.updateMany({
+      const result = await ctx.db.wishlistReport.updateMany({
         where: { id: { in: input.reportIds } },
         data: { resolved: true },
       });

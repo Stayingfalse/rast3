@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
@@ -9,37 +9,38 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = session.user.id;
-
   const url = new URL(req.url);
   const wishlistId = url.searchParams.get("wishlistId");
 
-  const where: any = {
+  const where: {
+    resolved: boolean;
+    wishlistAssignmentId?: string;
+  } = {
     resolved: false,
-    wishlist: { ownerId: userId },
   };
 
   if (wishlistId) {
     // narrow down to a specific wishlist
-    where.wishlistId = wishlistId;
+    where.wishlistAssignmentId = wishlistId;
   }
 
-  const reports = await db.report.findMany({
+  const reports = await db.wishlistReport.findMany({
     where,
     select: {
       id: true,
-      type: true,
-      message: true,
-      wishlistId: true,
-      createdAt: true,
+      reportType: true,
+      description: true,
+      wishlistAssignmentId: true,
+      reportedAt: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { reportedAt: "desc" },
   });
 
-  const grouped: Record<string, any[]> = {};
+  type ReportItem = typeof reports[number];
+  const grouped: Record<string, ReportItem[]> = {};
   for (const r of reports) {
-    grouped[r.type] = grouped[r.type] ?? [];
-    grouped[r.type].push(r);
+    grouped[r.reportType] = grouped[r.reportType] ?? [];
+    grouped[r.reportType]?.push(r);
   }
 
   const out = Object.entries(grouped).map(([type, items]) => ({
@@ -59,18 +60,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = await req.json();
-  const reportIds: string[] = Array.isArray(payload?.reportIds) ? payload.reportIds : [];
+  const payload = (await req.json()) as { reportIds?: string[] };
+  const reportIds: string[] = Array.isArray(payload.reportIds) ? payload.reportIds : [];
 
   if (reportIds.length === 0) {
     return NextResponse.json({ error: "reportIds required" }, { status: 400 });
   }
 
   // ensure the current user owns the wishlists for these reports before resolving
-  const result = await db.report.updateMany({
+  const result = await db.wishlistReport.updateMany({
     where: {
       id: { in: reportIds },
-      wishlist: { ownerId: session.user.id },
+      userId: session.user.id,
     },
     data: { resolved: true },
   });

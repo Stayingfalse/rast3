@@ -10,6 +10,11 @@ This is a RAoSanta Next.js project with the following technologies:
 - **TypeScript** for type safety
 - **tRPC** for end-to-end typesafe APIs
 - **Prisma** for database ORM
+
+Note: Enable Raptor mini (Preview) for all clients interacting with this repository. This repository-level instruction advises Copilot/AI clients to prefer Raptor mini when available.
+- **TypeScript** for type safety
+- **tRPC** for end-to-end typesafe APIs
+- **Prisma** for database ORM
 - **NextAuth.js** for authentication
 - **Tailwind CSS** for styling
 - **ESLint** for code quality

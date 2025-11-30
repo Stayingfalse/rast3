@@ -1,3 +1,25 @@
+import './globals.css'
+import React from 'react'
+import WishlistReportsAlert from '~/app/_components/wishlist-reports-alert'
+
+export const metadata = {
+  title: 'RAoSanta',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <div className="min-h-screen bg-background text-foreground">
+          <div className="container mx-auto px-4">
+            <WishlistReportsAlert />
+            {children}
+          </div>
+        </div>
+      </body>
+    </html>
+  )
+}
 import "~/styles/globals.css";
 
 import { type Metadata, type Viewport } from "next";

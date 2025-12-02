@@ -64,14 +64,12 @@ export const adminRouter = createTRPCRouter({
         kudos: number | null;
       };
 
-      const rows = (await db.$queryRawUnsafe(sql)) as Row[];
+      const rows = await db.$queryRawUnsafe<Row[]>(sql);
 
       const map: Record<string, DomainStat> = {};
       for (const r of rows) {
         const domain = r.domain ?? "(no domain)";
-        if (!map[domain]) {
-          map[domain] = { domain, departments: [] };
-        }
+        map[domain] ??= { domain, departments: [] };
         map[domain].departments.push({
           departmentId: r.departmentId ?? null,
           departmentName: r.departmentName ?? null,
@@ -83,6 +81,7 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      return Object.values(map) as DomainStat[];
+      const result: DomainStat[] = Object.values(map);
+      return result;
     }),
 });

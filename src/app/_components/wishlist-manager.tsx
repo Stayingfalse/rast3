@@ -707,13 +707,7 @@ export function WishlistManager() {
                           {archivedAssignments.map((assignment: WishlistAssignment) => {
                             const hasPurchase = !!assignment.purchases;
                             const hasReport = assignment.reports.length > 0;
-                            const wishlistDomain = (
-                              assignment.wishlistOwner as { domain?: string }
-                            ).domain;
-                            const wishlistDeptId = assignment.wishlistOwner.department?.id;
-                            const isStranger =
-                              (wishlistDomain && userProfile?.domain && wishlistDomain !== userProfile.domain) ??
-                              (!userProfile?.domain && wishlistDomain);
+                            // archived items: no domain/department checks needed
 
                             return (
                               <div key={assignment.id} className="rounded-lg border-2 p-4 bg-gray-50">

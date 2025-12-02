@@ -27,8 +27,22 @@ function AdminOverview() {
   const { data: domains } = api.domain.getAll.useQuery();
   const { data: userStats } = api.user.getStats.useQuery();
   const { data: domainDeptStats } = api.admin.getDomainDepartmentStats.useQuery({});
-  type DomainStat = import("~/server/api/routers/admin").DomainStat;
-  const stats = (domainDeptStats as unknown) as DomainStat[] | undefined;
+  type DepartmentStat = {
+    departmentId: string | null;
+    departmentName: string | null;
+    users: number;
+    links: number;
+    errors: number;
+    purchases: number;
+    kudos: number;
+  };
+
+  type DomainStat = {
+    domain: string;
+    departments: DepartmentStat[];
+  };
+
+  const stats = domainDeptStats as DomainStat[] | undefined;
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">

@@ -94,6 +94,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showWhy, setShowWhy] = useState(false);
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
@@ -275,8 +276,20 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
             // Normal sign-in state
             <>
               <p className="mb-2 text-sm text-gray-600">
-                Sign in with your favourite service
+                Sign in with your personal email or a social login
+                <button
+                  type="button"
+                  onClick={() => setShowWhy((v) => !v)}
+                  className="ml-2 inline-block text-sm text-blue-600 hover:underline"
+                >
+                  Why?
+                </button>
               </p>
+              {showWhy && (
+                <div className="mb-4 rounded bg-blue-50 border border-blue-100 p-3 text-sm text-blue-800">
+                  Many corporate mail systems block emails from external domains that aren&apos;t explicitly trusted. To avoid missed magic-link emails, use a personal email address or sign in with a social account. Once you&apos;re signed in, you can add your work email on the profile setup to link your account with the rest of your organisation.
+                </div>
+              )}
               <h2 className="mb-6 text-2xl font-bold text-gray-900">
                 Sign in to your account
               </h2>

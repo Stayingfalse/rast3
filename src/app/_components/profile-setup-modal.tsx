@@ -39,6 +39,7 @@ export function ProfileSetupModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forceEditEmail, setForceEditEmail] = useState(false);
   const [showDomainSetup, setShowDomainSetup] = useState(false);
+  const [showPersonalEmailWarning, setShowPersonalEmailWarning] = useState(false);
   const isEditing = existingProfile?.profileCompleted ?? false; // Initialize form data with existing profile when modal opens
   useEffect(() => {
     if (isOpen && existingProfile) {
@@ -109,6 +110,35 @@ export function ProfileSetupModal({
     } else {
       setDomain("");
     }
+  }, [formData.workEmail]);
+
+  // Warn users if they enter a common personal email provider in the work email field
+  useEffect(() => {
+    const commonPersonalDomains = new Set([
+      "gmail.com",
+      "googlemail.com",
+      "hotmail.com",
+      "outlook.com",
+      "outlook.co.uk",
+      "yahoo.com",
+      "yahoo.co.uk",
+      "aol.com",
+      "icloud.com",
+      "me.com",
+      "live.com",
+      "msn.com",
+      "protonmail.com",
+    ]);
+
+    const email = formData.workEmail?.trim() ?? "";
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setShowPersonalEmailWarning(false);
+      return;
+    }
+
+    const parts = email.split("@");
+    const domainPart = (parts[1] ?? "").toLowerCase();
+    setShowPersonalEmailWarning(commonPersonalDomains.has(domainPart));
   }, [formData.workEmail]);
 
   const validateForm = () => {
@@ -408,6 +438,13 @@ export function ProfileSetupModal({
             )}{" "}
             {domain && (
               <p className="mt-1 text-sm text-gray-500">Domain: {domain}</p>
+            )}
+
+            {showPersonalEmailWarning && (
+              <div className="mt-2 rounded-md bg-yellow-50 border border-yellow-100 p-3 text-sm text-yellow-800">
+                <strong className="font-medium">Heads up:</strong>{' '}
+                That looks like a personal email address (Gmail, Hotmail, etc.). Please use your company / work email so we can link your account with the rest of your organisation. You can still continue with a personal address if needed.
+              </div>
             )}
             {/* Domain Setup Form */}
             {showDomainSetup && (

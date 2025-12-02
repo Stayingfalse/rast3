@@ -915,6 +915,59 @@ export const wishlistRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  // Archive or unarchive an assignment (visible only to assigned user)
+  archiveAssignment: protectedProcedure
+    .input(
+      z.object({ assignmentId: z.string(), archive: z.boolean() }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const assignment = await ctx.db.wishlistAssignment.findFirst({
+        where: { id: input.assignmentId, assignedUserId: userId, isActive: true },
+      });
+
+      if (!assignment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Assignment not found" });
+      }
+
+      const updated = await ctx.db.wishlistAssignment.update({
+        where: { id: input.assignmentId },
+        data: { archived: input.archive },
+      });
+
+      return updated;
+    }),
+
+  // Unassign an assignment so it becomes available to others
+  unassignAssignment: protectedProcedure
+    .input(z.object({ assignmentId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const assignment = await ctx.db.wishlistAssignment.findFirst({
+        where: { id: input.assignmentId, assignedUserId: userId, isActive: true },
+        include: { purchases: true, reports: true },
+      });
+
+      if (!assignment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Assignment not found" });
+      }
+
+      if (assignment.purchases) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot unassign a purchased wishlist" });
+      }
+
+      if (assignment.reports && assignment.reports.length > 0) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot unassign a reported wishlist" });
+      }
+
+      // Delete the assignment so it becomes unallocated
+      await ctx.db.wishlistAssignment.delete({ where: { id: input.assignmentId } });
+
+      return { success: true };
+    }),
+
   // Undo purchase marking
   undoPurchase: protectedProcedure
     .input(

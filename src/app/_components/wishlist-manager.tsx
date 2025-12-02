@@ -114,6 +114,29 @@ export function WishlistManager() {
     },
   });
 
+  const archiveAssignment = api.wishlist.archiveAssignment.useMutation({
+    onSuccess: () => {
+      void refetch();
+      toast.success("Updated archive status");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Could not update archive status");
+    },
+  });
+
+  const unassignAssignment = api.wishlist.unassignAssignment.useMutation({
+    onSuccess: () => {
+      void refetch();
+      void refetchStats();
+      toast.success("Assignment released");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Could not unassign wishlist");
+    },
+  });
+
+  const [showArchived, setShowArchived] = useState(false);
+
   // Add cross-domain assignment mutation (must be implemented in backend)
   const requestCrossDomain =
     api.wishlist.requestCrossDomainAssignments?.useMutation({
@@ -393,7 +416,13 @@ export function WishlistManager() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {assignments.map((assignment: WishlistAssignment) => {
+            {(() => {
+              // Split assignments into active vs archived
+              const activeAssignments = assignments.filter((a: WishlistAssignment) => !a.archived);
+              const archivedAssignments = assignments.filter((a: WishlistAssignment) => a.archived);
+              return (
+                <>
+                  {activeAssignments.map((assignment: WishlistAssignment) => {
               const hasPurchase = !!assignment.purchases;
               const hasReport = assignment.reports.length > 0;
               // Fix: Only treat as stranger if wishlistDomain is defined and different from userDomain, or if either is missing (but not both missing)
@@ -418,9 +447,9 @@ export function WishlistManager() {
                 userDeptId &&
                 wishlistDeptId !== userDeptId;
 
-              return (
-                <div
-                  key={assignment.id}
+                      return (
+                        <div
+                          key={assignment.id}
                   className={`rounded-lg border-2 p-4 transition-all ${
                     hasPurchase
                       ? "border-green-200 bg-green-50"
@@ -617,10 +646,139 @@ export function WishlistManager() {
                         </button>
                       </div>
                     )}
+
+                    {/* Archive / Unassign actions */}
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() => archiveAssignment.mutate({ assignmentId: assignment.id, archive: true })}
+                        disabled={archiveAssignment.isPending}
+                        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50"
+                      >
+                        {archiveAssignment.isPending ? "Updating..." : "Archive"}
+                      </button>
+
+                      {!hasPurchase && !hasReport && (
+                        <button
+                          onClick={() => {
+                            toast((t) => (
+                              <div className="flex flex-col gap-3">
+                                <span>Unassigning will release this wishlist for others to pick up. Continue?</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+                                    onClick={() => {
+                                      toast.dismiss(t.id);
+                                      unassignAssignment.mutate({ assignmentId: assignment.id });
+                                    }}
+                                  >
+                                    Yes, Unassign
+                                  </button>
+                                  <button className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600" onClick={() => toast.dismiss(t.id)}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ), { duration: Infinity });
+                          }}
+                          className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                        >
+                          Unassign
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+                      );
+                    })}
+
+                  {/* Archived lists toggle */}
+                  {archivedAssignments.length > 0 && (
+                    <div className="col-span-full">
+                      <button
+                        type="button"
+                        onClick={() => setShowArchived(v => !v)}
+                        className="mb-3 inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium"
+                      >
+                        {showArchived ? "Hide" : "Show"} Archived Lists ({archivedAssignments.length})
+                      </button>
+
+                      {showArchived && (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {archivedAssignments.map((assignment: WishlistAssignment) => {
+                            const hasPurchase = !!assignment.purchases;
+                            const hasReport = assignment.reports.length > 0;
+                            const wishlistDomain = (
+                              assignment.wishlistOwner as { domain?: string }
+                            ).domain;
+                            const wishlistDeptId = assignment.wishlistOwner.department?.id;
+                            const isStranger =
+                              (wishlistDomain && userProfile?.domain && wishlistDomain !== userProfile.domain) ??
+                              (!userProfile?.domain && wishlistDomain);
+
+                            return (
+                              <div key={assignment.id} className="rounded-lg border-2 p-4 bg-gray-50">
+                                <div className="mb-3 flex items-start justify-between">
+                                  <div>
+                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">Archived</span>
+                                  </div>
+                                </div>
+                                <div className="space-y-3">
+                                  <a
+                                    href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block w-full rounded-lg bg-orange-500 px-4 py-2 text-center font-medium text-white transition-colors hover:bg-orange-600"
+                                  >
+                                    🛒 View Wishlist
+                                  </a>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => archiveAssignment.mutate({ assignmentId: assignment.id, archive: false })}
+                                      disabled={archiveAssignment.isPending}
+                                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50"
+                                    >
+                                      {archiveAssignment.isPending ? "Updating..." : "Unarchive"}
+                                    </button>
+                                    {!hasPurchase && !hasReport && (
+                                      <button
+                                        onClick={() => {
+                                          toast((t) => (
+                                            <div className="flex flex-col gap-3">
+                                              <span>Unassigning will release this wishlist for others to pick up. Continue?</span>
+                                              <div className="flex gap-2">
+                                                <button
+                                                  className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+                                                  onClick={() => {
+                                                    toast.dismiss(t.id);
+                                                    unassignAssignment.mutate({ assignmentId: assignment.id });
+                                                  }}
+                                                >
+                                                  Yes, Unassign
+                                                </button>
+                                                <button className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600" onClick={() => toast.dismiss(t.id)}>
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ), { duration: Infinity });
+                                        }}
+                                        className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                                      >
+                                        Unassign
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               );
-            })}
+            })()}
           </div>
         </div>
       )}{" "}

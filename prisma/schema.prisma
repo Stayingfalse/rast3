@@ -122,6 +122,7 @@ model VerificationToken {
 model WishlistAssignment {
   id                String           @id @default(cuid())
   assignedUserId    String
+  archived          Boolean          @default(false)
   wishlistOwnerId   String
   assignedAt        DateTime         @default(now())
   isActive          Boolean          @default(true)

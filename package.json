@@ -28,6 +28,7 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
+    "ensure:migrations": "node ./scripts/ensure-migrations.js",
     "typecheck": "tsc --noEmit",
     "analyze": "node scripts/build-analyzer.js",
     "optimize": "npm run analyze && npm run build:analyze"

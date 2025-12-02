@@ -26,6 +26,9 @@ function AdminOverview() {
 
   const { data: domains } = api.domain.getAll.useQuery();
   const { data: userStats } = api.user.getStats.useQuery();
+  const { data: domainDeptStats } = api.admin.getDomainDepartmentStats.useQuery({});
+  type DomainStat = import("~/server/api/routers/admin").DomainStat;
+  const stats = (domainDeptStats as unknown) as DomainStat[] | undefined;
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">
@@ -130,6 +133,31 @@ function AdminOverview() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Domain / Department Key Stats */}
+      <div className="mt-6 rounded-lg bg-white p-4 shadow-md">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">Key Stats by Domain & Department</h2>
+        {(!stats || stats.length === 0) && <p className="text-sm text-gray-600">No data available</p>}
+        {stats?.map((domain) => (
+          <div key={domain.domain} className="mb-4">
+            <h3 className="mb-2 text-md font-semibold text-gray-800">{domain.domain}</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {domain.departments.map((dept) => (
+                <div key={dept.departmentId ?? dept.departmentName} className="rounded-lg border p-3">
+                  <div className="text-sm font-medium text-gray-700">{dept.departmentName ?? "(no department)"}</div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <div>Users: <strong className="text-gray-900">{dept.users}</strong></div>
+                    <div>Links: <strong className="text-gray-900">{dept.links}</strong></div>
+                    <div>Errors: <strong className="text-gray-900">{dept.errors}</strong></div>
+                    <div>Purchases: <strong className="text-gray-900">{dept.purchases}</strong></div>
+                    <div>Kudos: <strong className="text-gray-900">{dept.kudos}</strong></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

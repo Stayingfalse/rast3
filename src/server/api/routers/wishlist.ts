@@ -1,6 +1,6 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { TRPCError } from "@trpc/server";
 
 export const wishlistRouter = createTRPCRouter({
   // Get the current user's assigned wishlists (links they can shop from)

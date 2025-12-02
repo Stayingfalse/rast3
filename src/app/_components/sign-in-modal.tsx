@@ -275,7 +275,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
           ) : (
             // Normal sign-in state
             <>
-              <p className="mb-2 text-sm text-gray-600">
+              <h2 className="mb-2 text-sm text-gray-600">
                 Sign in with your personal email or a social login
                 <button
                   type="button"
@@ -284,15 +284,12 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                 >
                   Why?
                 </button>
-              </p>
+              </h2>
               {showWhy && (
                 <div className="mb-4 rounded bg-blue-50 border border-blue-100 p-3 text-sm text-blue-800">
                   Many corporate mail systems block emails from external domains that aren&apos;t explicitly trusted. To avoid missed magic-link emails, use a personal email address or sign in with a social account. Once you&apos;re signed in, you can add your work email on the profile setup to link your account with the rest of your organisation.
                 </div>
               )}
-              <h2 className="mb-6 text-2xl font-bold text-gray-900">
-                Sign in to your account
-              </h2>
               <div className="space-y-3">
             {isLoading ? (
               // Show preloader when any authentication is in progress

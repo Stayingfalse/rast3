@@ -1,10 +1,11 @@
-import { profileRouter } from "~/server/api/routers/profile";
+import { adminRouter } from "~/server/api/routers/admin";
+import { authProviderRouter } from "~/server/api/routers/auth-provider";
 import { domainRouter } from "~/server/api/routers/domain";
+import { kudosRouter } from "~/server/api/routers/kudos";
+import { linkRouter } from "~/server/api/routers/link";
+import { profileRouter } from "~/server/api/routers/profile";
 import { userRouter } from "~/server/api/routers/user";
 import { wishlistRouter } from "~/server/api/routers/wishlist";
-import { linkRouter } from "~/server/api/routers/link";
-import { kudosRouter } from "~/server/api/routers/kudos";
-import { authProviderRouter } from "~/server/api/routers/auth-provider";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   link: linkRouter,
   kudos: kudosRouter,
   authProvider: authProviderRouter,
+  admin: adminRouter,
 });
 
 // export type definition of API

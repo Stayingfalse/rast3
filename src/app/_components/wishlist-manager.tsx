@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Preloader } from "./preloader";
+import { ProfileSetupModal } from "./profile-setup-modal";
 
 type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 
@@ -29,7 +30,7 @@ export function WishlistManager() {
   const [strangerModal, setStrangerModal] = useState(false);
 
   // Check if user has completed profile - only run when authenticated
-  const { data: userProfile } = api.profile.getCurrentProfile.useQuery(
+  const { data: userProfile, refetch: refetchProfile } = api.profile.getCurrentProfile.useQuery(
     undefined,
     { enabled: !!sessionData?.user },
   );
@@ -58,9 +59,28 @@ export function WishlistManager() {
       void refetchStats();
     },
     onError: (error) => {
+      // No eligible wishlists -> show modal
       if (error.message.includes("No eligible wishlists available")) {
         setModalType("no-assignments");
+        return;
       }
+
+      // If profile is incomplete, open profile setup modal and mark pending request
+      if (!userProfile?.profileCompleted) {
+        setPendingRequest({ type: "initial" });
+        setShowProfileModal(true);
+        return;
+      }
+
+      // If profile is complete but wishlist URL is missing, offer inline add-wishlist prompt
+      if (userProfile.profileCompleted && !userProfile.amazonWishlistUrl) {
+        setPendingRequest({ type: "initial" });
+        setShowAddWishlistPrompt(true);
+        return;
+      }
+
+      console.error("requestInitialAssignments error:", error);
+      toast.error(error.message || "Could not get initial assignments");
     },
   });
   const requestAdditional =
@@ -72,7 +92,23 @@ export function WishlistManager() {
       onError: (error) => {
         if (error.message.includes("No additional wishlists available")) {
           setModalType("no-assignments");
+          return;
         }
+
+        if (!userProfile?.profileCompleted) {
+          setPendingRequest({ type: "additional", count: 1 });
+          setShowProfileModal(true);
+          return;
+        }
+
+        if (userProfile.profileCompleted && !userProfile.amazonWishlistUrl) {
+          setPendingRequest({ type: "additional", count: 1 });
+          setShowAddWishlistPrompt(true);
+          return;
+        }
+
+        console.error("requestAdditionalAssignments error:", error);
+        toast.error(error.message || "Could not get additional assignments");
       },
     });
 
@@ -136,6 +172,35 @@ export function WishlistManager() {
   });
 
   const [showArchived, setShowArchived] = useState(false);
+
+  // Profile modal / add-wishlist prompt states
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAddWishlistPrompt, setShowAddWishlistPrompt] = useState(false);
+  const [newWishlistUrl, setNewWishlistUrl] = useState("");
+  const [addWishlistError, setAddWishlistError] = useState<string | null>(null);
+  const [pendingRequest, setPendingRequest] = useState<
+    | null
+    | { type: "initial" | "additional"; count?: number }
+  >(null);
+
+  const updateProfileForWishlist = api.profile.updateProfile.useMutation({
+    onSuccess: async () => {
+      // Refresh profile and close prompt, then retry pending request
+      await refetchProfile();
+      setShowAddWishlistPrompt(false);
+      setAddWishlistError(null);
+      toast.success("Wishlist URL saved");
+      if (pendingRequest?.type === "initial") {
+        requestInitial.mutate();
+      } else if (pendingRequest?.type === "additional") {
+        requestAdditional.mutate({ count: pendingRequest.count ?? 1 });
+      }
+      setPendingRequest(null);
+    },
+    onError: (err) => {
+      setAddWishlistError(err.message || "Could not save wishlist URL");
+    },
+  });
 
   // Add cross-domain assignment mutation (must be implemented in backend)
   const requestCrossDomain =
@@ -993,6 +1058,73 @@ export function WishlistManager() {
           </div>
         </div>
       )}
+      {/* Profile Setup Modal (open when user needs to complete profile) */}
+      <ProfileSetupModal
+        isOpen={showProfileModal}
+        existingProfile={userProfile ?? null}
+        onComplete={() => {
+          setShowProfileModal(false);
+          // Retry pending request after profile completion
+          if (pendingRequest?.type === "initial") {
+            requestInitial.mutate();
+          } else if (pendingRequest?.type === "additional") {
+            requestAdditional.mutate({ count: pendingRequest.count ?? 1 });
+          }
+          setPendingRequest(null);
+        }}
+        onClose={() => {
+          setShowProfileModal(false);
+          setPendingRequest(null);
+        }}
+      />
+
+      {/* Inline Add Wishlist Prompt */}
+      {showAddWishlistPrompt && (
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
+            <h3 className="mb-4 text-xl font-semibold">Add your Amazon UK wishlist</h3>
+            <p className="mb-3 text-sm text-gray-600">You need to add your Amazon UK wishlist URL before you can receive assignments. You can add it now or cancel to do this later.</p>
+            <input
+              type="url"
+              value={newWishlistUrl}
+              onChange={(e) => setNewWishlistUrl(e.target.value)}
+              placeholder="https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX"
+              className="mb-3 block w-full rounded-md border border-gray-300 px-3 py-2"
+            />
+            {addWishlistError && <p className="mb-3 text-sm text-red-600">{addWishlistError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  // Submit updateProfile with existing profile values and new wishlist
+                  if (!userProfile) return;
+                  updateProfileForWishlist.mutate({
+                    firstName: userProfile.firstName ?? "",
+                    lastName: userProfile.lastName ?? "",
+                    workEmail: userProfile.workEmail ?? "",
+                    departmentId: userProfile.departmentId ?? undefined,
+                    amazonWishlistUrl: newWishlistUrl ?? undefined,
+                  });
+                }}
+                className="inline-block rounded bg-blue-600 px-4 py-2 text-white"
+              >
+                Save & Continue
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddWishlistPrompt(false);
+                  setAddWishlistError(null);
+                  setPendingRequest(null);
+                  toast("You can add your wishlist later from your profile.");
+                }}
+                className="inline-block rounded border border-gray-300 bg-white px-4 py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/*
         REMINDER: Ensure your Kudos section container has id="kudos-section" for smooth scroll navigation.
         Example:

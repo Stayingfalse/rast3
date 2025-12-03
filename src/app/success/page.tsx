@@ -7,8 +7,8 @@ import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
 import HomeHeaderClientWrapper from "../_components/home-header-client-wrapper";
 
 export default function SuccessPage() {
-  // Fetch a few latest kudos (public)
-  const { data: kudosResp, isLoading: kudosLoading } = api.kudos.getFeed.useQuery({ scope: "site", limit: 3 });
+  // Fetch more kudos so we can interleave facts and show a richer feed
+  const { data: kudosResp, isLoading: kudosLoading } = api.kudos.getFeed.useQuery({ scope: "site", limit: 9 });
 
   // Try to fetch user stats (protected) - will gracefully be undefined if not authenticated
   const { data: userStats } = api.user.getStats.useQuery(undefined, { retry: false });
@@ -17,6 +17,28 @@ export default function SuccessPage() {
   const { data: domainDeptStats } = api.admin.getDomainDepartmentStats.useQuery({}, { retry: false });
 
   const kudos = kudosResp?.items ?? [];
+
+  // Small site facts to intersperse — matches the homepage messaging
+  const facts = [
+    {
+      id: "fact-1",
+      emoji: "⚡",
+      title: "Quick & Hassle-Free",
+      desc: "Sign up in minutes, share your Amazon wishlist, and start spreading joy",
+    },
+    {
+      id: "fact-2",
+      emoji: "🎭",
+      title: "Completely Anonymous",
+      desc: "Gifters never see your address — Amazon handles delivery privately",
+    },
+    {
+      id: "fact-3",
+      emoji: "🤗",
+      title: "Inclusive & No Pressure",
+      desc: "Can't afford to give? No problem! Happy elves may still send you gifts",
+    },
+  ];
 
   // Aggregate headline stats from whichever source is available
   const stats = useMemo(() => {
@@ -84,41 +106,63 @@ export default function SuccessPage() {
             ) : kudos.length === 0 ? (
               <div className="col-span-3 text-center text-white/70">No stories available</div>
             ) : (
-              kudos.map((k) => {
-                // Safely parse images JSON into a string[] without unsafe any usage
-                let imgs: string[] = [];
-                if (k.images) {
-                  try {
-                    const parsed = JSON.parse(k.images) as unknown;
-                    if (Array.isArray(parsed)) {
-                      imgs = (parsed as unknown[]).map((v) => String(v));
+              (() => {
+                const elements: React.ReactNode[] = [];
+                let factIndex = 0;
+                kudos.forEach((k, i) => {
+                  // Safely parse images JSON into a string[] without unsafe any usage
+                  let imgs: string[] = [];
+                  if (k.images) {
+                    try {
+                      const parsed = JSON.parse(k.images) as unknown;
+                      if (Array.isArray(parsed)) {
+                        imgs = (parsed as unknown[]).map((v) => String(v));
+                      }
+                    } catch {
+                      imgs = [];
                     }
-                  } catch {
-                    imgs = [];
                   }
-                }
-                const firstImg = imgs.length > 0 ? imgs[0] : k.user?.image ?? null;
-                return (
-                  <article key={k.id} className="rounded-lg border border-white/10 bg-black/65 p-3 shadow-sm">
-                    <div className="mb-2 h-28 w-full overflow-hidden rounded-md bg-gray-800">
-                      {firstImg ? (
-                        <Image
-                          src={getProxyImageUrl(firstImg)}
-                          alt={k.message ? k.message.slice(0, 80) : "kudos image"}
-                          width={800}
-                          height={320}
-                          className="h-full w-full object-cover"
-                          onError={handleImageError}
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gray-800" />
-                      )}
-                    </div>
-                    <blockquote className="mb-2 text-sm leading-tight text-white/85">“{k.message}”</blockquote>
-                    <div className="text-xs text-white/60">— {k.user?.firstName ?? k.user?.name ?? k.user?.id}</div>
-                  </article>
-                );
-              })
+                  const firstImg = imgs.length > 0 ? imgs[0] : k.user?.image ?? null;
+                  elements.push(
+                    <article key={k.id} className="rounded-lg border border-white/10 bg-black/65 p-3 shadow-sm">
+                      <div className="mb-2 h-28 w-full overflow-hidden rounded-md bg-gray-800">
+                        {firstImg ? (
+                          <Image
+                            src={getProxyImageUrl(firstImg)}
+                            alt={k.message ? k.message.slice(0, 80) : "kudos image"}
+                            width={800}
+                            height={320}
+                            className="h-full w-full object-cover"
+                            onError={handleImageError}
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-gray-800" />
+                        )}
+                      </div>
+                      <blockquote className="mb-2 text-sm leading-tight text-white/85">“{k.message}”</blockquote>
+                      <div className="text-xs text-white/60">— {k.user?.firstName ?? k.user?.name ?? k.user?.id}</div>
+                    </article>,
+                  );
+
+                  // Insert a fact card after every 3 kudos
+                  if ((i + 1) % 3 === 0 && facts.length > 0) {
+                    const f = facts[factIndex % facts.length]!;
+                    elements.push(
+                      <article key={f.id} className="rounded-lg border border-white/10 bg-gradient-to-b from-blue-900/60 to-blue-900/40 p-4 text-left text-white/90 shadow-md">
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl">{f.emoji}</div>
+                          <div>
+                            <div className="font-semibold">{f.title}</div>
+                            <div className="text-xs text-white/70 mt-1">{f.desc}</div>
+                          </div>
+                        </div>
+                      </article>,
+                    );
+                    factIndex += 1;
+                  }
+                });
+                return elements;
+              })()
             )}
           </div>
         </section>

@@ -44,16 +44,16 @@ export const adminRouter = createTRPCRouter({
           d.name AS departmentName,
           COUNT(*) AS users,
           SUM(CASE WHEN u.amazonWishlistUrl IS NOT NULL THEN 1 ELSE 0 END) AS links,
-          COALESCE(SUM(COALESCE(wr.lists_with_errors, 0)), 0) AS errors,
+          COALESCE(SUM(CASE WHEN wr.ownerId IS NOT NULL THEN 1 ELSE 0 END), 0) AS errors,
           COALESCE(SUM(COALESCE(p.purchases_count, 0)), 0) AS purchases,
           COALESCE(SUM(COALESCE(k.kudos_count, 0)), 0) AS kudos
         FROM \`User\` u
         LEFT JOIN \`Department\` d ON d.id = u.departmentId
         LEFT JOIN (
-          SELECT wa.wishlistOwnerId AS ownerId, COUNT(DISTINCT wa.id) AS lists_with_errors
+          -- owners who have at least one unresolved report on any of their assignments
+          SELECT DISTINCT wa.wishlistOwnerId AS ownerId
           FROM \`WishlistAssignment\` wa
           JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
-          GROUP BY wa.wishlistOwnerId
         ) wr ON wr.ownerId = u.id
         LEFT JOIN (
           SELECT wa.wishlistOwnerId AS ownerId, COUNT(*) AS purchases_count

@@ -11,6 +11,15 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
   html: string;
   text: string;
 } {  const subject = `🎅 Sign in to ${host} - Your Magic Link is Here!`;
+  // Landing page for magic links - avoid embedding the raw magic link directly in the email
+  const landing = (() => {
+    try {
+      return `${new URL(url).origin}/auth/magic?url=${encodeURIComponent(url)}`;
+    } catch {
+      // Fallback: if URL parsing fails, fall back to the raw url
+      return url;
+    }
+  })();
 
   const html = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -95,7 +104,7 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
                           <w:anchorlock/>
                           <center>
                           <![endif]-->
-                          <a href="${url}" style="display: inline-block; background-color: #dc2626; color: #ffffff !important; text-decoration: none; padding: 16px 32px; font-weight: 600; font-size: 18px; font-family: Arial, Helvetica, sans-serif; border: none; text-align: center; line-height: 18px;">
+                          <a href="${landing}" style="display: inline-block; background-color: #dc2626; color: #ffffff !important; text-decoration: none; padding: 16px 32px; font-weight: 600; font-size: 18px; font-family: Arial, Helvetica, sans-serif; border: none; text-align: center; line-height: 18px;">
                             🎅 Sign In Now
                           </a>
                           <!--[if mso]>
@@ -124,7 +133,7 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
                   <td align="center" style="padding: 30px 0 0 0;">
                     <p style="color: #6b7280; font-size: 14px; margin: 0; font-family: Arial, Helvetica, sans-serif; text-align: center;">
                       Having trouble with the button? Copy and paste this link into your browser:<br>
-                      <span style="word-break: break-all; color: #dc2626;">${url}</span>
+                      <span style="word-break: break-all; color: #dc2626;">${landing}</span>
                     </p>
                   </td>
                 </tr>
@@ -182,7 +191,7 @@ Ho ho ho! 🎄
 We've prepared your magic link to sign in to ${host}. Just like Santa's sleigh, this link will take you straight to your destination!
 
 Click here to sign in:
-${url}
+${landing}
 
 🔒 Security Note: This magic link will expire in 24 hours and can only be used once. If you didn't request this email, you can safely ignore it.
 

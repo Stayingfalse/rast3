@@ -33,47 +33,40 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Raw SQL aggregation to avoid complex Prisma groupBy across relations
-      // Build a derived table of owners where we compute per-owner metrics
-      // using correlated subqueries (lists_with_errors, purchases_count, kudos_count).
-      // Then aggregate those owner-level metrics by domain/department to avoid
-      // row-multiplication from joins.
+      // Use aggregated derived tables per owner to avoid row multiplication
+      // and correlated subqueries. We pre-aggregate lists-with-errors, purchases,
+      // and kudos grouped by owner, join those to users, then aggregate by
+      // domain/department.
       const sql = `
         SELECT
-          owners.domain AS domain,
-          owners.departmentId AS departmentId,
+          COALESCE(u.domain, '') AS domain,
+          u.departmentId AS departmentId,
           d.name AS departmentName,
           COUNT(*) AS users,
-          COUNT(CASE WHEN owners.amazonWishlistUrl IS NOT NULL THEN 1 END) AS links,
-          COALESCE(SUM(owners.lists_with_errors), 0) AS errors,
-          COALESCE(SUM(owners.purchases_count), 0) AS purchases,
-          COALESCE(SUM(owners.kudos_count), 0) AS kudos
-        FROM (
-          SELECT
-            u.id AS userId,
-            COALESCE(u.domain, '') AS domain,
-            u.departmentId,
-            u.amazonWishlistUrl,
-            (
-              SELECT COUNT(DISTINCT wa.id)
-              FROM \`WishlistAssignment\` wa
-              JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
-              WHERE wa.wishlistOwnerId = u.id
-            ) AS lists_with_errors,
-            (
-              SELECT COUNT(*)
-              FROM \`Purchase\` p
-              JOIN \`WishlistAssignment\` wa2 ON wa2.id = p.wishlistAssignmentId
-              WHERE wa2.wishlistOwnerId = u.id
-            ) AS purchases_count,
-            (
-              SELECT COUNT(*)
-              FROM \`Kudos\` k2
-              WHERE k2.userId = u.id
-            ) AS kudos_count
-          FROM \`User\` u
-        ) owners
-        LEFT JOIN \`Department\` d ON d.id = owners.departmentId
-        GROUP BY owners.domain, owners.departmentId
+          SUM(CASE WHEN u.amazonWishlistUrl IS NOT NULL THEN 1 ELSE 0 END) AS links,
+          COALESCE(SUM(COALESCE(wr.lists_with_errors, 0)), 0) AS errors,
+          COALESCE(SUM(COALESCE(p.purchases_count, 0)), 0) AS purchases,
+          COALESCE(SUM(COALESCE(k.kudos_count, 0)), 0) AS kudos
+        FROM \`User\` u
+        LEFT JOIN \`Department\` d ON d.id = u.departmentId
+        LEFT JOIN (
+          SELECT wa.wishlistOwnerId AS ownerId, COUNT(DISTINCT wa.id) AS lists_with_errors
+          FROM \`WishlistAssignment\` wa
+          JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
+          GROUP BY wa.wishlistOwnerId
+        ) wr ON wr.ownerId = u.id
+        LEFT JOIN (
+          SELECT wa.wishlistOwnerId AS ownerId, COUNT(*) AS purchases_count
+          FROM \`Purchase\` p
+          JOIN \`WishlistAssignment\` wa ON wa.id = p.wishlistAssignmentId
+          GROUP BY wa.wishlistOwnerId
+        ) p ON p.ownerId = u.id
+        LEFT JOIN (
+          SELECT k2.userId AS ownerId, COUNT(*) AS kudos_count
+          FROM \`Kudos\` k2
+          GROUP BY k2.userId
+        ) k ON k.ownerId = u.id
+        GROUP BY u.domain, u.departmentId
         ORDER BY domain ASC, departmentName ASC
       `;
 

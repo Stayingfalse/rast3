@@ -46,33 +46,98 @@ function AdminOverview() {
   const stats = domainDeptStats as DomainStat[] | undefined;
 
   const copyDomainCsv = async (domainStat: DomainStat) => {
+    // Build headers and rows
+    const headers = ["Domain", "Department", "Users", "Links", "Errors", "Purchases", "Kudos"];
+    const rows = domainStat.departments.map((d) => ({
+      department: d.departmentName ?? "(no department)",
+      users: d.users ?? 0,
+      links: d.links ?? 0,
+      errors: d.errors ?? 0,
+      purchases: d.purchases ?? 0,
+      kudos: d.kudos ?? 0,
+    }));
+
+    // Plain text (tab-separated) fallback
+    const plainLines = [headers.join("\t")].concat(
+      rows.map((r) => [domainStat.domain, r.department, String(r.users), String(r.links), String(r.errors), String(r.purchases), String(r.kudos)].join("\t")),
+    );
+    const plainText = plainLines.join("\n");
+
+    // HTML table for richer clipboard copy
+    const htmlRows = rows
+      .map(
+        (r) => `
+          <tr>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(domainStat.domain)}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(r.department)}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.users}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.links}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.errors}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.purchases}</td>
+            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.kudos}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const html = `
+      <table style="border-collapse:collapse;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;">
+        <thead>
+          <tr>
+            ${headers.map((h) => `<th style="padding:8px;text-align:left;background:#0f172a;color:#fff;border-bottom:1px solid #111827;">${escapeHtml(h)}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody style="background:#fff;color:#111827;">
+          ${htmlRows}
+        </tbody>
+      </table>`;
+
     try {
-      const escape = (v: string | number | boolean | null | undefined) => {
-        if (v === null || v === undefined) return "";
-        const s = String(v);
-        return `"${s.replace(/"/g, '""')}"`;
-      };
+      // Try to copy the HTML table by inserting it into a hidden element,
+      // selecting it, and issuing the legacy `execCommand('copy')` which
+      // preserves rich HTML clipboard data in many browsers.
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      // Keep off-screen and selectable
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      document.body.appendChild(container);
 
-      const headers = ["Domain", "Department", "Users", "Links", "Errors", "Purchases", "Kudos"];
-      const rows = domainStat.departments.map((d) => [
-        domainStat.domain,
-        d.departmentName ?? "(no department)",
-        String(d.users ?? 0),
-        String(d.links ?? 0),
-        String(d.errors ?? 0),
-        String(d.purchases ?? 0),
-        String(d.kudos ?? 0),
-      ]);
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      const sel = window.getSelection();
+      if (!sel) throw new Error("Selection not available");
+      sel.removeAllRanges();
+      sel.addRange(range);
 
-      const csvLines = [headers.map(escape).join(",")].concat(rows.map((r) => r.map(escape).join(",")));
-      const output = csvLines.join("\n");
-      await navigator.clipboard.writeText(output);
+      const successful = document.execCommand("copy");
+      sel.removeAllRanges();
+      container.remove();
+
+      if (!successful) {
+        // Fallback to plain text copy
+        await navigator.clipboard.writeText(plainText);
+      }
+
       toast.success("Copied domain stats to clipboard");
     } catch {
-      // fallback: notify failure
-      toast.error("Could not copy stats to clipboard");
+      try {
+        await navigator.clipboard.writeText(plainText);
+        toast.success("Copied domain stats to clipboard");
+      } catch {
+        toast.error("Could not copy stats to clipboard");
+      }
     }
   };
+
+  function escapeHtml(s: string) {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">

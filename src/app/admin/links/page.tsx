@@ -101,6 +101,11 @@ export default function AdminLinksPage() {
     const errorCount = errors.length;
     const [showErrors, setShowErrors] = useState(false);
     const ownerEmail = user.workEmail ?? user.email ?? "";
+    const displayName = user.firstName
+      ? user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : user.firstName
+      : user.name ?? user.email ?? user.id;
     const mailSubject = `Action required: ${errorCount} reported issue${errorCount !== 1 ? "s" : ""} on your shared wishlist`;
     const urlPart = user.amazonWishlistUrl ? ":\n" + user.amazonWishlistUrl : ".";
     const mailBody =
@@ -114,7 +119,7 @@ export default function AdminLinksPage() {
     return (
       <tr key={user.id} className="hover:bg-white/5">
         <td className="px-6 py-4 font-medium text-white">
-          {user.firstName ?? user.name ?? user.email ?? user.id}
+          {displayName}
         </td>
         <td className="px-6 py-4">
           {user.amazonWishlistUrl ? (
@@ -398,11 +403,16 @@ export default function AdminLinksPage() {
                       {users.map((user: UserWithWishlist) => {
                         const stats = user.amazonWishlistUrlStats ?? {};
                         const errorCount = stats.errors?.length ?? 0;
+                        const displayName = user.firstName
+                          ? user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : user.firstName
+                          : user.name ?? user.email ?? user.id;
                         return (
                           <div key={user.id} className="bg-black/85 rounded-lg border border-white/20 p-4 backdrop-blur-sm">
                             <div className="mb-3">
                               <h4 className="font-medium text-white text-lg">
-                                {user.firstName ?? user.name ?? user.email ?? user.id}
+                                {displayName}
                               </h4>
                             </div>
                             

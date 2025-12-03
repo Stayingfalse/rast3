@@ -1,8 +1,8 @@
 "use client";
 
+import { toast } from "react-hot-toast";
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
-import { toast } from "react-hot-toast";
 
 type DomainData = {
   id: string;

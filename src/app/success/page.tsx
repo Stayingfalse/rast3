@@ -40,7 +40,7 @@ export default function SuccessPage() {
   }, [userStats, domainDeptStats]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-black/90 to-black p-6 text-white">
+    <div className="min-h-screen p-6 text-white">
       <div className="mx-auto max-w-5xl">
         <header className="mb-4 relative z-30">
           <div className="flex justify-center items-center">

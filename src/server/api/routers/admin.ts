@@ -33,6 +33,9 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Raw SQL aggregation to avoid complex Prisma groupBy across relations
+      // We compute per-user counts of distinct wishlist-assignments that have at least
+      // one unresolved report, then sum those counts per department. This ensures
+      // the "errors" value counts unique wishlists with >=1 report (not total reports).
       const sql = `
         SELECT
           COALESCE(u.domain, '') AS domain,
@@ -40,13 +43,19 @@ export const adminRouter = createTRPCRouter({
           d.name AS departmentName,
           COUNT(DISTINCT u.id) AS users,
           COUNT(DISTINCT CASE WHEN u.amazonWishlistUrl IS NOT NULL THEN u.id END) AS links,
-          COUNT(DISTINCT CASE WHEN wr.id IS NOT NULL THEN wa.id END) AS errors,
+          COALESCE(SUM(lwe.lists_with_errors), 0) AS errors,
           COUNT(DISTINCT p.id) AS purchases,
           COUNT(DISTINCT k.id) AS kudos
         FROM \`User\` u
         LEFT JOIN \`Department\` d ON d.id = u.departmentId
+        -- per-user counts of distinct wishlist assignments that have unresolved reports
+        LEFT JOIN (
+          SELECT wa.wishlistOwnerId AS ownerId, COUNT(DISTINCT wa.id) AS lists_with_errors
+          FROM \`WishlistAssignment\` wa
+          JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
+          GROUP BY wa.wishlistOwnerId
+        ) lwe ON lwe.ownerId = u.id
         LEFT JOIN \`WishlistAssignment\` wa ON wa.wishlistOwnerId = u.id
-        LEFT JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
         LEFT JOIN \`Purchase\` p ON p.wishlistAssignmentId = wa.id
         LEFT JOIN \`Kudos\` k ON k.userId = u.id
         GROUP BY u.domain, u.departmentId

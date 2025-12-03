@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
+import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
 import HomeHeaderClientWrapper from "../_components/home-header-client-wrapper";
 
 export default function SuccessPage() {
@@ -67,21 +69,41 @@ export default function SuccessPage() {
             ) : kudos.length === 0 ? (
               <div className="col-span-3 text-center text-white/70">No stories available</div>
             ) : (
-              kudos.map((k) => (
-                <article key={k.id} className="rounded border border-white/10 bg-black/70 p-3">
-                  <div className="mb-2 h-20 w-full overflow-hidden rounded bg-gray-800">
-                    {k.images ? (
-                      <img src={JSON.parse(k.images)[0]} alt="kudos" className="h-full w-full object-cover" />
-                    ) : k.user?.image ? (
-                      <img src={k.user.image} alt="kudos" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gray-800" />
-                    )}
-                  </div>
-                  <blockquote className="mb-2 text-sm leading-tight">“{k.message}”</blockquote>
-                  <div className="text-xs text-white/60">— {k.user?.firstName ?? k.user?.name ?? k.user?.id}</div>
-                </article>
-              ))
+              kudos.map((k) => {
+                // Safely parse images JSON into a string[] without unsafe any usage
+                let imgs: string[] = [];
+                if (k.images) {
+                  try {
+                    const parsed = JSON.parse(k.images);
+                    if (Array.isArray(parsed)) {
+                      imgs = parsed.map((v: unknown) => String(v));
+                    }
+                  } catch {
+                    imgs = [];
+                  }
+                }
+                const firstImg = imgs.length > 0 ? imgs[0] : k.user?.image ?? null;
+                return (
+                  <article key={k.id} className="rounded border border-white/10 bg-black/70 p-3">
+                    <div className="mb-2 h-20 w-full overflow-hidden rounded bg-gray-800">
+                      {firstImg ? (
+                        <Image
+                          src={getProxyImageUrl(firstImg)}
+                          alt={k.message ? k.message.slice(0, 80) : "kudos image"}
+                          width={800}
+                          height={320}
+                          className="h-full w-full object-cover"
+                          onError={handleImageError}
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gray-800" />
+                      )}
+                    </div>
+                    <blockquote className="mb-2 text-sm leading-tight">“{k.message}”</blockquote>
+                    <div className="text-xs text-white/60">— {k.user?.firstName ?? k.user?.name ?? k.user?.id}</div>
+                  </article>
+                );
+              })
             )}
           </div>
         </section>

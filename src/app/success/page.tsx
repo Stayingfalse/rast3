@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import HomeHeaderClientWrapper from "../_components/home-header-client-wrapper";
 import { api } from "~/trpc/react";
+import HomeHeaderClientWrapper from "../_components/home-header-client-wrapper";
 
 export default function SuccessPage() {
   // Fetch a few latest kudos (public)

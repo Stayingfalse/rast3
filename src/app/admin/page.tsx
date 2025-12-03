@@ -149,29 +149,46 @@ function AdminOverview() {
         </div>
       </div>
 
-      {/* Domain / Department Key Stats */}
+      {/* Domain / Department Key Stats (table view) */}
       <div className="mt-6 rounded-lg bg-white p-4 shadow-md">
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Key Stats by Domain & Department</h2>
         {(!stats || stats.length === 0) && <p className="text-sm text-gray-600">No data available</p>}
-        {stats?.map((domain) => (
-          <div key={domain.domain} className="mb-4">
-            <h3 className="mb-2 text-md font-semibold text-gray-800">{domain.domain}</h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {domain.departments.map((dept) => (
-                <div key={dept.departmentId ?? dept.departmentName} className="rounded-lg border p-3">
-                  <div className="text-sm font-medium text-gray-700">{dept.departmentName ?? "(no department)"}</div>
-                  <div className="mt-2 text-sm text-gray-600">
-                    <div>Users: <strong className="text-gray-900">{dept.users}</strong></div>
-                    <div>Links: <strong className="text-gray-900">{dept.links}</strong></div>
-                    <div>Errors: <strong className="text-gray-900">{dept.errors}</strong></div>
-                    <div>Purchases: <strong className="text-gray-900">{dept.purchases}</strong></div>
-                    <div>Kudos: <strong className="text-gray-900">{dept.kudos}</strong></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+        {stats && stats.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Domain / Department</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Users</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Links</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Errors</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Purchases</th>
+                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Kudos</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.map((domain) => (
+                  <>
+                    <tr key={`domain-${domain.domain}`} className="bg-black/85">
+                      <td colSpan={6} className="px-4 py-2 text-sm font-semibold text-white">{domain.domain}</td>
+                    </tr>
+                    {domain.departments.map((dept: DepartmentStat) => (
+                      <tr key={dept.departmentId ?? dept.departmentName}>
+                        <td className="px-4 py-2 text-sm text-gray-700">{dept.departmentName ?? "(no department)"}</td>
+                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.users}</td>
+                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.links}</td>
+                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.errors}</td>
+                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.purchases}</td>
+                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.kudos}</td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { AdminLayout } from "~/app/_components/admin-layout";
 import { api } from "~/trpc/react";
+import { toast } from "react-hot-toast";
 
 type DomainData = {
   id: string;
@@ -43,6 +44,35 @@ function AdminOverview() {
   };
 
   const stats = domainDeptStats as DomainStat[] | undefined;
+
+  const copyDomainCsv = async (domainStat: DomainStat) => {
+    try {
+      const escape = (v: string | number | boolean | null | undefined) => {
+        if (v === null || v === undefined) return "";
+        const s = String(v);
+        return `"${s.replace(/"/g, '""')}"`;
+      };
+
+      const headers = ["Domain", "Department", "Users", "Links", "Errors", "Purchases", "Kudos"];
+      const rows = domainStat.departments.map((d) => [
+        domainStat.domain,
+        d.departmentName ?? "(no department)",
+        String(d.users ?? 0),
+        String(d.links ?? 0),
+        String(d.errors ?? 0),
+        String(d.purchases ?? 0),
+        String(d.kudos ?? 0),
+      ]);
+
+      const csvLines = [headers.map(escape).join(",")].concat(rows.map((r) => r.map(escape).join(",")));
+      const output = csvLines.join("\n");
+      await navigator.clipboard.writeText(output);
+      toast.success("Copied domain stats to clipboard");
+    } catch {
+      // fallback: notify failure
+      toast.error("Could not copy stats to clipboard");
+    }
+  };
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">
@@ -150,9 +180,9 @@ function AdminOverview() {
       </div>
 
       {/* Domain / Department Key Stats (table view) */}
-      <div className="mt-6 rounded-lg bg-white p-4 shadow-md">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Key Stats by Domain & Department</h2>
-        {(!stats || stats.length === 0) && <p className="text-sm text-gray-600">No data available</p>}
+      <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-">
+        <h2 className="text-sm text-white/80 sm:text-base">Key Stats by Domain & Department</h2>
+        {(!stats || stats.length === 0) && <p className="text-sm text-white/80 sm:text-base">No data available</p>}
 
         {stats && stats.length > 0 && (
           <div className="overflow-x-auto">
@@ -171,8 +201,48 @@ function AdminOverview() {
                 {stats.map((domain) => (
                   <>
                     <tr key={`domain-${domain.domain}`} className="bg-black/85">
-                      <td colSpan={6} className="px-4 py-2 text-sm font-semibold text-white">{domain.domain}</td>
+                      <td colSpan={6} className="px-4 py-2 text-sm font-semibold text-white">
+                        <div className="flex items-center justify-between">
+                          <span>{domain.domain}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void copyDomainCsv(domain)}
+                              className="ml-4 inline-flex items-center gap-2 rounded border border-white/10 bg-white/10 px-2 py-1 text-xs font-medium text-white hover:bg-white/20"
+                              aria-label={`Copy stats for ${domain.domain}`}
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
+
+                    {/* Totals row for domain */}
+                    {(() => {
+                      const totals = domain.departments.reduce(
+                        (acc, d) => {
+                          acc.users += d.users ?? 0;
+                          acc.links += d.links ?? 0;
+                          acc.errors += d.errors ?? 0;
+                          acc.purchases += d.purchases ?? 0;
+                          acc.kudos += d.kudos ?? 0;
+                          return acc;
+                        },
+                        { users: 0, links: 0, errors: 0, purchases: 0, kudos: 0 },
+                      );
+                      return (
+                        <tr key={`domain-totals-${domain.domain}`} className="bg-black/70">
+                          <td className="px-4 py-2 text-sm font-medium text-white">Totals</td>
+                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.users}</td>
+                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.links}</td>
+                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.errors}</td>
+                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.purchases}</td>
+                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.kudos}</td>
+                        </tr>
+                      );
+                    })()}
+
                     {domain.departments.map((dept: DepartmentStat) => (
                       <tr key={dept.departmentId ?? dept.departmentName}>
                         <td className="px-4 py-2 text-sm text-gray-700">{dept.departmentName ?? "(no department)"}</td>

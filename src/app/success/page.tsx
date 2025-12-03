@@ -42,28 +42,43 @@ export default function SuccessPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-black/90 to-black p-6 text-white">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-4">
-          <HomeHeaderClientWrapper />
+        <header className="mb-4 relative z-30">
+          <div className="flex justify-center items-center">
+            <div className="w-full max-w-3xl text-center">
+              <HomeHeaderClientWrapper />
+            </div>
+          </div>
         </header>
 
-        <section className="mb-4 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded border border-white/10 bg-black/70 p-3">
-            <div className="text-sm text-white/80">People Involved</div>
-            <div className="text-2xl font-bold">{stats.peopleInvolved ? stats.peopleInvolved.toLocaleString() : "—"}</div>
+        {/* Intro / Sales write-up */}
+        <section className="mb-6 rounded-lg border border-white/10 bg-black/75 p-5 text-sm text-white/80 shadow-lg z-20 relative">
+          <h2 className="text-xl font-semibold text-blue-300 mb-2">Why Random Acts of Santa Worked</h2>
+          <p className="leading-snug">
+            Random Acts of Santa created fast, low-friction moments of human connection across teams and organisations. Using a simple wishlist mechanism and an emphasis on anonymity and kindness, colleagues who might otherwise never exchange a gift came together to share meaningful presents and appreciation.
+          </p>
+          <p className="mt-3 leading-snug text-white/80">
+            To date this campaign has involved <strong className="text-white">{stats.peopleInvolved ? stats.peopleInvolved.toLocaleString() : "many"}</strong> participants, with <strong className="text-white">{stats.giftsSent ? stats.giftsSent.toLocaleString() : "many"}</strong> gifts recorded and <strong className="text-white">{stats.wishlistsShared ? stats.wishlistsShared.toLocaleString() : "many"}</strong> wishlists shared across the organisation. These simple numbers represent dozens of small gestures that boosted morale, included colleagues who might otherwise be left out, and generated authentic stories shared below.
+          </p>
+        </section>
+
+        <section className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center z-20 relative">
+          <div className="rounded-lg border border-white/10 bg-gradient-to-b from-black/60 to-black/50 p-4 shadow-md">
+            <div className="text-sm text-white/70">People Involved</div>
+            <div className="text-2xl font-extrabold text-white mt-2">{stats.peopleInvolved ? stats.peopleInvolved.toLocaleString() : "—"}</div>
           </div>
-          <div className="rounded border border-white/10 bg-black/70 p-3">
-            <div className="text-sm text-white/80">Gifts Sent</div>
-            <div className="text-2xl font-bold">{stats.giftsSent ? stats.giftsSent.toLocaleString() : "—"}</div>
+          <div className="rounded-lg border border-white/10 bg-gradient-to-b from-black/60 to-black/50 p-4 shadow-md">
+            <div className="text-sm text-white/70">Gifts Sent</div>
+            <div className="text-2xl font-extrabold text-white mt-2">{stats.giftsSent ? stats.giftsSent.toLocaleString() : "—"}</div>
           </div>
-          <div className="rounded border border-white/10 bg-black/70 p-3">
-            <div className="text-sm text-white/80">Wishlists Shared</div>
-            <div className="text-2xl font-bold">{stats.wishlistsShared ? stats.wishlistsShared.toLocaleString() : "—"}</div>
+          <div className="rounded-lg border border-white/10 bg-gradient-to-b from-black/60 to-black/50 p-4 shadow-md">
+            <div className="text-sm text-white/70">Wishlists Shared</div>
+            <div className="text-2xl font-extrabold text-white mt-2">{stats.wishlistsShared ? stats.wishlistsShared.toLocaleString() : "—"}</div>
           </div>
         </section>
 
         <section className="mb-6">
           <h2 className="mb-2 text-lg font-semibold text-blue-300">Selected Stories</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {kudosLoading ? (
               <div className="col-span-3 text-center text-white/70">Loading stories…</div>
             ) : kudos.length === 0 ? (
@@ -84,8 +99,8 @@ export default function SuccessPage() {
                 }
                 const firstImg = imgs.length > 0 ? imgs[0] : k.user?.image ?? null;
                 return (
-                  <article key={k.id} className="rounded border border-white/10 bg-black/70 p-3">
-                    <div className="mb-2 h-20 w-full overflow-hidden rounded bg-gray-800">
+                  <article key={k.id} className="rounded-lg border border-white/10 bg-black/65 p-3 shadow-sm">
+                    <div className="mb-2 h-28 w-full overflow-hidden rounded-md bg-gray-800">
                       {firstImg ? (
                         <Image
                           src={getProxyImageUrl(firstImg)}
@@ -99,7 +114,7 @@ export default function SuccessPage() {
                         <div className="h-full w-full bg-gray-800" />
                       )}
                     </div>
-                    <blockquote className="mb-2 text-sm leading-tight">“{k.message}”</blockquote>
+                    <blockquote className="mb-2 text-sm leading-tight text-white/85">“{k.message}”</blockquote>
                     <div className="text-xs text-white/60">— {k.user?.firstName ?? k.user?.name ?? k.user?.id}</div>
                   </article>
                 );

@@ -74,9 +74,9 @@ export default function SuccessPage() {
                 let imgs: string[] = [];
                 if (k.images) {
                   try {
-                    const parsed = JSON.parse(k.images);
+                    const parsed = JSON.parse(k.images) as unknown;
                     if (Array.isArray(parsed)) {
-                      imgs = parsed.map((v: unknown) => String(v));
+                      imgs = (parsed as unknown[]).map((v) => String(v));
                     }
                   } catch {
                     imgs = [];

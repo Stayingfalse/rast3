@@ -40,7 +40,7 @@ export const adminRouter = createTRPCRouter({
           d.name AS departmentName,
           COUNT(DISTINCT u.id) AS users,
           COUNT(DISTINCT CASE WHEN u.amazonWishlistUrl IS NOT NULL THEN u.id END) AS links,
-          COUNT(DISTINCT CASE WHEN wr.id IS NOT NULL THEN wr.id END) AS errors,
+          COUNT(DISTINCT CASE WHEN wr.id IS NOT NULL THEN wa.id END) AS errors,
           COUNT(DISTINCT p.id) AS purchases,
           COUNT(DISTINCT k.id) AS kudos
         FROM \`User\` u

@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     if (currentToken) {
       try {
         await db.impersonationAudit.updateMany({
-          where: { startSessionToken: currentToken, stoppedAt: null },
+          where: { startSessionToken: { equals: currentToken }, stoppedAt: null },
           data: { stoppedAt: new Date(), stopSessionToken: currentToken },
         });
       } catch (err) {

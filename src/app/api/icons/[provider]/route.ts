@@ -180,7 +180,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
     cacheStats.hits++;
     logCacheStats();
-    return new NextResponse(cached.data, {
+    return new NextResponse(new Uint8Array(cached.data), {
       headers: {
         'Content-Type': cached.contentType,
         'Cache-Control': 'public, max-age=86400', // 24 hours

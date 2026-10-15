@@ -55,8 +55,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Prisma CLI for the optional schema sync in docker-entrypoint.sh
-RUN npm install -g prisma@6.8.2 && npm cache clean --force
+# Prisma CLI for the optional schema sync in docker-entrypoint.sh.
+# Keep the version in step with prisma in package-lock.json.
+RUN npm install -g prisma@6.19.3 && npm cache clean --force
 
 COPY --from=builder /app/public ./public
 

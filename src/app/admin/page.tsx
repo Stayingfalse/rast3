@@ -43,7 +43,7 @@ function AdminOverview() {
     departments: DepartmentStat[];
   };
 
-  const stats = domainDeptStats as DomainStat[] | undefined;
+  const stats = domainDeptStats;
 
   const copyDomainCsv = async (domainStat: DomainStat) => {
     // Build headers and rows

@@ -46,11 +46,20 @@
   server membership (optionally a role); friends join by invite link or code.
 - **Membership**: user ↔ group, with role (`MEMBER`, `MODERATOR`, `ADMIN`).
   One person can be in many groups.
-- **Season**: a giving period inside a group (dates, suggested budget, rules).
+- **Christmas season (site-wide, yearly)**: the site is exclusively for
+  Christmas. One season a year, open from **mid-November to early January**
+  (defaults about 15 Nov → 6 Jan, adjustable by the site admin). Groups don't
+  set their own dates; they only choose a suggested budget and mixing rules.
   It keeps the **Random Acts** model, the site's key selling point: **not** a
   classic Secret Santa. There's no closed draw and no fixed 1:1 pairing: people
   pick up a random wishlist whenever they're ready and can do as many acts of
   kindness as they like.
+  - *Off-season*: a countdown to opening. People can still create or join
+    groups and get their wishlist ready, but no lists are handed out.
+  - *Season end*: assignments are archived (the existing `archived` flag) and
+    each group gets a recap; next year starts fresh.
+  - Other occasions (birthdays, other holidays) belong to a separate sister
+    project in future, not this site.
 - **Wishlist** (one or more per user): Amazon, Throne, Etsy or any URL; Amazon
   item data read from public lists where possible.
 - Existing prod data migrates into one `ORG` group per enabled domain, with
@@ -71,18 +80,18 @@
 ### Week 2: groups (22–28 Oct), the core change
 | Day | Date | Focus |
 |---|---|---|
-| 7 | Thu 22 Oct | Data model: Group, Membership, Exchange, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
-| 8 | Fri 23 Oct | Scope every query to a group/exchange; tenant-isolation tests |
+| 7 | Thu 22 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
+| 8 | Fri 23 Oct | Scope every query to a group and season; tenant-isolation tests |
 | 9 | Sat 24 Oct | Create a group + invite links/codes (friends groups) |
 | 10 | Sun 25 Oct | Org joining via verified work email, moved onto the new model |
 | 11 | Mon 26 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
 | 12 | Tue 27 Oct | Group switcher + per-group home, designed mobile-first |
 | 13 | Wed 28 Oct | Group admin console: members, roles, settings, moderation |
 
-### Week 3: exchanges and wishlists (29 Oct – 4 Nov)
+### Week 3: the Christmas season and wishlists (29 Oct – 4 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 14 | Thu 29 Oct | Seasons for Random Acts: per-group dates, suggested budget, mixing rules (same/cross department or group) |
+| 14 | Thu 29 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
 | 15 | Fri 30 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
 | 16 | Sat 31 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
 | 17 | Sun 1 Nov | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
@@ -113,8 +122,8 @@
   affiliate links in emails.
 - **Free tier**: friend groups and small communities, so the site grows by word of mouth.
 - **Paid "Community" tier** (e.g. large Discord servers): Discord bot,
-  role-gated joining, custom branding, more exchanges per year, moderation tools.
-- **Paid "Workplace" tier** (per org, per season): SSO/domain verification,
+  role-gated joining, custom branding, sub-groups, moderation tools.
+- **Paid "Workplace" tier** (per org, per Christmas season): SSO/domain verification,
   department mixing, admin reports, charity/CSR wishlists, Slack/Teams reminders,
   invoicing.
 - **Optional extras**: supporter tips, sponsored charity drives.
@@ -130,12 +139,13 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   so it fits the communities target well.
 - **Charity wishlists**: orgs add a shelter's or school's wishlist to the pool
   (good for workplace CSR and the paid tier).
-- **Budget bands** per exchange, with each wishlist item tagged by price.
-- **Calendar (.ics) export** for season start, end and last-order-for-Christmas dates.
+- **Budget bands** per group, with each wishlist item tagged by price.
+- **Calendar (.ics) export** for season opening, last-order-for-Christmas and season close.
 - **"Shipped / arrived" tracking** with a nudge if nothing has arrived by a date.
 - **Streaks and badges** for Random Acts (gentle gamification, opt-in).
 - **Slack/Teams app** for the workplace tier.
 - **Stale-wishlist detection**: private, empty or broken lists, plus a nudge to the owner.
+- **Year-in-review recap** each January: gifts given per group, kudos highlights, an "opens again in November" reminder (good for return visits and next year's sign-ups).
 - **Nobody left out**: highlight wishlists with no gifts yet as the season ends, and let generous members (or the org, via CSR budget) pick them up.
 
 ## Log
@@ -146,4 +156,6 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   that had broken every deploy since March (#16), plus the dev DB setup (#17).
   Both merged and deployed to prod (`434cc10`): healthy, 158 users intact.
   Goals expanded (above) and the plan rewritten around them. Owner: Random Acts
-  (not a classic Secret Santa) is the key selling point, so there is no draw mode.
+  (not a classic Secret Santa) is the key selling point, so there is no draw mode;
+  the site is Christmas-only, with one season a year (mid-Nov → early Jan). Other
+  occasions belong to a future sister project.

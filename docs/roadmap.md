@@ -46,9 +46,11 @@
   server membership (optionally a role); friends join by invite link or code.
 - **Membership**: user ↔ group, with role (`MEMBER`, `MODERATOR`, `ADMIN`).
   One person can be in many groups.
-- **Exchange**: a season or event inside a group, with dates, budget and mode:
-  - *Random Acts* (today's behaviour): an open pool, take another list when you're ready.
-  - *Classic Secret Santa*: a closed sign-up, one draw, with exclusions (e.g. couples).
+- **Season**: a giving period inside a group (dates, suggested budget, rules).
+  It keeps the **Random Acts** model, the site's key selling point: **not** a
+  classic Secret Santa. There's no closed draw and no fixed 1:1 pairing: people
+  pick up a random wishlist whenever they're ready and can do as many acts of
+  kindness as they like.
 - **Wishlist** (one or more per user): Amazon, Throne, Etsy or any URL; Amazon
   item data read from public lists where possible.
 - Existing prod data migrates into one `ORG` group per enabled domain, with
@@ -80,8 +82,8 @@
 ### Week 3: exchanges and wishlists (29 Oct – 4 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 14 | Thu 29 Oct | Exchange modes: Random Acts vs Classic Secret Santa, with sign-up and draw dates |
-| 15 | Fri 30 Oct | Draw engine: exclusions, department mixing, fairness, admin re-draw |
+| 14 | Thu 29 Oct | Seasons for Random Acts: per-group dates, suggested budget, mixing rules (same/cross department or group) |
+| 15 | Fri 30 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
 | 16 | Sat 31 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
 | 17 | Sun 1 Nov | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
 | 18 | Mon 2 Nov | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
@@ -91,7 +93,7 @@
 ### Week 4: engagement, polish, launch (5–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 21 | Thu 5 Nov | Notifications: email + PWA push (draw, reminders, gift received) |
+| 21 | Thu 5 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
 | 22 | Fri 6 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
 | 23 | Sat 7 Nov | Public landing page + "start a group" onboarding (mobile-first) |
 | 24 | Sun 8 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
@@ -129,12 +131,12 @@ Suggestions beyond the brief, to schedule when the owner agrees:
 - **Charity wishlists**: orgs add a shelter's or school's wishlist to the pool
   (good for workplace CSR and the paid tier).
 - **Budget bands** per exchange, with each wishlist item tagged by price.
-- **Calendar (.ics) export** for sign-up, draw and delivery deadlines.
+- **Calendar (.ics) export** for season start, end and last-order-for-Christmas dates.
 - **"Shipped / arrived" tracking** with a nudge if nothing has arrived by a date.
 - **Streaks and badges** for Random Acts (gentle gamification, opt-in).
 - **Slack/Teams app** for the workplace tier.
 - **Stale-wishlist detection**: private, empty or broken lists, plus a nudge to the owner.
-- **Gift-swap fallback**: if someone drops out, re-home their giftee automatically.
+- **Nobody left out**: highlight wishlists with no gifts yet as the season ends, and let generous members (or the org, via CSR budget) pick them up.
 
 ## Log
 
@@ -143,4 +145,5 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   `dev-backup-2026-10-15`); fixed the Next 16 / next-auth dependency conflict
   that had broken every deploy since March (#16), plus the dev DB setup (#17).
   Both merged and deployed to prod (`434cc10`): healthy, 158 users intact.
-  Goals expanded (above) and the plan rewritten around them.
+  Goals expanded (above) and the plan rewritten around them. Owner: Random Acts
+  (not a classic Secret Santa) is the key selling point, so there is no draw mode.

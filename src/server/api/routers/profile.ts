@@ -27,10 +27,6 @@ type UserWithDepartment = {
   } | null;
 };
 
-type DomainStatus = {
-  enabled: boolean;
-};
-
 // Amazon UK wishlist URL regex
 const amazonWishlistRegex =
   /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
@@ -56,10 +52,10 @@ export const profileRouter = createTRPCRouter({
     // Get domain status if user has a domain
     let domainEnabled = null;
     if (user.domain) {
-      const domain = (await ctx.db.domain.findUnique({
+      const domain = await ctx.db.domain.findUnique({
         where: { name: user.domain },
         select: { enabled: true },
-      })) as DomainStatus | null;
+      });
       domainEnabled = domain ? domain.enabled : null;
     }
 
@@ -75,10 +71,10 @@ export const profileRouter = createTRPCRouter({
   checkDomainStatus: protectedProcedure
     .input(z.object({ domain: z.string() }))
     .query(async ({ ctx, input }) => {
-      const domain = (await ctx.db.domain.findUnique({
+      const domain = await ctx.db.domain.findUnique({
         where: { name: input.domain },
         select: { enabled: true },
-      })) as DomainStatus | null;
+      });
 
       return {
         exists: !!domain,
@@ -162,10 +158,10 @@ export const profileRouter = createTRPCRouter({
 
       // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = (await ctx.db.domain.findUnique({
+        const domainRecord = await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        })) as DomainStatus | null;
+        });
 
         if (domainRecord && !domainRecord.enabled) {
           throw new Error(
@@ -255,10 +251,10 @@ export const profileRouter = createTRPCRouter({
 
       // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = (await ctx.db.domain.findUnique({
+        const domainRecord = await ctx.db.domain.findUnique({
           where: { name: domain },
           select: { enabled: true },
-        })) as DomainStatus | null;
+        });
 
         if (domainRecord && !domainRecord.enabled) {
           throw new Error(

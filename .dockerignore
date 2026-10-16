@@ -64,3 +64,8 @@ scripts/
 # OS files
 Thumbs.db
 .DS_Store
+
+# e2e tests (run from CI or a workstation, not in the image)
+e2e/
+playwright.config.ts
+test-results/

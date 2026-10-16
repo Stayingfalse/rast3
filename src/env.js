@@ -37,6 +37,10 @@ export const env = createEnv({
     EMAIL_SERVER_PASSWORD: z.string().optional(),
     EMAIL_FROM: z.string().email().optional(),
 
+    // Test-only sign-in for e2e tests (src/app/api/test-auth). Never set in production.
+    ENABLE_TEST_LOGIN: z.enum(["true", "false"]).optional(),
+    TEST_LOGIN_SECRET: z.string().optional(),
+
     // Database
     DATABASE_URL: z.string().url(),
     NODE_ENV: z
@@ -85,6 +89,8 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
 
     // Database
+    ENABLE_TEST_LOGIN: process.env.ENABLE_TEST_LOGIN,
+    TEST_LOGIN_SECRET: process.env.TEST_LOGIN_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
   },

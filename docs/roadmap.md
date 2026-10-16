@@ -71,7 +71,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 1 | Fri 16 Oct | Dev-only test login (env-gated) + Playwright smoke suite, with desktop and mobile screenshots of every page |
-| 2 | Sat 17 Oct | Dev seed script: an org with departments, a Discord-style community, a friends group, wishlists, assignments |
+| 2 | Sat 17 Oct | Dev seed data: an org with departments and users, wishlists, assignments, purchases and kudos, loaded through a gated `/api/test-auth/seed` route (there's no direct DB access from CI), plus e2e tests of the wishlist flow |
 | 3 | Sun 18 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2) |
 | 4 | Mon 19 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model |
 | 5 | Tue 20 Oct | Security pass: server-side admin gating, remove or gate `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
@@ -146,6 +146,12 @@ Suggestions beyond the brief, to schedule when the owner agrees:
 - **Slack/Teams app** for the workplace tier.
 - **Stale-wishlist detection**: private, empty or broken lists, plus a nudge to the owner.
 - **Year-in-review recap** each January: gifts given per group, kudos highlights, an "opens again in November" reminder (good for return visits and next year's sign-ups).
+- **Shareable "Wall of Kindness"**: at season end, turn a group's kudos into an
+  anonymised image or page they can post on Discord or LinkedIn (free marketing).
+- **Mobile header**: the floating "Join Santa" button covers headings on phones;
+  the cookie banner fills half the screen (Day 4).
+- **Copy refresh**: the homepage still says "2025" and "Bring Secret Santa to Remote
+  Teams"; it should pitch Random Acts for orgs, communities and friends (Day 4/23).
 - **Nobody left out**: highlight wishlists with no gifts yet as the season ends, and let generous members (or the org, via CSR budget) pick them up.
 
 ## Log
@@ -159,3 +165,9 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   (not a classic Secret Santa) is the key selling point, so there is no draw mode;
   the site is Christmas-only, with one season a year (mid-Nov → early Jan). Other
   occasions belong to a future sister project.
+- **Day 1 (16 Oct):** dev-only test login (`/api/test-auth/login`, gated by
+  `ENABLE_TEST_LOGIN` + `TEST_LOGIN_SECRET`, limited to `@e2e.raosanta.test`
+  users, 404 otherwise) and a Playwright suite (desktop 1280×800 + Pixel 7):
+  30/30 passing on dev. Run with `E2E_TEST_LOGIN_SECRET=… npm run test:e2e`.
+  Note: full-page screenshots don't extend the fixed dark background, so
+  lower sections look faded; the UX audit uses viewport screenshots.

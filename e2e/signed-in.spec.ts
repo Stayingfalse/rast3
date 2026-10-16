@@ -46,7 +46,7 @@ test.describe("signed-in user", () => {
     });
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "Complete Your Profile" }),
+      page.getByRole("heading", { name: "Complete Your Profile", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /Join Santa/ })).toHaveCount(0);
     await settle(page);

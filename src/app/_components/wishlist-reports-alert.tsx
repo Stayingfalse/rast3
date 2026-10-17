@@ -93,11 +93,11 @@ export default function WishlistReportsAlert() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           {/* Modal Container */}
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-label shadow-2xl">
             {/* Close Button */}
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute top-4 right-4 text-ink-soft hover:text-ink transition-colors"
               aria-label="Close modal"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,10 +113,10 @@ export default function WishlistReportsAlert() {
                   <span className="text-2xl">🎁</span>
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-ink mb-2">
                     Hey {firstName}! 👋
                   </h2>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-ink-soft leading-relaxed">
                     Some of the elves on the site have tried to buy you a gift but have reported the following 
                     errors with your list. These may be incorrect reports, but could also indicate something is wrong. 
                     Please check your wishlist and once you think it&apos;s fixed, click{" "}
@@ -130,15 +130,15 @@ export default function WishlistReportsAlert() {
                 {groups.map((g) => (
                   <div
                     key={g.type}
-                    className="border border-yellow-200 bg-yellow-50 rounded-lg p-4 hover:border-yellow-300 transition-colors"
+                    className="border border-rule bg-label-shade rounded-label p-4 hover:border-yellow-300 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-lg">⚠️</span>
-                          <h3 className="text-lg font-semibold text-gray-900">{g.type}</h3>
+                          <h3 className="text-lg font-semibold text-ink">{g.type}</h3>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-ink-soft">
                           {g.count} {g.count === 1 ? "elf has" : "elves have"} reported this issue
                         </p>
                       </div>
@@ -146,7 +146,7 @@ export default function WishlistReportsAlert() {
                       <button
                         onClick={() => void resolveGroup(g.ids)}
                         disabled={resolving[g.ids.join(",")]}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-post hover:bg-post-deep disabled:bg-gray-400 text-white font-medium rounded-label transition-colors shadow-sm hover:shadow disabled:cursor-not-allowed"
                       >
                         {resolving[g.ids.join(",")] ? "Resolving..." : "Resolve All"}
                       </button>
@@ -156,8 +156,8 @@ export default function WishlistReportsAlert() {
               </div>
 
               {/* Footer */}
-              <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-                <p className="text-sm text-gray-500">
+              <div className="mt-6 pt-6 border-t border-rule text-center">
+                <p className="text-sm text-ink-soft">
                   Need help? Check your Amazon wishlist settings to ensure it&apos;s public and shipping address is set.
                 </p>
               </div>

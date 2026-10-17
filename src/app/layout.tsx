@@ -1,9 +1,8 @@
 import "~/styles/globals.css"
 
 import { type Metadata, type Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Archivo } from "next/font/google"
 import Image from "next/image"
-import Link from "next/link"
 import { Toaster } from "react-hot-toast"
 
 import { SessionProvider } from "next-auth/react"
@@ -16,15 +15,19 @@ import { CookieConsent } from "./_components/cookie-consent"
 import { ServiceWorkerRegistration } from "./_components/service-worker-registration"
 import WishlistReportsAlert from "./_components/wishlist-reports-alert"
 
-const inter = Inter({
+// Archivo across its width axis: expanded caps for the franked wordmark and
+// labels, regular width for reading.
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-inter",
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Random Acts of Santa 2025",
+  title: "Random Acts of Santa 2026",
   description:
-    "Bring Secret Santa to remote teams! Anonymous gift exchanges made simple for home workers. Share Amazon wishlists, spread Christmas cheer, no addresses needed.",
+    "Send a colleague a Christmas gift without ever knowing their address. Share your Amazon wishlist, pick up a few of theirs whenever you're ready, and say thank you with kudos. No draw, no pressure.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -61,7 +64,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0a1c40",
+  themeColor: "#13264d",
 };
 
 export default function RootLayout({
@@ -70,7 +73,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable}`} suppressHydrationWarning>
       <head>
         {/* PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
@@ -78,7 +81,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="RAoSanta" />
         <meta name="application-name" content="RAoSanta" />
-        <meta name="msapplication-TileColor" content="#13264D" />
+        <meta name="msapplication-TileColor" content="#13264d" />
         <meta name="msapplication-tap-highlight" content="no" />
         
         {/* Additional Icon Links for better compatibility */}
@@ -91,26 +94,27 @@ export default function RootLayout({
       <SessionProvider>
         <body>
           {" "}
-          <main className="bg-#13264D relative z-10 flex min-h-screen flex-col items-center justify-center bg-[url('/plaid.png')] bg-fixed bg-top bg-repeat">
+          <main className="relative z-10 flex min-h-screen flex-col items-center bg-night bg-[url('/plaid.png')] bg-fixed bg-top bg-repeat">
             {/* Admin Button (top right) */}
             <AdminButton />
             {/* Auth Button (top right, shows when not admin) */}
             <AuthButton />
-            {/* Header with SVG image */}
-            <header className="pointer-events-none absolute top-[-0.5rem] left-1/2 z-0 flex w-full max-w-[150%] -translate-x-1/2 justify-center select-none">
-              <Link href="/">
-                <Image
-                  src="/header.svg"
-                  alt="Header Logo"
-                  width={800}
-                  height={200}
-                  className="z-0 h-auto w-full"
-                  draggable="false"
-                  priority
-                />
-              </Link>
-            </header>{" "}
-            <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+            {/* Hanging baubles across the top of the night sky (decorative) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[150px] overflow-hidden select-none sm:h-[220px]"
+            >
+              <Image
+                src="/header.svg"
+                alt=""
+                width={1405}
+                height={725}
+                className="h-full w-full object-cover object-bottom"
+                draggable="false"
+                priority
+              />
+            </div>{" "}
+            <div className="relative flex w-full max-w-6xl flex-col items-center gap-16 px-4 pt-[164px] pb-24 sm:px-6 sm:pt-[236px]">
               <WishlistReportsAlert />
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>
@@ -127,9 +131,11 @@ export default function RootLayout({
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: "#1f2937",
-                  color: "#f9fafb",
-                  border: "1px solid #374151",
+                  background: "#f6f0e2",
+                  color: "#18223a",
+                  border: "1px solid #cdbf9f",
+                  borderRadius: "0.375rem",
+                  fontWeight: 500,
                 },
               }}
             />

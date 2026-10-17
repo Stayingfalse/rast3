@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 
 import { api } from "~/trpc/react";
-import { SignInModal } from "./sign-in-modal";
 import { ProfileSetupModal } from "./profile-setup-modal";
 
 export function AuthShowcase() {
   const { data: sessionData } = useSession();
-  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState(false);
   // Get current user profile - only runs for authenticated users
   const { data: userProfile, refetch: refetchProfile } =
@@ -73,104 +71,80 @@ export function AuthShowcase() {
     }
   }, [sessionData, userProfile, domainStatus]);
   // Early return if user is not authenticated - prevents rendering authenticated content
-  if (!sessionData?.user) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6">
-        {/* Main CTA Button */}
-        <button
-          className="transform rounded-2xl border-2 border-green-400 bg-gradient-to-r from-green-500 to-green-600 px-12 py-4 text-xl font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-green-700"
-          onClick={() => setIsSignInModalOpen(true)}
-        >
-          🎁 Start Your Secret Santa Journey 🎁
-        </button>
-
-        {/* Secondary smaller button */}
-        <div className="text-center">
-          <p className="mb-3 text-sm text-white/80">Already have an account?</p>
-          <button
-            className="rounded-full border border-white/30 bg-white/10 px-8 py-2 font-semibold text-white transition-all duration-200 hover:bg-white/20"
-            onClick={() => setIsSignInModalOpen(true)}
-          >
-            Sign In
-          </button>
-        </div>
-
-        <SignInModal
-          isOpen={isSignInModalOpen}
-          onClose={() => setIsSignInModalOpen(false)}
-        />
-      </div>
-    );
-  }
+  if (!sessionData?.user) return null;
 
   const handleProfileSetupComplete = () => {
     setIsProfileSetupModalOpen(false);
     void refetchProfile(); // Refresh the profile data
   };
 
+  const displayName =
+    userProfile?.firstName && userProfile?.lastName
+      ? `${userProfile.firstName} ${userProfile.lastName}`
+      : sessionData.user?.name;
+
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-center text-2xl text-white">
-        {userProfile?.firstName && userProfile?.lastName ? (
-          <span>
-            Welcome, {userProfile.firstName} {userProfile.lastName}!
-          </span>
-        ) : (
-          <span>Logged in as {sessionData.user?.name}</span>
+    <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+      <div className="sm:text-right">
+        <p className="font-expanded text-frost text-lg font-bold">
+          {displayName ? `Welcome, ${displayName}` : "Welcome"}
+        </p>
+        {userProfile && (
+          <p className="text-frost-soft text-sm">
+            {userProfile.profileCompleted ? (
+              <>
+                {userProfile.workEmail}
+                {userProfile.department && ` · ${userProfile.department.name}`}
+              </>
+            ) : (
+              <span className="text-gold-soft">Profile setup needed</span>
+            )}
+          </p>
         )}
-      </p>
+      </div>
 
-      {/* Profile Status */}
-      {userProfile && (
-        <div className="text-center">
-          {userProfile.profileCompleted ? (
-            <div className="space-y-1">
-              <p className="text-sm text-green-400">
-                ✓ Profile completed
-                {userProfile.workEmail && ` • ${userProfile.workEmail}`}
-                {userProfile.department && ` • ${userProfile.department.name}`}
-              </p>{" "}
-              {/* Domain status warnings */}
-              {userProfile.domain && userProfile.domainEnabled === false && (
-                <p className="rounded-lg border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-sm text-orange-400">
-                  ⚠ Your organization&apos;s domain ({userProfile.domain}) is
-                  currently disabled. Contact your manager for access.
-                </p>
-              )}
-              {userProfile.domain &&
-                userProfile.domainEnabled !== false &&
-                domainStatus &&
-                !domainStatus.exists && (
-                  <p className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-400">
-                    ⚠ Your organization&apos;s domain ({userProfile.domain})
-                    isn&apos;t set up in our system. You can set it up or
-                    contact your employer.
-                  </p>
-                )}
-            </div>
-          ) : (
-            <p className="text-sm text-yellow-400">⚠ Profile setup required</p>
-          )}
-        </div>
-      )}
+      {userProfile?.profileCompleted &&
+        userProfile.domain &&
+        userProfile.domainEnabled === false && (
+          <p
+            role="status"
+            className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
+          >
+            Your organisation&apos;s domain ({userProfile.domain}) is currently
+            disabled. Ask your organiser for access.
+          </p>
+        )}
+      {userProfile?.profileCompleted &&
+        userProfile.domain &&
+        userProfile.domainEnabled !== false &&
+        domainStatus &&
+        !domainStatus.exists && (
+          <p
+            role="status"
+            className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
+          >
+            Your organisation&apos;s domain ({userProfile.domain}) isn&apos;t
+            set up yet. You can set it up or ask your employer.
+          </p>
+        )}
 
-      <div className="flex gap-3">
+      <div className="flex gap-2">
+        {userProfile?.profileCompleted && (
+          <button
+            type="button"
+            className="btn-quiet text-frost min-h-10 py-2 text-sm"
+            onClick={() => setIsProfileSetupModalOpen(true)}
+          >
+            Edit profile
+          </button>
+        )}
         <button
-          className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+          type="button"
+          className="btn-quiet text-frost-soft min-h-10 border-transparent py-2 text-sm"
           onClick={() => void signOut()}
         >
           Sign out
         </button>
-
-        {/* Profile Setup Button for completed profiles */}
-        {userProfile?.profileCompleted && (
-          <button
-            className="rounded-full bg-blue-600/20 px-6 py-3 font-semibold text-blue-300 no-underline transition hover:bg-blue-600/30"
-            onClick={() => setIsProfileSetupModalOpen(true)}
-          >
-            Edit Profile
-          </button>
-        )}
       </div>
 
       <ProfileSetupModal

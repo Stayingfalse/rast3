@@ -1,31 +1,43 @@
 import { AuthShowcase } from "~/app/_components/auth-showcase";
 import { KudosFeed } from "~/app/_components/kudos-feed";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
+import { auth } from "~/server/auth";
+import { getPublicTotals } from "~/server/public-stats";
 import { HydrateClient } from "~/trpc/server";
-import HideMarketingIfAuthenticated from "./_components/hide-marketing-if-authenticated";
-import HomeHeaderClientWrapper from "./_components/home-header-client-wrapper";
+import { HomeHero } from "./_components/home-hero";
 import HomeMarketingServer from "./_components/home-marketing-server";
 import KudosAreaClient from "./_components/kudos-area-client";
+import { Wordmark } from "./_components/post/wordmark";
 
 export default async function Home() {
+  const session = await auth();
+
+  if (!session?.user) {
+    const totals = await getPublicTotals();
+    return (
+      <HydrateClient>
+        <div className="flex w-full flex-col gap-24">
+          <HomeHero totals={totals} />
+          <HomeMarketingServer />
+          <KudosFeed />
+        </div>
+      </HydrateClient>
+    );
+  }
 
   return (
     <HydrateClient>
-      <div className="container mx-auto flex flex-col items-center justify-center gap-12 px-4 py-16">
-        {" "}
-        <HomeHeaderClientWrapper />
-        <HomeMarketingServer />
-        <HideMarketingIfAuthenticated />
-        <div className="flex flex-col items-center gap-2">
+      <div className="flex w-full flex-col items-center gap-12">
+        <div className="flex w-full flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+          <Wordmark size="masthead" asHeading />
           <AuthShowcase />
-          <WishlistManager />
         </div>
-        <div id="kudos-section" className="w-full max-w-4xl">
+        <WishlistManager />
+        <div id="kudos-section" className="w-full">
           {/* Client-gated kudos form to avoid server/client mismatch */}
-          <div className="mb-4">
+          <div className="mb-14">
             <KudosAreaClient />
           </div>
-          {/* Keep KudosFeed server-rendered */}
           <KudosFeed />
         </div>
       </div>

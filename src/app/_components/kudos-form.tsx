@@ -82,58 +82,6 @@ export const KudosForm: React.FC<KudosFormProps> = ({
     "Wonder Worker",
   ];
 
-  const CHRISTMAS_AVATARS = [
-    "🎅",
-    "🤶",
-    "🎄",
-    "⭐",
-    "❄️",
-    "🎁",
-    "🔔",
-    "🕯️",
-    "🍪",
-    "🥛",
-    "🦌",
-    "⛄",
-    "🎊",
-    "🎉",
-    "✨",
-    "🌟",
-    "🎀",
-    "🧑‍🎄",
-    "🎯",
-    "🎪",
-    "🍭",
-    "🧤",
-    "🧣",
-    "👑",
-    "💎",
-    "🎭",
-    "🎨",
-    "🎵",
-    "🎶",
-    "💫",
-  ];
-
-  const CHRISTMAS_COLORS = [
-    "bg-red-200",
-    "bg-green-200",
-    "bg-red-300",
-    "bg-green-300",
-    "bg-emerald-200",
-    "bg-rose-200",
-    "bg-lime-200",
-    "bg-pink-200",
-    "bg-teal-200",
-    "bg-amber-200",
-    "bg-orange-200",
-    "bg-yellow-200",
-    "bg-indigo-200",
-    "bg-purple-200",
-    "bg-cyan-200",
-    "bg-slate-200",
-  ];
-
   function getChristmasIdentity(userId: string) {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
@@ -142,12 +90,8 @@ export const KudosForm: React.FC<KudosFormProps> = ({
       hash = hash & hash;
     }
     const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
-    const avatarIndex = Math.abs(hash >> 8) % CHRISTMAS_AVATARS.length;
-    const colorIndex = Math.abs(hash >> 16) % CHRISTMAS_COLORS.length;
     return {
       name: CHRISTMAS_NAMES[nameIndex]!,
-      avatar: CHRISTMAS_AVATARS[avatarIndex]!,
-      color: CHRISTMAS_COLORS[colorIndex]!,
     };
   }
 
@@ -258,16 +202,19 @@ export const KudosForm: React.FC<KudosFormProps> = ({
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 p-6">
+    <div className="w-full">
       <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-3">
         {/* Form: 2/3 on desktop, full on mobile */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-lg border bg-white p-6 shadow-md md:col-span-2"
+          className="label-stock space-y-4 p-6 md:col-span-2"
         >
-          <h2 className="text-lg font-bold">Say Thanks (Kudos)</h2>
+          <h2 className="font-expanded text-ink text-xl font-extrabold">
+            Say thank you
+          </h2>
           <textarea
-            className="w-full rounded border p-2"
+            aria-label="Your thank-you message"
+            className="rounded-label border-rule text-ink min-h-28 w-full border bg-white p-3"
             placeholder="Write a short message of thanks..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -276,10 +223,10 @@ export const KudosForm: React.FC<KudosFormProps> = ({
           />
           {/* Drag and drop area */}
           <div
-            className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
+            className={`rounded-label relative flex flex-col items-center justify-center border-2 border-dashed p-6 text-center transition-colors ${
               isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50"
+                ? "border-post bg-post-tint"
+                : "border-rule bg-label-shade"
             }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -297,7 +244,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
             />
             <div className="pointer-events-none z-10 flex flex-col items-center">
               <svg
-                className="mb-2 h-10 w-10 text-blue-400"
+                className="text-ink-soft mb-2 h-10 w-10"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -306,18 +253,18 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M7 16V8a4 4 0 018 0v8m-4 4v-4m0 0H5m4 0h6"
+                  d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                 />
               </svg>
-              <span className="text-sm text-gray-600">
+              <span className="text-ink-soft text-sm">
                 Drag & drop images here, or{" "}
                 <span className="underline">click to select</span>
               </span>
-              <span className="mt-1 text-xs text-gray-400">
+              <span className="text-ink-soft mt-1 text-xs">
                 Maximum 5 images, 0.5MB each
                 {images.length > 0 && (
                   <span
-                    className={`ml-2 ${images.length === 5 ? "text-red-500" : "text-blue-500"}`}
+                    className={`ml-2 ${images.length === 5 ? "text-post" : "text-ink-soft"}`}
                   >
                     ({images.length}/5)
                   </span>
@@ -351,7 +298,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                       setPreviews(newPreviews);
                       if (inputRef.current) inputRef.current.value = "";
                     }}
-                    className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                    className="bg-post hover:bg-post-deep absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full text-xs text-white"
                   >
                     ×
                   </button>
@@ -360,9 +307,9 @@ export const KudosForm: React.FC<KudosFormProps> = ({
             </div>
           )}
           {loading && (
-            <div className="flex items-center gap-2 text-blue-600">
+            <div className="text-post flex items-center gap-2">
               <svg
-                className="h-6 w-6 animate-spin text-blue-600"
+                className="text-post h-6 w-6 animate-spin"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -384,29 +331,23 @@ export const KudosForm: React.FC<KudosFormProps> = ({
               Uploading images and sending Kudos...
             </div>
           )}
-          {error && <div className="text-red-500">{error}</div>}
-          <button
-            type="submit"
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-            disabled={loading}
-          >
+          {error && <div className="text-post">{error}</div>}
+          <button type="submit" className="btn-post" disabled={loading}>
             {loading ? "Sending..." : "Send Kudos"}
           </button>
         </form>
         {/* Live Preview: 1/3 on desktop, full on mobile */}
         <div className="w-full md:col-span-1">
-          <div
-            className={`border-opacity-50 overflow-hidden rounded-2xl border border-white shadow-md ${getChristmasIdentity(userId).color} flex min-h-[340px] flex-col p-0`}
-          >
+          <div className="label-stock flex min-h-[340px] flex-col overflow-hidden">
             {/* Images at the top, or placeholder */}
             <div className="w-full">
               {previews.length > 0 ? (
-                <div className="relative flex aspect-square max-h-[400px] min-h-[180px] w-full items-center justify-center overflow-hidden rounded-lg bg-black">
+                <div className="rounded-label relative flex aspect-square max-h-[400px] min-h-[180px] w-full items-center justify-center overflow-hidden bg-black">
                   <Image
                     src={previews[carouselIndex] ?? ""}
                     alt="preview"
                     fill
-                    className="max-h-[400px] rounded-lg object-contain"
+                    className="rounded-label max-h-[400px] object-contain"
                     sizes="(max-width: 768px) 100vw, 800px"
                   />
                   {previews.length > 1 && (
@@ -414,7 +355,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                       <button
                         type="button"
                         aria-label="Previous image"
-                        className="bg-opacity-70 absolute top-1/2 left-1 -translate-y-1/2 rounded-full bg-white p-1 shadow hover:bg-blue-100"
+                        className="bg-label hover:bg-label-shade absolute top-1/2 left-1 -translate-y-1/2 rounded-full p-1 shadow"
                         onClick={() =>
                           setCarouselIndex(
                             (i) => (i - 1 + previews.length) % previews.length,
@@ -423,7 +364,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                       >
                         <span className="sr-only">Previous</span>
                         <svg
-                          className="h-5 w-5 text-blue-600"
+                          className="text-post h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth={2}
@@ -439,14 +380,14 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                       <button
                         type="button"
                         aria-label="Next image"
-                        className="bg-opacity-70 absolute top-1/2 right-1 -translate-y-1/2 rounded-full bg-white p-1 shadow hover:bg-blue-100"
+                        className="bg-label hover:bg-label-shade absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-1 shadow"
                         onClick={() =>
                           setCarouselIndex((i) => (i + 1) % previews.length)
                         }
                       >
                         <span className="sr-only">Next</span>
                         <svg
-                          className="h-5 w-5 text-blue-600"
+                          className="text-post h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth={2}
@@ -471,9 +412,9 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="flex aspect-square max-h-[400px] min-h-[180px] w-full flex-col items-center justify-center rounded-lg bg-black">
+                <div className="border-rule bg-label-shade flex aspect-[4/3] w-full flex-col items-center justify-center border-b">
                   <svg
-                    className="mb-2 h-16 w-16 text-white opacity-40"
+                    className="text-ink-soft mb-2 h-12 w-12 opacity-60"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={2}
@@ -482,44 +423,27 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M7 16V8a4 4 0 018 0v8m-4 4v-4m0 0H5m4 0h6"
+                      d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                     />
                   </svg>
-                  <span className="text-opacity-60 text-sm text-white">
-                    Image preview
-                  </span>
+                  <span className="text-ink-soft text-sm">Photo preview</span>
                 </div>
               )}
             </div>
             {/* Content below image */}
             <div className="flex flex-1 flex-col p-5">
-              {/* User info */}
-              <div className="mb-3 flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <div className="border-opacity-70 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-white shadow-sm">
-                    <span className="text-2xl">
-                      {getChristmasIdentity(userId).avatar}
-                    </span>
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center space-x-2">
-                    <p className="text-lg font-semibold text-gray-900">
-                      {getChristmasIdentity(userId).name}
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-700 opacity-80">Just now</p>
-                </div>
-              </div>
-              {/* Message */}
-              <div className="bg-opacity-40 border-opacity-30 flex min-h-[3rem] flex-1 items-center rounded-xl border border-white bg-white p-4 shadow-sm">
-                <p className="w-full leading-relaxed whitespace-pre-wrap text-gray-900">
-                  {liveMessage || (
-                    <span className="text-gray-400">
-                      Your message will appear here...
-                    </span>
-                  )}
+              <p className="text-ink flex-1 leading-relaxed whitespace-pre-wrap">
+                {liveMessage || (
+                  <span className="text-ink-soft">
+                    Your message will appear here...
+                  </span>
+                )}
+              </p>
+              <div className="border-rule mt-4 border-t pt-3">
+                <p className="font-expanded text-ink text-sm font-bold">
+                  {getChristmasIdentity(userId).name}
                 </p>
+                <p className="text-ink-soft text-xs">Just now</p>
               </div>
             </div>
           </div>

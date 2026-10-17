@@ -235,16 +235,16 @@ export function ProfileSetupModal({
     return <Preloader message="Loading your profile..." />;
   }
   return (
-    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-deep/75">
+      <div className="mx-4 w-full max-w-md rounded-label bg-label p-6 shadow-lift">
         {" "}
         {/* Domain Issues Warnings */}
         {isDomainDisabled && (
-          <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <div className="mb-4 rounded-label border border-rule bg-label-shade p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-orange-400"
+                  className="h-5 w-5 text-post"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -256,10 +256,10 @@ export function ProfileSetupModal({
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-orange-800">
+                <h3 className="text-sm font-medium text-ink">
                   Domain Access Restricted
                 </h3>{" "}
-                <div className="mt-2 text-sm text-orange-700">
+                <div className="mt-2 text-sm text-ink-soft">
                   <p>
                     Your organization&apos;s domain ({existingProfile?.domain})
                     is currently disabled.
@@ -270,7 +270,7 @@ export function ProfileSetupModal({
                   </p>
                   <button
                     type="button"
-                    className="mt-3 inline-block rounded border border-orange-300 bg-white px-3 py-1 text-xs font-medium text-orange-700 shadow-sm hover:bg-orange-100"
+                    className="mt-3 inline-block rounded border border-ink-soft bg-label px-3 py-1 text-xs font-medium text-ink-soft shadow-sm hover:bg-label-shade"
                     onClick={() => {
                       setForceEditEmail(true);
                       setErrors({});
@@ -289,11 +289,11 @@ export function ProfileSetupModal({
           !domainStatus.exists &&
           !showDomainSetup &&
           !isDomainDisabled && (
-            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="mb-4 rounded-label border border-rule bg-label-shade p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <svg
-                    className="h-5 w-5 text-blue-400"
+                    className="h-5 w-5 text-ink-soft"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -306,10 +306,10 @@ export function ProfileSetupModal({
                 </div>
                 <div className="ml-3">
                   {" "}
-                  <h3 className="text-sm font-medium text-blue-800">
+                  <h3 className="text-sm font-medium text-ink">
                     Organization Domain Not Set Up
                   </h3>
-                  <div className="mt-2 text-sm text-blue-700">
+                  <div className="mt-2 text-sm text-ink-soft">
                     <p>
                       The domain &quot;{domainForChecking}&quot; hasn&apos;t
                       been set up in our system yet.
@@ -327,14 +327,14 @@ export function ProfileSetupModal({
                     {" "}
                     <button
                       type="button"
-                      className="inline-block rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-700"
+                      className="inline-block rounded bg-post px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-post-deep"
                       onClick={() => setShowDomainSetup(true)}
                     >
                       Set Up Domain Now
                     </button>
                     <button
                       type="button"
-                      className="inline-block rounded border border-blue-300 bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50"
+                      className="inline-block rounded border border-ink-soft bg-label px-3 py-1 text-xs font-medium text-ink-soft shadow-sm hover:bg-label-shade"
                       onClick={() => {
                         setForceEditEmail(true);
                         setErrors({});
@@ -349,10 +349,10 @@ export function ProfileSetupModal({
           )}
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-ink">
               {isEditing ? "Edit Your Profile" : "Complete Your Profile"}
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-ink-soft">
               {isEditing
                 ? "Update your profile information below."
                 : "Help us get to know you better by completing your profile information."}
@@ -361,7 +361,7 @@ export function ProfileSetupModal({
           {(isEditing || onClose) && (
             <button
               onClick={onClose}
-              className="text-2xl font-bold text-gray-400 hover:text-gray-600"
+              className="text-2xl font-bold text-ink-soft hover:text-ink"
               type="button"
             >
               ×
@@ -373,7 +373,7 @@ export function ProfileSetupModal({
           <div>
             <label
               htmlFor="firstName"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-ink-soft"
             >
               First Name *
             </label>
@@ -382,20 +382,20 @@ export function ProfileSetupModal({
               id="firstName"
               value={formData.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                errors.firstName ? "border-red-500" : "border-gray-300"
+              className={`mt-1 block min-h-11 w-full rounded-label border bg-white px-3 py-2 text-ink ${
+                errors.firstName ? "border-post" : "border-rule"
               }`}
               placeholder="Enter your first name"
             />
             {errors.firstName && (
-              <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+              <p className="mt-1 text-sm text-post">{errors.firstName}</p>
             )}
           </div>
           {/* Last Name */}
           <div>
             <label
               htmlFor="lastName"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-ink-soft"
             >
               Last Name *
             </label>
@@ -404,20 +404,20 @@ export function ProfileSetupModal({
               id="lastName"
               value={formData.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                errors.lastName ? "border-red-500" : "border-gray-300"
+              className={`mt-1 block min-h-11 w-full rounded-label border bg-white px-3 py-2 text-ink ${
+                errors.lastName ? "border-post" : "border-rule"
               }`}
               placeholder="Enter your last name"
             />
             {errors.lastName && (
-              <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+              <p className="mt-1 text-sm text-post">{errors.lastName}</p>
             )}
           </div>{" "}
           {/* Work Email */}
           <div>
             <label
               htmlFor="workEmail"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-ink-soft"
             >
               Work Email Address *
             </label>{" "}
@@ -428,34 +428,34 @@ export function ProfileSetupModal({
               onChange={(e) => handleInputChange("workEmail", e.target.value)}
               onBlur={handleEmailBlur}
               disabled={isDomainDisabled}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                errors.workEmail ? "border-red-500" : "border-gray-300"
-              } ${isDomainDisabled ? "cursor-not-allowed bg-gray-100" : ""}`}
+              className={`mt-1 block min-h-11 w-full rounded-label border bg-white px-3 py-2 text-ink ${
+                errors.workEmail ? "border-post" : "border-rule"
+              } ${isDomainDisabled ? "cursor-not-allowed bg-label-shade" : ""}`}
               placeholder="Enter your work email"
             />
             {errors.workEmail && (
-              <p className="mt-1 text-sm text-red-600">{errors.workEmail}</p>
+              <p className="mt-1 text-sm text-post">{errors.workEmail}</p>
             )}{" "}
             {domain && (
-              <p className="mt-1 text-sm text-gray-500">Domain: {domain}</p>
+              <p className="mt-1 text-sm text-ink-soft">Domain: {domain}</p>
             )}
 
             {showPersonalEmailWarning && (
-              <div className="mt-2 rounded-md bg-yellow-50 border border-yellow-100 p-3 text-sm text-yellow-800">
+              <div className="mt-2 rounded-label bg-label-shade border border-rule p-3 text-sm text-ink">
                 <strong className="font-medium">Heads up:</strong>{' '}
                 That looks like a personal email address (Gmail, Hotmail, etc.). Please use your company / work email so we can link your account with the rest of your organisation. You can still continue with a personal address if needed.
               </div>
             )}
             {/* Domain Setup Form */}
             {showDomainSetup && (
-              <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-4">
-                <h4 className="mb-3 text-sm font-medium text-green-800">
+              <div className="mt-3 rounded-label border border-pine/30 bg-pine-tint p-4">
+                <h4 className="mb-3 text-sm font-medium text-pine">
                   Setting up domain: {domain}
                 </h4>
                 <div>
                   <label
                     htmlFor="domainDescription"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-ink-soft"
                   >
                     Domain Description (Optional)
                   </label>
@@ -463,12 +463,12 @@ export function ProfileSetupModal({
                     id="domainDescription"
                     value={domainDescription}
                     onChange={(e) => setDomainDescription(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    className="mt-1 block min-h-11 w-full rounded-label border border-rule bg-white px-3 py-2 text-ink"
                     placeholder="Brief description of your organization..."
                     rows={2}
                   />
                 </div>
-                <div className="mt-3 text-xs text-green-700">
+                <div className="mt-3 text-xs text-pine">
                   <p>• You will become the domain administrator</p>
                   <p>• You can manage users and departments for this domain</p>
                   <p>
@@ -478,7 +478,7 @@ export function ProfileSetupModal({
                 </div>
                 <button
                   type="button"
-                  className="mt-3 inline-block rounded border border-gray-300 bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-300"
+                  className="mt-3 inline-block rounded border border-rule bg-label-shade px-3 py-1 text-xs font-medium text-ink-soft shadow-sm hover:bg-rule/60"
                   onClick={() => {
                     setShowDomainSetup(false);
                     setDomainDescription("");
@@ -494,7 +494,7 @@ export function ProfileSetupModal({
             <div>
               <label
                 htmlFor="department"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-ink-soft"
               >
                 Department
               </label>
@@ -505,8 +505,8 @@ export function ProfileSetupModal({
                   handleInputChange("departmentId", e.target.value)
                 }
                 disabled={isDomainDisabled}
-                className={`mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                  isDomainDisabled ? "cursor-not-allowed bg-gray-100" : ""
+                className={`mt-1 block min-h-11 w-full rounded-label border border-rule bg-white px-3 py-2 text-ink ${
+                  isDomainDisabled ? "cursor-not-allowed bg-label-shade" : ""
                 }`}
               >
                 <option value="">Select a department (optional)</option>
@@ -522,7 +522,7 @@ export function ProfileSetupModal({
           <div>
             <label
               htmlFor="amazonWishlist"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-ink-soft"
             >
               Amazon UK Wishlist URL
             </label>
@@ -533,24 +533,24 @@ export function ProfileSetupModal({
               onChange={(e) =>
                 handleInputChange("amazonWishlistUrl", e.target.value)
               }
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                errors.amazonWishlistUrl ? "border-red-500" : "border-gray-300"
+              className={`mt-1 block min-h-11 w-full rounded-label border bg-white px-3 py-2 text-ink ${
+                errors.amazonWishlistUrl ? "border-post" : "border-rule"
               }`}
               placeholder="https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX (optional)"
             />
             {errors.amazonWishlistUrl && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-sm text-post">
                 {errors.amazonWishlistUrl}
               </p>
             )}
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-ink-soft">
               Optional: Add your Amazon UK wishlist for gift exchanges
             </p>
           </div>
           {/* Submit Error */}
           {errors.submit && (
-            <div className="rounded-md bg-red-50 p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
+            <div className="rounded-label bg-post-tint p-3">
+              <p className="text-sm text-post">{errors.submit}</p>
             </div>
           )}{" "}
           {/* Submit Button */}
@@ -559,7 +559,7 @@ export function ProfileSetupModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 font-medium text-gray-600 hover:text-gray-800 focus:outline-none"
+                className="px-4 py-2 font-medium text-ink-soft hover:text-ink"
               >
                 {isDomainDisabled ? "Close" : "Cancel"}
               </button>
@@ -568,7 +568,7 @@ export function ProfileSetupModal({
               <button
                 type="submit"
                 disabled={currentMutation.isPending}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-label bg-post px-4 py-2 font-medium text-white hover:bg-post-deep disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {currentMutation.isPending
                   ? showDomainSetup

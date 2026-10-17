@@ -191,3 +191,16 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   Dev switched to `migrate` and baselined cleanly (`/api/health` shows `0_init`).
   Prod still unset; switching it on is a one-line env change for the owner to approve.
   Guide: `docs/DATABASE_MIGRATIONS.md`. All later days moved one day earlier.
+- **Extra day (17 Oct): 2026 design, "Christmas Post"** (#25, waiting for
+  approval). Done with the impeccable skill: PRODUCT.md, a chosen direction,
+  the build, the design detector, an independent finish review, then DESIGN.md.
+  - **Look.** Night-navy sky and baubles kept, cream parcel-label surfaces,
+    postal red for actions only, gold postmarks with the 2026 season mark,
+    Archivo in place of Inter.
+  - **Public home.** Live rounded totals (under 10 hidden). The server now
+    decides signed-in vs signed-out, so the marketing no longer flashes.
+  - **Signed-in home.** Wishlists shown as parcel labels; kudos as postcards.
+  - **Checks.** 36/36 e2e pass on dev. The e2e run caught a stacking bug: the
+    new cookie strip covered the buttons in mobile dialogs. Fixed.
+  - **Admin.** Pages are not restyled yet; they're a candidate for the UX
+    audit day.

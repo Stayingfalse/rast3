@@ -25,56 +25,58 @@ type ParcelLabelProps = {
  */
 export function ParcelLabel({ gifts }: ParcelLabelProps) {
   return (
-    <figure className="label-stock relative w-full max-w-md rotate-[1.25deg] overflow-hidden">
-      <div className="airmail h-2.5" aria-hidden />
-      <div className="border-rule flex items-start justify-between gap-4 border-b px-5 pt-4 pb-3">
-        <div>
-          <p className="label-caps text-ink-soft">Christmas Post</p>
-          <p className="font-expanded text-ink mt-1 text-lg leading-tight font-extrabold">
-            Random Acts of Santa
-          </p>
-        </div>
-        <BaubleStamp className="h-20 w-16 shrink-0 -rotate-3" />
-      </div>
-      <dl className="divide-rule divide-y px-5">
-        {ROWS.map((row) => (
-          <div
-            key={row.label}
-            className="grid grid-cols-[6.5rem_1fr] gap-3 py-3"
-          >
-            <dt className="label-caps text-ink-soft pt-1">{row.label}</dt>
-            <dd className="text-ink text-base leading-snug font-semibold">
-              {row.value}
-              {row.hint && (
-                <span className="text-ink-soft block text-sm font-normal">
-                  {row.hint}
-                </span>
-              )}
-            </dd>
+    <div className="relative w-full max-w-md rotate-[1.25deg]">
+      <figure className="label-stock overflow-hidden">
+        <div className="airmail h-2.5" aria-hidden />
+        <div className="border-rule flex items-start justify-between gap-4 border-b px-5 pt-4 pb-3">
+          <div>
+            <p className="label-caps text-ink-soft">Christmas Post</p>
+            <p className="font-expanded text-ink mt-1 text-lg leading-tight font-extrabold">
+              Random Acts of Santa
+            </p>
           </div>
-        ))}
-      </dl>
-      <figcaption className="border-rule bg-label-shade flex items-end justify-between gap-4 border-t px-5 py-4">
-        <p className="text-ink-soft text-sm leading-snug">
-          {gifts ? (
-            <>
-              <span className="tabular font-expanded text-ink block text-2xl font-extrabold">
-                {gifts}
-              </span>
-              gifts sent so far, no addresses shared
-            </>
-          ) : (
-            <>No addresses shared. Ever.</>
-          )}
-        </p>
-        <Postmark
-          centre={gifts ? "SENT" : "2026"}
-          sub={gifts ? "2026 SEASON" : "SEASON"}
-          cancellation
-          animate
-          className="text-post -mr-2 -mb-2 w-40 shrink-0"
-        />
-      </figcaption>
-    </figure>
+          <BaubleStamp className="h-20 w-16 shrink-0 -rotate-3" />
+        </div>
+        <dl className="divide-rule divide-y px-5">
+          {ROWS.map((row) => (
+            <div
+              key={row.label}
+              className="grid grid-cols-[6.5rem_1fr] gap-3 py-3"
+            >
+              <dt className="label-caps text-ink-soft pt-1">{row.label}</dt>
+              <dd className="text-ink text-base leading-snug font-semibold">
+                {row.value}
+                {row.hint && (
+                  <span className="text-ink-soft block text-sm font-normal">
+                    {row.hint}
+                  </span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <figcaption className="border-rule bg-label-shade border-t px-5 py-4 pr-36">
+          <p className="text-ink-soft text-sm leading-snug">
+            {gifts ? (
+              <>
+                <span className="tabular font-expanded text-ink block text-2xl font-extrabold">
+                  {gifts}
+                </span>
+                gifts sent so far, no addresses shared
+              </>
+            ) : (
+              <>No addresses shared. Ever.</>
+            )}
+          </p>
+        </figcaption>
+      </figure>
+      <Postmark
+        centre={gifts ? "SENT" : "2026"}
+        sub={gifts ? "2026 SEASON" : "SEASON"}
+        cancellation
+        animate
+        className="text-gold-ink pointer-events-none absolute -right-8 -bottom-8 w-44 sm:-right-12 sm:w-52"
+      />
+    </div>
   );
 }

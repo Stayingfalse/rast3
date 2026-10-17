@@ -32,6 +32,7 @@
   --color-post-tint: #f3dcd8;
   --color-gold: #caa24c; /* postmarks and the year mark only */
   --color-gold-soft: #e5cf98;
+  --color-gold-ink: #9c7a2a; /* postmark ink on label stock */
   --color-pine: #1f5c47; /* delivered / gifted state */
   --color-pine-tint: #d9e9df;
 

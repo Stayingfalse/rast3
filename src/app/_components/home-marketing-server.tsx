@@ -55,7 +55,7 @@ export default function HomeMarketingServer() {
             id="route-heading"
             className="font-expanded text-frost text-3xl leading-none font-extrabold uppercase sm:text-4xl"
           >
-            From wishlist <span className="text-post-bright">to doorstep</span>
+            From wishlist <span className="text-gold-soft">to doorstep</span>
           </h2>
           <p className="text-frost-soft max-w-sm">
             Four stops, all from your phone. Most people are done in a couple of
@@ -92,8 +92,8 @@ export default function HomeMarketingServer() {
         className="label-stock overflow-hidden"
       >
         <div className="airmail h-2.5" aria-hidden />
-        <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[1fr_2fr]">
-          <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-6 p-6 sm:p-10">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
             <h2
               id="small-print-heading"
               className="font-expanded text-ink text-2xl leading-tight font-extrabold uppercase"
@@ -104,7 +104,7 @@ export default function HomeMarketingServer() {
               Short, because there isn&apos;t much of it.
             </p>
           </div>
-          <dl className="grid gap-x-10 sm:grid-cols-2">
+          <dl className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
             {SMALL_PRINT.map((item) => (
               <div key={item.q} className="border-rule border-t py-5">
                 <dt className="text-ink font-bold">{item.q}</dt>

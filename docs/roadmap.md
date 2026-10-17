@@ -152,6 +152,9 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   the cookie banner fills half the screen (Day 4).
 - **Copy refresh**: the homepage still says "2025" and "Bring Secret Santa to Remote
   Teams"; it should pitch Random Acts for orgs, communities and friends (Day 4/23).
+- **Session refresh race**: Auth.js refreshes a session's expiry once a day; parallel
+  requests at that moment can briefly read as signed out (seen in testing). Worth a
+  retry in the client session provider, or a longer `updateAge` (Day 5).
 - **Nobody left out**: highlight wishlists with no gifts yet as the season ends, and let generous members (or the org, via CSR budget) pick them up.
 
 ## Log
@@ -171,3 +174,12 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   30/30 passing on dev. Run with `E2E_TEST_LOGIN_SECRET=… npm run test:e2e`.
   Note: full-page screenshots don't extend the fixed dark background, so
   lower sections look faded; the UX audit uses viewport screenshots.
+
+- **Day 2 (17 Oct):** `/api/test-auth/seed` (same gate) creates a deterministic
+  org: 3 departments, 15 members with wishlists, 30 assignments, 15 purchases,
+  kudos, plus a "giver" for tests. Seed data stays on dev for browsing. New e2e
+  tests: request 3 wishlists → mark one gifted; kudos feed; admin with data.
+  The tests found two real bugs, both fixed: (1) `/api/auth/session` sent the
+  httpOnly **session token** and the full user record to the browser
+  (security); (2) on mobile the cookie banner covered modal buttons, so
+  "Confirm Purchase" couldn't be tapped until cookies were dismissed.

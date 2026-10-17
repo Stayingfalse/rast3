@@ -53,3 +53,18 @@ export function trackPageErrors(page: Page) {
 export async function settle(page: Page) {
   await page.waitForLoadState("networkidle").catch(() => undefined);
 }
+
+/** Wipes and recreates the dev seed dataset; returns its summary. */
+export async function seed(request: APIRequestContext) {
+  const res = await request.post("/api/test-auth/seed", {
+    headers: { "x-test-login-secret": TEST_LOGIN_SECRET },
+  });
+  expect(res.status(), await res.text()).toBe(200);
+  return (await res.json()) as {
+    members: number;
+    assignments: number;
+    purchases: number;
+    kudos: number;
+    giver: { email: string };
+  };
+}

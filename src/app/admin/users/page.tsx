@@ -246,25 +246,6 @@ export default function UsersPage() {
     ), { duration: Infinity });
   };
 
-  const handleImpersonate = async (userId: string, userDisplayName: string) => {
-    const ok = confirm(
-      `Impersonate ${userDisplayName}? You will be signed in as them in this browser.`,
-    );
-    if (!ok) return;
-    try {
-      const resp = await fetch("/api/admin/impersonate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start", targetUserId: userId }),
-      });
-      if (!resp.ok) throw new Error("Failed to impersonate");
-      // reload to pick up the impersonated session
-      window.location.href = "/";
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to start impersonation");
-    }
-  };
   return (
     <AdminLayout>
       <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -680,21 +661,6 @@ export default function UsersPage() {
                           >
                             Delete
                           </button>
-                            {currentUser?.adminLevel === "SITE" && (
-                              <button
-                                onClick={() =>
-                                  void handleImpersonate(
-                                    user.id,
-                                    user.firstName && user.lastName
-                                      ? `${user.firstName} ${user.lastName}`
-                                      : user.name ?? user.email ?? "Unknown User",
-                                  )
-                                }
-                                className="rounded border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/5"
-                              >
-                                Sign in as
-                              </button>
-                            )}
                         </div>
                       </td>
                     </tr>
@@ -983,21 +949,6 @@ export default function UsersPage() {
                   >
                     Delete
                   </button>
-                  {currentUser?.adminLevel === "SITE" && (
-                    <button
-                      onClick={() =>
-                        void handleImpersonate(
-                          user.id,
-                          user.firstName && user.lastName
-                            ? `${user.firstName} ${user.lastName}`
-                            : user.name ?? user.email ?? "Unknown User",
-                        )
-                      }
-                      className="flex-1 rounded border border-white/20 px-3 py-2 text-xs text-white hover:bg-white/5"
-                    >
-                      Sign in as
-                    </button>
-                  )}
                 </div>
               </div>
             ))}

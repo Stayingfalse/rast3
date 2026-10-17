@@ -27,8 +27,13 @@ test.describe("public pages", () => {
   test("health endpoint reports a connected database", async ({ request }) => {
     const res = await request.get("/api/health");
     expect(res.status()).toBe(200);
-    const body = (await res.json()) as { database: { connected: boolean } };
+    const body = (await res.json()) as {
+      database: { connected: boolean };
+      schemaSync: { result: string } | null;
+    };
     expect(body.database.connected).toBe(true);
+    // A startup schema sync must never leave drift or a failed migration.
+    expect(body.schemaSync?.result ?? "skipped").not.toMatch(/drift|failed/);
   });
 
   test("test login is hidden without the secret", async ({ request }) => {

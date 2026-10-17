@@ -10,6 +10,7 @@ import Reddit from "next-auth/providers/reddit";
 import TikTok from "next-auth/providers/tiktok";
 import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
+import { toClientSession } from "~/server/auth-session";
 import { db } from "~/server/db";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
 import { createChildLogger } from "~/utils/logger";
@@ -232,21 +233,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    session: async ({ session, user }) => {
-      const { id } = user;
-      // We can safely access these fields since we've augmented the User type
-      const { adminLevel, adminScope } = user;
-
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id,
-          adminLevel,
-          adminScope,
-        },
-      };
-    },
+    session: ({ session, user }) => toClientSession({ session, user }),
   },
   debug: process.env.NODE_ENV === "development",
 });

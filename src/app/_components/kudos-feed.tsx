@@ -501,11 +501,11 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return (
       <section ref={feedRef} aria-busy="true" className={`w-full ${className}`}>
         <div className="bg-night-raised mb-6 h-9 w-48 animate-pulse rounded" />
-        <div className="columns-1 gap-6 md:columns-2 lg:columns-3">
+        <div className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
             <div
               key={i}
-              className="label-stock mb-6 break-inside-avoid p-5 opacity-70"
+              className="label-stock p-5 opacity-70"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               {i % 3 === 0 && (
@@ -538,7 +538,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return (
       <article
         key={kudos.id}
-        className={`label-stock mb-6 break-inside-avoid overflow-hidden ${isNew ? "animate-fade-in-slide" : ""}`}
+        className={`label-stock overflow-hidden ${isNew ? "animate-fade-in-slide" : ""}`}
         style={isNew ? { animationDuration: "1.1s" } : undefined}
       >
         {images.length > 0 && (
@@ -653,7 +653,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
             </p>
           </div>
         ) : (
-          <div className="columns-1 gap-6 md:columns-2 lg:columns-3">
+          <div className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {newKudos.map((kudos) => renderPostcard(kudos, true))}
             {allKudos.map((kudos) => renderPostcard(kudos, false))}
           </div>

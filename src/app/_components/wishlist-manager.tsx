@@ -631,7 +631,7 @@ export function WishlistManager() {
                 </span>
                 <span aria-hidden>
                   Your parcels{" "}
-                  <span className="tabular text-post-bright">
+                  <span className="tabular text-gold-soft">
                     ({assignments.length})
                   </span>
                 </span>

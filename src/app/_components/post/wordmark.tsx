@@ -39,7 +39,7 @@ export function Wordmark({
         sub="SEASON"
         className={`text-gold pointer-events-none absolute -rotate-10 ${
           hero
-            ? "-right-16 bottom-0 w-20 sm:-right-24 sm:w-28"
+            ? "-right-10 bottom-1 w-20 sm:-right-12 sm:bottom-3 sm:w-28"
             : "-right-12 -bottom-1 w-12"
         }`}
       />

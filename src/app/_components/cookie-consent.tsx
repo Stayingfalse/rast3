@@ -114,9 +114,9 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
   return (
     <section
       aria-label="Cookie preferences"
-      className={`label-stock shadow-lift fixed inset-x-3 bottom-3 z-40 max-w-md p-4 sm:right-auto sm:bottom-6 sm:left-6 ${className}`}
+      className={`border-rule bg-label text-ink shadow-lift fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t px-4 py-2.5 sm:flex-row sm:items-center sm:justify-center sm:gap-6 ${className}`}
     >
-      <p className="text-ink text-sm leading-relaxed">
+      <p className="text-ink text-sm leading-snug">
         <strong>Cookies.</strong> Essential ones keep you signed in. With your
         OK we&apos;d also use optional ones for analytics.{" "}
         <Link
@@ -128,18 +128,18 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
           Privacy policy
         </Link>
       </p>
-      <div className="mt-3 flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <button
           type="button"
           onClick={handleAccept}
-          className="btn-post min-h-10 flex-1 py-2 text-sm"
+          className="btn-post min-h-9 flex-1 py-1.5 text-sm sm:flex-none"
         >
           Accept All
         </button>
         <button
           type="button"
           onClick={handleDecline}
-          className="btn-quiet text-ink min-h-10 flex-1 py-2 text-sm"
+          className="btn-quiet text-ink min-h-9 flex-1 py-1.5 text-sm sm:flex-none"
         >
           Decline Optional
         </button>

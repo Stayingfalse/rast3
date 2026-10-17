@@ -253,7 +253,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M7 16V8a4 4 0 018 0v8m-4 4v-4m0 0H5m4 0h6"
+                  d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                 />
               </svg>
               <span className="text-ink-soft text-sm">
@@ -423,7 +423,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M7 16V8a4 4 0 018 0v8m-4 4v-4m0 0H5m4 0h6"
+                      d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                     />
                   </svg>
                   <span className="text-ink-soft text-sm">Photo preview</span>

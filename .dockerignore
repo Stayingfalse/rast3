@@ -52,7 +52,6 @@ Dockerfile*
 docker-compose.yml
 
 # prisma
-prisma/migrations/
 prisma/db.sqlite*
 
 # Development files

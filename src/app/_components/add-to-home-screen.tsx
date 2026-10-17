@@ -121,10 +121,10 @@ export function AddToHomeScreen() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm">
-      <div className="relative rounded-lg bg-white p-4 shadow-lg border border-gray-200">
+      <div className="relative rounded-label bg-label p-4 shadow-lift border border-rule">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600"
+          className="absolute top-2 right-2 p-1 text-ink-soft hover:text-ink"
           aria-label="Close"
         >
           <XMarkIcon className="h-4 w-4" />
@@ -132,24 +132,24 @@ export function AddToHomeScreen() {
         
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
-            <DevicePhoneMobileIcon className="h-8 w-8 text-green-600" />
+            <DevicePhoneMobileIcon className="h-8 w-8 text-pine" />
           </div>
           
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-ink">
               Add RAoSanta to Home Screen
             </h3>
             
             {isIOS ? (
-              <div className="mt-2 text-xs text-gray-600">
+              <div className="mt-2 text-xs text-ink-soft">
                 <p>Tap the share button <span className="inline-block">⬆️</span> then &quot;Add to Home Screen&quot;</p>
               </div>
             ) : deferredPrompt ? (
-              <div className="mt-2 text-xs text-gray-600">
+              <div className="mt-2 text-xs text-ink-soft">
                 <p>Get quick access to RAoSanta by adding it to your home screen!</p>
               </div>
             ) : (
-              <div className="mt-2 text-xs text-gray-600">
+              <div className="mt-2 text-xs text-ink-soft">
                 <p>Install RAoSanta as an app! In Chrome, look for the install icon in the address bar.</p>
               </div>
             )}
@@ -158,7 +158,7 @@ export function AddToHomeScreen() {
               {!isIOS && deferredPrompt && (
                 <button
                   onClick={handleInstallClick}
-                  className="inline-flex items-center rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  className="inline-flex items-center rounded-label bg-post px-3 py-1.5 text-xs font-medium text-white hover:bg-post-deep"
                 >
                   <PlusIcon className="mr-1 h-3.5 w-3.5" />
                   Add Now
@@ -167,7 +167,7 @@ export function AddToHomeScreen() {
               
               <button
                 onClick={handleDismiss}
-                className="inline-flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="inline-flex items-center rounded-label bg-label-shade px-3 py-1.5 text-xs font-medium text-ink-soft hover:bg-rule/50"
               >
                 Maybe Later
               </button>

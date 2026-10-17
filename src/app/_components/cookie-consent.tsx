@@ -112,56 +112,39 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
   }
 
   return (
-    <div
-      className={`fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white shadow-lg ${className}`}
+    <section
+      aria-label="Cookie preferences"
+      className={`label-stock shadow-lift fixed inset-x-3 bottom-3 z-40 max-w-md p-4 sm:right-auto sm:bottom-6 sm:left-6 ${className}`}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">
-              🍪 Cookie Consent
-            </h3>
-            <p className="text-sm leading-relaxed text-gray-600">
-              We use essential cookies to make our site work. We&apos;d also
-              like to use optional cookies to enhance your experience and help
-              us improve our services. You can manage your preferences below.{" "}
-              <Link
-                href="/privacy"
-                className="text-red-600 underline hover:text-red-700"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn more in our Privacy Policy
-              </Link>
-            </p>
-          </div>
-
-          <div className="flex min-w-fit flex-col gap-2 sm:flex-row">
-            <button
-              onClick={handleDecline}
-              className="rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-            >
-              Decline Optional
-            </button>
-            <button
-              onClick={handleAccept}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-            >
-              Accept All
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-3 text-xs text-gray-500">
-          <p>
-            <strong>Essential cookies</strong> are always enabled to ensure the
-            site functions properly.
-            <strong> Optional cookies</strong> include analytics and
-            personalization features.
-          </p>
-        </div>
+      <p className="text-ink text-sm leading-relaxed">
+        <strong>Cookies.</strong> Essential ones keep you signed in. With your
+        OK we&apos;d also use optional ones for analytics.{" "}
+        <Link
+          href="/privacy"
+          className="text-post font-semibold underline underline-offset-4"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Privacy policy
+        </Link>
+      </p>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={handleAccept}
+          className="btn-post min-h-10 flex-1 py-2 text-sm"
+        >
+          Accept All
+        </button>
+        <button
+          type="button"
+          onClick={handleDecline}
+          className="btn-quiet text-ink min-h-10 flex-1 py-2 text-sm"
+        >
+          Decline Optional
+        </button>
       </div>
-    </div>
+    </section>
   );
 };
 

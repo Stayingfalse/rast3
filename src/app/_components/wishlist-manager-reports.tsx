@@ -61,7 +61,7 @@ export default function WishlistManagerReports({ wishlistId }: { wishlistId: str
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-4 border rounded-md p-3 bg-white">
+    <div className="mt-4 border rounded-label p-3 bg-label">
       <div className="text-sm font-semibold mb-2">This wishlist has {items.length} report{items.length > 1 ? 's' : ''}</div>
       <ul className="space-y-2">
         {items.map((it) => (

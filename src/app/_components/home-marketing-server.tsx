@@ -1,100 +1,137 @@
+import { JoinButton } from "./post/join-button";
+
+const STATIONS = [
+  {
+    no: "01",
+    title: "Share your wishlist",
+    body: "Sign in, pick your organisation and department, and add your Amazon UK wishlist. Amazon keeps your address; nobody here ever sees it.",
+  },
+  {
+    no: "02",
+    title: "Pick up three",
+    body: "Whenever you're ready, collect three random wishlists from colleagues. The ones nobody has looked at yet come first, so no one is left out.",
+  },
+  {
+    no: "03",
+    title: "Post a gift",
+    body: "Buy whatever suits your budget from their list and mark it Gifted. Gift one, all three, or ask for more. Giving is always optional.",
+  },
+  {
+    no: "04",
+    title: "Say thank you",
+    body: "When a parcel arrives, post a kudos note with a photo or two. Your Santa stays anonymous; the thank-you is shared with the team.",
+  },
+];
+
+const SMALL_PRINT = [
+  {
+    q: "Is my address private?",
+    a: "Yes. Gifters only see your Amazon wishlist, and Amazon delivers without sharing your address. We never ask for it.",
+  },
+  {
+    q: "Do I have to spend money?",
+    a: "No. You can share a wishlist and never gift anyone. Gifts are whatever you choose, with no minimum and no ranking.",
+  },
+  {
+    q: "Is this Secret Santa?",
+    a: "Not quite. There's no sign-up deadline, no draw and no fixed match. You pick up random wishlists when it suits you, so anyone can join late and nobody is stuck with one name.",
+  },
+  {
+    q: "Who can join?",
+    a: "Anyone with a verified email at a participating organisation. Support for communities and friend groups is on its way.",
+  },
+];
+
 export default function HomeMarketingServer() {
   return (
-    <div id="home-marketing" className="w-full max-w-4xl">
-      {/* Main Value Proposition */}
-      <div className="mb-8 text-center">
-        <h2 className="mb-4 text-3xl font-bold text-white">🎁 Bring Secret Santa to Remote Teams 🎁</h2>
-        <p className="mb-6 text-xl leading-relaxed text-red-100">
-          Perfect for home workers and remote teams who want to share
-          Christmas cheer but don&apos;t know each other&apos;s addresses.
-          Anonymous gifting made simple!
-        </p>
-      </div>
-
-      {/* Key Benefits Grid */}
-      <div className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm">
-          <div className="mb-3 text-3xl">⚡</div>
-          <h3 className="mb-2 text-lg font-semibold text-white">Quick & Hassle-Free</h3>
-          <p className="text-sm text-red-100">Sign up in minutes, share your Amazon wishlist, and start spreading joy</p>
+    <div id="home-marketing" className="flex w-full flex-col gap-24">
+      <section
+        id="how-it-works"
+        aria-labelledby="route-heading"
+        className="scroll-mt-24"
+      >
+        <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h2
+            id="route-heading"
+            className="font-expanded text-frost text-3xl leading-none font-extrabold uppercase sm:text-4xl"
+          >
+            From wishlist <span className="text-post-bright">to doorstep</span>
+          </h2>
+          <p className="text-frost-soft max-w-sm">
+            Four stops, all from your phone. Most people are done in a couple of
+            minutes.
+          </p>
         </div>
+        <ol className="border-frost/25 grid border-t md:grid-cols-4">
+          {STATIONS.map((s, i) => (
+            <li
+              key={s.no}
+              className={`border-frost/25 relative flex flex-col gap-3 border-b py-6 md:border-b-0 md:py-8 ${
+                i > 0 ? "md:border-l md:pl-6" : ""
+              } md:pr-6`}
+            >
+              <span
+                aria-hidden
+                className="bg-gold absolute -top-[5px] left-0 h-2.5 w-2.5 rounded-full md:left-auto"
+                style={i > 0 ? { left: "-5px" } : undefined}
+              />
+              <span className="tabular font-expanded text-gold text-sm font-bold">
+                {s.no}
+              </span>
+              <h3 className="font-expanded text-frost text-xl font-bold">
+                {s.title}
+              </h3>
+              <p className="text-frost-soft leading-relaxed">{s.body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-        <div className="rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm">
-          <div className="mb-3 text-3xl">🎭</div>
-          <h3 className="mb-2 text-lg font-semibold text-white">Completely Anonymous</h3>
-          <p className="text-sm text-red-100">Gifters never see your address - Amazon handles delivery privately</p>
+      <section
+        aria-labelledby="small-print-heading"
+        className="label-stock overflow-hidden"
+      >
+        <div className="airmail h-2.5" aria-hidden />
+        <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[1fr_2fr]">
+          <div className="flex flex-col gap-3">
+            <h2
+              id="small-print-heading"
+              className="font-expanded text-ink text-2xl leading-tight font-extrabold uppercase"
+            >
+              The small print
+            </h2>
+            <p className="text-ink-soft">
+              Short, because there isn&apos;t much of it.
+            </p>
+          </div>
+          <dl className="grid gap-x-10 sm:grid-cols-2">
+            {SMALL_PRINT.map((item) => (
+              <div key={item.q} className="border-rule border-t py-5">
+                <dt className="text-ink font-bold">{item.q}</dt>
+                <dd className="text-ink-soft mt-2 leading-relaxed">{item.a}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
+      </section>
 
-        <div className="rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm">
-          <div className="mb-3 text-3xl">🤗</div>
-          <h3 className="mb-2 text-lg font-semibold text-white">Inclusive & No Pressure</h3>
-          <p className="text-sm text-red-100">Can&apos;t afford to give? No problem! Happy elves may still send you gifts</p>
+      <section
+        aria-labelledby="closing-heading"
+        className="border-frost/25 flex flex-col items-start gap-6 border-y py-12 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="max-w-xl">
+          <h2
+            id="closing-heading"
+            className="font-expanded text-frost text-2xl leading-tight font-extrabold sm:text-3xl"
+          >
+            The 2026 season opens mid-November.
+          </h2>
+          <p className="text-frost-soft mt-2">
+            Get your wishlist ready now and be first in the post.
+          </p>
         </div>
-      </div>
-
-      {/* How It Works */}
-      <div className="mb-8 rounded-xl border border-green-400/30 bg-green-600/20 p-8 backdrop-blur-sm">
-        <h3 className="mb-6 text-center text-2xl font-bold text-white">🎅 How It Works</h3>
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-500 font-bold text-white">1</div>
-            <p className="text-sm font-medium text-green-100">Sign up &amp; join your company</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-500 font-bold text-white">2</div>
-            <p className="text-sm font-medium text-green-100">Share your Amazon wishlist</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-500 font-bold text-white">3</div>
-            <p className="text-sm font-medium text-green-100">Browse colleagues&apos; wishlists</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-500 font-bold text-white">4</div>
-            <p className="text-sm font-medium text-green-100">Send anonymous gifts & kudos!</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Call to Action */}
-      <div className="text-center">
-        <div className="relative overflow-hidden rounded-2xl border-2 border-red-400/40 bg-gradient-to-br from-red-600/30 to-red-800/30 p-8 shadow-2xl backdrop-blur-sm">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute top-4 left-4 animate-pulse text-sm text-yellow-300">✨</div>
-            <div className="absolute top-6 right-8 animate-pulse delay-500 text-xs text-yellow-300">⭐</div>
-            <div className="absolute bottom-6 left-8 animate-pulse delay-1000 text-xs text-yellow-300">💫</div>
-            <div className="absolute right-4 bottom-4 animate-pulse delay-1000 text-sm text-yellow-300">✨</div>
-          </div>
-
-          <div className="relative z-10 mb-6">
-            <div className="mb-3 text-4xl">🎅✨</div>
-            <h3 className="mb-4 text-3xl leading-tight font-bold text-white">Ready to spread some Christmas magic?</h3>
-            <p className="mb-4 text-xl leading-relaxed text-red-100">Join other remote workers making the holidays special for their colleagues</p>
-          </div>
-
-          <div className="relative z-10 mb-6 text-lg font-medium text-red-200">👇 Click below to sign up and join the fun 👇</div>
-
-          <div className="relative z-10 flex items-center justify-center gap-6 text-sm text-red-200">
-            <div className="flex items-center gap-1"><span>🔒</span><span>100% Anonymous</span></div>
-            <div className="flex items-center gap-1"><span>⚡</span><span>Setup in 2 minutes</span></div>
-            <div className="flex items-center gap-1"><span>💝</span><span>No obligation to spend</span></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick FAQ */}
-      <div className="mt-8">
-        <h3 className="mb-4 text-center text-lg font-bold text-white">❓ Quick Questions</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-            <h4 className="mb-2 font-medium text-white">🔐 Is my address private?</h4>
-            <p className="text-sm text-gray-200">Absolutely! Gifters only see your Amazon wishlist. Amazon handles all deliveries privately.</p>
-          </div>
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-            <h4 className="mb-2 font-medium text-white">💰 Do I have to spend money?</h4>
-            <p className="text-sm text-gray-200">Not at all! You can participate by sharing your wishlist without any obligation to gift others.</p>
-          </div>
-        </div>
-      </div>
+        <JoinButton label="Join Random Acts of Santa" />
+      </section>
     </div>
   );
 }

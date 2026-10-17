@@ -109,7 +109,7 @@ export function Preloader({
           ></animate>
         </circle>
       </svg>
-      <div className="text-lg font-medium text-gray-700">{message}</div>
+      <div className="text-lg font-medium text-ink-soft">{message}</div>
     </div>
   );
 }

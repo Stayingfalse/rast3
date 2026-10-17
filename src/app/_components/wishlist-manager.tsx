@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  ChatBubbleLeftRightIcon,
-  GlobeAltIcon,
-  ShoppingCartIcon,
-} from "@heroicons/react/24/solid";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { Postmark } from "./post/postmark";
 import { Preloader } from "./preloader";
 import { ProfileSetupModal } from "./profile-setup-modal";
 
@@ -30,10 +26,10 @@ export function WishlistManager() {
   const [strangerModal, setStrangerModal] = useState(false);
 
   // Check if user has completed profile - only run when authenticated
-  const { data: userProfile, refetch: refetchProfile } = api.profile.getCurrentProfile.useQuery(
-    undefined,
-    { enabled: !!sessionData?.user },
-  );
+  const { data: userProfile, refetch: refetchProfile } =
+    api.profile.getCurrentProfile.useQuery(undefined, {
+      enabled: !!sessionData?.user,
+    });
 
   // Only show queries if user is authenticated and has completed profile
   const shouldShowWishlist =
@@ -178,10 +174,10 @@ export function WishlistManager() {
   const [showAddWishlistPrompt, setShowAddWishlistPrompt] = useState(false);
   const [newWishlistUrl, setNewWishlistUrl] = useState("");
   const [addWishlistError, setAddWishlistError] = useState<string | null>(null);
-  const [pendingRequest, setPendingRequest] = useState<
-    | null
-    | { type: "initial" | "additional"; count?: number }
-  >(null);
+  const [pendingRequest, setPendingRequest] = useState<null | {
+    type: "initial" | "additional";
+    count?: number;
+  }>(null);
 
   const updateProfileForWishlist = api.profile.updateProfile.useMutation({
     onSuccess: async () => {
@@ -239,16 +235,14 @@ export function WishlistManager() {
 
   if (!userProfile?.profileCompleted) {
     return (
-      <div className="mx-auto mt-8 max-w-2xl p-6">
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
-          <h2 className="mb-2 text-xl font-semibold text-yellow-800">
-            Complete Your Profile First
-          </h2>
-          <p className="text-yellow-700">
-            Please complete your profile setup to access the Secret Santa
-            wishlist system.
-          </p>
-        </div>
+      <div className="label-stock w-full max-w-2xl p-6">
+        <h2 className="font-expanded text-ink text-xl font-extrabold">
+          Finish your profile first
+        </h2>
+        <p className="text-ink-soft mt-2">
+          Add your work email, department and wishlist, then you can start
+          picking up wishlists.
+        </p>
       </div>
     );
   }
@@ -273,591 +267,450 @@ export function WishlistManager() {
     );
   };
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const yOffset = -24; // adjust if you have a sticky header
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
-  };
-
-  return (
-    <div className="mx-auto max-w-4xl space-y-8 p-6">
-      {/* Feature Guide - compact stats, feature boxes below */}
-      <div className="mb-6 rounded-xl border border-blue-400/30 bg-blue-600/20 p-6 backdrop-blur-sm">
-        <h3 className="mb-4 text-center text-xl font-bold text-white">
-          🎯 Your Secret Santa Dashboard
-        </h3>
-        {/* Compact stats line */}
-        <div className="mb-6 flex flex-wrap justify-center gap-4 text-base font-medium text-blue-100">
-          {stats?.totalUsers !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-green-200">👥</span> {stats.totalUsers}{" "}
-              users
-            </span>
-          )}
-          {stats?.totalLinks !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-blue-200">🔗</span> {stats.totalLinks}{" "}
-              wishlists
-            </span>
-          )}
-          {stats?.totalGiftsSent !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-pink-200">🎁</span> {stats.totalGiftsSent}{" "}
-              gifts sent
-            </span>
-          )}
-          {stats?.totalLinksInDomain !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-purple-200">🏢</span>{" "}
-              {stats.totalLinksInDomain} in your domain
-            </span>
-          )}
-          {stats?.totalLinksInDepartment !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-cyan-200">🏬</span>{" "}
-              {stats.totalLinksInDepartment} in your dept
-            </span>
-          )}
-          {stats?.totalUnallocatedLinks !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="text-orange-200">🕵️‍♂️</span>{" "}
-              {stats.totalUnallocatedLinks} unallocated
-            </span>
-          )}
-        </div>
-        {/* Feature boxes */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Browse & Gift */}
-          <button
-            type="button"
-            onClick={() => scrollToSection("assignments-section")}
-            className="group w-full cursor-pointer rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm transition hover:bg-orange-100/10 focus:ring-2 focus:ring-orange-300 focus:outline-none"
-          >
-            <h4 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold text-white">
-              <ShoppingCartIcon
-                className="h-6 w-6 text-orange-300 transition group-hover:text-orange-400"
-                aria-hidden="true"
-              />
-              Browse &amp; Gift
-            </h4>
-            <p className="text-sm text-blue-100">
-              Browse up to <b>3</b> colleague wishlists at a time. Send
-              anonymous gifts or request more links when ready!
-            </p>
-          </button>
-          {/* Kudos & Thanks */}
-          <button
-            type="button"
-            onClick={() => scrollToSection("kudos-section")}
-            className="group w-full cursor-pointer rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm transition hover:bg-pink-100/10 focus:ring-2 focus:ring-pink-200 focus:outline-none"
-          >
-            <h4 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold text-white">
-              <ChatBubbleLeftRightIcon
-                className="h-6 w-6 text-pink-200 transition group-hover:text-pink-300"
-                aria-hidden="true"
-              />
-              Kudos &amp; Thanks
-            </h4>
-            <p className="text-sm text-blue-100">
-              Share anonymous thank you messages when you receive gifts. Spread
-              positivity and Christmas cheer!
-            </p>
-          </button>
-          {/* Help a Stranger */}
-          <button
-            type="button"
-            onClick={() => scrollToSection("assignments-section")}
-            className="group w-full cursor-pointer rounded-lg border border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm transition hover:bg-blue-100/10 focus:ring-2 focus:ring-blue-200 focus:outline-none"
-          >
-            <h4 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold text-white">
-              <GlobeAltIcon
-                className="h-6 w-6 text-blue-200 transition group-hover:text-blue-300"
-                aria-hidden="true"
-              />
-              Help a Stranger
-            </h4>
-            <p className="text-sm text-blue-100">
-              You can request more assignments after gifting, or help a stranger
-              if your company runs out of wishlists.
-            </p>
-          </button>
-        </div>
-      </div>
-      {/* Request Initial Assignments or Waiting for Users */}
-      {(!assignments || assignments.length === 0) &&
-      stats &&
-      stats.totalLinks < 10 &&
-      (stats.totalLinksInDepartment ?? 0) < 2 ? (
-        <div
-          id="assignments-section"
-          className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center shadow-md"
-        >
-          <h2 className="mb-4 text-2xl font-semibold text-yellow-800">
-            Waiting for More Participants
-          </h2>
-          <p className="mb-4 text-yellow-700">
-            There {"aren't"} enough wishlists or participants yet to get
-            started. Please check back later when more people have joined and
-            set up their profiles!
-          </p>
-          <div className="mb-2 text-sm text-yellow-700">
-            Help spread the word:
+  const confirmToast = (
+    message: string,
+    confirmLabel: string,
+    onConfirm: () => void,
+  ) =>
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <span>{message}</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn-post min-h-9 px-3 py-1 text-sm"
+              onClick={() => {
+                toast.dismiss(t.id);
+                onConfirm();
+              }}
+            >
+              {confirmLabel}
+            </button>
+            <button
+              type="button"
+              className="btn-quiet min-h-9 px-3 py-1 text-sm"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
           </div>
-          <div className="flex flex-col justify-center gap-2 sm:flex-row">
+        </div>
+      ),
+      { duration: Infinity },
+    );
+
+  const confirmUnassign = (assignmentId: string) =>
+    confirmToast(
+      "Unassigning will release this wishlist for others to pick up. Continue?",
+      "Yes, unassign",
+      () => unassignAssignment.mutate({ assignmentId }),
+    );
+
+  const renderAssignment = (assignment: WishlistAssignment, index: number) => {
+    const hasPurchase = !!assignment.purchases;
+    const hasReport = assignment.reports.length > 0;
+    const archived = assignment.archived;
+    const wishlistDomain = (assignment.wishlistOwner as { domain?: string })
+      .domain;
+    const wishlistDeptId = assignment.wishlistOwner.department?.id;
+    const userDomain = userProfile?.domain;
+    const userDeptId = userProfile?.departmentId;
+    // A stranger is someone from another domain (or any domain when we have none)
+    const isStranger =
+      (wishlistDomain && userDomain && wishlistDomain !== userDomain) ??
+      (!userDomain && wishlistDomain);
+    const isCrossDept =
+      !isStranger &&
+      wishlistDomain &&
+      userDomain &&
+      wishlistDomain === userDomain &&
+      wishlistDeptId &&
+      userDeptId &&
+      wishlistDeptId !== userDeptId;
+
+    const route = archived
+      ? "Archived"
+      : isStranger
+        ? "Another organisation"
+        : isCrossDept && assignment.wishlistOwner.department?.name
+          ? assignment.wishlistOwner.department.name
+          : "Your department";
+
+    return (
+      <article
+        key={assignment.id}
+        className={`label-stock relative flex flex-col overflow-hidden ${archived ? "opacity-80" : ""}`}
+      >
+        <div
+          className={hasPurchase ? "bg-pine h-2.5" : "airmail h-2.5"}
+          aria-hidden
+        />
+        <header className="border-rule flex items-start justify-between gap-3 border-b px-4 pt-3 pb-2">
+          <div>
+            <p className="label-caps text-ink-soft">
+              Wishlist{" "}
+              <span className="tabular">
+                No. {String(index + 1).padStart(2, "0")}
+              </span>
+            </p>
+            <p className="text-ink mt-0.5 text-sm font-semibold">{route}</p>
+          </div>
+          {hasPurchase ? (
+            <span className="label-caps bg-pine-tint text-pine rounded-sm px-2 py-1">
+              Gift sent
+            </span>
+          ) : hasReport ? (
+            <span className="label-caps bg-post-tint text-post-deep rounded-sm px-2 py-1">
+              Issue reported
+            </span>
+          ) : null}
+        </header>
+
+        {hasPurchase && !archived && (
+          <Postmark
+            centre="SENT"
+            sub="2026 SEASON"
+            animate
+            className="text-pine pointer-events-none absolute top-10 right-3 w-20 opacity-90"
+          />
+        )}
+
+        <div className="flex flex-1 flex-col gap-3 p-4">
+          {hasPurchase && assignment.purchases && (
+            <div className="text-ink-soft text-sm">
+              <p>
+                Purchased:{" "}
+                <span className="tabular">
+                  {new Date(
+                    assignment.purchases.purchasedAt,
+                  ).toLocaleDateString("en-GB")}
+                </span>
+              </p>
+              {assignment.purchases.notes && (
+                <p className="text-ink mt-1 italic">
+                  &quot;{assignment.purchases.notes}&quot;
+                </p>
+              )}
+            </div>
+          )}
+          {hasReport && !hasPurchase && (
+            <div className="text-ink-soft text-sm">
+              <p>
+                Reported: {formatReportType(assignment.reports[0]!.reportType)}
+              </p>
+              {assignment.reports[0]?.description && (
+                <p className="text-ink mt-1 italic">
+                  &quot;{assignment.reports[0].description}&quot;
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-auto flex flex-col gap-2">
             <a
-              href={`mailto:?subject=Join%20our%20Secret%20Santa!&body=Sign%20up%20for%20Secret%20Santa%20here:%20${encodeURIComponent(window.location.origin)}`}
-              className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+              href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
               target="_blank"
               rel="noopener noreferrer"
+              className={
+                hasPurchase || archived ? "btn-quiet text-ink" : "btn-post"
+              }
             >
-              Invite by Email
+              View Wishlist on Amazon
             </a>
+
+            {!archived && !hasPurchase && !hasReport && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAssignment(assignment.id);
+                    setModalType("purchase");
+                  }}
+                  className="btn-quiet text-pine"
+                >
+                  Gifted
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAssignment(assignment.id);
+                    setModalType("report");
+                  }}
+                  className="btn-quiet text-ink-soft"
+                >
+                  Report issue
+                </button>
+              </div>
+            )}
+
+            {!archived && hasPurchase && (
+              <button
+                type="button"
+                onClick={() =>
+                  confirmToast(
+                    "Undo this purchase? This removes the purchase record.",
+                    "Yes, undo",
+                    () => undoPurchase.mutate({ assignmentId: assignment.id }),
+                  )
+                }
+                disabled={undoPurchase.isPending}
+                className="btn-quiet text-ink-soft"
+              >
+                {undoPurchase.isPending ? "Undoing..." : "Undo purchase"}
+              </button>
+            )}
+
+            {!archived && hasReport && !hasPurchase && (
+              <button
+                type="button"
+                onClick={() =>
+                  confirmToast(
+                    "Mark this issue as fixed? This removes the report.",
+                    "Yes, it's fixed",
+                    () => clearReport.mutate({ assignmentId: assignment.id }),
+                  )
+                }
+                disabled={clearReport.isPending}
+                className="btn-quiet text-ink"
+              >
+                {clearReport.isPending ? "Clearing..." : "It's fixed"}
+              </button>
+            )}
+          </div>
+
+          <div className="border-rule flex justify-between gap-3 border-t pt-3 text-sm">
             <button
-              onClick={() => {
-                void navigator.clipboard.writeText(window.location.origin);
-                toast.success("Link copied!");
-              }}
-              className="rounded-lg bg-gray-600 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-700"
+              type="button"
+              onClick={() =>
+                archiveAssignment.mutate({
+                  assignmentId: assignment.id,
+                  archive: !archived,
+                })
+              }
+              disabled={archiveAssignment.isPending}
+              className="text-ink-soft hover:text-ink min-h-9 font-semibold underline-offset-4 hover:underline"
             >
-              Copy Signup Link
+              {archiveAssignment.isPending
+                ? "Updating..."
+                : archived
+                  ? "Unarchive"
+                  : "Archive"}
             </button>
+            {!hasPurchase && !hasReport && (
+              <button
+                type="button"
+                onClick={() => confirmUnassign(assignment.id)}
+                className="text-post min-h-9 font-semibold underline-offset-4 hover:underline"
+              >
+                Unassign
+              </button>
+            )}
           </div>
         </div>
+      </article>
+    );
+  };
+
+  const statItems = [
+    { value: stats?.totalUsers, label: "members" },
+    { value: stats?.totalLinks, label: "wishlists" },
+    { value: stats?.totalGiftsSent, label: "gifts sent" },
+    { value: stats?.totalLinksInDomain, label: "in your organisation" },
+    { value: stats?.totalLinksInDepartment, label: "in your department" },
+    { value: stats?.totalUnallocatedLinks, label: "not yet picked up" },
+  ].filter((s): s is { value: number; label: string } => s.value !== undefined);
+
+  const activeAssignments =
+    assignments?.filter((a: WishlistAssignment) => !a.archived) ?? [];
+  const archivedAssignments =
+    assignments?.filter((a: WishlistAssignment) => a.archived) ?? [];
+  const waitingForPeople =
+    (!assignments || assignments.length === 0) &&
+    stats &&
+    stats.totalLinks < 10 &&
+    (stats.totalLinksInDepartment ?? 0) < 2;
+
+  return (
+    <div className="w-full space-y-10">
+      {statItems.length > 0 && (
+        <dl className="border-frost/25 grid grid-cols-2 border-y sm:grid-cols-3 lg:grid-cols-6">
+          {statItems.map((s) => (
+            <div
+              key={s.label}
+              className="border-frost/15 px-1 py-4 lg:border-l lg:px-4 lg:first:border-l-0"
+            >
+              <dt className="text-frost-soft text-sm">{s.label}</dt>
+              <dd className="tabular font-expanded text-frost text-2xl font-extrabold">
+                {s.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {waitingForPeople ? (
+        <section
+          id="assignments-section"
+          className="label-stock overflow-hidden"
+        >
+          <div className="airmail h-2.5" aria-hidden />
+          <div className="p-6 sm:p-8">
+            <h2 className="font-expanded text-ink text-2xl font-extrabold">
+              Waiting for more people
+            </h2>
+            <p className="text-ink-soft mt-2 max-w-xl">
+              There aren&apos;t enough wishlists to pick from yet. Invite a few
+              colleagues and check back once they&apos;ve set up their profiles.
+            </p>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <a
+                href={`mailto:?subject=Join%20Random%20Acts%20of%20Santa&body=Share%20your%20wishlist%20and%20send%20a%20colleague%20a%20gift%3A%20${encodeURIComponent(window.location.origin)}`}
+                className="btn-post"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Invite by email
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(window.location.origin);
+                  toast.success("Link copied!");
+                }}
+                className="btn-quiet text-ink"
+              >
+                Copy sign-up link
+              </button>
+            </div>
+          </div>
+        </section>
       ) : (
         (!assignments || assignments.length === 0) && (
-          <div className="rounded-lg bg-gradient-to-r from-red-50 to-green-50 p-6 text-center shadow-md">
-            <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-              🎁 Get Started!
-            </h2>
-            <p className="mb-6 text-gray-600">
-              Request your first 3 wishlist assignments to start shopping for
-              others!
-            </p>
-            <button
-              onClick={() => requestInitial.mutate()}
-              disabled={requestInitial.isPending}
-              className="rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
-            >
-              {requestInitial.isPending
-                ? "Finding wishlists..."
-                : "Get My 3 Wishlist Assignments"}
-            </button>
-          </div>
-        )
-      )}
-      {/* Current Assignments */}
-      {assignments && assignments.length > 0 && (
-        <div
-          id="assignments-section"
-          className="rounded-lg bg-white p-6 shadow-md"
-        >
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Your Wishlist Assignments ({assignments.length})
-            </h2>
-            {/* Show 'Try for More Assignments' if <3, else 'Request More' */}
-            {assignments.length < 3 ? (
+          <section
+            id="assignments-section"
+            className="label-stock overflow-hidden"
+          >
+            <div className="airmail h-2.5" aria-hidden />
+            <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div>
+                <h2 className="font-expanded text-ink text-2xl font-extrabold">
+                  Pick up your first three
+                </h2>
+                <p className="text-ink-soft mt-2 max-w-xl">
+                  We&apos;ll hand you three random wishlists, starting with
+                  people nobody has picked up yet. Gift as many or as few as you
+                  like.
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => requestInitial.mutate()}
                 disabled={requestInitial.isPending}
-                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
+                className="btn-post shrink-0"
+              >
+                {requestInitial.isPending
+                  ? "Finding wishlists..."
+                  : "Get My 3 Wishlist Assignments"}
+              </button>
+            </div>
+          </section>
+        )
+      )}
+
+      {assignments && assignments.length > 0 && (
+        <section id="assignments-section" aria-labelledby="assignments-heading">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="assignments-heading"
+                className="font-expanded text-frost text-3xl leading-none font-extrabold uppercase"
+              >
+                <span className="sr-only">
+                  Your Wishlist Assignments ({assignments.length})
+                </span>
+                <span aria-hidden>
+                  Your parcels{" "}
+                  <span className="tabular text-post-bright">
+                    ({assignments.length})
+                  </span>
+                </span>
+              </h2>
+              <p className="text-frost-soft mt-2">
+                Open a wishlist, buy something that suits your budget, then mark
+                it Gifted.
+              </p>
+            </div>
+            {assignments.length < 3 ? (
+              <button
+                type="button"
+                onClick={() => requestInitial.mutate()}
+                disabled={requestInitial.isPending}
+                className="btn-quiet text-frost shrink-0"
               >
                 {requestInitial.isPending
                   ? "Finding..."
-                  : "Try for More Assignments"}
+                  : "Try for more wishlists"}
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => requestAdditional.mutate({ count: 1 })}
                 disabled={requestAdditional.isPending}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
+                className="btn-quiet text-frost shrink-0"
               >
-                {requestAdditional.isPending ? "Finding..." : "Request More"}
+                {requestAdditional.isPending ? "Finding..." : "Pick up another"}
               </button>
             )}
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {(() => {
-              // Split assignments into active vs archived
-              const activeAssignments = assignments.filter((a: WishlistAssignment) => !a.archived);
-              const archivedAssignments = assignments.filter((a: WishlistAssignment) => a.archived);
-              return (
-                <>
-                  {activeAssignments.map((assignment: WishlistAssignment) => {
-              const hasPurchase = !!assignment.purchases;
-              const hasReport = assignment.reports.length > 0;
-              // Fix: Only treat as stranger if wishlistDomain is defined and different from userDomain, or if either is missing (but not both missing)
-              const wishlistDomain = (
-                assignment.wishlistOwner as { domain?: string }
-              ).domain;
-              const wishlistDeptId = assignment.wishlistOwner.department?.id;
-              const userDomain = userProfile?.domain;
-              const userDeptId = userProfile?.departmentId;
-              // Only tag as stranger if both domains are defined and different, or if wishlistDomain is defined and userDomain is missing
-              const isStranger =
-                (wishlistDomain &&
-                  userDomain &&
-                  wishlistDomain !== userDomain) ??
-                (!userDomain && wishlistDomain);
-              const isCrossDept =
-                !isStranger &&
-                wishlistDomain &&
-                userDomain &&
-                wishlistDomain === userDomain &&
-                wishlistDeptId &&
-                userDeptId &&
-                wishlistDeptId !== userDeptId;
-
-                      return (
-                        <div
-                          key={assignment.id}
-                  className={`rounded-lg border-2 p-4 transition-all ${
-                    hasPurchase
-                      ? "border-green-200 bg-green-50"
-                      : hasReport
-                        ? "border-yellow-200 bg-yellow-50"
-                        : isStranger
-                          ? "border-pink-200 bg-pink-50 hover:border-pink-300"
-                          : isCrossDept
-                            ? "border-purple-200 bg-purple-50 hover:border-purple-300"
-                            : "border-gray-200 bg-white hover:border-blue-300"
-                  }`}
-                >
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      {isStranger ? (
-                        <span className="rounded-full bg-pink-100 px-2 py-1 text-xs font-medium text-pink-600">
-                          🎁 Stranger
-                        </span>
-                      ) : isCrossDept &&
-                        assignment.wishlistOwner.department?.name ? (
-                        <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-600">
-                          📍 {assignment.wishlistOwner.department.name}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {hasPurchase && (
-                        <span className="text-sm font-medium text-green-600">
-                          ✅ Purchased
-                        </span>
-                      )}
-                      {hasReport && !hasPurchase && (
-                        <span className="text-sm font-medium text-yellow-600">
-                          ⚠️ Reported
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <a
-                      href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full rounded-lg bg-orange-500 px-4 py-2 text-center font-medium text-white transition-colors hover:bg-orange-600"
-                    >
-                      🛒 View Wishlist
-                    </a>
-
-                    {!hasPurchase && !hasReport && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedAssignment(assignment.id);
-                            setModalType("purchase");
-                          }}
-                          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="h-5 w-5"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          Gifted
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedAssignment(assignment.id);
-                            setModalType("report");
-                          }}
-                          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                            className="h-5 w-5"
-                          >
-                            <path d="M12 2c.38 0 .73.21.9.55l9 16A1 1 0 0 1 21 20H3a1 1 0 0 1-.9-1.45l9-16A1 1 0 0 1 12 2zm0 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-1-6v4a1 1 0 1 0 2 0V9a1 1 0 1 0-2 0z" />
-                          </svg>
-                          Issue
-                        </button>
-                      </div>
-                    )}
-
-                    {hasPurchase && assignment.purchases && (
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
-                          <div>
-                            Purchased:{" "}
-                            {new Date(
-                              assignment.purchases.purchasedAt,
-                            ).toLocaleDateString()}
-                          </div>
-                          {assignment.purchases.notes && (
-                            <div className="mt-1 italic">
-                              &quot;{assignment.purchases.notes}&quot;
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => {
-                            // Using toast with a custom confirmation
-                            toast((t) => (
-                              <div className="flex flex-col gap-3">
-                                <span>Are you sure you want to undo this purchase? This will remove the purchase record.</span>
-                                <div className="flex gap-2">
-                                  <button
-                                    className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
-                                    onClick={() => {
-                                      toast.dismiss(t.id);
-                                      undoPurchase.mutate({
-                                        assignmentId: assignment.id,
-                                      });
-                                    }}
-                                  >
-                                    Yes, Undo
-                                  </button>
-                                  <button
-                                    className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
-                                    onClick={() => toast.dismiss(t.id)}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ), { duration: Infinity });
-                          }}
-                          disabled={undoPurchase.isPending}
-                          className="w-full rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 disabled:bg-gray-400"
-                        >
-                          {undoPurchase.isPending
-                            ? "Undoing..."
-                            : "Undo Purchased"}
-                        </button>
-                      </div>
-                    )}
-
-                    {hasReport && !hasPurchase && (
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
-                          <div>
-                            Reported:{" "}
-                            {formatReportType(
-                              assignment.reports[0]!.reportType,
-                            )}
-                          </div>
-                          {assignment.reports[0]?.description && (
-                            <div className="mt-1 italic">
-                              &quot;{assignment.reports[0].description}&quot;
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => {
-                            // Using toast with a custom confirmation
-                            toast((t) => (
-                              <div className="flex flex-col gap-3">
-                                <span>Mark this issue as fixed? This will remove the report.</span>
-                                <div className="flex gap-2">
-                                  <button
-                                    className="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
-                                    onClick={() => {
-                                      toast.dismiss(t.id);
-                                      clearReport.mutate({
-                                        assignmentId: assignment.id,
-                                      });
-                                    }}
-                                  >
-                                    Yes, Mark Fixed
-                                  </button>
-                                  <button
-                                    className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600"
-                                    onClick={() => toast.dismiss(t.id)}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ), { duration: Infinity });
-                          }}
-                          disabled={clearReport.isPending}
-                          className="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
-                        >                          {clearReport.isPending
-                            ? "Clearing..."
-                            : "It's Fixed"}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Archive / Unassign actions */}
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        onClick={() => archiveAssignment.mutate({ assignmentId: assignment.id, archive: true })}
-                        disabled={archiveAssignment.isPending}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50"
-                      >
-                        {archiveAssignment.isPending ? "Updating..." : "Archive"}
-                      </button>
-
-                      {!hasPurchase && !hasReport && (
-                        <button
-                          onClick={() => {
-                            toast((t) => (
-                              <div className="flex flex-col gap-3">
-                                <span>Unassigning will release this wishlist for others to pick up. Continue?</span>
-                                <div className="flex gap-2">
-                                  <button
-                                    className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
-                                    onClick={() => {
-                                      toast.dismiss(t.id);
-                                      unassignAssignment.mutate({ assignmentId: assignment.id });
-                                    }}
-                                  >
-                                    Yes, Unassign
-                                  </button>
-                                  <button className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600" onClick={() => toast.dismiss(t.id)}>
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ), { duration: Infinity });
-                          }}
-                          className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-                        >
-                          Unassign
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                      );
-                    })}
-
-                  {/* Archived lists toggle */}
-                  {archivedAssignments.length > 0 && (
-                    <div className="col-span-full">
-                      <button
-                        type="button"
-                        onClick={() => setShowArchived(v => !v)}
-                        className="mb-3 inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium"
-                      >
-                        {showArchived ? "Hide" : "Show"} Archived Lists ({archivedAssignments.length})
-                      </button>
-
-                      {showArchived && (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {archivedAssignments.map((assignment: WishlistAssignment) => {
-                            const hasPurchase = !!assignment.purchases;
-                            const hasReport = assignment.reports.length > 0;
-                            // archived items: no domain/department checks needed
-
-                            return (
-                              <div key={assignment.id} className="rounded-lg border-2 p-4 bg-gray-50">
-                                <div className="mb-3 flex items-start justify-between">
-                                  <div>
-                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">Archived</span>
-                                  </div>
-                                </div>
-                                <div className="space-y-3">
-                                  <a
-                                    href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block w-full rounded-lg bg-orange-500 px-4 py-2 text-center font-medium text-white transition-colors hover:bg-orange-600"
-                                  >
-                                    🛒 View Wishlist
-                                  </a>
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => archiveAssignment.mutate({ assignmentId: assignment.id, archive: false })}
-                                      disabled={archiveAssignment.isPending}
-                                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50"
-                                    >
-                                      {archiveAssignment.isPending ? "Updating..." : "Unarchive"}
-                                    </button>
-                                    {!hasPurchase && !hasReport && (
-                                      <button
-                                        onClick={() => {
-                                          toast((t) => (
-                                            <div className="flex flex-col gap-3">
-                                              <span>Unassigning will release this wishlist for others to pick up. Continue?</span>
-                                              <div className="flex gap-2">
-                                                <button
-                                                  className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
-                                                  onClick={() => {
-                                                    toast.dismiss(t.id);
-                                                    unassignAssignment.mutate({ assignmentId: assignment.id });
-                                                  }}
-                                                >
-                                                  Yes, Unassign
-                                                </button>
-                                                <button className="rounded bg-gray-500 px-3 py-1 text-white hover:bg-gray-600" onClick={() => toast.dismiss(t.id)}>
-                                                  Cancel
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ), { duration: Infinity });
-                                        }}
-                                        className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-                                      >
-                                        Unassign
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+            {activeAssignments.map((a, i) => renderAssignment(a, i))}
           </div>
-        </div>
-      )}{" "}
+
+          {archivedAssignments.length > 0 && (
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => setShowArchived((v) => !v)}
+                aria-expanded={showArchived}
+                className="btn-quiet text-frost-soft"
+              >
+                {showArchived ? "Hide" : "Show"} archived (
+                {archivedAssignments.length})
+              </button>
+              {showArchived && (
+                <div className="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {archivedAssignments.map((a, i) =>
+                    renderAssignment(a, activeAssignments.length + i),
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
       {/* Purchase Modal */}
       {selectedAssignment && modalType === "purchase" && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-semibold">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-night-deep/75 fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        >
+          <div className="label-stock shadow-lift w-full max-w-md p-6">
+            <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
               Mark Purchase Complete
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="label-caps text-ink-soft mb-2 block">
                   Notes (optional)
                 </label>
                 <textarea
                   value={purchaseNotes}
                   onChange={(e) => setPurchaseNotes(e.target.value)}
                   placeholder="What did you buy? Any special notes..."
-                  className="w-full rounded-lg border border-gray-300 p-3 focus:border-transparent focus:ring-2 focus:ring-green-500"
+                  className="rounded-label border-rule text-ink w-full border bg-white p-3"
                   rows={3}
                 />
               </div>
@@ -870,7 +723,7 @@ export function WishlistManager() {
                     });
                   }}
                   disabled={markPurchase.isPending}
-                  className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+                  className="btn-post flex-1"
                 >
                   {markPurchase.isPending ? "Saving..." : "Confirm Purchase"}
                 </button>
@@ -879,7 +732,7 @@ export function WishlistManager() {
                     setSelectedAssignment(null);
                     setModalType(null);
                   }}
-                  className="flex-1 rounded-lg bg-gray-500 px-4 py-2 font-medium text-white hover:bg-gray-600"
+                  className="btn-quiet text-ink flex-1"
                 >
                   Cancel
                 </button>
@@ -890,14 +743,18 @@ export function WishlistManager() {
       )}
       {/* Report Issue Modal */}
       {selectedAssignment && modalType === "report" && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-semibold">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-night-deep/75 fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        >
+          <div className="label-stock shadow-lift w-full max-w-md p-6">
+            <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
               Report Wishlist Issue
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="label-caps text-ink-soft mb-2 block">
                   Issue Type
                 </label>
                 <select
@@ -905,7 +762,7 @@ export function WishlistManager() {
                   onChange={(e) =>
                     setReportType(e.target.value as typeof reportType)
                   }
-                  className="w-full rounded-lg border border-gray-300 p-3 focus:border-transparent focus:ring-2 focus:ring-red-500"
+                  className="rounded-label border-rule text-ink w-full border bg-white p-3"
                 >
                   <option value="NO_ITEMS">Wishlist has no items</option>
                   <option value="DOESNT_EXIST">
@@ -916,14 +773,14 @@ export function WishlistManager() {
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="label-caps text-ink-soft mb-2 block">
                   Description (optional)
                 </label>
                 <textarea
                   value={reportDescription}
                   onChange={(e) => setReportDescription(e.target.value)}
                   placeholder="Additional details about the issue..."
-                  className="w-full rounded-lg border border-gray-300 p-3 focus:border-transparent focus:ring-2 focus:ring-red-500"
+                  className="rounded-label border-rule text-ink w-full border bg-white p-3"
                   rows={3}
                 />
               </div>
@@ -937,7 +794,7 @@ export function WishlistManager() {
                     });
                   }}
                   disabled={reportIssue.isPending}
-                  className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+                  className="btn-post flex-1"
                 >
                   {reportIssue.isPending ? "Reporting..." : "Submit Report"}
                 </button>
@@ -946,7 +803,7 @@ export function WishlistManager() {
                     setSelectedAssignment(null);
                     setModalType(null);
                   }}
-                  className="flex-1 rounded-lg bg-gray-500 px-4 py-2 font-medium text-white hover:bg-gray-600"
+                  className="btn-quiet text-ink flex-1"
                 >
                   Cancel
                 </button>
@@ -957,17 +814,21 @@ export function WishlistManager() {
       )}
       {/* No Assignments Available Modal */}
       {modalType === "no-assignments" && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-semibold text-gray-900">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-night-deep/75 fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        >
+          <div className="label-stock shadow-lift w-full max-w-md p-6">
+            <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
               No More Wishlists Available
             </h3>
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-ink-soft">
                 We {"couldn't"} find any more wishlists from your department to
                 assign to you. This might be because:
               </p>
-              <ul className="list-inside list-disc space-y-1 text-sm text-gray-600">
+              <ul className="text-ink-soft list-inside list-disc space-y-1 text-sm">
                 <li>
                   All colleagues in your department already have assignments
                 </li>
@@ -978,14 +839,14 @@ export function WishlistManager() {
                   {"You've"} already been assigned all available wishlists
                 </li>
               </ul>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p className="mb-3 text-sm text-blue-800">
+              <div className="rounded-label border-rule bg-label-shade border p-4">
+                <p className="text-ink mb-2 text-sm">
                   <strong>
                     Would you like to get a wishlist from another department in
                     your company?
                   </strong>
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-ink-soft text-xs">
                   This will be highlighted differently to show {"it's"} from a
                   different department.
                 </p>
@@ -994,7 +855,7 @@ export function WishlistManager() {
                 <button
                   onClick={handleCrossDepartment}
                   disabled={requestCrossDepartment.isPending}
-                  className="flex-1 rounded-lg bg-purple-600 px-4 py-2 font-medium text-white hover:bg-purple-700 disabled:bg-gray-400"
+                  className="btn-post flex-1"
                 >
                   {requestCrossDepartment.isPending
                     ? "Finding..."
@@ -1002,7 +863,7 @@ export function WishlistManager() {
                 </button>
                 <button
                   onClick={() => setModalType(null)}
-                  className="flex-1 rounded-lg bg-gray-500 px-4 py-2 font-medium text-white hover:bg-gray-600"
+                  className="btn-quiet text-ink flex-1"
                 >
                   Try Again Later
                 </button>
@@ -1013,28 +874,32 @@ export function WishlistManager() {
       )}
       {/* Stranger (cross-domain) fallback modal */}
       {strangerModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-semibold text-gray-900">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-night-deep/75 fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        >
+          <div className="label-stock shadow-lift w-full max-w-md p-6">
+            <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
               No More Wishlists in Your Company
             </h3>
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-ink-soft">
                 There are no more wishlists available in your company or
                 department.
                 <br />
                 Would you like to help a{" "}
-                <span className="font-bold text-pink-600">stranger</span> from
+                <span className="text-post font-bold">stranger</span> from
                 another company/domain?
               </p>
-              <div className="rounded-lg border border-pink-200 bg-pink-50 p-4">
-                <p className="mb-3 text-sm text-pink-800">
+              <div className="rounded-label border-rule bg-label-shade border p-4">
+                <p className="text-ink mb-2 text-sm">
                   <strong>
                     This wishlist will be from a random participant outside your
                     company. Their identity and department will not be shown.
                   </strong>
                 </p>
-                <p className="text-xs text-pink-600">
+                <p className="text-ink-soft text-xs">
                   These are rare! Thank you for spreading extra holiday cheer.
                 </p>
               </div>
@@ -1042,14 +907,15 @@ export function WishlistManager() {
                 <button
                   onClick={() => requestCrossDomain?.mutate({ count: 1 })}
                   disabled={requestCrossDomain?.isPending}
-                  className="flex-1 rounded-lg bg-pink-600 px-4 py-2 font-medium text-white hover:bg-pink-700 disabled:bg-gray-400"
-                >                  {requestCrossDomain?.isPending
+                  className="btn-post flex-1"
+                >
+                  {requestCrossDomain?.isPending
                     ? "Finding..."
                     : "Get a Stranger's Wishlist"}
                 </button>
                 <button
                   onClick={() => setStrangerModal(false)}
-                  className="flex-1 rounded-lg bg-gray-500 px-4 py-2 font-medium text-white hover:bg-gray-600"
+                  className="btn-quiet text-ink flex-1"
                 >
                   Cancel
                 </button>
@@ -1080,18 +946,29 @@ export function WishlistManager() {
 
       {/* Inline Add Wishlist Prompt */}
       {showAddWishlistPrompt && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h3 className="mb-4 text-xl font-semibold">Add your Amazon UK wishlist</h3>
-            <p className="mb-3 text-sm text-gray-600">You need to add your Amazon UK wishlist URL before you can receive assignments. You can add it now or cancel to do this later.</p>
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="bg-night-deep/75 fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        >
+          <div className="label-stock shadow-lift w-full max-w-md p-6">
+            <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
+              Add your Amazon UK wishlist
+            </h3>
+            <p className="text-ink-soft mb-3 text-sm">
+              You need to add your Amazon UK wishlist URL before you can receive
+              assignments. You can add it now or cancel to do this later.
+            </p>
             <input
               type="url"
               value={newWishlistUrl}
               onChange={(e) => setNewWishlistUrl(e.target.value)}
               placeholder="https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX"
-              className="mb-3 block w-full rounded-md border border-gray-300 px-3 py-2"
+              className="rounded-label border-rule text-ink mb-3 block w-full border bg-white px-3 py-2"
             />
-            {addWishlistError && <p className="mb-3 text-sm text-red-600">{addWishlistError}</p>}
+            {addWishlistError && (
+              <p className="text-post mb-3 text-sm">{addWishlistError}</p>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -1105,7 +982,7 @@ export function WishlistManager() {
                     amazonWishlistUrl: newWishlistUrl ?? undefined,
                   });
                 }}
-                className="inline-block rounded bg-blue-600 px-4 py-2 text-white"
+                className="btn-post"
               >
                 Save & Continue
               </button>
@@ -1116,7 +993,7 @@ export function WishlistManager() {
                   setPendingRequest(null);
                   toast("You can add your wishlist later from your profile.");
                 }}
-                className="inline-block rounded border border-gray-300 bg-white px-4 py-2"
+                className="btn-quiet text-ink"
               >
                 Cancel
               </button>
@@ -1124,12 +1001,6 @@ export function WishlistManager() {
           </div>
         </div>
       )}
-
-      {/*
-        REMINDER: Ensure your Kudos section container has id="kudos-section" for smooth scroll navigation.
-        Example:
-        <div id="kudos-section"> ...kudos content... </div>
-      */}
     </div>
   );
 }

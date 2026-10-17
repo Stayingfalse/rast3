@@ -12,14 +12,23 @@ async function getSchemaSync() {
   }
 }
 
-/** Latest applied Prisma migration, or null if migrations aren't in use yet. */
+/**
+ * Prisma migration history: applied count, latest applied migration, and every
+ * row with its state (so leftovers from older tooling are visible). null when
+ * the _prisma_migrations table doesn't exist.
+ */
 async function getMigrations() {
   try {
-    const rows = await db.$queryRaw<{ migration_name: string }[]>`
-      SELECT migration_name FROM _prisma_migrations
-      WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL
-      ORDER BY finished_at DESC`;
-    return { applied: rows.length, latest: rows[0]?.migration_name ?? null };
+    const rows = await db.$queryRaw<
+      { migration_name: string; finished_at: Date | null; rolled_back_at: Date | null }[]
+    >`SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations
+      ORDER BY started_at DESC LIMIT 50`;
+    const history = rows.map((r) => ({
+      name: r.migration_name,
+      state: r.rolled_back_at ? "rolled-back" : r.finished_at ? "applied" : "failed",
+    }));
+    const applied = history.filter((r) => r.state === "applied");
+    return { applied: applied.length, latest: applied[0]?.name ?? null, history };
   } catch {
     return null;
   }

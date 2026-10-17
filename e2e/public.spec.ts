@@ -33,7 +33,7 @@ test.describe("public pages", () => {
     };
     expect(body.database.connected).toBe(true);
     // A startup schema sync must never leave drift or a failed migration.
-    expect(body.schemaSync?.result ?? "skipped").not.toMatch(/drift|failed/);
+    expect(body.schemaSync?.result ?? "skipped").not.toMatch(/drift|failed|foreign-history/);
   });
 
   test("test login is hidden without the secret", async ({ request }) => {

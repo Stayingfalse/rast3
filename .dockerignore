@@ -68,3 +68,7 @@ Thumbs.db
 e2e/
 playwright.config.ts
 test-results/
+
+# Claude Code project config and skills (not needed in the image)
+.claude/
+CLAUDE.md

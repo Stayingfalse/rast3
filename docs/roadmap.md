@@ -67,52 +67,53 @@
 
 ## Plan
 
-### Week 1: foundations and a clear view of the UX (16–21 Oct)
+### Week 1: foundations and a clear view of the UX (16–20 Oct)
 | Day | Date | Focus |
 |---|---|---|
 | 1 | Fri 16 Oct | Dev-only test login (env-gated) + Playwright smoke suite, with desktop and mobile screenshots of every page |
 | 2 | Sat 17 Oct | Dev seed data: an org with departments and users, wishlists, assignments, purchases and kudos, loaded through a gated `/api/test-auth/seed` route (there's no direct DB access from CI), plus e2e tests of the wishlist flow |
-| 3 | Sun 18 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2) |
-| 4 | Mon 19 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model |
-| 5 | Tue 20 Oct | Security pass: server-side admin gating, remove or gate `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
-| 6 | Wed 21 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
+| 3 | Sat 17 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2). **Pulled forward a day at the owner's request; every later day moved one day earlier.** |
+| 4 | Sun 18 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model |
+| 5 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
+| 6 | Tue 20 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
-### Week 2: groups (22–28 Oct), the core change
+### Week 2: groups (21–27 Oct), the core change
 | Day | Date | Focus |
 |---|---|---|
-| 7 | Thu 22 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
-| 8 | Fri 23 Oct | Scope every query to a group and season; tenant-isolation tests |
-| 9 | Sat 24 Oct | Create a group + invite links/codes (friends groups) |
-| 10 | Sun 25 Oct | Org joining via verified work email, moved onto the new model |
-| 11 | Mon 26 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
-| 12 | Tue 27 Oct | Group switcher + per-group home, designed mobile-first |
-| 13 | Wed 28 Oct | Group admin console: members, roles, settings, moderation |
+| 7 | Wed 21 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
+| 8 | Thu 22 Oct | Scope every query to a group and season; tenant-isolation tests |
+| 9 | Fri 23 Oct | Create a group + invite links/codes (friends groups) |
+| 10 | Sat 24 Oct | Org joining via verified work email, moved onto the new model |
+| 11 | Sun 25 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
+| 12 | Mon 26 Oct | Group switcher + per-group home, designed mobile-first |
+| 13 | Tue 27 Oct | Group admin console: members, roles, settings, moderation |
 
-### Week 3: the Christmas season and wishlists (29 Oct – 4 Nov)
+### Week 3: the Christmas season and wishlists (28 Oct – 3 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 14 | Thu 29 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
-| 15 | Fri 30 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 16 | Sat 31 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
-| 17 | Sun 1 Nov | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
-| 18 | Mon 2 Nov | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
-| 19 | Tue 3 Nov | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
-| 20 | Wed 4 Nov | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 14 | Wed 28 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
+| 15 | Thu 29 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
+| 16 | Fri 30 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
+| 17 | Sat 31 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
+| 18 | Sun 1 Nov | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
+| 19 | Mon 2 Nov | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
+| 20 | Tue 3 Nov | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
 
-### Week 4: engagement, polish, launch (5–15 Nov)
+### Week 4: engagement, polish, launch (4–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 21 | Thu 5 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
-| 22 | Fri 6 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
-| 23 | Sat 7 Nov | Public landing page + "start a group" onboarding (mobile-first) |
-| 24 | Sun 8 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
-| 25 | Mon 9 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 26 | Tue 10 Nov | Accessibility + mobile pass |
-| 27 | Wed 11 Nov | Performance pass |
-| 28 | Thu 12 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies |
-| 29 | Fri 13 Nov | Full regression on dev + launch checklist |
-| 30 | Sat 14 Nov | Fixes from regression |
-| 31 | Sun 15 Nov | Release candidate → prod (with the owner's approval) |
+| 21 | Wed 4 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
+| 22 | Thu 5 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
+| 23 | Fri 6 Nov | Public landing page + "start a group" onboarding (mobile-first) |
+| 24 | Sat 7 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 25 | Sun 8 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 26 | Mon 9 Nov | Accessibility + mobile pass |
+| 27 | Tue 10 Nov | Performance pass |
+| 28 | Wed 11 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies |
+| 29 | Thu 12 Nov | Full regression on dev + launch checklist |
+| 30 | Fri 13 Nov | Fixes from regression |
+| 31 | Sat 14 Nov | Release candidate → prod (with the owner's approval) |
+| 32 | Sun 15 Nov | **Spare day** (gained by pulling Day 3 forward): launch support, last fixes, or an extra feature from the backlog |
 
 ## Monetisation (2027; this year only collects the evidence)
 
@@ -183,3 +184,10 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   httpOnly **session token** and the full user record to the browser
   (security); (2) on mobile the cookie banner covered modal buttons, so
   "Confirm Purchase" couldn't be tapped until cookies were dismissed.
+- **Day 3 (17 Oct, pulled forward):** versioned Prisma migrations. Baseline
+  `0_init` from the current schema; `PRISMA_SCHEMA_SYNC=migrate` runs
+  `migrate deploy` on start and baselines an existing `db push` database only if
+  it exactly matches the schema (otherwise reports drift and changes nothing).
+  Dev switched to `migrate` and baselined cleanly (`/api/health` shows `0_init`).
+  Prod still unset; switching it on is a one-line env change for the owner to approve.
+  Guide: `docs/DATABASE_MIGRATIONS.md`. All later days moved one day earlier.

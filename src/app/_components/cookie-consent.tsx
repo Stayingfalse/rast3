@@ -113,7 +113,7 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
 
   return (
     <div
-      className={`fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white shadow-lg ${className}`}
+      className={`fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white shadow-lg ${className}`}
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

@@ -14,7 +14,6 @@ import AuthButton from "./_components/auth-button"
 import { AuthProvider } from "./_components/auth-provider"
 import { CookieConsent } from "./_components/cookie-consent"
 import { ServiceWorkerRegistration } from "./_components/service-worker-registration"
-import StopImpersonation from "./_components/stop-impersonation"
 import WishlistReportsAlert from "./_components/wishlist-reports-alert"
 
 const inter = Inter({
@@ -122,8 +121,6 @@ export default function RootLayout({
             <AddToHomeScreen />
             {/* Service Worker Registration */}
             <ServiceWorkerRegistration />
-            {/* Stop Impersonation Control */}
-            <StopImpersonation />
             {/* Toast Notifications */}
             <Toaster
               position="top-right"

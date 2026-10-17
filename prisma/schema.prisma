@@ -78,8 +78,6 @@ model User {
   assignedLinks        WishlistAssignment[] @relation("AssignedUser")
   ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
   reports              WishlistReport[]
-  impersonationsAsAdmin ImpersonationAudit[] @relation("ImpersonationAdmin")
-  impersonationsAsTarget ImpersonationAudit[] @relation("ImpersonationTarget")
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -168,24 +166,6 @@ model WishlistReport {
   @@index([wishlistAssignmentId])
   @@index([reportType])
   @@index([resolved])
-}
-
-model ImpersonationAudit {
-  id                 String   @id @default(cuid())
-  adminId            String
-  targetUserId       String
-  startedAt          DateTime @default(now())
-  stoppedAt          DateTime?
-  startSessionToken  String?
-  stopSessionToken   String?
-  adminSessionToken  String?
-  metadata           Json?
-
-  admin  User @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: Cascade)
-  target User @relation("ImpersonationTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
-
-  @@index([adminId])
-  @@index([targetUserId])
 }
 
 model Kudos {

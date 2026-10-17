@@ -11,11 +11,13 @@ The schema is managed with versioned Prisma migrations in `prisma/migrations/`.
 | Value | Behaviour | Used by |
 |---|---|---|
 | *(unset)* | Nothing. The schema is managed by hand. | prod, until switched over |
-| `migrate` | `prisma migrate deploy`. A database with no migration history is baselined first (`0_init` marked as applied) **only if** its tables exactly match `schema.prisma`; otherwise it is left untouched and reported as drift. A failed migration stops the container from starting. | dev |
+| `migrate` | `prisma migrate deploy`. A database whose tables pre-date migrations (no history table, or an empty one) is baselined first (`0_init` marked as applied) **only if** its tables exactly match `schema.prisma`; otherwise it is left untouched and reported as `drift`. Unrecognised history rows are left alone and reported as `foreign-history`. A failed migration stops the container from starting. | dev |
 | `push` | `prisma db push` (no history). Throwaway databases only. | — |
 
-The result (`skipped`, `pushed`, `migrated`, `baselined`, `drift`, `failed`)
-and the latest applied migration are shown by `GET /api/health`.
+The result (`skipped`, `pushed`, `migrated`, `baselined`, `drift`,
+`foreign-history`, `failed`) and the migration history are shown by
+`GET /api/health`. `migration-state.cjs` is the helper the entrypoint uses to
+inspect the database before deciding what to do.
 
 ## Making a schema change
 

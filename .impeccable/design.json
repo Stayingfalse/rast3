@@ -1,0 +1,532 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T22:54:39+00:00",
+  "title": "Design System: Random Acts of Santa",
+  "extensions": {
+    "colorMeta": {
+      "post": {
+        "role": "primary",
+        "displayName": "Postal Red",
+        "canonical": "#b8262c",
+        "oklch": "oklch(51.2% 0.181 24.7)",
+        "tonalRamp": [
+          "#2d0000",
+          "#610000",
+          "#870000",
+          "#ad1722",
+          "#d44343",
+          "#fb6863",
+          "#ff8f87",
+          "#ffcfc6"
+        ]
+      },
+      "post-deep": {
+        "role": "primary",
+        "displayName": "Pillar-Box Shade",
+        "canonical": "#941c21",
+        "oklch": "oklch(43.6% 0.155 24.8)",
+        "tonalRamp": [
+          "#2d0000",
+          "#590000",
+          "#7e000d",
+          "#a32c2d",
+          "#c9504c",
+          "#ef736c",
+          "#ff9991",
+          "#ffcfc6"
+        ]
+      },
+      "post-bright": {
+        "role": "primary",
+        "displayName": "Lamp Red",
+        "canonical": "#ec6a64",
+        "oklch": "oklch(68.1% 0.162 25.0)",
+        "tonalRamp": [
+          "#2d0000",
+          "#5b0000",
+          "#800008",
+          "#a6282a",
+          "#cc4d49",
+          "#f37069",
+          "#ff968e",
+          "#ffcfc6"
+        ]
+      },
+      "post-tint": {
+        "role": "primary",
+        "displayName": "Red Tint",
+        "canonical": "#f3dcd8",
+        "oklch": "oklch(91.2% 0.026 29.4)",
+        "tonalRamp": [
+          "#150705",
+          "#301f1d",
+          "#4d3b38",
+          "#6c5855",
+          "#8c7874",
+          "#ae9995",
+          "#d5beba",
+          "#ffe8e4"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Postmark Gold",
+        "canonical": "#caa24c",
+        "oklch": "oklch(73.2% 0.114 84.2)",
+        "tonalRamp": [
+          "#1f0000",
+          "#3d1a00",
+          "#5b3800",
+          "#7b5600",
+          "#9d7617",
+          "#c09841",
+          "#e7be69",
+          "#ffe993"
+        ]
+      },
+      "gold-soft": {
+        "role": "secondary",
+        "displayName": "Pale Gold",
+        "canonical": "#e5cf98",
+        "oklch": "oklch(86.0% 0.075 88.7)",
+        "tonalRamp": [
+          "#180700",
+          "#332100",
+          "#503d00",
+          "#6f5b26",
+          "#907b47",
+          "#b19c67",
+          "#d8c28c",
+          "#ffedb5"
+        ]
+      },
+      "gold-ink": {
+        "role": "secondary",
+        "displayName": "Postmark Ink",
+        "canonical": "#9c7a2a",
+        "oklch": "oklch(59.8% 0.105 85.1)",
+        "tonalRamp": [
+          "#1e0200",
+          "#3a1c00",
+          "#593900",
+          "#785800",
+          "#9a7827",
+          "#bc994c",
+          "#e3bf72",
+          "#ffea9c"
+        ]
+      },
+      "pine": {
+        "role": "tertiary",
+        "displayName": "Pine",
+        "canonical": "#1f5c47",
+        "oklch": "oklch(42.9% 0.072 166.9)",
+        "tonalRamp": [
+          "#001305",
+          "#002e1c",
+          "#084c37",
+          "#2f6b55",
+          "#508b74",
+          "#71ad95",
+          "#97d4ba",
+          "#c0ffe4"
+        ]
+      },
+      "pine-tint": {
+        "role": "tertiary",
+        "displayName": "Pine Tint",
+        "canonical": "#d9e9df",
+        "oklch": "oklch(91.9% 0.022 158.6)",
+        "tonalRamp": [
+          "#040e08",
+          "#1b2720",
+          "#36433b",
+          "#546259",
+          "#738178",
+          "#94a399",
+          "#b9c9bf",
+          "#e3f3e9"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night Sky",
+        "canonical": "#13264d",
+        "oklch": "oklch(27.7% 0.076 262.9)",
+        "tonalRamp": [
+          "#00062a",
+          "#0f2248",
+          "#2a3f68",
+          "#465d89",
+          "#657dab",
+          "#859fcf",
+          "#aac5f6",
+          "#d4efff"
+        ]
+      },
+      "night-deep": {
+        "role": "neutral",
+        "displayName": "Deep Night",
+        "canonical": "#0c1a37",
+        "oklch": "oklch(22.4% 0.060 263.1)",
+        "tonalRamp": [
+          "#010824",
+          "#142341",
+          "#2f3f5f",
+          "#4c5e80",
+          "#6b7da1",
+          "#8b9fc4",
+          "#b0c5ec",
+          "#daefff"
+        ]
+      },
+      "night-raised": {
+        "role": "neutral",
+        "displayName": "Raised Night",
+        "canonical": "#1b3363",
+        "oklch": "oklch(33.0% 0.090 262.5)",
+        "tonalRamp": [
+          "#000430",
+          "#0a204f",
+          "#253e6f",
+          "#425d90",
+          "#607db3",
+          "#809fd7",
+          "#a5c5ff",
+          "#ceefff"
+        ]
+      },
+      "frost": {
+        "role": "neutral",
+        "displayName": "Frost",
+        "canonical": "#e6ecf7",
+        "oklch": "oklch(94.2% 0.016 262.8)",
+        "tonalRamp": [
+          "#080b12",
+          "#20242c",
+          "#3b4049",
+          "#595e67",
+          "#787d87",
+          "#999fa9",
+          "#bfc4cf",
+          "#e9effa"
+        ]
+      },
+      "frost-soft": {
+        "role": "neutral",
+        "displayName": "Frost Soft",
+        "canonical": "#aebbd4",
+        "oklch": "oklch(79.0% 0.038 263.6)",
+        "tonalRamp": [
+          "#040a1b",
+          "#1a2437",
+          "#354054",
+          "#525e74",
+          "#727e95",
+          "#929fb7",
+          "#b7c5de",
+          "#e1efff"
+        ]
+      },
+      "label": {
+        "role": "neutral",
+        "displayName": "Label Stock",
+        "canonical": "#f6f0e2",
+        "oklch": "oklch(95.6% 0.020 87.5)",
+        "tonalRamp": [
+          "#0f0b03",
+          "#282419",
+          "#443f34",
+          "#625d51",
+          "#827d70",
+          "#a49e91",
+          "#c9c4b6",
+          "#f4eee0"
+        ]
+      },
+      "label-shade": {
+        "role": "neutral",
+        "displayName": "Label Shade",
+        "canonical": "#ebe2cd",
+        "oklch": "oklch(91.4% 0.030 87.5)",
+        "tonalRamp": [
+          "#100a00",
+          "#2a2313",
+          "#463f2e",
+          "#655d4b",
+          "#857d6a",
+          "#a69e8a",
+          "#ccc3af",
+          "#f7eed9"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#cdbf9f",
+        "oklch": "oklch(80.8% 0.046 87.2)",
+        "tonalRamp": [
+          "#130900",
+          "#2e2206",
+          "#4a3e22",
+          "#695c3f",
+          "#897c5e",
+          "#ab9d7e",
+          "#d1c3a3",
+          "#fcedcc"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#18223a",
+        "oklch": "oklch(25.6% 0.048 266.0)",
+        "tonalRamp": [
+          "#03091f",
+          "#19233b",
+          "#343f59",
+          "#515d79",
+          "#707d9a",
+          "#909ebd",
+          "#b6c4e4",
+          "#dfefff"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "#4b5670",
+        "oklch": "oklch(45.4% 0.045 266.8)",
+        "tonalRamp": [
+          "#04091e",
+          "#1a233a",
+          "#353f58",
+          "#525d78",
+          "#717d99",
+          "#929ebb",
+          "#b7c4e2",
+          "#e1eeff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Wordmark",
+        "purpose": "The stacked three-line wordmark only, with the year postmark."
+      },
+      "headline": {
+        "displayName": "Section headline",
+        "purpose": "Section heads (expanded caps on navy) and the hero hook (bold, sentence case)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Station titles, modal titles, card names."
+      },
+      "body": {
+        "displayName": "Reading",
+        "purpose": "Reading text at normal width; frost-soft on navy, ink-soft on label."
+      },
+      "label": {
+        "displayName": "Label caps",
+        "purpose": "Field captions, card headers, state tags, form labels. Never a kicker above a heading."
+      },
+      "figures": {
+        "displayName": "Tabular figures",
+        "purpose": "Every count, date and number; public totals rounded and shown as N+."
+      }
+    },
+    "shadows": [
+      {
+        "name": "label",
+        "value": "0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 28px -12px rgb(4 10 26 / 0.55), 0 2px 6px -2px rgb(4 10 26 / 0.35)",
+        "purpose": "Every label-stock surface at rest."
+      },
+      {
+        "name": "lift",
+        "value": "0 18px 40px -16px rgb(4 10 26 / 0.65), 0 4px 10px -4px rgb(4 10 26 / 0.4)",
+        "purpose": "Modals and the cookie notice."
+      },
+      {
+        "name": "button-post",
+        "value": "0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 16px -8px rgb(148 28 33 / 0.9)",
+        "purpose": "Red glow under the primary button only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "frank",
+        "value": "frank 520ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        "purpose": "The one authored moment: a postmark lands on a label (hero load, a wishlist marked Gifted)."
+      },
+      {
+        "name": "state-transition",
+        "value": "160ms ease-out",
+        "purpose": "Button background, colour and press transitions."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation-duration: 0.01ms; transition-duration: 0.01ms",
+        "purpose": "Under prefers-reduced-motion everything rests immediately; the postmark simply appears."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "surfaces": [
+      {
+        "name": "airmail",
+        "value": "repeating-linear-gradient(-45deg, var(--color-post) 0 12px, var(--color-label) 12px 20px, var(--color-night) 20px 32px, var(--color-label) 32px 40px)",
+        "purpose": "10px band on the top edge of label surfaces; solid pine on a gifted card."
+      },
+      {
+        "name": "perforated",
+        "value": "padding: 6px; background: radial-gradient(circle at center, transparent 2px, #fffdf8 2.5px) -4px -4px / 8px 8px",
+        "purpose": "Punched stamp edge around the bauble stamp."
+      }
+    ],
+    "contrast": {
+      "white-on-post": "6.27:1",
+      "post-bright-on-night": "4.82:1",
+      "frost-soft-on-night": "7.69:1",
+      "gold-on-night": "6.22:1",
+      "ink-soft-on-label": "6.45:1",
+      "pine-on-label": "6.90:1"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action colour: Join Santa, Accept All, a modal's main action.",
+      "html": "<button class=\"ds-btn-post\">Join Santa</button>",
+      "css": ".ds-btn-post{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:2.75rem;padding:.625rem 1.25rem;border:0;border-radius:6px;background:var(--color-post,#b8262c);color:#fff;font-weight:700;font-stretch:112%;letter-spacing:.01em;box-shadow:0 1px 0 rgb(255 255 255/.18) inset,0 6px 16px -8px rgb(148 28 33/.9);cursor:pointer;transition:background-color 160ms ease-out,transform 160ms ease-out}.ds-btn-post:hover{background:var(--color-post-deep,#941c21)}.ds-btn-post:active{transform:translateY(1px)}.ds-btn-post:focus-visible{outline:2px solid var(--color-gold,#caa24c);outline-offset:3px}.ds-btn-post:disabled{background:#8b8f99;box-shadow:none;cursor:not-allowed}"
+    },
+    {
+      "name": "Quiet Button (on night)",
+      "kind": "button",
+      "refersTo": "button-quiet-on-night",
+      "description": "Secondary action on the navy ground, outlined in the text colour.",
+      "html": "<div class=\"ds-night\"><button class=\"ds-btn-quiet\">How it works</button></div>",
+      "css": ".ds-night{background:var(--color-night,#13264d);color:var(--color-frost,#e6ecf7);padding:24px}.ds-btn-quiet{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;padding:.625rem 1.125rem;border-radius:6px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:600;font-stretch:112%;cursor:pointer;transition:background-color 160ms ease-out}.ds-btn-quiet:hover{background:color-mix(in srgb,currentColor 10%,transparent)}.ds-btn-quiet:focus-visible{outline:2px solid var(--color-gold,#caa24c);outline-offset:3px}"
+    },
+    {
+      "name": "Field on label stock",
+      "kind": "input",
+      "refersTo": "input-on-label",
+      "description": "White field with a hairline border and a label-caps caption, used in modals.",
+      "html": "<div class=\"ds-label-sheet\"><label class=\"ds-caps\" for=\"ds-f\">Notes (optional)</label><input id=\"ds-f\" class=\"ds-input\" placeholder=\"What did you buy?\"></div>",
+      "css": ".ds-label-sheet{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;background:var(--color-label,#f6f0e2);color:var(--color-ink,#18223a);padding:20px;border-radius:6px;border:1px solid var(--color-rule,#cdbf9f)}.ds-caps{display:block;margin-bottom:8px;font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-stretch:125%;color:var(--color-ink-soft,#4b5670)}.ds-input{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;width:100%;padding:12px 16px;background:#fff;color:var(--color-ink,#18223a);border:1px solid var(--color-rule,#cdbf9f);border-radius:6px;font-size:1rem}.ds-input::placeholder{color:var(--color-ink-soft,#4b5670)}.ds-input:focus-visible{outline:2px solid var(--color-gold,#caa24c);outline-offset:3px}"
+    },
+    {
+      "name": "State tags",
+      "kind": "chip",
+      "refersTo": "tag-gift-sent",
+      "description": "Label-caps tags naming a card's state in words: pine for sent, red tint for problems.",
+      "html": "<span class=\"ds-tag ds-tag-sent\">Gift sent</span> <span class=\"ds-tag ds-tag-issue\">Issue reported</span>",
+      "css": ".ds-tag{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;display:inline-block;padding:4px 8px;border-radius:2px;font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-stretch:125%}.ds-tag-sent{background:var(--color-pine-tint,#d9e9df);color:var(--color-pine,#1f5c47)}.ds-tag-issue{background:var(--color-post-tint,#f3dcd8);color:var(--color-post-deep,#941c21)}"
+    },
+    {
+      "name": "Parcel Card",
+      "kind": "card",
+      "refersTo": "label-card",
+      "description": "A wishlist assignment as a shipping label: airmail band, numbered header, route, state tag, actions. Gifted cards swap the band to pine.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-airmail\"></div><header class=\"ds-card-head\"><div><p class=\"ds-caps\">Wishlist <span class=\"ds-tab\">No. 01</span></p><p class=\"ds-route\">Your department</p></div></header><div class=\"ds-card-body\"><button class=\"ds-btn-post\">Open wishlist</button></div></article>",
+      "css": ".ds-card{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;max-width:22rem;background:var(--color-label,#f6f0e2);color:var(--color-ink,#18223a);border:1px solid var(--color-rule,#cdbf9f);border-radius:6px;overflow:hidden;box-shadow:0 1px 0 rgb(255 255 255/.6) inset,0 12px 28px -12px rgb(4 10 26/.55),0 2px 6px -2px rgb(4 10 26/.35)}.ds-airmail{height:10px;background-image:repeating-linear-gradient(-45deg,#b8262c 0 12px,#f6f0e2 12px 20px,#13264d 20px 32px,#f6f0e2 32px 40px)}.ds-card-head{padding:12px 16px 8px;border-bottom:1px solid var(--color-rule,#cdbf9f)}.ds-caps{margin:0;font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-stretch:125%;color:var(--color-ink-soft,#4b5670)}.ds-tab{font-variant-numeric:tabular-nums lining-nums}.ds-route{margin:2px 0 0;font-size:.875rem;font-weight:600}.ds-card-body{padding:16px}.ds-btn-post{display:inline-flex;min-height:2.75rem;align-items:center;padding:.625rem 1.25rem;border:0;border-radius:6px;background:#b8262c;color:#fff;font-weight:700;font-stretch:112%;cursor:pointer}.ds-btn-post:hover{background:#941c21}.ds-btn-post:focus-visible{outline:2px solid #caa24c;outline-offset:3px}"
+    },
+    {
+      "name": "Postmark",
+      "kind": "custom",
+      "refersTo": "postmark",
+      "description": "Double-ring date stamp with ring text and a large centre line; gold on navy, gold-ink on label, pine for SENT. Lands with the frank.",
+      "html": "<div class=\"ds-pm-wrap\"><svg class=\"ds-pm\" viewBox=\"0 0 120 120\" fill=\"none\" stroke=\"currentColor\"><defs><path id=\"dsTop\" d=\"M 22 60 A 38 38 0 0 1 98 60\"/><path id=\"dsBot\" d=\"M 16 60 A 44 44 0 0 0 104 60\"/></defs><circle cx=\"60\" cy=\"60\" r=\"56\" stroke-width=\"2.5\"/><circle cx=\"60\" cy=\"60\" r=\"34\" stroke-width=\"1.5\"/><g fill=\"currentColor\" stroke=\"none\" style=\"font-stretch:125%\"><text font-size=\"8.5\" font-weight=\"700\" letter-spacing=\"1.2\"><textPath href=\"#dsTop\" startOffset=\"50%\" text-anchor=\"middle\">RANDOM ACTS</textPath></text><text font-size=\"8.5\" font-weight=\"700\" letter-spacing=\"1.2\"><textPath href=\"#dsBot\" startOffset=\"50%\" text-anchor=\"middle\">CHRISTMAS POST</textPath></text><text x=\"60\" y=\"64\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"800\">2026</text><text x=\"60\" y=\"78\" text-anchor=\"middle\" font-size=\"7.5\" font-weight=\"700\" letter-spacing=\"1\">SEASON</text></g></svg></div>",
+      "css": ".ds-pm-wrap{background:var(--color-night,#13264d);padding:24px;display:inline-block}.ds-pm{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;width:120px;color:var(--color-gold,#caa24c);transform:rotate(-10deg);animation:ds-frank 520ms cubic-bezier(0.16,1,0.3,1) both}@keyframes ds-frank{0%{opacity:0;transform:scale(1.35) rotate(-14deg);filter:blur(2px)}60%{opacity:1;transform:scale(.96) rotate(-9deg);filter:blur(0)}100%{opacity:1;transform:scale(1) rotate(-10deg)}}@media (prefers-reduced-motion:reduce){.ds-pm{animation:none}}"
+    },
+    {
+      "name": "Sign-in pill (navigation)",
+      "kind": "nav",
+      "refersTo": "button-quiet-on-night",
+      "description": "The only persistent navigation: a quiet Sign in button fixed top right over the baubles.",
+      "html": "<div class=\"ds-nav\"><button class=\"ds-nav-btn\">Sign in</button></div>",
+      "css": ".ds-nav{background:var(--color-night,#13264d);padding:16px;display:flex;justify-content:flex-end}.ds-nav-btn{font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif;min-height:2.75rem;padding:.625rem 1.125rem;border-radius:6px;border:1px solid currentColor;background:rgb(19 38 77/.8);color:var(--color-frost,#e6ecf7);font-weight:600;font-stretch:112%;cursor:pointer}.ds-nav-btn:hover{background:color-mix(in srgb,#e6ecf7 10%,#13264d)}.ds-nav-btn:focus-visible{outline:2px solid #caa24c;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Christmas Post",
+    "overview": "Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the incumbent hanging baubles above it, and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.\n\nDensity is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded caps for the franked wordmark, headings and label captions, regular width for reading.\n\nThere is one authored motion, the frank: a postmark pressing onto a label once, on load or when a wishlist is marked Gifted. Everything else is still.",
+    "keyCharacteristics": [
+      "Two grounds only: night sky (dark) and label stock (cream). No third surface family.",
+      "Postal red is the one action colour; gold is the postmark ink; pine means sent.",
+      "Archivo across widths: expanded for marks and captions, normal for reading.",
+      "Hairline rules and the airmail band do the structuring; no decorative chrome.",
+      "Counts in tabular figures; public totals rounded and shown as \"N+\".",
+      "One motion: the frank. Reduced motion shows the postmark at rest."
+    ],
+    "rules": [
+      {
+        "name": "The One Stamp Of Red Rule",
+        "body": "Postal red marks what you can do: buttons, links, destructive actions. It never decorates a heading or a panel. The only red that is not an action is the wordmark's \"ACTS OF\" line in lamp red, and it stays the only one; other emphasis on navy uses pale gold.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gold Is Ink Rule",
+        "body": "Gold is postmark ink and the year mark. It is never a button, a fill or a background. On label stock, postmarks switch to postmark ink (gold-ink).",
+        "section": "colors"
+      },
+      {
+        "name": "The Pine Means Sent Rule",
+        "body": "Pine appears only for the gifted/sent state, and always with words (\"Gift sent\", \"SENT\"), never as colour alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Field Caption Rule",
+        "body": "Expanded caps are captions for a field or a mark (a label row, a tag, a postmark), never a kicker stacked above a heading.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Count Rule",
+        "body": "Numbers are always set in tabular lining figures. Public totals are rounded before display: under 10 hidden, floored to the nearest 10, to the nearest 50 above 1,000, and shown as \"N+\".",
+        "section": "typography"
+      },
+      {
+        "name": "The Ruled Grid Rule",
+        "body": "Structure comes from hairline rules and fixed columns, not from nested cards. If a group needs separating, rule it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper Not Glass Rule",
+        "body": "Surfaces are opaque paper. No translucency, blur or glass panels; the one exception is the dark scrim behind a modal.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep the page on two grounds: night sky for the page, label stock for anything you read closely or act on.",
+      "**Do** use postal red only for actions (buttons, links, destructive text); use pale gold for emphasis inside navy headings.",
+      "**Do** switch postmarks to gold-ink on label stock and pine for the sent state.",
+      "**Do** set every number in tabular figures, and round public totals (hide under 10, floor to 10, to 50 above 1,000, show as \"N+\").",
+      "**Do** separate content with hairline rules and the airmail band rather than extra boxes.",
+      "**Do** keep touch targets at 44px and check every change at 1280x800 and Pixel 7 widths.",
+      "**Do** keep the frank as the only authored motion and honour reduced motion."
+    ],
+    "donts": [
+      "**Don't** use emoji as icons; draw icons as SVG.",
+      "**Don't** put an eyebrow kicker above a heading; expanded caps are for field captions, tags and marks only.",
+      "**Don't** use gradient text, glass or blurred translucent panels.",
+      "**Don't** mark a card with a coloured side stripe; state goes in the top band, a tag and words.",
+      "**Don't** add a second red emphasis on navy beyond the wordmark's \"ACTS OF\" line.",
+      "**Don't** use gold for buttons, fills or backgrounds.",
+      "**Don't** show exact small counts, names or per-organisation numbers in public stats."
+    ]
+  }
+}

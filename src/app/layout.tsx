@@ -114,7 +114,7 @@ export default function RootLayout({
                 priority
               />
             </div>{" "}
-            <div className="relative z-10 flex w-full max-w-6xl flex-col items-center gap-16 px-4 pt-[164px] pb-24 sm:px-6 sm:pt-[236px]">
+            <div className="relative flex w-full max-w-6xl flex-col items-center gap-16 px-4 pt-[164px] pb-24 sm:px-6 sm:pt-[236px]">
               <WishlistReportsAlert />
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>

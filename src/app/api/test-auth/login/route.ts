@@ -22,7 +22,8 @@ import {
  */
 
 const SESSION_COOKIE = "next-auth.session-token";
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+// Same lifetime as real sessions (Auth.js maxAge, 30 days)
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const loginSchema = z.object({
   email: z

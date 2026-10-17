@@ -1,66 +1,218 @@
 @import "tailwindcss";
 
-/* Font configuration */
-:root {
+/*
+ * Random Acts of Santa: the Christmas post.
+ * Night-navy sky as the ground, cream label stock for working surfaces,
+ * postal red for the one action colour, gold reserved for postmarks.
+ * Tokens are documented in DESIGN.md.
+ */
+@theme {
   --font-sans:
-    var(--font-inter), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    var(--font-archivo), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+
+  /* Night sky (ground and raised navy) */
+  --color-night: #13264d;
+  --color-night-deep: #0c1a37;
+  --color-night-raised: #1b3363;
+  --color-frost: #e6ecf7; /* body text on night */
+  --color-frost-soft: #aebbd4; /* secondary text on night */
+
+  /* Label stock (working surfaces) */
+  --color-label: #f6f0e2;
+  --color-label-shade: #ebe2cd;
+  --color-rule: #cdbf9f; /* hairline rules on label */
+  --color-ink: #18223a; /* text on label */
+  --color-ink-soft: #4b5670; /* secondary text on label */
+
+  /* Post */
+  --color-post: #b8262c; /* the action colour */
+  --color-post-deep: #941c21;
+  --color-post-bright: #ec6a64; /* red text on night (4.6:1+) */
+  --color-post-tint: #f3dcd8;
+  --color-gold: #caa24c; /* postmarks and the year mark only */
+  --color-gold-soft: #e5cf98;
+  --color-pine: #1f5c47; /* delivered / gifted state */
+  --color-pine-tint: #d9e9df;
+
+  --radius-label: 0.375rem;
+
+  --shadow-label: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 28px -12px rgb(4 10 26 / 0.55), 0 2px 6px -2px rgb(4 10 26 / 0.35);
+  --shadow-lift: 0 18px 40px -16px rgb(4 10 26 / 0.65), 0 4px 10px -4px rgb(4 10 26 / 0.4);
+
+  --animate-frank: frank 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Loading animations for KudosFeed skeleton cards */
-@keyframes skeleton-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.98);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1);
-  }
+:root {
+  /* Legacy name used by the admin layouts */
+  --blueZodiac: var(--color-night);
+  color-scheme: dark;
 }
 
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
+/* ------------------------------------------------------------------ base */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--color-night-raised) var(--color-night-deep);
 }
 
-.animate-skeleton-pulse {
-  animation: skeleton-pulse 2s ease-in-out infinite;
+body {
+  background-color: var(--color-night);
+  color: var(--color-frost);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--color-post);
 }
 
-.animate-skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
+::selection {
+  background: var(--color-gold);
+  color: var(--color-night-deep);
+}
+
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+:where(a) {
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+}
+
+/* Data is always set in tabular figures */
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ----------------------------------------------------------- the world */
+
+@utility font-expanded {
+  font-stretch: 125%;
+}
+
+@utility font-condensed {
+  font-stretch: 75%;
+}
+
+/* Cream label stock with a hairline ink rule */
+@utility label-stock {
+  background-color: var(--color-label);
+  color: var(--color-ink);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-label);
+  box-shadow: var(--shadow-label);
+}
+
+/* Red / navy airmail band along an edge */
+@utility airmail {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-post) 0 12px,
+    var(--color-label) 12px 20px,
+    var(--color-night) 20px 32px,
+    var(--color-label) 32px 40px
   );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 2s infinite;
 }
 
-/* Fade in animation for new kudos */
-@keyframes fade-in-slide {
+/* Small caps label text: expanded, tracked, set in ink */
+@utility label-caps {
+  font-stretch: 125%;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+/* Perforated stamp edge: holes in a white paper ring; the child covers the centre */
+@utility perforated {
+  padding: 6px;
+  background:
+    radial-gradient(circle at center, transparent 2px, #fffdf8 2.5px) -4px -4px / 8px 8px;
+}
+
+/* Buttons: one primary action colour, one quiet secondary */
+@utility btn-post {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-label);
+  background-color: var(--color-post);
+  color: #fff;
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 16px -8px rgb(148 28 33 / 0.9);
+  transition: background-color 160ms ease-out, transform 160ms ease-out, box-shadow 160ms ease-out;
+  &:hover {
+    background-color: var(--color-post-deep);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+  &:disabled {
+    background-color: #8b8f99;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-label);
+  border: 1px solid currentColor;
+  font-weight: 600;
+  font-stretch: 112%;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+  &:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* The franking stamp landing: one authored moment */
+@keyframes frank {
   0% {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: scale(1.35) rotate(-14deg);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-9deg);
+    filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1) rotate(-10deg);
   }
 }
 
-.animate-fade-in-slide {
-  animation: fade-in-slide 0.6s ease-out forwards;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-/* Loading animations for KudosFeed skeleton cards */
+/* ------------------------------------------- kudos feed loading + entry */
+
 @keyframes skeleton-pulse {
   0%,
   100% {
@@ -87,17 +239,11 @@
 }
 
 .animate-skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   background-size: 200px 100%;
   animation: skeleton-shimmer 2s infinite;
 }
 
-/* Fade in animation for new kudos */
 @keyframes fade-in-slide {
   0% {
     opacity: 0;

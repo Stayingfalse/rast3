@@ -152,79 +152,7 @@ const CHRISTMAS_NAMES = [
   "Wonder Worker",
 ];
 
-// Christmas-themed emojis for avatars
-const CHRISTMAS_AVATARS = [
-  "🎅",
-  "🤶",
-  "🎄",
-  "⭐",
-  "❄️",
-  "🎁",
-  "🔔",
-  "🕯️",
-  "🍪",
-  "🥛",
-  "🦌",
-  "⛄",
-  "🎊",
-  "🎉",
-  "✨",
-  "🌟",
-  "🎀",
-  "🧑‍🎄",
-  "🎯",
-  "🎪",
-  "🍭",
-  "🧤",
-  "🧣",
-  "👑",
-  "💎",
-  "🎭",
-  "🎨",
-  "🎵",
-  "🎶",
-  "💫",
-];
-
-// Christmas-themed colors for user backgrounds - more vibrant for full cards
-const CHRISTMAS_COLORS = [
-  // Classic Christmas reds & greens
-  "bg-red-600", // Santa red
-  "bg-green-600", // Pine green
-  "bg-emerald-500", // Emerald
-  "bg-lime-500", // Holly green
-  "bg-rose-500", // Holly berry red
-  "bg-green-800", // Deep pine
-  "bg-red-800", // Deep red
-
-  // Snowy & frosty blues
-  "bg-blue-500", // Winter blue
-  "bg-sky-400", // Frost blue
-  "bg-cyan-400", // Icy blue
-  "bg-blue-800", // Night sky
-
-  // Golds & yellows (bells, stars, lights)
-  "bg-yellow-400", // Star yellow
-  "bg-amber-400", // Golden bell
-  "bg-yellow-600", // Warm gold
-
-  // Accents: festive purples, pinks, and silver
-  "bg-fuchsia-500", // Festive pink
-  "bg-purple-500", // Royal purple
-  "bg-indigo-500", // Midnight
-  "bg-gray-200", // Snow
-  "bg-white", // Pure snow
-  "bg-slate-400", // Silver tinsel
-
-  // Orange for gingerbread/cookies
-  "bg-orange-400", // Gingerbread
-  "bg-orange-600", // Toasty cookie
-
-  // Extra: teal for icy accents
-  "bg-teal-400", // Icy teal
-];
-
-// Function to generate consistent Christmas name, avatar, and color based on user ID
+// Consistent anonymous Christmas name for a user ID
 const getChristmasIdentity = (userId: string) => {
   // Create a simple hash from the user ID for consistency
   let hash = 0;
@@ -235,13 +163,9 @@ const getChristmasIdentity = (userId: string) => {
   }
 
   const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
-  const avatarIndex = Math.abs(hash >> 8) % CHRISTMAS_AVATARS.length;
-  const colorIndex = Math.abs(hash >> 16) % CHRISTMAS_COLORS.length;
 
   return {
     name: CHRISTMAS_NAMES[nameIndex]!,
-    avatar: CHRISTMAS_AVATARS[avatarIndex]!,
-    color: CHRISTMAS_COLORS[colorIndex]!,
   };
 };
 
@@ -459,7 +383,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     if (actualDisplayScope !== requestedScope) {
       const requestedName = getScopeDisplayName(requestedScope);
       const actualName = getScopeDisplayName(actualDisplayScope!);
-      return `No kudos in ${requestedName} yet, showing ${actualName} kudos instead! 🎄`;
+      return `No kudos in ${requestedName} yet, showing ${actualName} kudos instead.`;
     }
     return null;
   };
@@ -575,383 +499,165 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   };
   if (isLoading) {
     return (
-      <div ref={feedRef} className={`rounded-lg ${className}`}>
-        {/* Header skeleton */}
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="animate-skeleton-shimmer mb-4 h-8 w-1/3 rounded bg-gray-200"></div>
-            <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
-              {Array.from({ length: 3 }, (_, i) => (
-                <div
-                  key={i}
-                  className="animate-skeleton-shimmer h-8 flex-1 rounded-md bg-gray-200"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                ></div>
-              ))}
+      <section ref={feedRef} aria-busy="true" className={`w-full ${className}`}>
+        <div className="bg-night-raised mb-6 h-9 w-48 animate-pulse rounded" />
+        <div className="columns-1 gap-6 md:columns-2 lg:columns-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div
+              key={i}
+              className="label-stock mb-6 break-inside-avoid p-5 opacity-70"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
+              {i % 3 === 0 && (
+                <div className="animate-skeleton-pulse bg-label-shade mb-4 aspect-[4/3] rounded" />
+              )}
+              <div className="animate-skeleton-pulse bg-label-shade mb-3 h-4 w-1/2 rounded" />
+              <div className="animate-skeleton-pulse bg-label-shade mb-2 h-3 w-full rounded" />
+              <div className="animate-skeleton-pulse bg-label-shade h-3 w-4/5 rounded" />
             </div>
-          </div>
+          ))}
         </div>
-
-        {/* Loading cards that match the actual feed layout */}
-        <div className="p-6">
-          <div className="columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3">
-            {Array.from({ length: 6 }, (_, i) => {
-              const hasImage = i % 3 === 0; // Some cards have images
-              const colorIndex = i % CHRISTMAS_COLORS.length;
-              const bgColor = CHRISTMAS_COLORS[colorIndex];
-
-              return (
-                <div
-                  key={i}
-                  className={`animate-skeleton-pulse mb-6 break-inside-avoid ${
-                    hasImage ? "w-full md:col-span-2 lg:col-span-3" : ""
-                  }`}
-                  style={{
-                    animationDelay: `${i * 150}ms`,
-                  }}
-                >
-                  <div
-                    className={`${bgColor} border-opacity-50 overflow-hidden rounded-2xl border border-white opacity-60 shadow-sm`}
-                  >
-                    {/* Image placeholder for some cards */}
-                    {hasImage && (
-                      <div className="animate-skeleton-shimmer aspect-square max-h-[400px] min-h-[180px] w-full bg-gray-300"></div>
-                    )}
-
-                    {/* Content */}
-                    <div className="p-5">
-                      {/* User info skeleton */}
-                      <div className="mb-3 flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="border-opacity-70 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-white shadow-sm">
-                            <div className="animate-skeleton-shimmer h-6 w-6 rounded bg-gray-200"></div>
-                          </div>
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div
-                            className="animate-skeleton-shimmer h-5 w-32 rounded bg-gray-200"
-                            style={{ animationDelay: "200ms" }}
-                          ></div>
-                          <div
-                            className="animate-skeleton-shimmer h-3 w-20 rounded bg-gray-200"
-                            style={{ animationDelay: "300ms" }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      {/* Message skeleton */}
-                      <div className="bg-opacity-40 border-opacity-30 rounded-xl border border-white bg-white p-4 shadow-sm">
-                        <div className="space-y-2">
-                          <div
-                            className="animate-skeleton-shimmer h-4 w-full rounded bg-gray-200"
-                            style={{ animationDelay: "100ms" }}
-                          ></div>
-                          <div
-                            className="animate-skeleton-shimmer h-4 w-4/5 rounded bg-gray-200"
-                            style={{ animationDelay: "200ms" }}
-                          ></div>
-                          <div
-                            className="animate-skeleton-shimmer h-4 w-3/5 rounded bg-gray-200"
-                            style={{ animationDelay: "300ms" }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className={`rounded-lg bg-white p-6 shadow-md ${className}`}>
-        <div className="text-center text-red-600">
-          <p>Failed to load kudos feed</p>
-          <p className="text-sm text-gray-500">{error.message}</p>
-        </div>
-      </div>
+      <section className={`label-stock w-full p-6 text-center ${className}`}>
+        <p className="text-ink font-semibold">
+          The kudos feed didn&apos;t load.
+        </p>
+        <p className="text-ink-soft mt-1 text-sm">{error.message}</p>
+      </section>
     );
   }
 
+  const renderPostcard = (kudos: Kudos, isNew: boolean) => {
+    const images = kudos.images ? (JSON.parse(kudos.images) as string[]) : [];
+    const identity = getChristmasIdentity(kudos.user.id);
+    return (
+      <article
+        key={kudos.id}
+        className={`label-stock mb-6 break-inside-avoid overflow-hidden ${isNew ? "animate-fade-in-slide" : ""}`}
+        style={isNew ? { animationDuration: "1.1s" } : undefined}
+      >
+        {images.length > 0 && (
+          <ImageCarousel
+            images={images}
+            onZoom={(index) => setLightbox({ images, index })}
+          />
+        )}
+        <div className="p-5">
+          <p className="text-ink leading-relaxed whitespace-pre-wrap">
+            {kudos.message}
+          </p>
+          <footer className="border-rule mt-4 flex items-end justify-between gap-3 border-t pt-3">
+            <div className="min-w-0">
+              <p className="font-expanded text-ink truncate text-sm font-bold">
+                {identity.name}
+                {kudos.hidden && (
+                  <span className="label-caps bg-post-tint text-post-deep ml-2 rounded-sm px-1.5 py-0.5">
+                    Hidden
+                  </span>
+                )}
+              </p>
+              <p className="text-ink-soft text-xs">
+                {kudos.purchase && (
+                  <>
+                    Thanking{" "}
+                    {
+                      getChristmasIdentity(
+                        kudos.purchase.wishlistAssignment.wishlistOwner.id,
+                      ).name
+                    }{" "}
+                    for a gift ·{" "}
+                  </>
+                )}
+                <time dateTime={new Date(kudos.createdAt).toISOString()}>
+                  {formatDistanceToNow(new Date(kudos.createdAt), {
+                    addSuffix: true,
+                  })}
+                </time>
+              </p>
+            </div>
+            {session && (
+              <AdminActionsDropdown
+                kudosId={kudos.id}
+                kudosUserId={kudos.user.id}
+                isHidden={kudos.hidden}
+              />
+            )}
+          </footer>
+        </div>
+      </article>
+    );
+  };
+
   return (
-    <div ref={feedRef} className={`rounded-lg ${className}`}>
-      {/* Header with scope selection */}{" "}
-      <div className="p-6">
-        <h2 className="mb-4 text-2xl font-bold text-white">Kudos Feed</h2>
+    <section
+      ref={feedRef}
+      aria-labelledby="kudos-heading"
+      className={`w-full ${className}`}
+    >
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2
+            id="kudos-heading"
+            className="font-expanded text-frost text-3xl leading-none font-extrabold uppercase"
+          >
+            Thank-you post
+          </h2>
+          <p className="text-frost-soft mt-2">
+            Kudos from people whose parcels arrived.
+          </p>
+        </div>
 
         {session && (
-          /* Scope Selection Tabs */
-          <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
-            {(["department", "domain", "site"] as ScopeType[])
-              .filter((scope) => {
-                // For unauthenticated users, only show site scope
-                if (!session) {
-                  return scope === "site";
-                }
-                // For authenticated users, show all scopes
-                return true;
-              })
-              .map((scope) => (
-                <button
-                  key={scope}
-                  onClick={() => setSelectedScope(scope)}
-                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    currentScope === scope
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                  title={getScopeDescription(scope)}
-                >
-                  {getScopeDisplayName(scope)}
-                </button>
-              ))}
+          <div
+            role="tablist"
+            aria-label="Kudos from"
+            className="rounded-label border-frost/25 flex border p-1"
+          >
+            {(["department", "domain", "site"] as ScopeType[]).map((scope) => (
+              <button
+                key={scope}
+                role="tab"
+                aria-selected={currentScope === scope}
+                onClick={() => setSelectedScope(scope)}
+                className={`min-h-9 flex-1 rounded-sm px-3 text-sm font-semibold transition-colors ${
+                  currentScope === scope
+                    ? "bg-label text-ink"
+                    : "text-frost-soft hover:text-frost"
+                }`}
+                title={getScopeDescription(scope)}
+              >
+                {getScopeDisplayName(scope)}
+              </button>
+            ))}
           </div>
         )}
       </div>
-      {/* Feed Content */}
       <div>
-        {/* Fallback message */}
         {getFallbackMessage() && (
-          <div className="px-6 pb-2">
-            <div className="rounded-lg border border-green-200 bg-green-100 p-3">
-              <p className="text-center text-sm font-medium text-green-800">
-                {getFallbackMessage()}
-              </p>
-            </div>
-          </div>
+          <p className="text-frost-soft mb-4 text-sm">{getFallbackMessage()}</p>
         )}
 
-        {allKudos.length === 0 ? (
-          <div className="p-6">
-            <div className="border-opacity-50 overflow-hidden rounded-2xl border border-white bg-red-600 shadow-lg">
-              <div className="p-8 text-center text-white">
-                {/* Santa Avatar */}
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-red-200 bg-white shadow-lg">
-                  <span className="text-4xl">🎅</span>
-                </div>
-
-                {/* Christmas-themed message */}
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-white">
-                    Ho ho ho! No kudos yet! 🎄
-                  </h3>{" "}
-                  <p className="text-lg text-red-100">
-                    Santa&apos;s workshop is quiet here...
-                  </p>
-                  <p className="text-red-200">
-                    Be the first elf to spread some Christmas cheer and
-                    appreciation! ✨
-                  </p>
-                  {/* Christmas decorations */}
-                  <div className="mt-6 flex justify-center space-x-4 text-2xl opacity-75">
-                    <span>🎁</span>
-                    <span>⭐</span>
-                    <span>❄️</span>
-                    <span>🔔</span>
-                    <span>🎄</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {allKudos.length === 0 && newKudos.length === 0 ? (
+          <div className="rounded-label border-frost/30 border border-dashed p-10 text-center">
+            <p className="font-expanded text-frost text-xl font-bold">
+              No thank-yous yet
+            </p>
+            <p className="text-frost-soft mt-2">
+              When someone&apos;s gift arrives, their kudos note will be posted
+              here.
+            </p>
           </div>
         ) : (
-          <div className="p-6">
-            {/* Masonry Grid Container */}
-            <div className="columns-1 gap-6 space-y-6 md:columns-2 lg:columns-3">
-              {/* Animated new kudos at the top */}
-              {newKudos.map((kudos) => {
-                const images = kudos.images
-                  ? (JSON.parse(kudos.images) as string[])
-                  : [];
-                const christmasIdentity = getChristmasIdentity(kudos.user.id);
-                const displayName = christmasIdentity.name;
-                const avatarEmoji = christmasIdentity.avatar;
-                return (
-                  <div
-                    key={kudos.id}
-                    className={`animate-fade-in-slide mb-6 break-inside-avoid ${images.length > 0 ? "w-full md:col-span-2 lg:col-span-3" : ""}`}
-                    style={{ animationDuration: "1.1s" }}
-                  >
-                    <div
-                      className={`${christmasIdentity.color} border-opacity-50 overflow-hidden rounded-2xl border border-white shadow-sm transition-shadow hover:shadow-md`}
-                    >
-                      {/* Purchase context */}
-                      {kudos.purchase && (
-                        <div className="bg-opacity-50 m-4 mb-3 rounded-lg border-l-4 border-red-400 bg-white p-3">
-                          <p className="text-sm text-red-800">
-                            🎁 Thanking{" "}
-                            <span className="font-medium">
-                              {
-                                getChristmasIdentity(
-                                  kudos.purchase.wishlistAssignment
-                                    .wishlistOwner.id,
-                                ).name
-                              }
-                            </span>{" "}
-                            for a gift
-                          </p>
-                        </div>
-                      )}
-                      {/* Images at the top */}
-                      {images.length > 0 && (
-                        <div className="w-full">
-                          <ImageCarousel
-                            images={images}
-                            onZoom={(index) => setLightbox({ images, index })}
-                          />
-                        </div>
-                      )}
-
-                      {/* Content below image */}
-                      <div className="p-5">
-                        {/* User info */}
-                        <div className="mb-3 flex items-center space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="border-opacity-70 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-white shadow-sm">
-                              <span className="text-2xl">{avatarEmoji}</span>
-                            </div>
-                          </div>{" "}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center space-x-2">
-                              <p className="text-lg font-semibold text-gray-900">
-                                {displayName}
-                              </p>
-                              {kudos.hidden && (
-                                <span className="rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-800">
-                                  Hidden
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-700 opacity-80">
-                              {formatDistanceToNow(new Date(kudos.createdAt), {
-                                addSuffix: true,
-                              })}
-                            </p>
-                          </div>
-                          {session && (
-                            <div className="flex-shrink-0">
-                              <AdminActionsDropdown
-                                kudosId={kudos.id}
-                                kudosUserId={kudos.user.id}
-                                isHidden={kudos.hidden}
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Message */}
-                        <div className="bg-opacity-40 border-opacity-30 rounded-xl border border-white bg-white p-4 shadow-sm">
-                          <p className="leading-relaxed whitespace-pre-wrap text-gray-900">
-                            {kudos.message}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}{" "}
-              {/* Existing kudos */}
-              {allKudos.map((kudos) => {
-                const images = kudos.images
-                  ? (JSON.parse(kudos.images) as string[])
-                  : [];
-
-                // Get Christmas-themed anonymous identity
-                const christmasIdentity = getChristmasIdentity(kudos.user.id);
-                const displayName = christmasIdentity.name;
-                const avatarEmoji = christmasIdentity.avatar;
-
-                return (
-                  <div
-                    key={kudos.id}
-                    className={`mb-6 break-inside-avoid ${images.length > 0 ? "w-full md:col-span-2 lg:col-span-3" : ""}`}
-                  >
-                    <div
-                      className={`${christmasIdentity.color} border-opacity-50 overflow-hidden rounded-2xl border border-white shadow-sm transition-shadow hover:shadow-md`}
-                    >
-                      {/* Purchase context */}
-                      {kudos.purchase && (
-                        <div className="bg-opacity-50 m-4 mb-3 rounded-lg border-l-4 border-red-400 bg-white p-3">
-                          <p className="text-sm text-red-800">
-                            🎁 Thanking{" "}
-                            <span className="font-medium">
-                              {
-                                getChristmasIdentity(
-                                  kudos.purchase.wishlistAssignment
-                                    .wishlistOwner.id,
-                                ).name
-                              }
-                            </span>{" "}
-                            for a gift
-                          </p>
-                        </div>
-                      )}{" "}
-                      {/* Images at the top */}
-                      {images.length > 0 && (
-                        <div className="w-full">
-                          <ImageCarousel
-                            images={images}
-                            onZoom={(index) => setLightbox({ images, index })}
-                          />
-                        </div>
-                      )}
-                      {/* Content below image */}
-                      <div className="p-5">
-                        {/* User info */}
-                        <div className="mb-3 flex items-center space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="border-opacity-70 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-white shadow-sm">
-                              <span className="text-2xl">{avatarEmoji}</span>
-                            </div>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center space-x-2">
-                              <p className="text-lg font-semibold text-gray-900">
-                                {displayName}
-                              </p>
-                              {kudos.hidden && (
-                                <span className="rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-800">
-                                  Hidden
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-700 opacity-80">
-                              {formatDistanceToNow(new Date(kudos.createdAt), {
-                                addSuffix: true,
-                              })}
-                            </p>
-                          </div>
-                          {session && (
-                            <div className="flex-shrink-0">
-                              <AdminActionsDropdown
-                                kudosId={kudos.id}
-                                kudosUserId={kudos.user.id}
-                                isHidden={kudos.hidden}
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Message */}
-                        <div className="bg-opacity-40 border-opacity-30 rounded-xl border border-white bg-white p-4 shadow-sm">
-                          <p className="leading-relaxed whitespace-pre-wrap text-gray-900">
-                            {kudos.message}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="columns-1 gap-6 md:columns-2 lg:columns-3">
+            {newKudos.map((kudos) => renderPostcard(kudos, true))}
+            {allKudos.map((kudos) => renderPostcard(kudos, false))}
           </div>
         )}
-
         {/* Lightbox Modal */}
         {lightbox && (
           <LightboxModal
@@ -965,7 +671,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
         {hasNextPage && (
           <div ref={loadMoreRef} className="p-4 text-center">
             {isFetchingNextPage ? (
-              <div className="flex items-center justify-center space-x-2 text-gray-500">
+              <div className="text-frost-soft flex items-center justify-center space-x-2">
                 <svg
                   className="h-5 w-5 animate-spin"
                   xmlns="http://www.w3.org/2000/svg"
@@ -991,7 +697,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
             ) : (
               <button
                 onClick={() => fetchNextPage()}
-                className="rounded-md px-4 py-2 text-sm text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                className="btn-quiet text-frost"
               >
                 Load more kudos
               </button>
@@ -999,7 +705,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

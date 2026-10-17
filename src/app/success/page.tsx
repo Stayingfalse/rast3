@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
 import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
-import HomeHeaderClientWrapper from "../_components/home-header-client-wrapper";
+import { Wordmark } from "../_components/post/wordmark";
 
 export default function SuccessPage() {
   // Fetch more kudos so we can interleave facts and show a richer feed
@@ -67,7 +67,7 @@ export default function SuccessPage() {
         <header className="mb-4 relative z-30">
           <div className="flex justify-center items-center">
             <div className="w-full max-w-3xl text-center">
-              <HomeHeaderClientWrapper />
+              <Wordmark />
             </div>
           </div>
         </header>

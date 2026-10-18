@@ -9,7 +9,7 @@ import {
   sharePath,
   type GroupScope,
 } from "~/server/share-cards";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, rateLimit } from "../trpc";
 
 /**
  * The groups this member may share a total for, with their default card
@@ -86,6 +86,7 @@ export const shareRouter = createTRPCRouter({
    * can share a thank-you.
    */
   create: protectedProcedure
+    .use(rateLimit("share.create", 30, 60 * 60_000))
     .input(
       z.discriminatedUnion("kind", [
         z.object({ kind: z.literal("sent"), purchaseId: z.string() }),

@@ -1,6 +1,15 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  rateLimit,
+} from "~/server/api/trpc";
+
+const HOUR = 60 * 60_000;
+// Picking up wishlists hands out other people's links, so cap how fast one
+// person can draw them.
+const requestLimit = rateLimit("wishlist.request", 30, HOUR);
 
 export const wishlistRouter = createTRPCRouter({
   // Get the current user's assigned wishlists (links they can shop from)
@@ -277,7 +286,9 @@ export const wishlistRouter = createTRPCRouter({
   }),
 
   // Distribute initial 3 wishlists to current user
-  requestInitialAssignments: protectedProcedure.mutation(async ({ ctx }) => {
+  requestInitialAssignments: protectedProcedure
+    .use(requestLimit)
+    .mutation(async ({ ctx }) => {
     const userId = ctx.session.user.id;
     // Check if user has profile completed and wishlist URL
     const currentUser = await ctx.db.user.findUnique({
@@ -398,6 +409,7 @@ export const wishlistRouter = createTRPCRouter({
 
   // Request additional assignments beyond the initial 3
   requestAdditionalAssignments: protectedProcedure
+    .use(requestLimit)
     .input(
       z.object({
         count: z.number().min(1).max(5).default(1),
@@ -522,6 +534,7 @@ export const wishlistRouter = createTRPCRouter({
 
   // Request cross-department assignments when same-department ones are not available
   requestCrossDepartmentAssignments: protectedProcedure
+    .use(requestLimit)
     .input(
       z.object({
         count: z.number().min(1).max(3).default(1),
@@ -641,6 +654,7 @@ export const wishlistRouter = createTRPCRouter({
 
   // Request cross-domain (stranger) assignments when no more are available in user's domain
   requestCrossDomainAssignments: protectedProcedure
+    .use(requestLimit)
     .input(
       z.object({
         count: z.number().min(1).max(3).default(1),
@@ -811,6 +825,7 @@ export const wishlistRouter = createTRPCRouter({
 
   // Report an issue with a wishlist
   reportIssue: protectedProcedure
+    .use(rateLimit("wishlist.report", 30, HOUR))
     .input(
       z.object({
         assignmentId: z.string(),
@@ -999,34 +1014,4 @@ export const wishlistRouter = createTRPCRouter({
 
       return { success: true };
     }),
-
-  // Get reports for admin/debugging
-  getAllReports: protectedProcedure.query(async ({ ctx }) => {
-    // Note: In production, you'd want to add admin permission check here
-    const reports = await ctx.db.wishlistReport.findMany({
-      include: {
-        user: {
-          select: {
-            name: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        wishlistAssignment: {
-          include: {
-            wishlistOwner: {
-              select: {
-                amazonWishlistUrl: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        reportedAt: "desc",
-      },
-    });
-
-    return reports;
-  }),
 });

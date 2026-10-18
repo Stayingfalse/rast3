@@ -75,7 +75,7 @@
 | 3 | Sat 17 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2). **Pulled forward a day at the owner's request; every later day moved one day earlier.** |
 | 4 | Sun 18 Oct | **Brand mark and sky (owner feedback, 17 Oct).** Rethink the logo for 2026 for design and readability while keeping the name "Random Acts of Santa", and replace or redraw the background and hanging baubles if something better suits the Christmas Post world. Use the impeccable skill and present directions before building. **Inserted at the owner's request: every later day moved one day later, using up the spare day.** |
 | 5 | Sun 18 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model **Pulled forward to Sun 18 Oct at the owner's request; every later day moved one day earlier and the spare day is back.** |
-| 6 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
+| 6 | Sun 18 Oct | **Pulled forward to Sun 18 Oct at the owner's request; no run on Mon 19 Oct (weekly allowance), Day 7 stays on Tue 20 Oct.** Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
 | 7 | Tue 20 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
 ### Week 2: groups (21–27 Oct), the core change
@@ -312,3 +312,24 @@ that don't touch the data model. Known items to include:
   - **Owner actions.** Create the privacy@raosanta.uk mailbox, cap server log
     retention at 30 days in Easypanel, and check whether the ICO data
     protection fee applies.
+- **Day 6 (18 Oct, pulled forward; no run on Mon 19 Oct): security pass.**
+  - **Holes closed.** Any signed-in member could make themselves an
+    organisation admin, list every user with emails, see every wishlist link,
+    and create, edit, disable or delete organisations and departments. All
+    organiser APIs now refuse members and check the target is in the
+    organiser's own organisation or department. Domain and department admins
+    can no longer act on fellow or more senior organisers, or on themselves.
+  - **Public feed.** The kudos feed sent posters' real names, profile photos,
+    departments and private purchase notes to anyone, even though the page
+    only showed festive names. It now sends none of that; organisers still
+    see names for posts they can moderate.
+  - **Removed.** `/success`, `/debug`, `/pwa-test`, `/api/test-logging` and
+    unused procedures, including `wishlist.getAllReports`. `/admin` is gated
+    on the server (members get the 404 page).
+  - **Rate limits.** Per person, in memory (single container): 60 mutations a
+    minute overall, plus hourly caps on wishlist requests, reports, thank-yous,
+    share cards and new-organisation setup.
+  - **Still open.** Anyone can join an organisation, or set up a new one and
+    become its admin, by typing a work email they don't own. That's Day 11
+    (verified work email). `/api/images/*` serves any key in the photo bucket.
+

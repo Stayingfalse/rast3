@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+  rateLimit,
+} from "~/server/api/trpc";
+import { canManageDomain } from "~/server/utils/admin-permissions";
 
 type UserWithDepartment = {
   id: string;
@@ -118,8 +125,11 @@ export const profileRouter = createTRPCRouter({
         if (input.domain !== "all") {
           where.domain = input.domain;
         }
+      } else {
+        // Members choosing a department during setup: one organisation only
+        if (input.domain === "all") return [];
+        where.domain = input.domain;
       }
-      // USER level shouldn't access this endpoint
 
       return ctx.db.department.findMany({
         where,
@@ -311,20 +321,28 @@ export const profileRouter = createTRPCRouter({
     }),
 
   // Admin: Create department
-  createDepartment: protectedProcedure
+  createDepartment: adminProcedure
     .input(
       z.object({
-        name: z.string().min(1, "Department name is required"),
+        name: z.string().trim().min(1, "Department name is required").max(100),
         domain: z.string().min(1, "Domain is required"),
       }),
     )
     .mutation(({ ctx, input }) => {
+      const domain = input.domain.toLowerCase();
+      if (!canManageDomain(ctx.admin, domain)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not your organisation",
+        });
+      }
       return ctx.db.department.create({
-        data: input,
+        data: { name: input.name, domain },
       });
     }),
   // Setup new domain and complete profile (for new domains)
   setupNewDomain: protectedProcedure
+    .use(rateLimit("setupNewDomain", 5, 60 * 60_000))
     .input(
       z.object({
         firstName: z.string().min(1, "First name is required"),

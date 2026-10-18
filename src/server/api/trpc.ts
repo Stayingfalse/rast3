@@ -14,6 +14,7 @@ import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { hitRateLimit } from "~/server/rate-limit";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('trpc');
@@ -179,9 +180,20 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(({ ctx, next }) => {
+  .use(({ ctx, next, type }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    // Every signed-in mutation shares a generous per-person budget; busier
+    // or riskier ones add their own with `rateLimit` below.
+    if (type === "mutation") {
+      const { ok } = hitRateLimit(`m:${ctx.session.user.id}`, 60, 60_000);
+      if (!ok) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "That's a lot of clicks. Please wait a minute and try again.",
+        });
+      }
     }
     return next({
       ctx: {
@@ -190,3 +202,50 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Per-person limit for one procedure, e.g. `.use(rateLimit("kudos", 20, HOUR))`.
+ * Use after `protectedProcedure`.
+ */
+export const rateLimit = (name: string, limit: number, windowMs: number) =>
+  t.middleware(({ ctx, next }) => {
+    const userId = ctx.session?.user?.id ?? "anon";
+    const { ok } = hitRateLimit(`${name}:${userId}`, limit, windowMs);
+    if (!ok) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "You've done that a lot recently. Please try again later.",
+      });
+    }
+    return next();
+  });
+
+/**
+ * Organiser (department, organisation or site admin) procedure. Loads the
+ * caller's admin level and scope into `ctx.admin`; members get FORBIDDEN.
+ * Procedures still have to check the target is inside `ctx.admin`'s scope.
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const admin = await ctx.db.user.findUnique({
+    where: { id: ctx.session.user.id },
+    select: {
+      id: true,
+      adminLevel: true,
+      adminScope: true,
+      domain: true,
+      departmentId: true,
+    },
+  });
+  if (!admin || admin.adminLevel === "USER") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Organisers only" });
+  }
+  return next({ ctx: { admin } });
+});
+
+/** Site admin only. */
+export const siteAdminProcedure = adminProcedure.use(({ ctx, next }) => {
+  if (ctx.admin.adminLevel !== "SITE") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Site admin required" });
+  }
+  return next();
+});

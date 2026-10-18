@@ -33,7 +33,9 @@ Next.js 16 (App Router, webpack build) + tRPC + Prisma (MariaDB) + Auth.js v5
 | Prod | `main` | `ras/raosanta-uk` | `ras/database` (db `ras`) |
 | Dev | `dev` | `ras/raosanta-dev` | `ras/database-dev` (db `ras_dev`) |
 
-Pushing either branch deploys it. `/api/health` shows DB status, applied
+Pushing either branch runs CI (`.github/workflows/ci.yml`): checks, then one
+deploy at a time (waits until the new build serves), then e2e on dev. A commit
+that fails the checks is not deployed. `/api/health` shows DB status, applied
 migrations and the startup schema-sync result.
 
 ## Checks before pushing

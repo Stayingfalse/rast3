@@ -22,6 +22,15 @@ export async function loginAs(
     data: user,
   });
   expect(res.status(), await res.text()).toBe(200);
+  // Signed-in screenshots shouldn't be covered by the cookie notice
+  await page.context().addCookies([
+    {
+      name: "cookie-consent",
+      value: "seen",
+      domain: new URL(res.url()).hostname,
+      path: "/",
+    },
+  ]);
   return (await res.json()) as { userId: string; email: string };
 }
 

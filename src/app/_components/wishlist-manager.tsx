@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Postmark } from "./post/postmark";
+import { ShareSheet, type ShareRequest } from "./share/share-sheet";
 import { Preloader } from "./preloader";
 import { ProfileSetupModal } from "./profile-setup-modal";
 
@@ -117,8 +118,10 @@ export function WishlistManager() {
       },
     });
   const utils = api.useUtils();
+  const [shareRequest, setShareRequest] = useState<ShareRequest | null>(null);
   const markPurchase = api.wishlist.markPurchase.useMutation({
-    onSuccess: () => {
+    onSuccess: (purchase) => {
+      setShareRequest({ kind: "sent", purchaseId: purchase.id });
       void refetch();
       void utils.stamps.getMyAlbum.invalidate();
       setSelectedAssignment(null);
@@ -445,6 +448,21 @@ export function WishlistManager() {
                   Report issue
                 </button>
               </div>
+            )}
+
+            {!archived && hasPurchase && assignment.purchases && (
+              <button
+                type="button"
+                onClick={() =>
+                  setShareRequest({
+                    kind: "sent",
+                    purchaseId: assignment.purchases!.id,
+                  })
+                }
+                className="btn-quiet text-ink"
+              >
+                Share this act
+              </button>
             )}
 
             {!archived && hasPurchase && (
@@ -928,6 +946,11 @@ export function WishlistManager() {
         </div>
       )}
       {/* Profile Setup Modal (open when user needs to complete profile) */}
+      <ShareSheet
+        request={shareRequest}
+        onClose={() => setShareRequest(null)}
+      />
+
       <ProfileSetupModal
         isOpen={showProfileModal}
         existingProfile={userProfile ?? null}

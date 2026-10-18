@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api } from "~/trpc/react";
+import { ShareSheet, type ShareRequest } from "./share/share-sheet";
 import imageCompression from "browser-image-compression";
 import { useSession } from "next-auth/react";
 
@@ -26,6 +27,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
 
   const createKudos = api.kudos.createKudos.useMutation();
   const utils = api.useUtils();
+  const [shareRequest, setShareRequest] = useState<ShareRequest | null>(null);
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "anon";
 
@@ -185,11 +187,12 @@ export const KudosForm: React.FC<KudosFormProps> = ({
             }),
         ),
       );
-      await createKudos.mutateAsync({
+      const created = await createKudos.mutateAsync({
         message,
         purchaseId,
         images: base64Images,
       });
+      setShareRequest({ kind: "thanks", kudosId: created.id });
       setMessage("");
       setImages([]);
       setPreviews([]);
@@ -205,6 +208,10 @@ export const KudosForm: React.FC<KudosFormProps> = ({
 
   return (
     <div className="w-full">
+      <ShareSheet
+        request={shareRequest}
+        onClose={() => setShareRequest(null)}
+      />
       <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-3">
         {/* Form: 2/3 on desktop, full on mobile */}
         <form

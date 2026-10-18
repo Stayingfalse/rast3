@@ -22,6 +22,10 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const imagePath = resolvedParams.path.join("/");
+    // Only thank-you photos are served; nothing else in the bucket is public
+    if (!/^kudos\/[\w-]+(\.[a-z0-9]+)?$/i.test(imagePath)) {
+      return new NextResponse("Image not found", { status: 404 });
+    }
 
     const command = new GetObjectCommand({
       Bucket: process.env.E2_BUCKET!,

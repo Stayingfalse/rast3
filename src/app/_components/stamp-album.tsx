@@ -48,11 +48,11 @@ export function StampAlbum() {
         </p>
       </div>
 
-      <ol className="label-stock bg-rule grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-3 lg:grid-cols-4">
+      <ol className="label-stock grid grid-cols-2 overflow-hidden sm:grid-cols-3 lg:grid-cols-4">
         {album.map((page) => (
           <li
             key={page.year}
-            className="bg-label flex flex-col items-center gap-3 p-5 text-center"
+            className="border-rule -mr-px -mb-px flex flex-col items-center gap-3 border-r border-b p-5 text-center"
           >
             <div
               className={`relative flex aspect-[4/5] w-full max-w-36 items-center justify-center rounded-sm border ${
@@ -105,7 +105,7 @@ export function StampAlbum() {
             </div>
           </li>
         ))}
-        <li className="bg-label flex flex-col items-center gap-3 p-5 text-center">
+        <li className="border-rule -mr-px -mb-px flex flex-col items-center gap-3 border-r border-b p-5 text-center">
           <div className="border-rule flex aspect-[4/5] w-full max-w-36 items-center justify-center rounded-sm border">
             <span className="label-caps text-ink-soft/80 px-3">
               Next Christmas

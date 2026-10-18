@@ -124,6 +124,9 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   if (discordConfig) {
     providers.push(
       Discord({
+        // Discord now returns an `iss` on the callback (RFC 9207); Auth.js
+        // checks it against the issuer, which defaults to a placeholder.
+        issuer: "https://discord.com",
         clientId: discordConfig.clientId,
         clientSecret: discordConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,

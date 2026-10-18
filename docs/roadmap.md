@@ -75,7 +75,7 @@
 | 3 | Sat 17 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2). **Pulled forward a day at the owner's request; every later day moved one day earlier.** |
 | 4 | Sun 18 Oct | **Brand mark and sky (owner feedback, 17 Oct).** Rethink the logo for 2026 for design and readability while keeping the name "Random Acts of Santa", and replace or redraw the background and hanging baubles if something better suits the Christmas Post world. Use the impeccable skill and present directions before building. **Inserted at the owner's request: every later day moved one day later, using up the spare day.** |
 | 5 | Sun 18 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model **Pulled forward to Sun 18 Oct at the owner's request; every later day moved one day earlier and the spare day is back.** |
-| 6 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
+| 6 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
 | 7 | Tue 20 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
 ### Week 2: groups (21–27 Oct), the core change
@@ -110,7 +110,7 @@
 | 26 | Sun 8 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 27 | Mon 9 Nov | Accessibility + mobile pass |
 | 28 | Tue 10 Nov | Performance pass |
-| 29 | Wed 11 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies |
+| 29 | Wed 11 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 | 30 | Thu 12 Nov | Full regression on dev + launch checklist |
 | 31 | Fri 13 Nov | Fixes from regression |
 | 32 | Sat 14 Nov | Release candidate → prod (with the owner's approval) |
@@ -298,3 +298,17 @@ that don't touch the data model. Known items to include:
     added to Day 6. The admin area is still in the 2025 style, proposed for its
     own day or folded into Day 13. The privacy policy is a 2025 template, for
     Day 29 with the owner's wording.
+- **Extra (18 Oct, at the owner's request): privacy policy.** A new UK GDPR
+  policy written from what the code actually does.
+  - **Owner's choices.** Controller: the owner, contact privacy@raosanta.uk.
+    Users must be 16+. Accounts are kept until deleted, or after 24 months
+    without a sign-in. Hosting and photo storage are in the UK or EU.
+  - **Cookie banner.** No analytics run, so it is now an essential-cookies
+    notice; the old "accept optional analytics" choice is gone.
+  - **Sign-in window.** It no longer refers to terms of service that don't
+    exist.
+  - **Data minimisation.** The wishlist API no longer sends a wishlist owner's
+    name to the member buying for them.
+  - **Owner actions.** Create the privacy@raosanta.uk mailbox, cap server log
+    retention at 30 days in Easypanel, and check whether the ICO data
+    protection fee applies.

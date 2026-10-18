@@ -1,180 +1,59 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-interface CookieConsentProps {
-  className?: string;
+/**
+ * Cookie notice. The site sets only strictly necessary cookies (sign-in and
+ * this notice), so under PECR there is nothing to consent to: this just tells
+ * people, once. If analytics or other optional cookies are ever added, this
+ * must become a real consent choice again and /privacy must be updated.
+ */
+const NOTICE_COOKIE = "cookie-consent";
+const NOTICE_DAYS = 365;
+
+function hasSeenNotice() {
+  return document.cookie
+    .split(";")
+    .some((c) => c.trim().startsWith(`${NOTICE_COOKIE}=`));
 }
 
-type ConsentStatus = "pending" | "accepted" | "declined";
+export function CookieConsent({ className = "" }: { className?: string }) {
+  const [visible, setVisible] = useState(false);
 
-const CONSENT_COOKIE_NAME = "cookie-consent";
-const CONSENT_EXPIRY_DAYS = 365;
-
-export const CookieConsent: React.FC<CookieConsentProps> = ({
-  className = "",
-}) => {
-  const [consentStatus, setConsentStatus] = useState<ConsentStatus>("pending");
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Check existing consent on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const existingConsent = getCookieConsent();
-      if (existingConsent) {
-        setConsentStatus(existingConsent);
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-    }
+    setVisible(!hasSeenNotice());
   }, []);
 
-  const getCookieConsent = (): ConsentStatus | null => {
-    if (typeof document === "undefined") return null;
+  if (!visible) return null;
 
-    const cookies = document.cookie.split(";");
-    const consentCookie = cookies.find((cookie) =>
-      cookie.trim().startsWith(`${CONSENT_COOKIE_NAME}=`),
-    );
-
-    if (consentCookie) {
-      const value = consentCookie.split("=")[1]?.trim();
-      return (value as ConsentStatus) || null;
-    }
-
-    return null;
+  const dismiss = () => {
+    const expires = new Date(Date.now() + NOTICE_DAYS * 24 * 60 * 60 * 1000);
+    document.cookie = `${NOTICE_COOKIE}=seen; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    setVisible(false);
   };
-
-  const setCookieConsent = (status: ConsentStatus) => {
-    if (typeof document === "undefined") return;
-
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + CONSENT_EXPIRY_DAYS);
-
-    document.cookie = `${CONSENT_COOKIE_NAME}=${status}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-  };
-
-  const handleAccept = () => {
-    setConsentStatus("accepted");
-    setCookieConsent("accepted");
-    setIsVisible(false);
-
-    // Initialize analytics or other tracking scripts here if needed
-    // Example: window.gtag?.('consent', 'update', { analytics_storage: 'granted' });
-  };
-
-  const handleDecline = () => {
-    setConsentStatus("declined");
-    setCookieConsent("declined");
-    setIsVisible(false);
-
-    // Clear any existing tracking cookies if needed
-    // Example: Clear Google Analytics cookies, etc.
-    clearNonEssentialCookies();
-  };
-
-  const clearNonEssentialCookies = () => {
-    if (typeof document === "undefined") return;
-
-    // List of non-essential cookie patterns to clear
-    const nonEssentialPatterns = [
-      "_ga",
-      "_gid",
-      "_gat", // Google Analytics
-      "_fbp",
-      "_fbc", // Facebook Pixel
-      "__utm", // UTM tracking
-      // Add other tracking cookie patterns as needed
-    ];
-
-    // Clear cookies that match non-essential patterns
-    const cookies = document.cookie.split(";");
-    cookies.forEach((cookie) => {
-      const cookieName = cookie.split("=")[0]?.trim();
-      if (cookieName) {
-        const shouldClear = nonEssentialPatterns.some((pattern) =>
-          cookieName.startsWith(pattern),
-        );
-
-        if (shouldClear) {
-          // Clear cookie by setting it to expire in the past
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-        }
-      }
-    });
-  };
-
-  // Don't render if consent has been given or declined
-  if (!isVisible || consentStatus !== "pending") {
-    return null;
-  }
 
   return (
     <section
-      aria-label="Cookie preferences"
+      aria-label="Cookie notice"
       className={`border-rule bg-label text-ink shadow-lift fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t px-4 py-2.5 sm:flex-row sm:items-center sm:justify-center sm:gap-6 ${className}`}
     >
       <p className="text-ink text-sm leading-snug">
-        <strong>Cookies.</strong> Essential ones keep you signed in. With your
-        OK we&apos;d also use optional ones for analytics.{" "}
+        <strong>Cookies.</strong> We only use the cookies needed to keep you
+        signed in. No tracking, no adverts.{" "}
         <Link
-          href="/privacy"
+          href="/privacy#cookies"
           className="text-post font-semibold underline underline-offset-4"
-          target="_blank"
-          rel="noopener noreferrer"
         >
           Privacy policy
         </Link>
       </p>
-      <div className="flex shrink-0 gap-2">
-        <button
-          type="button"
-          onClick={handleAccept}
-          className="btn-post min-h-9 flex-1 py-1.5 text-sm sm:flex-none"
-        >
-          Accept All
-        </button>
-        <button
-          type="button"
-          onClick={handleDecline}
-          className="btn-quiet text-ink min-h-9 flex-1 py-1.5 text-sm sm:flex-none"
-        >
-          Decline Optional
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={dismiss}
+        className="btn-post min-h-9 shrink-0 self-start py-1.5 text-sm sm:self-auto"
+      >
+        OK
+      </button>
     </section>
   );
-};
-
-// Utility function to check if user has consented to cookies
-export const hasConsentedToCookies = (): boolean => {
-  if (typeof document === "undefined") return false;
-
-  const cookies = document.cookie.split(";");
-  const consentCookie = cookies.find((cookie) =>
-    cookie.trim().startsWith(`${CONSENT_COOKIE_NAME}=`),
-  );
-
-  if (consentCookie) {
-    const value = consentCookie.split("=")[1]?.trim();
-    return value === "accepted";
-  }
-
-  return false;
-};
-
-// Utility function to check if user has made any consent choice
-export const hasChosenCookieConsent = (): boolean => {
-  if (typeof document === "undefined") return false;
-
-  const cookies = document.cookie.split(";");
-  const consentCookie = cookies.find((cookie) =>
-    cookie.trim().startsWith(`${CONSENT_COOKIE_NAME}=`),
-  );
-
-  return !!consentCookie;
-};
-
-export default CookieConsent;
+}

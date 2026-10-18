@@ -1,11 +1,12 @@
 // Writes the brand assets in public/ from scripts/brand/marks.mjs:
-//   public/brand/{stamp,sky-left,sky-right}.svg, the favicons, app icons and
+//   public/brand/{stamp,sky-left,sky-right}.svg, public/brand/stamps/<year>.svg,
+//   the favicons, app icons and
 //   the social preview image (public/og.png).
 // Run: node scripts/brand/build.mjs   (needs Playwright's Chromium; the social
 // image loads Archivo from Google Fonts, so it needs network access)
 import { writeFileSync, mkdirSync } from "node:fs";
 import { chromium } from "@playwright/test";
-import { C, stampMark, skyCluster } from "./marks.mjs";
+import { C, SEASON_FACES, stampMark, skyCluster } from "./marks.mjs";
 
 const out = new URL("../../public/", import.meta.url).pathname;
 mkdirSync(`${out}brand`, { recursive: true });
@@ -14,6 +15,15 @@ const stamp = stampMark({ showYear: false });
 writeFileSync(`${out}brand/stamp.svg`, stamp);
 writeFileSync(`${out}brand/sky-left.svg`, skyCluster("left"));
 writeFileSync(`${out}brand/sky-right.svg`, skyCluster("right"));
+
+// One stamp per season for the stamp album (the year is set over it in Archivo).
+mkdirSync(`${out}brand/stamps`, { recursive: true });
+for (const [year, face] of Object.entries(SEASON_FACES)) {
+  writeFileSync(
+    `${out}brand/stamps/${year}.svg`,
+    stampMark({ showYear: false, face }),
+  );
+}
 
 const browser = await chromium.launch();
 const page = await browser.newPage();

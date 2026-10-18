@@ -25,6 +25,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const createKudos = api.kudos.createKudos.useMutation();
+  const utils = api.useUtils();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "anon";
 
@@ -193,6 +194,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
       setImages([]);
       setPreviews([]);
       if (inputRef.current) inputRef.current.value = "";
+      void utils.stamps.getMyAlbum.invalidate();
       if (onSuccess) onSuccess();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to send Kudos");

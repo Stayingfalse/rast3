@@ -105,7 +105,7 @@ export function hangingStamp(x, top, len, w, h, rot, body) {
     <defs><mask id="${id}"><rect x="-4" y="-4" width="${w + 8}" height="${h + 8}" fill="#fff"/>${perfHoles(w, h, 6, 1.9)}</mask></defs>
     <rect width="${w}" height="${h}" fill="${C.paper}" mask="url(#${id})"/>
     <rect x="5" y="5" width="${w - 10}" height="${h - 10}" fill="${body}"/>
-    ${body === C.post ? star(w / 2, h / 2, w * 0.22, C.goldSoft) : bauble({ cx: w / 2, cy: h / 2 + 3, r: w * 0.24, body: C.post })}
+    ${star(w / 2, h / 2, w * 0.22, C.goldSoft)}
   </g>`;
 }
 
@@ -147,7 +147,7 @@ export function skyCluster(side) {
       band2: C.paper,
       stringTop: 0,
     }),
-    star(206, 214, 7, C.goldSoft),
+    star(206, 196, 7, C.goldSoft),
     star(470, 130, 9, C.goldSoft),
     star(120, 40, 5, C.goldSoft),
   ];
@@ -175,7 +175,7 @@ export function skyCluster(side) {
       stringTop: 0,
     }),
     bauble({ cx: 500, cy: 176, r: 36, body: C.post, stringTop: 0 }),
-    star(360, 236, 6, C.goldSoft),
+    star(360, 200, 6, C.goldSoft),
     star(540, 40, 5, C.goldSoft),
   ];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${(side === "left" ? left : right).join("\n")}</svg>`;

@@ -24,12 +24,12 @@ export function Wordmark({
     <div className={`flex items-center ${hero ? "gap-3 sm:gap-5" : "gap-3"}`}>
       <StampMark
         year={hero ? year : undefined}
-        className={`shrink-0 -rotate-4 ${hero ? "w-16 sm:w-24 lg:w-28" : "w-9 sm:w-10"}`}
+        className={`shrink-0 -rotate-4 ${hero ? "w-14 min-[360px]:w-16 min-[400px]:w-20 sm:w-24 lg:w-28" : "w-9 sm:w-10"}`}
       />
       <Tag
         className={`font-expanded text-frost leading-[0.95] font-extrabold tracking-[-0.01em] ${
           hero
-            ? "text-[clamp(2rem,5vw,3.75rem)]"
+            ? "text-[clamp(1.875rem,5vw,3.75rem)] max-[359px]:text-[1.625rem]"
             : "text-lg sm:text-xl"
         }`}
       >

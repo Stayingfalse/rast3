@@ -25,7 +25,14 @@ colors:
 typography:
   display:
     fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2rem, 5vw, 3.75rem)"
+    fontSize: "clamp(1.875rem, 5vw, 3.75rem)"
+    fontWeight: 800
+    lineHeight: 0.95
+    letterSpacing: "-0.01em"
+    fontVariation: "'wdth' 125"
+  display-narrow:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.625rem"
     fontWeight: 800
     lineHeight: 0.95
     letterSpacing: "-0.01em"
@@ -186,7 +193,7 @@ Measured contrast: white on postal red 6.27:1; lamp red on night 4.82:1; frost s
 **Character:** One grotesque stretched to do two jobs. At 125% width and heavy weight it is the ink of a rubber stamp and the print of a shipping label; at normal width it reads plainly for long sentences.
 
 ### Hierarchy
-- **Display** (800, 2rem rising to 3.75rem, line-height 0.95, expanded, mixed case): the wordmark only, on two lines ("Random Acts" / "of Santa", with "of" at regular weight and width), each line kept whole, beside the stamp mark. A slim masthead version runs at 1.125 to 1.25rem.
+- **Display** (800, 1.875rem rising to 3.75rem, line-height 0.95, expanded, mixed case): the wordmark only, on two lines ("Random Acts" / "of Santa", with "of" at regular weight and width), each line kept whole, beside the stamp mark. Below 360px wide it steps down to 1.625rem (display-narrow) so each line stays whole. A slim masthead version runs at 1.125 to 1.25rem.
 - **Headline** (800, 1.875 to 2.25rem, line-height 1, expanded, uppercase on navy section heads): section headings such as "From wishlist to doorstep" and "The small print". The hero hook is a bold (700) expanded headline at 1.5 to 1.875rem in sentence case.
 - **Title** (700, 1.25rem, expanded): station titles, modal titles (800 at 1.25 to 1.5rem), card names.
 - **Body** (400, 1rem to 1.125rem, line-height 1.625): reading text, in frost-soft on navy or ink-soft on label; keep to roughly 36rem (max-w-xl) beside the hero.

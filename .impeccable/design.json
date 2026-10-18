@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-17T22:54:39+00:00",
+  "generatedAt": "2026-10-18T05:00:00Z",
   "title": "Design System: Random Acts of Santa",
   "extensions": {
     "colorMeta": {
@@ -307,6 +307,22 @@
           "#b7c4e2",
           "#e1eeff"
         ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Stamp Paper",
+        "canonical": "#fffdf8",
+        "oklch": "oklch(99.4% 0.006 85)",
+        "tonalRamp": [
+          "#fffdf8",
+          "#f6f0e2",
+          "#ebe2cd",
+          "#cdbf9f",
+          "#a8987a",
+          "#7d6f56",
+          "#4f4535",
+          "#2a2419"
+        ]
       }
     },
     "typographyMeta": {
@@ -464,7 +480,7 @@
   ],
   "narrative": {
     "northStar": "The Christmas Post",
-    "overview": "Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the incumbent hanging baubles above it, and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.\n\nDensity is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded caps for the franked wordmark, headings and label captions, regular width for reading.\n\nThere is one authored motion, the frank: a postmark pressing onto a label once, on load or when a wishlist is marked Gifted. Everything else is still.",
+    "overview": "Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the hanging post above it (baubles, stamps and luggage tags on gold thread), and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.\n\nDensity is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded weight for the wordmark, expanded caps for headings and label captions, regular width for reading.\n\nThere is one authored motion, the frank: a postmark pressing onto a label once, on load or when a wishlist is marked Gifted. Everything else is still.\n\n**Key Characteristics:**\n- Two grounds only: night sky (dark) and label stock (cream). No third surface family.\n- Postal red is the one action colour; gold is the postmark ink; pine means sent.\n- Archivo across widths: expanded for marks and captions, normal for reading.\n- Hairline rules and the airmail band do the structuring; no decorative chrome.\n- Counts in tabular figures; public totals rounded and shown as \"N+\".\n- One motion: the frank. Reduced motion shows the postmark at rest.",
     "keyCharacteristics": [
       "Two grounds only: night sky (dark) and label stock (cream). No third surface family.",
       "Postal red is the one action colour; gold is the postmark ink; pine means sent.",
@@ -476,7 +492,7 @@
     "rules": [
       {
         "name": "The One Stamp Of Red Rule",
-        "body": "Postal red marks what you can do: buttons, links, destructive actions. It never decorates a heading or a panel. The only red that is not an action is the wordmark's \"ACTS OF\" line in lamp red, and it stays the only one; other emphasis on navy uses pale gold.",
+        "body": "Postal red marks what you can do: buttons, links, destructive actions. It never decorates a heading or a panel. Red never decorates the name; it belongs to actions and to the stamp's bauble.",
         "section": "colors"
       },
       {
@@ -524,7 +540,7 @@
       "**Don't** put an eyebrow kicker above a heading; expanded caps are for field captions, tags and marks only.",
       "**Don't** use gradient text, glass or blurred translucent panels.",
       "**Don't** mark a card with a coloured side stripe; state goes in the top band, a tag and words.",
-      "**Don't** add a second red emphasis on navy beyond the wordmark's \"ACTS OF\" line.",
+      " Red never decorates the name; it belongs to actions and to the stamp's bauble.",
       "**Don't** use gold for buttons, fills or backgrounds.",
       "**Don't** show exact small counts, names or per-organisation numbers in public stats."
     ]

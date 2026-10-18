@@ -14,7 +14,7 @@ export default function AuthButton() {
       <button
         onClick={() => setIsSignInModalOpen(true)}
         type="button"
-        className="btn-quiet bg-night/80 text-frost fixed top-4 right-4 z-40 sm:right-6"
+        className="btn-quiet bg-night text-frost fixed top-4 right-4 z-40 sm:right-6"
       >
         Sign in
       </button>

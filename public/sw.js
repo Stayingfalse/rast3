@@ -1,4 +1,4 @@
-const CACHE_NAME = 'raosanta-v1';
+const CACHE_NAME = 'raosanta-v2';
 const STATIC_CACHE_URLS = [
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
@@ -6,7 +6,9 @@ const STATIC_CACHE_URLS = [
   '/favicon-16x16.png',
   '/favicon-32x32.png',
   '/favicon.ico',
-  '/header.svg',
+  '/brand/stamp.svg',
+  '/brand/sky-left.svg',
+  '/brand/sky-right.svg',
   '/site.webmanifest'
 ];
 

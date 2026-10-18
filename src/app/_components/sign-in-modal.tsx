@@ -477,7 +477,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                   )}
                 </div>
                 <p className="text-ink-soft mt-6 text-sm">
-                  By signing in, you agree to our terms of service and{" "}
+                  You need to be 16 or over. Our{" "}
                   <Link
                     href="/privacy"
                     className="text-post font-semibold underline underline-offset-4"
@@ -485,8 +485,8 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                     rel="noopener noreferrer"
                   >
                     privacy policy
-                  </Link>
-                  .
+                  </Link>{" "}
+                  explains what we keep and why.
                 </p>
               </>
             )}

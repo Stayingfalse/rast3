@@ -78,44 +78,55 @@
 | 6 | Sun 18 Oct | **Pulled forward to Sun 18 Oct at the owner's request; no run on Mon 19 Oct (weekly allowance), Day 7 was then also done on 18 Oct.** Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
 | 7 | Sun 18 Oct | **Done early on 18 Oct at the owner's request; every later day moved one day earlier and a second spare day added.** CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
-### Week 2: groups (20–26 Oct), the core change
+### Week 2: groups and onboarding (18–25 Oct), the core change
+*Re-planned 18 Oct (owner): profile/onboarding rework added as Day 12, shadcn/ui adoption and a two-part admin rework added as Days 15–17; later days moved accordingly. Days 6–11 were done early on 18 Oct.*
+
 | Day | Date | Focus |
 |---|---|---|
 | 8 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
 | 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
 | 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
-| 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
-| 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
-| 13 | Sun 25 Oct | Group switcher + per-group home, designed mobile-first |
-| 14 | Mon 26 Oct | Group admin console: members, roles, settings, moderation |
+| 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
+| 12 | Mon 19 Oct | **Profile and onboarding rework (owner, 18 Oct).** Your profile becomes just you and your wishlist; joining groups is a separate step. "Join a group" offers three routes: work email (organisations, plus the join code when one is set), invite code or link (friends and communities), and Discord (Day 13). People can be in several groups and join more at any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. |
+| 13 | Tue 20 Oct | **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
+| 14 | Wed 21 Oct | **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
+| 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
+| 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. |
+| 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
+| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
 
-### Week 3: the Christmas season and wishlists (27 Oct – 2 Nov)
+### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
 |---|---|---|
-| 15 | Tue 27 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
-| 16 | Wed 28 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 17 | Thu 29 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
-| 18 | Fri 30 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
-| 19 | Sat 31 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
-| 20 | Sun 1 Nov | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
-| 21 | Mon 2 Nov | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 19 | Mon 26 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
+| 20 | Tue 27 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
+| 21 | Wed 28 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
+| 22 | Thu 29 Oct | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
+| 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 24 | Sat 31 Oct | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
 
-### Week 4: engagement, polish, launch (3–15 Nov)
+### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 22 | Tue 3 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
-| 23 | Wed 4 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
-| 24 | Thu 5 Nov | Public landing page + "start a group" onboarding (mobile-first) |
-| 25 | Fri 6 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
-| 26 | Sat 7 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 27 | Sun 8 Nov | Accessibility + mobile pass |
-| 28 | Mon 9 Nov | Performance pass |
-| 29 | Tue 10 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
-| 30 | Wed 11 Nov | Full regression on dev + launch checklist |
-| 31 | Thu 12 Nov | Fixes from regression |
-| 32 | Fri 13 Nov | Release candidate → prod (with the owner's approval) |
-| 33 | Sat 14 Nov | **Spare day** (gained by pulling Day 5 forward): launch support, last fixes, or an extra feature from the backlog |
-| 34 | Sun 15 Nov | **Spare day** (gained by doing Day 7 early on 18 Oct) |
+| 25 | Sun 1 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
+| 26 | Mon 2 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
+| 27 | Tue 3 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 28 | Wed 4 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 29 | Thu 5 Nov | Accessibility + mobile pass |
+| 30 | Fri 6 Nov | Performance pass |
+| 31 | Sat 7 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
+
+### Week 5: launch (8–15 Nov)
+| Day | Date | Focus |
+|---|---|---|
+| 32 | Sun 8 Nov | Full regression on dev + launch checklist |
+| 33 | Mon 9 Nov | Fixes from regression |
+| 34 | Tue 10 Nov | Release candidate → prod (with the owner's approval) |
+| 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 36 | Thu 12 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 37 | Fri 13 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 38 | Sat 14 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 39 | Sun 15 Nov | **Spare day** (Amazon-only this year, owner 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 
 ## Monetisation (2027; this year only collects the evidence)
 
@@ -139,6 +150,8 @@
   instead.
 
 ## Ideas backlog
+
+- **2027: wishlists beyond Amazon** (Throne, Etsy, any URL), taken off the 2026 plan by the owner on 18 Oct.
 
 Suggestions beyond the brief, to schedule when the owner agrees:
 - **Address privacy as a selling point**: Amazon wishlists can ship to the owner
@@ -418,4 +431,37 @@ that don't touch the data model. Known items to include:
   - **Tests.** `e2e/groups.spec.ts`: start a group, invite page signed out,
     a friend joins with a lower-case dashed code, organiser-only code, wrong
     code 404.
+- **Day 11 (18 Oct, pulled forward): organisations on trust.** No email
+  verification (owner, 18 Oct); instead:
+  - **Approval.** New organisations wait for a site admin. Setting one up
+    now creates it as waiting, not live. The new `/admin/approvals` screen
+    lists waiting, live and closed organisations and friends or community
+    groups, with Approve, Close and Re-open. Approving an organisation also
+    switches on its legacy Domain row, so the older screens agree.
+    Members of a waiting organisation see a "waiting for approval" note and
+    can't pick up lists yet.
+  - **Join code.** Optional: organisers can require a code from new members
+    (Admin overview: "Require a join code", "Make a new code", "Stop
+    requiring a code"). Profile setup asks for it only when the
+    organisation has one. Existing members are never asked.
+  - **Recent joiners.** Organisers see who joined their groups in the last
+    30 days and can remove someone from the organisation. Their account
+    stays; their organisation, department, admin role and open wishlist
+    pick-ups are cleared.
+  - **Closed organisations** can't be joined.
+  - **Tests.** `e2e/org-trust.spec.ts`: code required (rejected without,
+    accepted lower-case and dashed), joiner listed and removed, and a new
+    organisation is waiting (412 on hand-outs), then approved on the
+    Approvals screen.
+- **Re-plan (owner, 18 Oct evening).** The profile is too tied to work email
+  for friends and communities, so Day 12 is now the profile and onboarding
+  rework: profile = you and your wishlist, then "Join a group" by work email,
+  invite code or Discord, with several groups allowed. shadcn/ui is adopted
+  on its own day (15) before a two-part admin rework (16 organiser console,
+  17 site admin console, legacy Domains/Departments retired). Everything
+  else moved three days later; the release candidate is now Wed 11 Nov with
+  four spare days after it.
+- **Owner decision (18 Oct):** Amazon wishlists only this year. "Wishlists
+  beyond Amazon" is off the 2026 plan (backlog for 2027); later days moved
+  one day earlier and the freed day is a fifth spare day.
 

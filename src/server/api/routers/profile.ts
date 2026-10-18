@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -7,10 +8,11 @@ import {
   rateLimit,
 } from "~/server/api/trpc";
 import {
+  ensureOrgGroup,
   ensureTeamGroup,
-  syncOrgGroupStatus,
   syncUserGroups,
 } from "~/server/groups";
+import { normaliseJoinCode } from "~/server/invites";
 import { canManageDomain } from "~/server/utils/admin-permissions";
 
 type UserWithDepartment = {
@@ -49,6 +51,43 @@ const normalizeWishlistUrl = (url: string | undefined): string | null => {
   return url.trim();
 };
 
+/**
+ * Day 11: joining an organisation is on trust (no email verification), with
+ * two safeguards: closed organisations can't be joined, and an organisation
+ * with a join code needs it from anyone who isn't already a member.
+ */
+async function checkOrgEntry(
+  db: Pick<PrismaClient, "group" | "membership">,
+  userId: string,
+  domain: string,
+  joinCode: string | undefined,
+) {
+  const org = await db.group.findUnique({
+    where: { emailDomain: domain.trim().toLowerCase() },
+    select: { id: true, status: true, joinCode: true },
+  });
+  if (!org) return;
+  if (org.status === "DISABLED") {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message:
+        "Your organisation is closed on Random Acts of Santa. Ask your organiser.",
+    });
+  }
+  if (!org.joinCode) return;
+  const member = await db.membership.findUnique({
+    where: { groupId_userId: { groupId: org.id, userId } },
+    select: { id: true },
+  });
+  if (!member && normaliseJoinCode(joinCode ?? "") !== org.joinCode) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Your organisation needs a join code. Ask your organiser for it.",
+    });
+  }
+}
+
 export const profileRouter = createTRPCRouter({
   // Get current user's profile with domain status
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -61,19 +100,21 @@ export const profileRouter = createTRPCRouter({
 
     if (!user) return null;
 
-    // Get domain status if user has a domain
-    let domainEnabled = null;
-    if (user.domain) {
-      const domain = await ctx.db.domain.findUnique({
-        where: { name: user.domain },
-        select: { enabled: true },
-      });
-      domainEnabled = domain ? domain.enabled : null;
-    }
+    // Organisation status comes from its group (Day 11): PENDING ones wait
+    // for a site admin; only ACTIVE ones are open for gifting.
+    const org = user.domain
+      ? await ctx.db.group.findUnique({
+          where: { emailDomain: user.domain.trim().toLowerCase() },
+          select: { status: true },
+        })
+      : null;
+    const domainEnabled =
+      org?.status === "ACTIVE" ? true : org?.status === "DISABLED" ? false : null;
 
     return {
       ...user,
       domainEnabled,
+      orgStatus: org?.status ?? null,
       adminLevel: user.adminLevel,
       adminScope: user.adminScope,
     };
@@ -83,14 +124,17 @@ export const profileRouter = createTRPCRouter({
   checkDomainStatus: protectedProcedure
     .input(z.object({ domain: z.string() }))
     .query(async ({ ctx, input }) => {
-      const domain = await ctx.db.domain.findUnique({
-        where: { name: input.domain },
-        select: { enabled: true },
+      const org = await ctx.db.group.findUnique({
+        where: { emailDomain: input.domain.trim().toLowerCase() },
+        select: { status: true, joinCode: true },
       });
 
       return {
-        exists: !!domain,
-        enabled: domain?.enabled ?? false,
+        exists: !!org,
+        // can people join it (pending ones too, gifting waits for approval)
+        enabled: !!org && org.status !== "DISABLED",
+        pending: org?.status === "PENDING",
+        codeRequired: !!org?.joinCode,
       };
     }),
   // Get departments for a domain
@@ -149,6 +193,8 @@ export const profileRouter = createTRPCRouter({
         lastName: z.string().min(1, "Last name is required"),
         workEmail: z.string().email("Valid work email is required"),
         departmentId: z.string().optional(),
+        /** Required when the organisation has a join code (Day 11) */
+        joinCode: z.string().max(200).optional(),
         amazonWishlistUrl: z
           .string()
           .optional()
@@ -171,18 +217,8 @@ export const profileRouter = createTRPCRouter({
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
 
-      // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await ctx.db.domain.findUnique({
-          where: { name: domain },
-          select: { enabled: true },
-        });
-
-        if (domainRecord && !domainRecord.enabled) {
-          throw new Error(
-            "Your organization's domain is currently disabled. Please contact your manager for access.",
-          );
-        }
+        await checkOrgEntry(ctx.db, ctx.session.user.id, domain, input.joinCode);
       }
 
       // Check if another user already has this work email
@@ -244,6 +280,8 @@ export const profileRouter = createTRPCRouter({
         lastName: z.string().min(1, "Last name is required"),
         workEmail: z.string().email("Valid work email is required"),
         departmentId: z.string().optional(),
+        /** Required when the organisation has a join code (Day 11) */
+        joinCode: z.string().max(200).optional(),
         amazonWishlistUrl: z
           .string()
           .optional()
@@ -266,18 +304,8 @@ export const profileRouter = createTRPCRouter({
       // Extract domain from work email
       const domain = workEmail.split("@")[1];
 
-      // Check if domain exists and is enabled
       if (domain) {
-        const domainRecord = await ctx.db.domain.findUnique({
-          where: { name: domain },
-          select: { enabled: true },
-        });
-
-        if (domainRecord && !domainRecord.enabled) {
-          throw new Error(
-            "Your organization's domain is currently disabled. Please contact your manager for access.",
-          );
-        }
+        await checkOrgEntry(ctx.db, ctx.session.user.id, domain, input.joinCode);
       }
 
       // Check if another user already has this work email
@@ -360,6 +388,8 @@ export const profileRouter = createTRPCRouter({
         lastName: z.string().min(1, "Last name is required"),
         workEmail: z.string().email("Valid work email is required"),
         departmentId: z.string().optional(),
+        /** Required when the organisation has a join code (Day 11) */
+        joinCode: z.string().max(200).optional(),
         amazonWishlistUrl: z
           .string()
           .optional()
@@ -414,7 +444,7 @@ export const profileRouter = createTRPCRouter({
         data: {
           name: domain,
           description: domainDescription,
-          enabled: true,
+          enabled: false, // goes live when a site admin approves it (owner, 18 Oct)
           createdById: ctx.session.user.id,
         },
       });
@@ -459,7 +489,14 @@ export const profileRouter = createTRPCRouter({
         },
       });
 
-      await syncOrgGroupStatus(ctx.db, domain);
+      // New organisations wait for a site admin's approval while it's free
+      const org = await ensureOrgGroup(ctx.db, domain);
+      if (org) {
+        await ctx.db.group.update({
+          where: { id: org.id },
+          data: { status: "PENDING", createdById: ctx.session.user.id },
+        });
+      }
       await syncUserGroups(ctx.db, ctx.session.user.id);
 
       return { user: updatedUser, domain: newDomain };

@@ -2,6 +2,7 @@
 
 import { toast } from "react-hot-toast";
 import { AdminLayout } from "~/app/_components/admin-layout";
+import { OrgTrustPanels } from "~/app/_components/org-trust-panels";
 import { api } from "~/trpc/react";
 
 type DomainData = {
@@ -143,6 +144,8 @@ function AdminOverview() {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">Admin Overview</h1>
       </div>
+
+      <OrgTrustPanels />
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">

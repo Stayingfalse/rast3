@@ -8,11 +8,7 @@ import {
   rateLimit,
   siteAdminProcedure,
 } from "~/server/api/trpc";
-import {
-  findInvite,
-  INVITE_KINDS,
-  newJoinCode,
-} from "~/server/invites";
+import { findInvite, INVITE_KINDS, newJoinCode } from "~/server/invites";
 
 const HOUR = 60 * 60_000;
 /** Most groups one person can start (while it's free, owner approves each). */
@@ -127,7 +123,10 @@ export const groupsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const membership = await ctx.db.membership.findUnique({
         where: {
-          groupId_userId: { groupId: input.groupId, userId: ctx.session.user.id },
+          groupId_userId: {
+            groupId: input.groupId,
+            userId: ctx.session.user.id,
+          },
         },
         select: { role: true, group: { select: { kind: true } } },
       });
@@ -156,7 +155,11 @@ export const groupsRouter = createTRPCRouter({
         },
       });
       const me = group?.memberships.find((m) => m.userId === userId);
-      if (!group || !me || !(INVITE_KINDS as readonly string[]).includes(group.kind)) {
+      if (
+        !group ||
+        !me ||
+        !(INVITE_KINDS as readonly string[]).includes(group.kind)
+      ) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       const others = group.memberships.filter((m) => m.userId !== userId);
@@ -168,7 +171,8 @@ export const groupsRouter = createTRPCRouter({
       if (me.role === "ADMIN" && !others.some((m) => m.role === "ADMIN")) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "You're the only organiser. Make someone else an organiser first.",
+          message:
+            "You're the only organiser. Make someone else an organiser first.",
         });
       }
       await ctx.db.membership.delete({
@@ -177,7 +181,35 @@ export const groupsRouter = createTRPCRouter({
       return { deleted: false };
     }),
 
-  /** Site admins: approve, re-open or close a group (approval UI is Day 11). */
+  /** Site admins: groups and organisations by status, newest first. */
+  forReview: siteAdminProcedure
+    .input(z.object({ status: z.enum(["PENDING", "ACTIVE", "DISABLED"]) }))
+    .query(async ({ ctx, input }) => {
+      const groups = await ctx.db.group.findMany({
+        where: { status: input.status, kind: { in: ["ORG", ...INVITE_KINDS] } },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          name: true,
+          kind: true,
+          status: true,
+          emailDomain: true,
+          createdAt: true,
+          createdBy: { select: { name: true, email: true } },
+          _count: { select: { memberships: true } },
+        },
+      });
+      return groups.map(({ _count, ...g }) => ({
+        ...g,
+        members: _count.memberships,
+      }));
+    }),
+
+  /**
+   * Site admins: approve (ACTIVE), close (DISABLED) or re-queue a group. For
+   * organisations the legacy Domain row follows, so older screens agree.
+   */
   setStatus: siteAdminProcedure
     .input(
       z.object({
@@ -185,11 +217,63 @@ export const groupsRouter = createTRPCRouter({
         status: z.enum(["PENDING", "ACTIVE", "DISABLED"]),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      ctx.db.group.update({
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.db.group.update({
         where: { id: input.groupId },
         data: { status: input.status },
-        select: { id: true, status: true },
-      }),
-    ),
+        select: { id: true, status: true, kind: true, emailDomain: true },
+      });
+      if (group.kind === "ORG" && group.emailDomain) {
+        await ctx.db.domain.upsert({
+          where: { name: group.emailDomain },
+          update: { enabled: input.status === "ACTIVE" },
+          create: {
+            name: group.emailDomain,
+            enabled: input.status === "ACTIVE",
+            createdById: ctx.session.user.id,
+          },
+        });
+      }
+      return { id: group.id, status: group.status };
+    }),
+
+  /** Organisers: their organisations and each one's join code (if any). */
+  myOrgs: protectedProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db.membership.findMany({
+      where: {
+        userId: ctx.session.user.id,
+        role: "ADMIN",
+        group: { kind: "ORG" },
+      },
+      select: {
+        group: {
+          select: { id: true, name: true, status: true, joinCode: true },
+        },
+      },
+    });
+    return rows.map((r) => r.group);
+  }),
+
+  /** Organisers: require a join code for the organisation, change it, or drop it. */
+  setOrgCode: protectedProcedure
+    .input(z.object({ groupId: z.string(), enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const m = await ctx.db.membership.findUnique({
+        where: {
+          groupId_userId: {
+            groupId: input.groupId,
+            userId: ctx.session.user.id,
+          },
+        },
+        select: { role: true, group: { select: { kind: true } } },
+      });
+      if (m?.role !== "ADMIN" || m.group.kind !== "ORG") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Organisers only" });
+      }
+      return ctx.db.group.update({
+        where: { id: input.groupId },
+        data: { joinCode: input.enabled ? newJoinCode() : null },
+        select: { id: true, joinCode: true },
+      });
+    }),
 });

@@ -87,13 +87,13 @@
 | 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
 | 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
 | 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
-| 12 | Mon 19 Oct | **Profile and onboarding rework (owner, 18 Oct).** Your profile becomes just you and your wishlist; joining groups is a separate step. "Join a group" offers three routes: work email (organisations, plus the join code when one is set), invite code or link (friends and communities), and Discord (Day 13). People can be in several groups and join more at any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. |
+| 12 | Mon 19 Oct | **Profile and onboarding rework (owner, 18 Oct).** Your profile becomes just you and your wishlist; joining groups is a separate step. "Join a group" offers three routes: work email (organisations, plus the join code when one is set), invite code or link (friends and communities), and Discord (Day 13). People can be in several groups and join more at any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also (owner, 18 Oct): **personal email domains** (gmail.com, outlook.com, icloud.com and the like) can't create or join an organisation; people using one are steered to an invite code or Discord, and the existing gmail.com "organisation" is wound down with its members kept. **Fix membership join dates**: the Day 8 backfill dated memberships from profile completion, or the backfill time when that was missing, so long-standing members show as "joined in the last 30 days"; re-date them from their earliest activity (assignments, purchases, thank-yous) or the 2025 season start. |
 | 13 | Tue 20 Oct | **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
 | 14 | Wed 21 Oct | **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. |
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
-| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
+| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. |
 
 ### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
@@ -464,4 +464,11 @@ that don't touch the data model. Known items to include:
 - **Owner decision (18 Oct):** Amazon wishlists only this year. "Wishlists
   beyond Amazon" is off the 2026 plan (backlog for 2027); later days moved
   one day earlier and the freed day is a fifth spare day.
+- **Owner feedback (18 Oct, after Day 11 went live).**
+  - "Joined in the last 30 days" lists members from 2025: the Day 8 backfill
+    gave memberships without a profile-completion date the backfill time.
+  - A gmail.com "organisation" exists because people entered personal email
+    as work email.
+  - Both are fixed in Day 12. Last season's pick-ups still on dashboards are
+    archived by the season work on Day 18.
 

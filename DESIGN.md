@@ -15,6 +15,7 @@ colors:
   post: "#b8262c"
   post-deep: "#941c21"
   post-bright: "#ec6a64"
+  paper: "#fffdf8"
   post-tint: "#f3dcd8"
   gold: "#caa24c"
   gold-soft: "#e5cf98"
@@ -24,9 +25,16 @@ colors:
 typography:
   display:
     fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.75rem, 7vw, 4.5rem)"
+    fontSize: "clamp(1.875rem, 5vw, 3.75rem)"
     fontWeight: 800
-    lineHeight: 0.88
+    lineHeight: 0.95
+    letterSpacing: "-0.01em"
+    fontVariation: "'wdth' 125"
+  display-narrow:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.625rem"
+    fontWeight: 800
+    lineHeight: 0.95
     letterSpacing: "-0.01em"
     fontVariation: "'wdth' 125"
   headline:
@@ -124,9 +132,9 @@ components:
 
 **Creative North Star: "The Christmas Post"**
 
-Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the incumbent hanging baubles above it, and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.
+Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the hanging post above it (baubles, stamps and luggage tags on gold thread), and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.
 
-Density is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded caps for the franked wordmark, headings and label captions, regular width for reading.
+Density is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded weight for the wordmark, expanded caps for headings and label captions, regular width for reading.
 
 There is one authored motion, the frank: a postmark pressing onto a label once, on load or when a wishlist is marked Gifted. Everything else is still.
 
@@ -144,7 +152,7 @@ A winter-night navy paired with cream postal stationery, with red, gold and pine
 
 ### Primary
 - **Postal Red** (post): the one action colour. Primary buttons, inline links on label stock, destructive text, the red stripe of the airmail band, and the text caret. Hover darkens to **Pillar-Box Shade** (post-deep), which also sets the text of the "Issue reported" and "Hidden" tags on **Red Tint** (post-tint).
-- **Lamp Red** (post-bright): red that reads on navy (4.82:1 on night). Used in exactly one place: the "ACTS OF" middle line of the wordmark, carried over from the 2025 logo's red middle line at the owner's request to lean on the previous design. It is not a general emphasis colour.
+- **Lamp Red** (post-bright): red that reads on navy (4.82:1 on night). Retired from the wordmark in the 2026 brand mark (the red now lives in the stamp's bauble); kept as a token for red text on navy should an action ever need it. It is not an emphasis colour.
 
 ### Secondary
 - **Postmark Gold** (gold): postmark rings on navy, the season year mark, route station numbers and dots, focus rings and text selection (6.22:1 on night).
@@ -155,7 +163,8 @@ A winter-night navy paired with cream postal stationery, with red, gold and pine
 - **Pine** (pine): the delivered state. The band on a gifted wishlist card, its "SENT" postmark and the "Gift sent" tag text (6.90:1 on label), set on **Pine Tint** (pine-tint).
 
 ### Neutral
-- **Night Sky** (night): the page ground, under a faint plaid texture and the bauble illustration band.
+- **Stamp Paper** (paper): the punched paper of the stamp mark, and button text on postal red (6.3:1).
+- **Night Sky** (night): the page ground, under a faint plaid texture and the hanging-post band.
 - **Deep Night** (night-deep): modal scrims (at 75%) and scrollbar track.
 - **Raised Night** (night-raised): scrollbar thumb and any raised navy surface.
 - **Frost** (frost): body and heading text on navy.
@@ -167,7 +176,7 @@ A winter-night navy paired with cream postal stationery, with red, gold and pine
 - **Ink Soft** (ink-soft): captions and secondary text on label stock (6.45:1 on label).
 
 ### Named Rules
-**The One Stamp Of Red Rule.** Postal red marks what you can do: buttons, links, destructive actions. It never decorates a heading or a panel. The only red that is not an action is the wordmark's "ACTS OF" line in lamp red, and it stays the only one; other emphasis on navy uses pale gold.
+**The One Stamp Of Red Rule.** Postal red marks what you can do: buttons, links, destructive actions. It never decorates a heading or a panel. The only red that is not an action is the bauble inside the brand stamp; emphasis on navy uses pale gold.
 
 **The Gold Is Ink Rule.** Gold is postmark ink and the year mark. It is never a button, a fill or a background. On label stock, postmarks switch to postmark ink (gold-ink).
 
@@ -184,7 +193,7 @@ Measured contrast: white on postal red 6.27:1; lamp red on night 4.82:1; frost s
 **Character:** One grotesque stretched to do two jobs. At 125% width and heavy weight it is the ink of a rubber stamp and the print of a shipping label; at normal width it reads plainly for long sentences.
 
 ### Hierarchy
-- **Display** (800, 2.75rem rising to 4.5rem, line-height 0.88, expanded, uppercase): the wordmark only, stacked on three lines with the gold year postmark over its corner. A slim masthead version runs at 1.25 to 1.5rem.
+- **Display** (800, 1.875rem rising to 3.75rem, line-height 0.95, expanded, mixed case): the wordmark only, on two lines ("Random Acts" / "of Santa", with "of" at regular weight and width), each line kept whole, beside the stamp mark. Below 360px wide it steps down to 1.625rem (display-narrow) so each line stays whole. A slim masthead version runs at 1.125 to 1.25rem.
 - **Headline** (800, 1.875 to 2.25rem, line-height 1, expanded, uppercase on navy section heads): section headings such as "From wishlist to doorstep" and "The small print". The hero hook is a bold (700) expanded headline at 1.5 to 1.875rem in sentence case.
 - **Title** (700, 1.25rem, expanded): station titles, modal titles (800 at 1.25 to 1.5rem), card names.
 - **Body** (400, 1rem to 1.125rem, line-height 1.625): reading text, in frost-soft on navy or ink-soft on label; keep to roughly 36rem (max-w-xl) beside the hero.
@@ -198,7 +207,7 @@ Measured contrast: white on postal red 6.27:1; lamp red on night 4.82:1; frost s
 
 ## Layout
 
-A single centred column, max 72rem (max-w-6xl), with a 16px side gutter on phones and 24px from small screens. The bauble illustration band hangs across the top (150px tall on phones, 220px from small screens) and content starts below it. Major sections are separated by 96px (gap-24).
+A single centred column, max 72rem (max-w-6xl), with a 16px side gutter on phones and 24px from small screens. The hanging-post band hangs across the top (150px tall on phones, 260px from small screens) in two fixed-size clusters pinned to the left and right edges, so the centre stays open at every width; content starts below it. The page frame clips horizontal overflow, so corner postmarks can hang off a label without causing sideways scroll. Major sections are separated by 96px (gap-24).
 
 The home hero is a two-column grid on large screens (1.1fr text, 1fr label), stacking text-then-label on phones. Below it, the route is a ruled timeline of four numbered stations: a frost hairline across the top with a gold dot on each station, four columns from medium width, stacked rows with hairlines between on phones. Card collections (wishlist parcels, thank-you postcards) run in an even grid of one, two, then three columns.
 
@@ -223,7 +232,7 @@ Depth is physical and low: paper lying on a dark table. Label stock carries a so
 Gently squared corners everywhere (6px, the label radius) on cards, buttons, inputs and modals; state tags are nearly square (2px). Circles belong to postmarks, the gold station dots and icon discs. Three recurring silhouettes carry the world:
 
 - **Airmail band:** a 10px strip of diagonal red, cream and navy stripes along the top edge of a label (cards, modals, the small print). On a gifted card it turns solid pine.
-- **Perforated stamp:** a stamp with a punched paper edge (a white ring of holes around a navy face), carrying a bauble drawn to match the header ornaments.
+- **Perforated stamp:** a stamp with a punched paper edge (a white ring of holes around a navy face) carrying a red bauble on gold thread. This is also the brand mark (see Brand Mark).
 - **Postmark:** a double-ring date stamp with text set on the ring, a large centre line (the year or "SENT") and optional wavy cancellation lines, drawn as SVG so the text stays real.
 
 ## Components
@@ -258,13 +267,19 @@ A label-stock card with the photo carousel across the top, the message in ink, a
 - **Focus:** the global 2px gold outline.
 
 ### Navigation
-Minimal. A quiet "Sign in" button sits fixed at the top right over the baubles (frost text on night at 80% opacity). Signed in, the wordmark shrinks to a slim masthead.
+Minimal. A quiet "Sign in" button sits fixed at the top right over the hanging post (frost text on solid night). Signed in, the wordmark shrinks to a slim masthead.
 
 ### Modals and the Cookie Notice
 Modals are label-stock sheets with an airmail band, Lift shadow, over a 75% deep-night scrim; they sit at the bottom on phones and centre from small screens. The cookie notice is a label-stock bar across the bottom with a hairline top edge, a red link, a primary "Accept All" and a quiet "Decline Optional".
 
 ### Parcel Label (hero signature)
-The home page's held moment: a label at real proportions (max 28rem), tilted 1.25deg, with airmail band, "Christmas Post" caption, bauble stamp, ruled To / From / Deliver to / Contents rows ("Address withheld"), and a label-shade franking footer holding the live gifts total in large tabular figures. A gold-ink postmark with cancellation lines is franked across its bottom-right corner on load.
+The home page's held moment: a label at real proportions (max 28rem), tilted 1.25deg, with airmail band, "Christmas Post" caption, the brand stamp, ruled To / From / Deliver to / Contents rows ("Address withheld"), and a label-shade franking footer holding the live gifts total in large tabular figures. A gold-ink postmark with cancellation lines is franked across its bottom-right corner on load.
+
+### Brand Mark
+The 2026 mark is a portrait perforated stamp: cream paper with punched edges, a night-navy face, and a red bauble with a cream and gold band hanging on gold thread. The lockup puts the stamp (tilted -4deg) beside the name on two lines in Archivo expanded 800, "of" in regular. The season year is printed at the foot of the stamp in pale gold, set live in Archivo over the artwork so it can change each year. The bare stamp, with no year, is the favicon, app icon and PWA icon; at 16px it still reads as a navy square with a red ball. Artwork is generated from `scripts/brand/marks.mjs` by `node scripts/brand/build.mjs`, which writes `public/brand/*.svg`, every icon size, `favicon.ico` and the social preview `public/og.png`. Never redraw the icons by hand; edit the generator and rebuild.
+
+### Sky (the hanging post)
+Two authored clusters (`public/brand/sky-left.svg`, `sky-right.svg`, 560×260 each) of flat-print ornaments on gold thread: red, ice-blue and gold baubles, small stamps, cream luggage tags with ruled lines, and four-point gold stars. They replace the 2025 raster bauble illustration (186 KB → about 11 KB). Same palette as the page; no gradients, no glow.
 
 ### Motion: the Frank
 One authored animation: the postmark lands (520ms, cubic-bezier(0.16, 1, 0.3, 1)), scaling from 1.35 and -14deg with a slight blur to rest at -10deg. Used on the hero label's postmark and on a newly gifted parcel card. Under reduced motion every animation and transition collapses to an instant, so the postmark simply appears at rest.
@@ -285,6 +300,6 @@ One authored animation: the postmark lands (520ms, cubic-bezier(0.16, 1, 0.3, 1)
 - **Don't** put an eyebrow kicker above a heading; expanded caps are for field captions, tags and marks only.
 - **Don't** use gradient text, glass or blurred translucent panels.
 - **Don't** mark a card with a coloured side stripe; state goes in the top band, a tag and words.
-- **Don't** add a second red emphasis on navy beyond the wordmark's "ACTS OF" line.
+- **Don't** set any part of the name in red; red belongs to actions and to the stamp's bauble.
 - **Don't** use gold for buttons, fills or backgrounds.
 - **Don't** show exact small counts, names or per-organisation numbers in public stats.

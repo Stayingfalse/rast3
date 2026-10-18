@@ -1,5 +1,5 @@
 import { Postmark } from "./postmark";
-import { BaubleStamp } from "./stamp";
+import { StampMark } from "./stamp-mark";
 
 type Row = { label: string; value: string; hint?: string };
 
@@ -29,13 +29,10 @@ export function ParcelLabel({ gifts }: ParcelLabelProps) {
       <figure className="label-stock overflow-hidden">
         <div className="airmail h-2.5" aria-hidden />
         <div className="border-rule flex items-start justify-between gap-4 border-b px-5 pt-4 pb-3">
-          <div>
-            <p className="label-caps text-ink-soft">Christmas Post</p>
-            <p className="font-expanded text-ink mt-1 text-lg leading-tight font-extrabold">
-              Random Acts of Santa
-            </p>
-          </div>
-          <BaubleStamp className="h-20 w-16 shrink-0 -rotate-3" />
+          <p className="font-expanded text-ink pt-1 text-lg leading-tight font-extrabold">
+            Christmas Post
+          </p>
+          <StampMark className="w-14 shrink-0 -rotate-3" />
         </div>
         <dl className="divide-rule divide-y px-5">
           {ROWS.map((row) => (

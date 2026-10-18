@@ -1,4 +1,4 @@
-import { Postmark } from "./postmark";
+import { StampMark } from "./stamp-mark";
 
 type WordmarkProps = {
   /** "hero" for the landing lockup, "masthead" for the slim signed-in bar */
@@ -9,8 +9,9 @@ type WordmarkProps = {
 };
 
 /**
- * The Random Acts of Santa lockup: the name set in expanded Archivo caps with
- * the season year postmarked across its corner.
+ * The Random Acts of Santa lockup: the stamp mark beside the name, set in
+ * mixed case on two lines so it reads at a glance. The season year sits on
+ * the stamp.
  */
 export function Wordmark({
   size = "hero",
@@ -20,29 +21,24 @@ export function Wordmark({
   const Tag = asHeading ? "h1" : "p";
   const hero = size === "hero";
   return (
-    <div className="relative inline-block">
+    <div className={`flex items-center ${hero ? "gap-3 sm:gap-5" : "gap-3"}`}>
+      <StampMark
+        year={hero ? year : undefined}
+        className={`shrink-0 -rotate-4 ${hero ? "w-14 min-[360px]:w-16 min-[400px]:w-20 sm:w-24 lg:w-28" : "w-9 sm:w-10"}`}
+      />
       <Tag
-        className={`font-expanded text-frost leading-[0.88] font-extrabold tracking-[-0.01em] uppercase ${
+        className={`font-expanded text-frost leading-[0.95] font-extrabold tracking-[-0.01em] ${
           hero
-            ? "text-[2.75rem] sm:text-6xl lg:text-7xl"
-            : "text-xl sm:text-2xl"
+            ? "text-[clamp(1.875rem,5vw,3.75rem)] max-[359px]:text-[1.625rem]"
+            : "text-lg sm:text-xl"
         }`}
       >
-        <span className="block">Random</span>
-        <span className="text-post-bright block">Acts of</span>
-        <span className="block">
-          Santa<span className="sr-only"> {year}</span>
+        <span className="block whitespace-nowrap">Random Acts</span>
+        <span className="block whitespace-nowrap">
+          <span className="font-normal [font-stretch:100%]">of</span> Santa
+          <span className="sr-only"> {year}</span>
         </span>
       </Tag>
-      <Postmark
-        centre={year}
-        sub="SEASON"
-        className={`text-gold pointer-events-none absolute -rotate-10 ${
-          hero
-            ? "-right-10 bottom-1 w-20 sm:-right-12 sm:bottom-3 sm:w-28"
-            : "-right-12 -bottom-1 w-12"
-        }`}
-      />
     </div>
   );
 }

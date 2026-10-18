@@ -19,6 +19,7 @@
   --color-frost-soft: #aebbd4; /* secondary text on night */
 
   /* Label stock (working surfaces) */
+  --color-paper: #fffdf8; /* stamp paper and text on red */
   --color-label: #f6f0e2;
   --color-label-shade: #ebe2cd;
   --color-rule: #cdbf9f; /* hairline rules on label */
@@ -127,13 +128,6 @@ body {
   line-height: 1.2;
 }
 
-/* Perforated stamp edge: holes in a white paper ring; the child covers the centre */
-@utility perforated {
-  padding: 6px;
-  background:
-    radial-gradient(circle at center, transparent 2px, #fffdf8 2.5px) -4px -4px / 8px 8px;
-}
-
 /* Buttons: one primary action colour, one quiet secondary */
 @utility btn-post {
   display: inline-flex;
@@ -144,7 +138,7 @@ body {
   padding: 0.625rem 1.25rem;
   border-radius: var(--radius-label);
   background-color: var(--color-post);
-  color: #fff;
+  color: var(--color-paper);
   font-weight: 700;
   font-stretch: 112%;
   letter-spacing: 0.01em;
@@ -157,7 +151,8 @@ body {
     transform: translateY(1px);
   }
   &:disabled {
-    background-color: #8b8f99;
+    background-color: var(--color-frost-soft);
+    color: var(--color-night);
     box-shadow: none;
     cursor: not-allowed;
   }
@@ -226,23 +221,8 @@ body {
   }
 }
 
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
 .animate-skeleton-pulse {
   animation: skeleton-pulse 2s ease-in-out infinite;
-}
-
-.animate-skeleton-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 2s infinite;
 }
 
 @keyframes fade-in-slide {

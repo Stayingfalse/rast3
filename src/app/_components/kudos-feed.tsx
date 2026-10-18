@@ -479,7 +479,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       case "department":
         return "Department";
       case "domain":
-        return "Domain";
+        return "Organisation";
       case "site":
         return "Site";
       default:
@@ -492,7 +492,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       case "department":
         return "See kudos from your department colleagues";
       case "domain":
-        return "See kudos from your domain";
+        return "See kudos from your organisation";
       case "site":
         return "See all kudos from the entire site";
       default:

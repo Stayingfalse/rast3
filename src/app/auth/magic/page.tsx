@@ -5,8 +5,8 @@ export default function MagicLandingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-red-50 to-green-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600" />
+        <div className="flex w-full items-center justify-center py-16">
+          <div className="border-post h-32 w-32 animate-spin rounded-full border-b-2" />
         </div>
       }
     >

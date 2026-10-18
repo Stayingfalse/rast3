@@ -65,13 +65,15 @@ function SafeIcon({
   const { dataUrl, isLoading } = useIconDataUrl(providerId);
 
   if (isLoading) {
-    return <div className={`${className} animate-pulse rounded bg-gray-200`} />;
+    return (
+      <div className={`${className} bg-label-shade animate-pulse rounded`} />
+    );
   }
 
   if (!dataUrl) {
     return (
       <div
-        className={`${className} flex items-center justify-center rounded bg-gray-300 text-xs text-gray-500`}
+        className={`${className} bg-label-shade text-ink-soft flex items-center justify-center rounded text-xs`}
       >
         ?
       </div>

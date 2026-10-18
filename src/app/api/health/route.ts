@@ -51,6 +51,10 @@ export async function GET(_req: NextRequest) {
       migrations: await getMigrations(),
       schemaSync: await getSchemaSync(),
       environment: process.env.NODE_ENV,
+      // CI waits for a start time after its deploy call to know the new build is live
+      process: {
+        startedAt: new Date(Date.now() - process.uptime() * 1000).toISOString(),
+      },
     });
   } catch (error) {
     return NextResponse.json(

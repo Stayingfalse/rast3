@@ -221,6 +221,10 @@ body {
   }
 }
 
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}
+
 @keyframes fade-in-slide {
   0% {
     opacity: 0;

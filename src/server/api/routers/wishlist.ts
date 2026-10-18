@@ -799,7 +799,7 @@ export const wishlistRouter = createTRPCRouter({
           wishlistAssignment: {
             include: {
               wishlistOwner: {
-                select: {},
+                select: { id: true },
               },
             },
           },
@@ -849,7 +849,7 @@ export const wishlistRouter = createTRPCRouter({
           wishlistAssignment: {
             include: {
               wishlistOwner: {
-                select: {},
+                select: { id: true },
               },
             },
           },

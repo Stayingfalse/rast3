@@ -155,11 +155,9 @@ Suggestions beyond the brief, to schedule when the owner agrees:
 - **Session refresh race**: Auth.js refreshes a session's expiry once a day; parallel
   requests at that moment can briefly read as signed out (seen in testing). Worth a
   retry in the client session provider, or a longer `updateAge` (Day 5).
-- **Stamp album (yearly)**: each season issues a new stamp design (2026: the bauble).
-  Members who gave that year collect the stamp on their profile, building an album
-  over the years. It gives people a reason to come back each November, and with the
-  brand generator a new stamp is about ten minutes' work a year. Could carry a
-  sponsored stamp in 2027.
+- **Stamp album (yearly)**: built 18 Oct (see the log). Still to do: a 2027 stamp
+  design each year, a sponsored stamp in 2027, and possibly showing a member's
+  album to their group.
 - **Gift-sent share card**: after "Gifted", offer a franked image ("I sent a random
   act of kindness") for Slack, Teams or Discord, which never names the recipient.
   This is organic growth into new orgs.
@@ -250,3 +248,15 @@ that don't touch the data model. Known items to include:
 - the sign-in modal's leftover grey skeleton styles;
 - dev offers only Google sign-in, so the email option is untested there;
 - the "Domain" scope label in the kudos feed (call it "Organisation").
+- **Extra (18 Oct, at the owner's request): stamp album.** The owner's choices:
+  build it now, collect a stamp by giving *or* thanking, and back-fill 2025.
+  - **The album.** One stamp per season on the signed-in home: 2025 is the star,
+    2026 the bauble, and there's an empty "next Christmas" slot. A toast fires
+    when this season's stamp is collected.
+  - **How seasons are worked out.** From purchase and thank-you dates, with a
+    season running 1 August to 31 July, so there's no schema change. Hidden
+    kudos don't count. It moves onto the Season model when that lands
+    (Week 3).
+  - **Plumbing.** `stamps.getMyAlbum` returns your own activity only. The seed
+    gives the test giver a December 2025 thank-you, and the e2e test checks the
+    album before and after a gift.

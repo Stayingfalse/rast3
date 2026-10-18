@@ -151,11 +151,21 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   anonymised image or page they can post on Discord or LinkedIn (free marketing).
 - **Mobile header**: the floating "Join Santa" button covers headings on phones;
   the cookie banner fills half the screen (Day 4).
-- **Copy refresh**: the homepage still says "2025" and "Bring Secret Santa to Remote
-  Teams"; it should pitch Random Acts for orgs, communities and friends (Day 4/23).
+- **Copy refresh**: done on the 2026 design day (17 Oct).
 - **Session refresh race**: Auth.js refreshes a session's expiry once a day; parallel
   requests at that moment can briefly read as signed out (seen in testing). Worth a
   retry in the client session provider, or a longer `updateAge` (Day 5).
+- **Stamp album (yearly)**: each season issues a new stamp design (2026: the bauble).
+  Members who gave that year collect the stamp on their profile, building an album
+  over the years. It gives people a reason to come back each November, and with the
+  brand generator a new stamp is about ten minutes' work a year. Could carry a
+  sponsored stamp in 2027.
+- **Gift-sent share card**: after "Gifted", offer a franked image ("I sent a random
+  act of kindness") for Slack, Teams or Discord, which never names the recipient.
+  This is organic growth into new orgs.
+- **Hero cancellation mark**: strike a gold cancellation across the hero stamp's
+  corner, to bring the franking device back into the lockup (finish-review idea,
+  18 Oct).
 - **Nobody left out**: highlight wishlists with no gifts yet as the season ends, and let generous members (or the org, via CSR budget) pick them up.
 
 ## Log
@@ -210,3 +220,33 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   and readability as long as the name stays "Random Acts of Santa", and the
   background or baubles can change if something better suits 2026. That became
   Day 4. Every later day moved one day later, which uses up the spare day.
+- **Day 4 (18 Oct): brand mark and sky** (#26, waiting for approval). This
+  answers the owner's message: rethink the logo but keep the name, and the
+  background can change.
+  - **Options.** Three logo directions (stamp, postmark roundel, gift tag) and
+    three skies (current baubles, quiet night, hanging post) were drawn side by
+    side. The owner was asleep, so A + 3 were built and the others are in the
+    PR to choose from.
+  - **Logo.** A perforated stamp with a red bauble. The name sits beside it in
+    mixed case on two lines, and the year is on the stamp.
+  - **Icons.** New icons and favicon replace the Santa emoji (a third-party
+    Twemoji image). Also a social preview image and Open Graph tags.
+  - **Sky.** Hanging-post clusters pinned to the edges (about 11 KB, was 186 KB).
+  - **Plumbing.** `scripts/brand/build.mjs` generates every asset. The service
+    worker cache is bumped, and the manifest no longer says "Secret Santa".
+  - **Found along the way.** The corner postmark caused sideways scroll at
+    1024px and 360px. Fixed.
+  - **Review.** The finish review needed two rounds; the first was rejected for
+    unclean screenshots. All fixes applied: the phone sky clears Sign in, the
+    year is never under 10px, the lockup fits from 320px, and the label header
+    is one title.
+  - **Checks.** 36/36 e2e on dev.
+
+### Tomorrow: Day 5 (Mon 19 Oct), UX audit
+A desktop and mobile walk-through of every page, signed out, signed in and as
+an admin. It ends with a written report and screenshots, then the quick wins
+that don't touch the data model. Known items to include:
+- admin pages still in the old style;
+- the sign-in modal's leftover grey skeleton styles;
+- dev offers only Google sign-in, so the email option is untested there;
+- the "Domain" scope label in the kudos feed (call it "Organisation").

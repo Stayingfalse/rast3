@@ -1,265 +1,343 @@
-import React from "react";
 import { type Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · Random Acts of Santa",
+  title: "Privacy policy · Random Acts of Santa",
   description:
-    "How Random Acts of Santa collects, uses and protects your personal information.",
+    "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
+
+const LAST_UPDATED = "18 October 2026";
+const CONTACT = "privacy@raosanta.uk";
+
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className="border-rule border-t pt-6">
+      <h2
+        id={id}
+        className="font-expanded text-ink mb-3 text-xl font-extrabold"
+      >
+        {title}
+      </h2>
+      <div className="text-ink space-y-3 leading-relaxed">{children}</div>
+    </section>
+  );
+}
+
+const Mail = () => (
+  <a
+    href={`mailto:${CONTACT}`}
+    className="text-post font-semibold underline underline-offset-4"
+  >
+    {CONTACT}
+  </a>
+);
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full max-w-4xl">
-        <div className="label-stock text-ink p-6 sm:p-10">
-          <h1 className="font-expanded text-ink mb-4 text-3xl font-extrabold">
-            Privacy Policy
+    <article className="label-stock text-ink w-full max-w-3xl overflow-hidden">
+      <div className="airmail h-2.5" aria-hidden />
+      <div className="flex flex-col gap-6 p-6 sm:p-10">
+        <header>
+          <h1 className="font-expanded text-ink text-3xl font-extrabold">
+            Privacy policy
           </h1>
-          <p className="text-ink-soft mb-8 text-sm">
-            Last Updated: May 30, 2025
+          <p className="text-ink-soft mt-2 text-sm">
+            Last updated {LAST_UPDATED}
           </p>
+          <p className="mt-4 text-lg leading-relaxed">
+            Random Acts of Santa lets people send Christmas gifts to colleagues
+            and community members through their Amazon wishlists, without anyone
+            sharing a home address. This policy explains what personal data we
+            use to do that, why, who can see it, how long we keep it and the
+            rights you have under UK data protection law (the UK GDPR and the
+            Data Protection Act 2018).
+          </p>
+        </header>
 
-          <div className="max-w-none leading-relaxed">
-            <p className="mb-6 text-lg">
-              Welcome to Random Acts of Santa 2025! This Privacy Policy explains
-              how Random Acts of Santa 2025 (&quot;we,&quot; &quot;us,&quot; or
-              &quot;our&quot;) collects, uses, discloses, and protects your
-              personal information when you visit our website and use our
-              services (collectively, the &quot;Services&quot;).
-            </p>
+        <Section id="who" title="Who we are">
+          <p>
+            Random Acts of Santa (raosanta.uk) is run by an individual based in
+            the United Kingdom, who is the <strong>data controller</strong> for
+            the personal data described here. For anything about your data,
+            email <Mail />.
+          </p>
+        </Section>
 
-            <p className="mb-6">
-              We are committed to protecting your privacy. We will only collect
-              and use your personal information as described in this Privacy
-              Policy. We will never sell or distribute your personal information
-              to third parties for their marketing purposes.
-            </p>
+        <Section id="what" title="What we collect">
+          <p>
+            <strong>When you sign in.</strong> Your name, email address and
+            profile picture link from the sign-in method you choose (Google,
+            Discord, Twitch, GitHub, Reddit or an email link). We also store the
+            sign-in tokens that provider gives us, so you stay signed in. We
+            never see your password for those services.
+          </p>
+          <p>
+            <strong>Your profile.</strong> Your first and last name, your work
+            or community email address, the organisation (taken from that email
+            address) and department you choose, and the link to your Amazon
+            wishlist.
+          </p>
+          <p>
+            <strong>Taking part.</strong> Which wishlists you have picked up,
+            which you have marked as gifted (with any note you add), problems
+            you report with a wishlist, and how many times your wishlist has
+            been handed out. We never ask for, and never see, your home address:
+            Amazon handles delivery.
+          </p>
+          <p>
+            <strong>Thank-yous (kudos).</strong> The message and any photos you
+            post, and when you posted them.
+          </p>
+          <p>
+            <strong>Share cards.</strong> If you choose to share a card, we
+            store a random link code, what the card is for and how many times
+            its page has been viewed.
+          </p>
+          <p>
+            <strong>Technical data.</strong> Our servers keep short-lived logs
+            of requests, including your IP address, browser type and the pages
+            requested, to keep the site secure and working.
+          </p>
+        </Section>
 
-            <p className="mb-8">
-              Please read this Privacy Policy carefully. By accessing or using
-              our Services, you agree to the terms of this Privacy Policy. If
-              you do not agree with the terms of this Privacy Policy, please do
-              not access or use our Services.
-            </p>
+        <Section id="why" title="Why we use it, and our lawful basis">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>To run the service you signed up for</strong>: your
+              account, matching you with wishlists to pick up, recording gifts,
+              your stamp album, and posting and sharing thank-yous. Lawful
+              basis: performance of our agreement with you (Article 6(1)(b)).
+            </li>
+            <li>
+              <strong>To let your organisation run its Christmas</strong>:
+              organisers of your organisation or department can see your name,
+              email, department and whether you have completed your profile, so
+              they can manage members and moderate thank-yous. Lawful basis: our
+              legitimate interest, and your organisation&apos;s, in running the
+              scheme fairly and safely (Article 6(1)(f)).
+            </li>
+            <li>
+              <strong>To keep the site secure</strong>: server logs, preventing
+              abuse and fixing faults. Lawful basis: legitimate interests
+              (Article 6(1)(f)).
+            </li>
+            <li>
+              <strong>To show public totals</strong> such as &ldquo;120+ gifts
+              sent&rdquo;. These are counts only, rounded, and never shown when
+              under 10, so they do not identify anyone.
+            </li>
+            <li>
+              <strong>To send sign-in links</strong> when you choose to sign in
+              by email. Lawful basis: performance of our agreement with you.
+            </li>
+          </ul>
+          <p>
+            We do not sell your data, we do not use it for advertising, and we
+            do not use automated decision-making or profiling that affects you.
+            Wishlists are handed out at random (people whose wishlists have had
+            the fewest gifts are offered first), which has no legal or similarly
+            significant effect.
+          </p>
+        </Section>
 
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              1. Information We Collect
-            </h2>
-            <p className="mb-4">
-              We collect personal information that you voluntarily provide to
-              us, information that is automatically collected when you use our
-              Services, and information from third-party sources as described
-              below.
-            </p>
+        <Section id="who-sees" title="Who can see what">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>Someone who picks up your wishlist</strong> sees your
+              Amazon wishlist link and your department, not your address and not
+              who else is buying for you.
+            </li>
+            <li>
+              <strong>Recipients never see who gifted them.</strong> Your gifts
+              stay anonymous.
+            </li>
+            <li>
+              <strong>Thank-yous you post</strong>, with their photos, are shown
+              in the kudos feed to other members, and to visitors on the home
+              page. They appear under a random festive name, not your real name.
+              Organisers can hide thank-yous that break the rules.
+            </li>
+            <li>
+              <strong>Share cards</strong> are public web pages you choose to
+              create. A gift card never shows names, the gift or an address. A
+              thank-you card shows your message and photos. Organisation and
+              team cards show rounded totals only. Share pages ask search
+              engines not to index them.
+            </li>
+            <li>
+              <strong>Organisers</strong> (site, organisation and department
+              admins) can see members of their organisation or department as
+              described above.
+            </li>
+          </ul>
+        </Section>
 
-            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
-              a. Information You Provide to Us:
-            </h3>
-            <p className="mb-4">
-              <strong>Account Information:</strong> If you create an account
-              directly on our Site, we may collect your name, email address,
-              chosen username, and password.
-            </p>
-            <p className="mb-4">
-              <strong>Communications:</strong> If you contact us directly, we
-              may receive additional information about you such as your name,
-              email address, phone number, the contents of the message and/or
-              attachments you may send us, and any other information you may
-              choose to provide.
-            </p>
+        <Section id="processors" title="Who processes data for us">
+          <p>
+            We use a small number of service providers who process data only on
+            our instructions:
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>Hosting</strong>: the website and its database run on
+              servers in the UK or the European Economic Area.
+            </li>
+            <li>
+              <strong>Photo storage</strong>: photos posted with thank-yous are
+              stored with iDrive e2 in the UK or the European Economic Area.
+            </li>
+            <li>
+              <strong>Email delivery</strong>: an email service sends sign-in
+              links to the address you give.
+            </li>
+          </ul>
+          <p>
+            When you sign in with Google, Discord, Twitch, GitHub or Reddit,
+            that company handles the sign-in under its own privacy policy. When
+            you open a wishlist, you are taken to Amazon, which has its own
+            privacy policy. We share data with authorities only where the law
+            requires it.
+          </p>
+        </Section>
 
-            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
-              b. Information We Collect Automatically:
-            </h3>
-            <p className="mb-4">
-              <strong>Log and Usage Data:</strong> Like most websites, we
-              automatically collect certain information when you visit, use, or
-              navigate the Services. This information may include your IP
-              address, browser type, operating system, referring URLs, device
-              information, pages viewed, links clicked, and the dates and times
-              of your access. This information is primarily needed to maintain
-              the security and operation of our Services, and for our internal
-              analytics and reporting purposes.
-            </p>
-            <p className="mb-4">
-              <strong>Cookies and Similar Tracking Technologies:</strong> We may
-              use cookies and similar tracking technologies (like web beacons
-              and pixels) to access or store information. You can find more
-              information about how we use cookies in our cookie consent banner.
-            </p>
+        <Section id="transfers" title="International transfers">
+          <p>
+            We store and process your data in the UK and the European Economic
+            Area, which the UK recognises as giving adequate protection. If we
+            ever use a provider outside these areas, we will put appropriate
+            safeguards in place (such as the UK International Data Transfer
+            Agreement) and update this policy first.
+          </p>
+        </Section>
 
-            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
-              c. Information from Third-Party Login Providers:
-            </h3>
-            <p className="mb-4">
-              Our Services allow you to register and log in using your existing
-              third-party social media accounts, such as Twitch, Discord, or
-              Google (each a &quot;Third-Party Login Provider&quot;).
-            </p>
-            <p className="mb-4">
-              If you choose to register or log in to our Services using a
-              Third-Party Login Provider, we will receive certain profile
-              information about you from that provider. The specific information
-              we receive depends on the Third-Party Login Provider and your
-              privacy settings on that provider&apos;s platform, but will
-              typically include:
-            </p>
-            <ul className="mb-4 list-disc pl-6">
-              <li>
-                <strong>Twitch:</strong> Your Twitch username, email address (if
-                you have permitted Twitch to share it), and Twitch User ID.
-              </li>
-              <li>
-                <strong>Discord:</strong> Your Discord username, discriminator,
-                email address (if you have permitted Discord to share it), and
-                Discord User ID.
-              </li>
-              <li>
-                <strong>Google:</strong> Your name, email address, language
-                preference, and profile picture (if available), and Google User
-                ID.
-              </li>
-            </ul>
+        <Section id="retention" title="How long we keep it">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <strong>Your account and profile</strong>: until you ask us to
+              delete them. Membership carries over from one Christmas to the
+              next so your stamp album keeps working. Accounts that have not
+              been signed into for 24 months are deleted.
+            </li>
+            <li>
+              <strong>
+                Gifts, reports, thank-yous, photos and share cards
+              </strong>
+              : as long as your account exists. Deleting a thank-you or a gift
+              record also removes its share card.
+            </li>
+            <li>
+              <strong>Server logs</strong>: up to 30 days.
+            </li>
+            <li>
+              <strong>Sign-in links</strong>: they expire after 24 hours.
+            </li>
+          </ul>
+        </Section>
 
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              2. How We Use Your Information
-            </h2>
-            <p className="mb-4">
-              We use the personal information we collect for various purposes,
-              including:
-            </p>
+        <Section id="cookies" title="Cookies">
+          <p>
+            We use only cookies that are strictly necessary for the site to
+            work, so we do not ask for consent to them. We do not use analytics,
+            advertising or tracking cookies.
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              <code className="text-sm">next-auth.session-token</code>: keeps
+              you signed in (30 days).
+            </li>
+            <li>
+              <code className="text-sm">next-auth.csrf-token</code> and{" "}
+              <code className="text-sm">next-auth.callback-url</code>: protect
+              and complete sign-in (up to 1 hour).
+            </li>
+            <li>
+              <code className="text-sm">cookie-consent</code>: remembers that
+              you have seen our cookie notice (1 year).
+            </li>
+          </ul>
+          <p>
+            If you install the site as an app, your browser also stores the
+            site&apos;s icons and a few pages so it opens quickly.
+          </p>
+        </Section>
 
-            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
-              To Provide and Manage the Services:
-            </h3>
-            <ul className="mb-4 list-disc pl-6">
-              <li>To create and manage your account.</li>
-              <li>To facilitate the login process and manage your session.</li>
-              <li>
-                To provide you with access to our Services and its features.
-              </li>
-            </ul>
+        <Section id="rights" title="Your rights">
+          <p>You have the right to:</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>get a copy of the personal data we hold about you;</li>
+            <li>have inaccurate data corrected;</li>
+            <li>have your data deleted;</li>
+            <li>restrict or object to how we use it;</li>
+            <li>
+              receive your data in a portable format and have it sent to someone
+              else.
+            </li>
+          </ul>
+          <p>
+            You can update your profile on the site at any time. For anything
+            else, email <Mail />. We will respond within one month. To have a
+            thank-you removed, ask your organiser or email us.
+          </p>
+          <p>
+            If you are unhappy with how we have handled your data, please tell
+            us first. You also have the right to complain to the Information
+            Commissioner&apos;s Office (ICO) at{" "}
+            <a
+              href="https://ico.org.uk/make-a-complaint/"
+              className="text-post font-semibold underline underline-offset-4"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              ico.org.uk
+            </a>{" "}
+            or on 0303 123 1113.
+          </p>
+        </Section>
 
-            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
-              To Communicate With You:
-            </h3>
-            <ul className="mb-4 list-disc pl-6">
-              <li>To respond to your inquiries, comments, and questions.</li>
-              <li>
-                To send you administrative information, such as updates to our
-                terms, conditions, and policies.
-              </li>
-              <li>
-                To send you service-related announcements when it is necessary
-                to do so.
-              </li>
-            </ul>
+        <Section id="age" title="Age">
+          <p>
+            Random Acts of Santa is for people aged 16 and over. If you are
+            under 16, please don&apos;t use it. If we learn that someone under
+            16 has an account, we will delete it.
+          </p>
+        </Section>
 
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              3. How We Share Your Information
-            </h2>
-            <p className="mb-4">
-              We are committed to not selling or distributing your personal
-              information for marketing purposes. We may share your personal
-              information in the following limited circumstances:
-            </p>
-            <ul className="mb-4 list-disc pl-6">
-              <li>
-                <strong>With Third-Party Login Providers:</strong> When you
-                choose to use a Third-Party Login Provider to access our
-                Services, certain information is exchanged with these providers
-                for authentication and session control purposes.
-              </li>
-              <li>
-                <strong>Service Providers:</strong> We may share your personal
-                information with third-party vendors, consultants, and other
-                service providers who perform services on our behalf.
-              </li>
-              <li>
-                <strong>Legal Requirements:</strong> We may disclose your
-                information if required to do so by law or to protect our rights
-                and users.
-              </li>
-            </ul>
+        <Section id="security" title="Keeping your data safe">
+          <p>
+            The site is only served over HTTPS. Sign-in sessions are stored on
+            our server, not in your browser. Access to the database and photo
+            storage is restricted to the person who runs the service. No system
+            is perfectly secure, but if a breach affecting your data happens we
+            will tell you and, where required, the ICO.
+          </p>
+        </Section>
 
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              4. Data Security
-            </h2>
-            <p className="mb-4">
-              We have implemented appropriate technical and organizational
-              security measures designed to protect the security of any personal
-              information we process. However, no electronic transmission over
-              the Internet can be guaranteed to be 100% secure.
-            </p>
-
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              5. Your Data Protection Rights
-            </h2>
-            <p className="mb-4">
-              Depending on your location and applicable law, you may have
-              certain rights regarding your personal information, including:
-            </p>
-            <ul className="mb-4 list-disc pl-6">
-              <li>Access your personal information</li>
-              <li>Rectify inaccurate or incomplete personal information</li>
-              <li>Erase your personal information</li>
-              <li>Restrict the processing of your personal information</li>
-              <li>Object to the processing of your personal information</li>
-              <li>Data portability</li>
-              <li>Withdraw consent at any time</li>
-            </ul>
-
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              6. Cookies and Tracking Technologies
-            </h2>
-            <p className="mb-4">
-              We use cookies and similar tracking technologies to enhance your
-              experience on our Services. Essential cookies are required for the
-              Services to function properly, while optional cookies help us
-              improve our Services and provide personalized features. You can
-              manage your cookie preferences through our cookie consent banner.
-            </p>
-
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              7. Children&apos;s Privacy
-            </h2>
-            <p className="mb-4">
-              Our Services are not intended for use by children under the age of
-              13. We do not knowingly collect personal information from children
-              under this age.
-            </p>
-
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              8. Changes to This Privacy Policy
-            </h2>
-            <p className="mb-4">
-              We may update this Privacy Policy from time to time. We will
-              notify you of any changes by posting the new Privacy Policy on
-              this page and updating the &quot;Last Updated&quot; date at the
-              top of this Privacy Policy.
-            </p>
-
-            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
-              9. Contact Us
-            </h2>
-            <p className="mb-4">
-              If you have any questions or concerns about this Privacy Policy or
-              our data practices, please contact us through our website&apos;s
-              contact features.
-            </p>
-
-            <div className="rounded-label border-rule bg-label-shade mt-8 border p-4">
-              <p className="text-ink text-sm">
-                <strong>Disclaimer:</strong> This Privacy Policy is provided as
-                a template and is not a substitute for legal advice from a
-                qualified professional. You should consult with a legal
-                professional to ensure compliance with all applicable laws and
-                regulations.
-              </p>
-            </div>
-          </div>
-        </div>
+        <Section id="changes" title="Changes to this policy">
+          <p>
+            We will update this page when what we do with data changes, for
+            example before we add affiliate links or new features, and change
+            the date at the top. For significant changes we will tell signed-in
+            members on the site.
+          </p>
+          <p>
+            <Link
+              href="/"
+              className="text-post font-semibold underline underline-offset-4"
+            >
+              Back to Random Acts of Santa
+            </Link>
+          </p>
+        </Section>
       </div>
-    </div>
+    </article>
   );
 }

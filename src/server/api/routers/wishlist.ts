@@ -11,14 +11,13 @@ export const wishlistRouter = createTRPCRouter({
         isActive: true,
       },
       include: {
+        // Never send the owner's name to the person buying for them: gifts
+        // are anonymous both ways (see /privacy).
         wishlistOwner: {
           select: {
             id: true,
-            name: true,
-            firstName: true,
-            lastName: true,
             amazonWishlistUrl: true,
-            domain: true, // <-- Add domain to the select
+            domain: true,
             department: {
               select: {
                 id: true,
@@ -386,9 +385,6 @@ export const wishlistRouter = createTRPCRouter({
             wishlistOwner: {
               select: {
                 id: true,
-                name: true,
-                firstName: true,
-                lastName: true,
                 amazonWishlistUrl: true,
               },
             },
@@ -513,9 +509,6 @@ export const wishlistRouter = createTRPCRouter({
               wishlistOwner: {
                 select: {
                   id: true,
-                  name: true,
-                  firstName: true,
-                  lastName: true,
                   amazonWishlistUrl: true,
                 },
               },
@@ -630,9 +623,6 @@ export const wishlistRouter = createTRPCRouter({
               wishlistOwner: {
                 select: {
                   id: true,
-                  name: true,
-                  firstName: true,
-                  lastName: true,
                   amazonWishlistUrl: true,
                   department: {
                     select: {
@@ -745,9 +735,6 @@ export const wishlistRouter = createTRPCRouter({
               wishlistOwner: {
                 select: {
                   id: true,
-                  name: true,
-                  firstName: true,
-                  lastName: true,
                   amazonWishlistUrl: true,
                   // No department/domain info for privacy
                 },
@@ -812,11 +799,7 @@ export const wishlistRouter = createTRPCRouter({
           wishlistAssignment: {
             include: {
               wishlistOwner: {
-                select: {
-                  name: true,
-                  firstName: true,
-                  lastName: true,
-                },
+                select: {},
               },
             },
           },
@@ -866,11 +849,7 @@ export const wishlistRouter = createTRPCRouter({
           wishlistAssignment: {
             include: {
               wishlistOwner: {
-                select: {
-                  name: true,
-                  firstName: true,
-                  lastName: true,
-                },
+                select: {},
               },
             },
           },
@@ -917,18 +896,23 @@ export const wishlistRouter = createTRPCRouter({
 
   // Archive or unarchive an assignment (visible only to assigned user)
   archiveAssignment: protectedProcedure
-    .input(
-      z.object({ assignmentId: z.string(), archive: z.boolean() }),
-    )
+    .input(z.object({ assignmentId: z.string(), archive: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
       const assignment = await ctx.db.wishlistAssignment.findFirst({
-        where: { id: input.assignmentId, assignedUserId: userId, isActive: true },
+        where: {
+          id: input.assignmentId,
+          assignedUserId: userId,
+          isActive: true,
+        },
       });
 
       if (!assignment) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Assignment not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Assignment not found",
+        });
       }
 
       const updated = await ctx.db.wishlistAssignment.update({
@@ -946,24 +930,39 @@ export const wishlistRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
 
       const assignment = await ctx.db.wishlistAssignment.findFirst({
-        where: { id: input.assignmentId, assignedUserId: userId, isActive: true },
+        where: {
+          id: input.assignmentId,
+          assignedUserId: userId,
+          isActive: true,
+        },
         include: { purchases: true, reports: true },
       });
 
       if (!assignment) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Assignment not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Assignment not found",
+        });
       }
 
       if (assignment.purchases) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot unassign a purchased wishlist" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cannot unassign a purchased wishlist",
+        });
       }
 
       if (assignment.reports && assignment.reports.length > 0) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot unassign a reported wishlist" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cannot unassign a reported wishlist",
+        });
       }
 
       // Delete the assignment so it becomes unallocated
-      await ctx.db.wishlistAssignment.delete({ where: { id: input.assignmentId } });
+      await ctx.db.wishlistAssignment.delete({
+        where: { id: input.assignmentId },
+      });
 
       return { success: true };
     }),
@@ -1017,9 +1016,6 @@ export const wishlistRouter = createTRPCRouter({
           include: {
             wishlistOwner: {
               select: {
-                name: true,
-                firstName: true,
-                lastName: true,
                 amazonWishlistUrl: true,
               },
             },

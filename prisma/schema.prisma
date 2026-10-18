@@ -79,6 +79,8 @@ model User {
   assignedLinks        WishlistAssignment[] @relation("AssignedUser")
   ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
   reports              WishlistReport[]
+  memberships          Membership[]
+  createdGroups        Group[]              @relation("GroupCreator")
 
   @@index([departmentId], map: "User_departmentId_fkey")
 }
@@ -251,4 +253,76 @@ enum ReportType {
   DOESNT_EXIST
   NO_ADDRESS
   OTHER
+}
+
+/// A Christmas season. One site-wide season a year (mid-Nov to early Jan);
+/// `year` is the year the season opens in.
+model Season {
+  id        String   @id @default(cuid())
+  year      Int      @unique
+  opensAt   DateTime
+  closesAt  DateTime
+  createdAt DateTime @default(now())
+}
+
+/// A group people give within: a work organisation (ORG), a team inside one
+/// (TEAM, child of an ORG), a community such as a Discord server (COMMUNITY)
+/// or a friends group (FRIENDS). Replaces Domain/Department (Day 8 backfill;
+/// queries move over on Day 9).
+model Group {
+  id           String       @id @default(cuid())
+  kind         GroupKind
+  name         String
+  slug         String       @unique
+  status       GroupStatus  @default(PENDING)
+  description  String?
+  parentId     String?
+  /// ORG groups: the email domain members join with (legacy Domain.name)
+  emailDomain  String?      @unique
+  /// TEAM groups backfilled from a legacy Department
+  departmentId String?      @unique
+  joinCode     String?      @unique
+  createdById  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  parent       Group?       @relation("GroupTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     Group[]      @relation("GroupTree")
+  createdBy    User?        @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  memberships  Membership[]
+
+  @@index([parentId])
+  @@index([kind, status])
+  @@index([createdById])
+}
+
+model Membership {
+  id       String         @id @default(cuid())
+  groupId  String
+  userId   String
+  role     MembershipRole @default(MEMBER)
+  joinedAt DateTime       @default(now())
+  group    Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+enum GroupKind {
+  ORG
+  TEAM
+  COMMUNITY
+  FRIENDS
+}
+
+/// PENDING groups wait for a site admin's approval (owner, 18 Oct)
+enum GroupStatus {
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
+enum MembershipRole {
+  MEMBER
+  ADMIN
 }

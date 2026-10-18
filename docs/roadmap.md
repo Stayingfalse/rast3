@@ -84,7 +84,7 @@
 | 8 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
 | 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
 | 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
-| 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
+| 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
 | 13 | Sun 25 Oct | Group switcher + per-group home, designed mobile-first |
 | 14 | Mon 26 Oct | Group admin console: members, roles, settings, moderation |
@@ -418,4 +418,26 @@ that don't touch the data model. Known items to include:
   - **Tests.** `e2e/groups.spec.ts`: start a group, invite page signed out,
     a friend joins with a lower-case dashed code, organiser-only code, wrong
     code 404.
+- **Day 11 (18 Oct, pulled forward): organisations on trust.** No email
+  verification (owner, 18 Oct); instead:
+  - **Approval.** New organisations wait for a site admin. Setting one up
+    now creates it as waiting, not live. The new `/admin/approvals` screen
+    lists waiting, live and closed organisations and friends or community
+    groups, with Approve, Close and Re-open. Approving an organisation also
+    switches on its legacy Domain row, so the older screens agree.
+    Members of a waiting organisation see a "waiting for approval" note and
+    can't pick up lists yet.
+  - **Join code.** Optional: organisers can require a code from new members
+    (Admin overview: "Require a join code", "Make a new code", "Stop
+    requiring a code"). Profile setup asks for it only when the
+    organisation has one. Existing members are never asked.
+  - **Recent joiners.** Organisers see who joined their groups in the last
+    30 days and can remove someone from the organisation. Their account
+    stays; their organisation, department, admin role and open wishlist
+    pick-ups are cleared.
+  - **Closed organisations** can't be joined.
+  - **Tests.** `e2e/org-trust.spec.ts`: code required (rejected without,
+    accepted lower-case and dashed), joiner listed and removed, and a new
+    organisation is waiting (412 on hand-outs), then approved on the
+    Approvals screen.
 

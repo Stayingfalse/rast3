@@ -2,7 +2,8 @@
 
 import {
     BuildingOfficeIcon,
-    Cog6ToothIcon,
+    CheckBadgeIcon,
+  Cog6ToothIcon,
     GlobeAltIcon,
     HomeIcon,
     LinkIcon,
@@ -15,6 +16,7 @@ const navigation = [
   { name: "Overview", href: "/admin", icon: HomeIcon },
   { name: "Departments", href: "/admin/departments", icon: BuildingOfficeIcon },
   { name: "Domains", href: "/admin/domains", icon: GlobeAltIcon },
+  { name: "Approvals", href: "/admin/approvals", icon: CheckBadgeIcon },
   { name: "Users", href: "/admin/users", icon: UsersIcon },
   { name: "Links", href: "/admin/links", icon: LinkIcon },
   { name: "Settings", href: "/admin/settings", icon: Cog6ToothIcon },

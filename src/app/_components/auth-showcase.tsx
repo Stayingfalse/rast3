@@ -28,6 +28,7 @@ export function AuthShowcase() {
             profileCompleted: boolean;
             profileCompletedAt?: Date | null;
             domainEnabled?: boolean | null;
+            orgStatus?: "PENDING" | "ACTIVE" | "DISABLED" | null;
           }
         | null
         | undefined;
@@ -104,6 +105,16 @@ export function AuthShowcase() {
         )}
       </div>
 
+      {userProfile?.profileCompleted && userProfile.orgStatus === "PENDING" && (
+        <p
+          role="status"
+          className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
+        >
+          Your organisation ({userProfile.domain}) is new and waiting for our
+          approval. You can get your profile ready now; gifting opens once
+          it&apos;s approved.
+        </p>
+      )}
       {userProfile?.profileCompleted &&
         userProfile.domain &&
         userProfile.domainEnabled === false && (

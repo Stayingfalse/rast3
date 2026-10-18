@@ -61,14 +61,17 @@ async function clearSeed() {
     where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
   });
   await db.department.deleteMany({ where: { domain: TEST_EMAIL_DOMAIN } });
-  await db.department.deleteMany({ where: { domain: RIVAL_DOMAIN } });
+  // Any test organisation: the seed's own plus ones e2e tests set up
+  // (all on subdomains of the test domain)
+  const testOrg = { endsWith: `.${TEST_EMAIL_DOMAIN}` };
+  await db.department.deleteMany({ where: { domain: testOrg } });
   await db.domain.deleteMany({
-    where: { name: { in: [TEST_EMAIL_DOMAIN, RIVAL_DOMAIN] } },
+    where: { OR: [{ name: TEST_EMAIL_DOMAIN }, { name: testOrg }] },
   });
   // Team groups and memberships go with the organisation (cascade)
   await db.group.deleteMany({
     where: {
-      emailDomain: { in: [TEST_EMAIL_DOMAIN, RIVAL_DOMAIN, PENDING_DOMAIN] },
+      OR: [{ emailDomain: TEST_EMAIL_DOMAIN }, { emailDomain: testOrg }],
     },
   });
   return users.count;

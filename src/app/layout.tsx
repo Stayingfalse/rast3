@@ -1,19 +1,19 @@
-import "~/styles/globals.css"
+import "~/styles/globals.css";
 
-import { type Metadata, type Viewport } from "next"
-import { Archivo } from "next/font/google"
-import Image from "next/image"
-import { Toaster } from "react-hot-toast"
+import { type Metadata, type Viewport } from "next";
+import { Archivo } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 
-import { SessionProvider } from "next-auth/react"
-import { TRPCReactProvider } from "~/trpc/react"
-import { AddToHomeScreen } from "./_components/add-to-home-screen"
-import AdminButton from "./_components/admin-button"
-import AuthButton from "./_components/auth-button"
-import { AuthProvider } from "./_components/auth-provider"
-import { CookieConsent } from "./_components/cookie-consent"
-import { ServiceWorkerRegistration } from "./_components/service-worker-registration"
-import WishlistReportsAlert from "./_components/wishlist-reports-alert"
+import { SessionProvider } from "next-auth/react";
+import { TRPCReactProvider } from "~/trpc/react";
+import { AddToHomeScreen } from "./_components/add-to-home-screen";
+import AdminButton from "./_components/admin-button";
+import { Sky } from "./_components/post/sky";
+import AuthButton from "./_components/auth-button";
+import { AuthProvider } from "./_components/auth-provider";
+import { CookieConsent } from "./_components/cookie-consent";
+import { ServiceWorkerRegistration } from "./_components/service-worker-registration";
+import WishlistReportsAlert from "./_components/wishlist-reports-alert";
 
 // Archivo across its width axis: expanded caps for the franked wordmark and
 // labels, regular width for reading.
@@ -53,6 +53,25 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/site.webmanifest",
+  metadataBase: new URL("https://raosanta.uk"),
+  openGraph: {
+    title: "Random Acts of Santa 2026",
+    description:
+      "Send a colleague a Christmas gift without ever knowing their address. No draw, no pressure.",
+    url: "/",
+    siteName: "Random Acts of Santa",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Random Acts of Santa 2026",
+      },
+    ],
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", images: ["/og.png"] },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -83,43 +102,41 @@ export default function RootLayout({
         <meta name="application-name" content="RAoSanta" />
         <meta name="msapplication-TileColor" content="#13264d" />
         <meta name="msapplication-tap-highlight" content="no" />
-        
+
         {/* Additional Icon Links for better compatibility */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon-16x16.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <SessionProvider>
         <body>
           {" "}
-          <main className="relative z-10 flex min-h-screen flex-col items-center bg-night bg-[url('/plaid.png')] bg-fixed bg-top bg-repeat">
+          <main className="bg-night relative z-10 flex min-h-screen flex-col items-center overflow-x-clip bg-[url('/plaid.png')] bg-fixed bg-top bg-repeat">
             {/* Admin Button (top right) */}
             <AdminButton />
             {/* Auth Button (top right, shows when not admin) */}
             <AuthButton />
-            {/* Hanging baubles across the top of the night sky (decorative) */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[150px] overflow-hidden select-none sm:h-[220px]"
-            >
-              <Image
-                src="/header.svg"
-                alt=""
-                width={1405}
-                height={725}
-                className="h-full w-full object-cover object-bottom"
-                draggable="false"
-                priority
-              />
-            </div>{" "}
+            {/* The hanging post across the top of the night sky (decorative) */}
+            <Sky />{" "}
             <div className="relative flex w-full max-w-6xl flex-col items-center gap-16 px-4 pt-[164px] pb-24 sm:px-6 sm:pt-[236px]">
               <WishlistReportsAlert />
               <AuthProvider>
                 <TRPCReactProvider>{children}</TRPCReactProvider>
               </AuthProvider>{" "}
-            </div>            {/* Cookie Consent Banner */}
+            </div>{" "}
+            {/* Cookie Consent Banner */}
             <CookieConsent />
             {/* Add to Home Screen Prompt */}
             <AddToHomeScreen />

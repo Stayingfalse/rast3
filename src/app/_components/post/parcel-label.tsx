@@ -1,5 +1,5 @@
 import { Postmark } from "./postmark";
-import { BaubleStamp } from "./stamp";
+import { StampMark } from "./stamp-mark";
 
 type Row = { label: string; value: string; hint?: string };
 
@@ -35,7 +35,7 @@ export function ParcelLabel({ gifts }: ParcelLabelProps) {
               Random Acts of Santa
             </p>
           </div>
-          <BaubleStamp className="h-20 w-16 shrink-0 -rotate-3" />
+          <StampMark year="2026" className="w-16 shrink-0 -rotate-3" />
         </div>
         <dl className="divide-rule divide-y px-5">
           {ROWS.map((row) => (

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
 import type { RouterOutputs } from "~/trpc/react";
 import { AdminActionsDropdown } from "./admin-actions-dropdown";
+import { ShareSheet, type ShareRequest } from "./share/share-sheet";
 
 interface KudosFeedProps {
   className?: string;
@@ -316,6 +317,7 @@ type Kudos = RouterOutputs["kudos"]["getFeed"]["items"][number];
 
 export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const { data: session } = useSession();
+  const [shareRequest, setShareRequest] = useState<ShareRequest | null>(null);
   const [selectedScope, setSelectedScope] = useState<ScopeType | null>(null);
   const [lightbox, setLightbox] = useState<{
     images: string[];
@@ -580,13 +582,26 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 </time>
               </p>
             </div>
-            {session && (
-              <AdminActionsDropdown
-                kudosId={kudos.id}
-                kudosUserId={kudos.user.id}
-                isHidden={kudos.hidden}
-              />
-            )}
+            <div className="flex shrink-0 items-center gap-1">
+              {session?.user?.id === kudos.user.id && !kudos.hidden && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShareRequest({ kind: "thanks", kudosId: kudos.id })
+                  }
+                  className="text-post min-h-9 px-2 text-sm font-semibold underline-offset-4 hover:underline"
+                >
+                  Share
+                </button>
+              )}
+              {session && (
+                <AdminActionsDropdown
+                  kudosId={kudos.id}
+                  kudosUserId={kudos.user.id}
+                  isHidden={kudos.hidden}
+                />
+              )}
+            </div>
           </footer>
         </div>
       </article>
@@ -599,6 +614,10 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
       aria-labelledby="kudos-heading"
       className={`w-full ${className}`}
     >
+      <ShareSheet
+        request={shareRequest}
+        onClose={() => setShareRequest(null)}
+      />
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2

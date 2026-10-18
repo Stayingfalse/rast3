@@ -54,6 +54,9 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
 if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
   providers.push(
     Discord({
+      // Discord now returns an `iss` on the callback (RFC 9207); Auth.js
+      // checks it against the issuer, which defaults to a placeholder.
+      issuer: "https://discord.com",
       clientId: process.env.AUTH_DISCORD_ID,
       clientSecret: process.env.AUTH_DISCORD_SECRET,
       allowDangerousEmailAccountLinking: true,

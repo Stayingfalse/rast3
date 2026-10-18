@@ -29,12 +29,12 @@ function VerifyRequestContent() {
   const isEmailProvider = provider === "nodemailer" && type === "email";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-green-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
+    <div className="flex w-full items-center justify-center">
+      <div className="label-stock w-full max-w-md p-8 text-center">
         {/* Success Icon */}
-        <div className="mx-auto mb-6 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+        <div className="bg-pine-tint mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
           <svg
-            className="w-8 h-8 text-green-600"
+            className="text-pine h-8 w-8"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -49,19 +49,20 @@ function VerifyRequestContent() {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+        <h1 className="font-expanded text-ink mb-4 text-2xl font-extrabold">
           Check your email
         </h1>
 
         {/* Description */}
-        <div className="text-gray-600 mb-6 space-y-2">
+        <div className="text-ink-soft mb-6 space-y-2">
           {isEmailProvider ? (
-            <>              <p>
+            <>
+              {" "}
+              <p>
                 We&apos;ve sent a magic link to{" "}
-                {email && (
-                  <span className="font-medium text-gray-900">{email}</span>
-                )}
-              </p><p className="text-sm">
+                {email && <span className="text-ink font-medium">{email}</span>}
+              </p>
+              <p className="text-sm">
                 Click the link in the email to sign in to your account.
               </p>
             </>
@@ -74,59 +75,62 @@ function VerifyRequestContent() {
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="text-sm text-blue-800 space-y-2">
+        <div className="bg-label-shade border-rule rounded-label mb-6 border p-4">
+          <div className="text-ink space-y-2 text-sm">
             <p className="font-medium">Next steps:</p>
-            <ul className="text-left space-y-1 list-disc list-inside">
+            <ul className="list-inside list-disc space-y-1 text-left">
               <li>Check your email inbox</li>
-              <li>Look for an email from our system</li>              <li>Click the &quot;Sign in&quot; link in the email</li>
+              <li>Look for an email from our system</li>{" "}
+              <li>Click the &quot;Sign in&quot; link in the email</li>
               <li>You&apos;ll be automatically signed in</li>
             </ul>
           </div>
         </div>
 
         {/* Troubleshooting */}
-        <div className="text-xs text-gray-500 space-y-2 mb-6">          <p>
-            <strong>Don&apos;t see the email?</strong> Check your spam folder or try
-            requesting a new link.
+        <div className="text-ink-soft mb-6 space-y-2 text-xs">
+          {" "}
+          <p>
+            <strong>Don&apos;t see the email?</strong> Check your spam folder or
+            try requesting a new link.
           </p>
           <p>The link will expire in 24 hours for security reasons.</p>
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Link
-            href="/"
-            className="block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-          >
+          <Link href="/" className="btn-post w-full">
             Return to Home
           </Link>
-          
+
           <button
             onClick={() => window.location.reload()}
-            className="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
+            className="btn-quiet text-ink w-full"
           >
             Request New Link
           </button>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
+        <div className="border-rule mt-8 border-t pt-6">
+          <p className="text-ink-soft text-xs">
             Having trouble? Contact support for assistance.
           </p>
         </div>
-      </div>    </div>
+      </div>{" "}
+    </div>
   );
 }
 
 export default function VerifyRequestPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-green-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex w-full items-center justify-center py-16">
+          <div className="border-post h-32 w-32 animate-spin rounded-full border-b-2"></div>
+        </div>
+      }
+    >
       <VerifyRequestContent />
     </Suspense>
   );

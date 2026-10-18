@@ -75,7 +75,7 @@
 | 3 | Sat 17 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2). **Pulled forward a day at the owner's request; every later day moved one day earlier.** |
 | 4 | Sun 18 Oct | **Brand mark and sky (owner feedback, 17 Oct).** Rethink the logo for 2026 for design and readability while keeping the name "Random Acts of Santa", and replace or redraw the background and hanging baubles if something better suits the Christmas Post world. Use the impeccable skill and present directions before building. **Inserted at the owner's request: every later day moved one day later, using up the spare day.** |
 | 5 | Sun 18 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model **Pulled forward to Sun 18 Oct at the owner's request; every later day moved one day earlier and the spare day is back.** |
-| 6 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
+| 6 | Mon 19 Oct | Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`, authorisation on every tRPC procedure, rate limits |
 | 7 | Tue 20 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
 ### Week 2: groups (21–27 Oct), the core change
@@ -286,3 +286,15 @@ that don't touch the data model. Known items to include:
     shows the latest total.
   - **Database.** A second additive migration, `share_card_groups`, adds
     `groupKey` and `label` and extends the kind enum.
+- **Day 5 (18 Oct, pulled forward): UX audit.** Report in
+  `docs/ux-audit-2026-10-18.md`.
+  - **Coverage.** Every page on desktop and Pixel 7, in four states (signed
+    out, new member, member with gifts, admin), plus an axe scan of each.
+  - **Fixed today.** Pinch-zoom was blocked on every page; the privacy policy
+    text was near-invisible; the thank-you photo picker was unlabelled and
+    unreachable by keyboard. Also: a branded 404 page, the email sign-in pages
+    restyled, "Domain" renamed to "Organisation", and small contrast fixes.
+  - **Moved on.** `/success` publicly shows thank-you posters' first names,
+    added to Day 6. The admin area is still in the 2025 style, proposed for its
+    own day or folded into Day 13. The privacy policy is a 2025 template, for
+    Day 29 with the owner's wording.

@@ -83,7 +83,7 @@
 |---|---|---|
 | 8 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
 | 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
-| 10 | Thu 22 Oct | Create a group + invite links/codes (friends groups) |
+| 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
 | 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
 | 13 | Sun 25 Oct | Group switcher + per-group home, designed mobile-first |
@@ -400,4 +400,22 @@ that don't touch the data model. Known items to include:
     per-season wishlists and archiving are Day 15 (season open and close),
     to avoid hiding last Christmas's lists before the season machinery
     exists.
+- **Day 10 (18 Oct, pulled forward): start a group and invite people.**
+  `/groups` lets anyone signed in start a friends or community group, join
+  one with a code or link, and (as organiser) share the invite, make a new
+  code or leave. `/join/<code>` is the invite page: signed-out visitors can
+  sign in and come straight back (email sign-in now returns to the page you
+  were on). Codes are 8 characters with no look-alike letters, shown as
+  XXXX-XXXX, and accepted with or without the dash, in any case, or as a
+  pasted link.
+  - **Approval.** New groups start PENDING (owner's rule while it's free).
+    People can join, but gifting waits for a site admin.
+    `groups.setStatus` exists; the approval screen is Day 11.
+  - **Limits.** Up to 10 groups per person; per-person rate limits on
+    starting groups (5 an hour) and joining (20 an hour).
+  - **Not yet.** Picking up wishlists inside a friends or community group
+    comes with the group switcher (Day 13).
+  - **Tests.** `e2e/groups.spec.ts`: start a group, invite page signed out,
+    a friend joins with a lower-case dashed code, organiser-only code, wrong
+    code 404.
 

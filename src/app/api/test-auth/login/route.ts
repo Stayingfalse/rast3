@@ -94,6 +94,13 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
 
+  // Friends/community groups test users started (memberships cascade)
+  await db.group.deleteMany({
+    where: {
+      kind: { in: ["FRIENDS", "COMMUNITY"] },
+      createdBy: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
+    },
+  });
   const { count } = await db.user.deleteMany({
     where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
   });

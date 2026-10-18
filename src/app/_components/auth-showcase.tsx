@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 
@@ -128,7 +129,13 @@ export function AuthShowcase() {
           </p>
         )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href="/groups"
+          className="btn-quiet text-frost min-h-10 py-2 text-sm"
+        >
+          Your groups
+        </Link>
         {userProfile?.profileCompleted && (
           <button
             type="button"

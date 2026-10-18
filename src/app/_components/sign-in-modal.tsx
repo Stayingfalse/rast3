@@ -119,7 +119,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
         const result = await signIn(providerId, {
           email,
           redirect: false,
-          callbackUrl: window.location.origin,
+          callbackUrl: window.location.href, // back to the page they were on (e.g. an invite)
         });
         // Check if sign-in was successful
         if (result?.error) {

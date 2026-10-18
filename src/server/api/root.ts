@@ -1,3 +1,4 @@
+import { groupsRouter } from "~/server/api/routers/groups";
 import { adminRouter } from "~/server/api/routers/admin";
 import { authProviderRouter } from "~/server/api/routers/auth-provider";
 import { domainRouter } from "~/server/api/routers/domain";
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   admin: adminRouter,
   stamps: stampsRouter,
   share: shareRouter,
+  groups: groupsRouter,
 });
 
 // export type definition of API

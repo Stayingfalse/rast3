@@ -45,8 +45,10 @@ test.describe("public surface", () => {
         image: null,
         department: null,
       });
-      expect(item.purchase).not.toHaveProperty("notes");
-      expect(JSON.stringify(item.purchase ?? {})).not.toMatch(/firstName|email/);
+      // Only the wishlist owner's id is sent, for the festive "to" name
+      expect(JSON.stringify(item.purchase ?? {})).not.toMatch(
+        /notes|name|email/i,
+      );
     }
   });
 

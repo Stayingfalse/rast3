@@ -21,7 +21,17 @@ test.describe("public pages", () => {
 
   test("signed-out visitors see the Join Santa button", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("button", { name: /Join Santa/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Join Santa/ }),
+    ).toBeVisible();
+  });
+
+  test("unknown pages show the branded not-found page", async ({ page }) => {
+    const res = await page.goto("/no-such-page");
+    expect(res?.status()).toBe(404);
+    await expect(
+      page.getByRole("heading", { name: "Return to sender" }),
+    ).toBeVisible();
   });
 
   test("health endpoint reports a connected database", async ({ request }) => {
@@ -33,7 +43,9 @@ test.describe("public pages", () => {
     };
     expect(body.database.connected).toBe(true);
     // A startup schema sync must never leave drift or a failed migration.
-    expect(body.schemaSync?.result ?? "skipped").not.toMatch(/drift|failed|foreign-history/);
+    expect(body.schemaSync?.result ?? "skipped").not.toMatch(
+      /drift|failed|foreign-history/,
+    );
   });
 
   test("test login is hidden without the secret", async ({ request }) => {

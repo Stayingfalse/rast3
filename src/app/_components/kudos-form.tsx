@@ -232,7 +232,7 @@ export const KudosForm: React.FC<KudosFormProps> = ({
           />
           {/* Drag and drop area */}
           <div
-            className={`rounded-label relative flex flex-col items-center justify-center border-2 border-dashed p-6 text-center transition-colors ${
+            className={`rounded-label relative flex flex-col items-center justify-center border-2 border-dashed p-6 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-gold ${
               isDragging
                 ? "border-post bg-post-tint"
                 : "border-rule bg-label-shade"
@@ -248,8 +248,8 @@ export const KudosForm: React.FC<KudosFormProps> = ({
               accept="image/*"
               multiple
               onChange={handleImageChange}
+              aria-label="Add photos (up to 5)"
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              tabIndex={-1}
             />
             <div className="pointer-events-none z-10 flex flex-col items-center">
               <svg

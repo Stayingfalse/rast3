@@ -2,23 +2,24 @@ import React from "react";
 import { type Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Random Acts of Santa 2025",
-  description: "Privacy Policy for Random Acts of Santa 2025",
+  title: "Privacy Policy · Random Acts of Santa",
+  description:
+    "How Random Acts of Santa collects, uses and protects your personal information.",
 };
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="rounded-lg bg-white p-8 shadow-md">
-          <h1 className="mb-6 text-3xl font-bold text-gray-900">
+    <div className="w-full">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="label-stock text-ink p-6 sm:p-10">
+          <h1 className="font-expanded text-ink mb-4 text-3xl font-extrabold">
             Privacy Policy
           </h1>
-          <p className="mb-8 text-sm text-gray-600">
+          <p className="text-ink-soft mb-8 text-sm">
             Last Updated: May 30, 2025
           </p>
 
-          <div className="prose prose-gray max-w-none">
+          <div className="max-w-none leading-relaxed">
             <p className="mb-6 text-lg">
               Welcome to Random Acts of Santa 2025! This Privacy Policy explains
               how Random Acts of Santa 2025 (&quot;we,&quot; &quot;us,&quot; or
@@ -41,7 +42,7 @@ export default function PrivacyPolicyPage() {
               not access or use our Services.
             </p>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               1. Information We Collect
             </h2>
             <p className="mb-4">
@@ -51,7 +52,7 @@ export default function PrivacyPolicyPage() {
               below.
             </p>
 
-            <h3 className="mt-6 mb-3 text-xl font-semibold text-gray-800">
+            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
               a. Information You Provide to Us:
             </h3>
             <p className="mb-4">
@@ -67,7 +68,7 @@ export default function PrivacyPolicyPage() {
               choose to provide.
             </p>
 
-            <h3 className="mt-6 mb-3 text-xl font-semibold text-gray-800">
+            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
               b. Information We Collect Automatically:
             </h3>
             <p className="mb-4">
@@ -87,7 +88,7 @@ export default function PrivacyPolicyPage() {
               information about how we use cookies in our cookie consent banner.
             </p>
 
-            <h3 className="mt-6 mb-3 text-xl font-semibold text-gray-800">
+            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
               c. Information from Third-Party Login Providers:
             </h3>
             <p className="mb-4">
@@ -120,7 +121,7 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               2. How We Use Your Information
             </h2>
             <p className="mb-4">
@@ -128,7 +129,7 @@ export default function PrivacyPolicyPage() {
               including:
             </p>
 
-            <h3 className="mt-6 mb-3 text-xl font-semibold text-gray-800">
+            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
               To Provide and Manage the Services:
             </h3>
             <ul className="mb-4 list-disc pl-6">
@@ -139,7 +140,7 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
-            <h3 className="mt-6 mb-3 text-xl font-semibold text-gray-800">
+            <h3 className="text-ink mt-6 mb-3 text-xl font-semibold">
               To Communicate With You:
             </h3>
             <ul className="mb-4 list-disc pl-6">
@@ -154,7 +155,7 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               3. How We Share Your Information
             </h2>
             <p className="mb-4">
@@ -181,7 +182,7 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               4. Data Security
             </h2>
             <p className="mb-4">
@@ -191,7 +192,7 @@ export default function PrivacyPolicyPage() {
               the Internet can be guaranteed to be 100% secure.
             </p>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               5. Your Data Protection Rights
             </h2>
             <p className="mb-4">
@@ -208,7 +209,7 @@ export default function PrivacyPolicyPage() {
               <li>Withdraw consent at any time</li>
             </ul>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               6. Cookies and Tracking Technologies
             </h2>
             <p className="mb-4">
@@ -219,7 +220,7 @@ export default function PrivacyPolicyPage() {
               manage your cookie preferences through our cookie consent banner.
             </p>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               7. Children&apos;s Privacy
             </h2>
             <p className="mb-4">
@@ -228,7 +229,7 @@ export default function PrivacyPolicyPage() {
               under this age.
             </p>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               8. Changes to This Privacy Policy
             </h2>
             <p className="mb-4">
@@ -238,7 +239,7 @@ export default function PrivacyPolicyPage() {
               top of this Privacy Policy.
             </p>
 
-            <h2 className="mt-8 mb-4 text-2xl font-semibold text-gray-900">
+            <h2 className="text-ink mt-8 mb-4 text-2xl font-semibold">
               9. Contact Us
             </h2>
             <p className="mb-4">
@@ -247,8 +248,8 @@ export default function PrivacyPolicyPage() {
               contact features.
             </p>
 
-            <div className="mt-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
+            <div className="rounded-label border-rule bg-label-shade mt-8 border p-4">
+              <p className="text-ink text-sm">
                 <strong>Disclaimer:</strong> This Privacy Policy is provided as
                 a template and is not a substitute for legal advice from a
                 qualified professional. You should consult with a legal

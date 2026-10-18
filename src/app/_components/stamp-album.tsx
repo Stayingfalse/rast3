@@ -107,7 +107,7 @@ export function StampAlbum() {
         ))}
         <li className="border-rule -mr-px -mb-px flex flex-col items-center gap-3 border-r border-b p-5 text-center">
           <div className="border-rule flex aspect-[4/5] w-full max-w-36 items-center justify-center rounded-sm border">
-            <span className="label-caps text-ink-soft/80 px-3">
+            <span className="label-caps text-ink-soft px-3">
               Next Christmas
             </span>
           </div>

@@ -81,10 +81,10 @@
 ### Week 2: groups (20–26 Oct), the core change
 | Day | Date | Focus |
 |---|---|---|
-| 8 | Tue 20 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
+| 8 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
 | 9 | Wed 21 Oct | Scope every query to a group and season; tenant-isolation tests |
 | 10 | Thu 22 Oct | Create a group + invite links/codes (friends groups) |
-| 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live |
+| 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
 | 13 | Sun 25 Oct | Group switcher + per-group home, designed mobile-first |
 | 14 | Mon 26 Oct | Group admin console: members, roles, settings, moderation |
@@ -132,6 +132,11 @@
 - **Optional extras**: supporter tips, sponsored charity drives.
 - Decide in January using this year's numbers. Stripe integration is a 2027 task,
   not part of the proof of concept.
+
+- **New organisations and pricing (owner, 18 Oct).** While Random Acts of Santa
+  is free, every new organisation needs the site owner's approval before it
+  goes live. Once paid plans exist, approval should come with choosing a plan
+  instead.
 
 ## Ideas backlog
 
@@ -349,4 +354,27 @@ that don't touch the data model. Known items to include:
     run in CI. Claude can't set GitHub secrets.
   - **Owner decision (18 Oct):** no work-email verification; Day 11 is now
     trust-based joining with lighter safeguards.
+- **Owner decision (18 Oct, after Day 7):** new organisations need a site
+  admin's approval before they go live, while the service is free; later this
+  ties into the paid plans. Built on Day 11.
+- **Day 8 (18 Oct, pulled forward): groups data model.** Additive migration
+  `groups_and_seasons`: new `Season`, `Group` (kinds ORG, TEAM, COMMUNITY,
+  FRIENDS; status PENDING, ACTIVE, DISABLED; optional join code) and
+  `Membership` (MEMBER or ADMIN) tables. Nothing existing is changed or
+  removed.
+  - **Backfill, in the migration.** Every organisation becomes an ORG group:
+    enabled ones ACTIVE, disabled ones DISABLED, and domains used by members
+    or departments with no organisation record PENDING. Each department
+    becomes a TEAM group under its organisation; members and their admin
+    roles become memberships. Seasons 2025 and 2026 (15 Nov to 6 Jan).
+  - **Rehearsal.** On a scratch MariaDB with deliberately messy data
+    (mixed-case and padded domains, orphan departments, admins of groups
+    they aren't in, a department with no domain) and re-run to prove it is
+    idempotent. No anonymised prod copy: Claude has no prod database access.
+  - **Kept in step until Day 9.** `src/server/groups.ts` mirrors profile
+    saves, new organisations, admin department and role changes, and
+    organisation enable, disable or delete into groups. The old fields stay
+    the source of truth until Day 9 moves queries over.
+  - **Before prod.** The owner confirms a fresh prod database backup before
+    this merges; the migration runs on prod's next start.
 

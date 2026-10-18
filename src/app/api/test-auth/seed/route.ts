@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { db } from "~/server/db";
+import { syncUserGroups } from "~/server/groups";
 import {
   isTestAuthAuthorised,
   TEST_EMAIL_DOMAIN,
@@ -51,6 +52,8 @@ async function clearSeed() {
   });
   await db.department.deleteMany({ where: { domain: TEST_EMAIL_DOMAIN } });
   await db.domain.deleteMany({ where: { name: TEST_EMAIL_DOMAIN } });
+  // Team groups and memberships go with the organisation (cascade)
+  await db.group.deleteMany({ where: { emailDomain: TEST_EMAIL_DOMAIN } });
   return users.count;
 }
 
@@ -163,8 +166,27 @@ export async function POST(req: NextRequest) {
   });
   kudos++;
 
+  // Mirror the seed into groups, as the profile and admin flows do
+  const seeded = await db.user.findMany({
+    where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
+    select: { id: true },
+  });
+  for (const { id } of seeded) await syncUserGroups(db, id);
+  const inSeedOrg = {
+    OR: [
+      { emailDomain: TEST_EMAIL_DOMAIN },
+      { parent: { emailDomain: TEST_EMAIL_DOMAIN } },
+    ],
+  };
+  const groups = await db.group.count({ where: inSeedOrg });
+  const memberships = await db.membership.count({
+    where: { group: inSeedOrg },
+  });
+
   return NextResponse.json({
     domain: TEST_EMAIL_DOMAIN,
+    groups,
+    memberships,
     departments: departments.map((d) => d.name),
     members: members.length + 1,
     assignments,

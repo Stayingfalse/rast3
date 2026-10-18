@@ -17,6 +17,9 @@ let giverEmail = "";
 test.beforeEach(async ({ request }) => {
   const summary = await seed(request);
   expect(summary.members).toBe(16);
+  // Day 8: the seed org is mirrored into an ORG group with a TEAM per department
+  expect(summary.groups).toBe(4);
+  expect(summary.memberships).toBeGreaterThanOrEqual(summary.members);
   giverEmail = summary.giver.email;
 });
 

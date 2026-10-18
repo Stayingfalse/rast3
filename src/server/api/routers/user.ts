@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter } from "~/server/api/trpc";
+import { syncUserGroups } from "~/server/groups";
 import {
   canManageDepartment,
   canManageDomain,
@@ -235,7 +236,7 @@ export const userRouter = createTRPCRouter({
           throw forbidden("That department isn't in your scope");
         }
       }
-      return ctx.db.user.update({
+      const synced = await ctx.db.user.update({
         where: { id: input.userId },
         data: {
           departmentId: input.departmentId,
@@ -244,6 +245,8 @@ export const userRouter = createTRPCRouter({
           department: true,
         },
       });
+      await syncUserGroups(ctx.db, input.userId);
+      return synced;
     }),
   // Update user's admin level and scope
   updateAdminLevel: adminProcedure
@@ -307,7 +310,7 @@ export const userRouter = createTRPCRouter({
         }
       }
 
-      return ctx.db.user.update({
+      const synced = await ctx.db.user.update({
         where: { id: input.userId },
         data: {
           adminLevel: input.adminLevel,
@@ -317,6 +320,8 @@ export const userRouter = createTRPCRouter({
           department: true,
         },
       });
+      await syncUserGroups(ctx.db, input.userId);
+      return synced;
     }),
 
   // Get detailed user statistics for tooltips

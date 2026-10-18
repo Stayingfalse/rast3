@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   rateLimit,
 } from "~/server/api/trpc";
+import { syncOrgGroupStatus, syncUserGroups } from "~/server/groups";
 import { canManageDomain } from "~/server/utils/admin-permissions";
 
 type UserWithDepartment = {
@@ -211,7 +212,7 @@ export const profileRouter = createTRPCRouter({
         validDepartmentId = departmentId;
       }
 
-      return ctx.db.user.update({
+      const synced = await ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           firstName,
@@ -227,6 +228,8 @@ export const profileRouter = createTRPCRouter({
           department: true,
         },
       });
+      await syncUserGroups(ctx.db, ctx.session.user.id);
+      return synced;
     }),
 
   // Update profile
@@ -304,7 +307,7 @@ export const profileRouter = createTRPCRouter({
         validDepartmentId = departmentId;
       }
 
-      return ctx.db.user.update({
+      const synced = await ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           firstName,
@@ -318,6 +321,8 @@ export const profileRouter = createTRPCRouter({
           department: true,
         },
       });
+      await syncUserGroups(ctx.db, ctx.session.user.id);
+      return synced;
     }),
 
   // Admin: Create department
@@ -447,6 +452,9 @@ export const profileRouter = createTRPCRouter({
           department: true,
         },
       });
+
+      await syncOrgGroupStatus(ctx.db, domain);
+      await syncUserGroups(ctx.db, ctx.session.user.id);
 
       return { user: updatedUser, domain: newDomain };
     }),

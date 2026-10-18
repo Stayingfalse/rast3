@@ -62,6 +62,8 @@ export async function seed(request: APIRequestContext) {
   expect(res.status(), await res.text()).toBe(200);
   return (await res.json()) as {
     members: number;
+    groups: number;
+    memberships: number;
     assignments: number;
     purchases: number;
     kudos: number;

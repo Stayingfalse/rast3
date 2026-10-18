@@ -5,6 +5,7 @@ import {
   createTRPCRouter,
   siteAdminProcedure,
 } from "~/server/api/trpc";
+import { syncOrgGroupStatus } from "~/server/groups";
 import { canManageDomain } from "~/server/utils/admin-permissions";
 
 const forbidden = () =>
@@ -70,8 +71,8 @@ export const domainRouter = createTRPCRouter({
         enabled: z.boolean().default(false),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      return ctx.db.domain.create({
+    .mutation(async ({ ctx, input }) => {
+      const domain = await ctx.db.domain.create({
         data: {
           name: input.name.toLowerCase(),
           description: input.description,
@@ -79,6 +80,8 @@ export const domainRouter = createTRPCRouter({
           createdById: ctx.session.user.id,
         },
       });
+      await syncOrgGroupStatus(ctx.db, domain.name);
+      return domain;
     }),
 
   // Update domain
@@ -110,10 +113,12 @@ export const domainRouter = createTRPCRouter({
       if (updateData.name) {
         updateData.name = updateData.name.toLowerCase();
       }
-      return ctx.db.domain.update({
+      const updated = await ctx.db.domain.update({
         where: { id },
         data: updateData,
       });
+      await syncOrgGroupStatus(ctx.db, updated.name);
+      return updated;
     }),
 
   // Delete domain
@@ -140,9 +145,11 @@ export const domainRouter = createTRPCRouter({
         throw new Error("Cannot delete domain with existing departments");
       }
 
-      return ctx.db.domain.delete({
+      const deleted = await ctx.db.domain.delete({
         where: { id: input.id },
       });
+      await syncOrgGroupStatus(ctx.db, deleted.name);
+      return deleted;
     }),
 
   // Toggle domain enabled status
@@ -158,9 +165,11 @@ export const domainRouter = createTRPCRouter({
       }
       if (!canManageDomain(ctx.admin, domain.name)) throw forbidden();
 
-      return ctx.db.domain.update({
+      const updated = await ctx.db.domain.update({
         where: { id: input.id },
         data: { enabled: !domain.enabled },
       });
+      await syncOrgGroupStatus(ctx.db, updated.name);
+      return updated;
     }),
 });

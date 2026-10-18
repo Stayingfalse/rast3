@@ -82,7 +82,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 8 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
-| 9 | Wed 21 Oct | Scope every query to a group and season; tenant-isolation tests |
+| 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
 | 10 | Thu 22 Oct | Create a group + invite links/codes (friends groups) |
 | 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
@@ -377,4 +377,27 @@ that don't touch the data model. Known items to include:
     the source of truth until Day 9 moves queries over.
   - **Before prod.** The owner confirms a fresh prod database backup before
     this merges; the migration runs on prod's next start.
+- **Day 9 (18 Oct, pulled forward): scoping by group.** Who people give to,
+  read and manage now comes from group memberships, not the legacy domain
+  and department columns (still kept in step for the admin screens).
+  - **One module:** `src/server/scope.ts`, plus admin permissions rebuilt on
+    ADMIN memberships (site admin stays a flag on the user).
+  - **Wishlist hand-outs.** Team first, then the rest of the organisation,
+    then strangers. Strangers come only from other *approved* (ACTIVE)
+    organisations, and members of a pending or disabled organisation can't
+    pick up lists or post thank-yous.
+  - **Also on groups:** team and organisation kudos feeds, which organisers
+    see real names, moderation, the admin member and link lists, and the
+    organisation and team share-card totals.
+  - **Isolation tests** (`e2e/isolation.spec.ts`): the seed adds a rival
+    approved organisation and a member of a pending one. Tests prove:
+    - hand-outs stay inside the organisation until you ask for strangers;
+    - feeds never cross organisations;
+    - a rival organiser can't list or change the other organisation's
+      members;
+    - pending members can't take part.
+  - **Seasons.** Group totals and stamps were already per season;
+    per-season wishlists and archiving are Day 15 (season open and close),
+    to avoid hiding last Christmas's lists before the season machinery
+    exists.
 

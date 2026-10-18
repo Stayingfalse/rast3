@@ -97,7 +97,7 @@ export const domainRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
       const existing = await ctx.db.domain.findUnique({ where: { id } });
-      if (!existing || !canManageDomain(ctx.admin, existing.name)) {
+      if (!existing || !(await canManageDomain(ctx.admin, existing.name))) {
         throw forbidden();
       }
       // Organisers' admin scope is the domain name, so only site admins rename
@@ -163,7 +163,7 @@ export const domainRouter = createTRPCRouter({
       if (!domain) {
         throw new Error("Domain not found");
       }
-      if (!canManageDomain(ctx.admin, domain.name)) throw forbidden();
+      if (!(await canManageDomain(ctx.admin, domain.name))) throw forbidden();
 
       const updated = await ctx.db.domain.update({
         where: { id: input.id },

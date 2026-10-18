@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuth } from "~/server/auth-dynamic";
 import { db } from "~/server/db";
+import { getMemberships } from "~/server/scope";
 
+/** Members of an approved (ACTIVE) organisation can post thank-yous. */
 export async function GET() {
   try {
     const auth = await getAuth();
@@ -11,18 +13,8 @@ export async function GET() {
       return NextResponse.json({ allowed: false });
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      include: { department: true },
-    });
-
-    if (!user?.domain) {
-      return NextResponse.json({ allowed: false });
-    }
-
-    const domain = await db.domain.findUnique({ where: { name: user.domain } });
-
-    return NextResponse.json({ allowed: domain?.enabled ?? false });
+    const { org } = await getMemberships(db, session.user.id);
+    return NextResponse.json({ allowed: org?.status === "ACTIVE" });
   } catch {
     return NextResponse.json({ allowed: false });
   }

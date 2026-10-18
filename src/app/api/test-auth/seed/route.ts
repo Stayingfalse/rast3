@@ -35,6 +35,16 @@ const KUDOS_MESSAGES = [
   "Such a lovely surprise on a grey Monday. Thank you, elf! ✨",
 ];
 
+/**
+ * Day 9 isolation fixtures. Emails stay on the test domain (so cleanup finds
+ * them) but their organisation is set directly: a second, approved
+ * organisation, and a member whose organisation is still pending approval.
+ */
+const RIVAL_DOMAIN = `rival.${TEST_EMAIL_DOMAIN}`;
+const PENDING_DOMAIN = `pending.${TEST_EMAIL_DOMAIN}`;
+const RIVALS = ["Rival One", "Rival Two", "Rival Three"];
+const RIVAL_KUDOS = "Rival org thank-you: should never show in e2e.raosanta.test feeds";
+
 /** The seeded member e2e tests sign in as to walk the wishlist flow. */
 const GIVER_EMAIL = `giver@${TEST_EMAIL_DOMAIN}`;
 
@@ -51,9 +61,16 @@ async function clearSeed() {
     where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
   });
   await db.department.deleteMany({ where: { domain: TEST_EMAIL_DOMAIN } });
-  await db.domain.deleteMany({ where: { name: TEST_EMAIL_DOMAIN } });
+  await db.department.deleteMany({ where: { domain: RIVAL_DOMAIN } });
+  await db.domain.deleteMany({
+    where: { name: { in: [TEST_EMAIL_DOMAIN, RIVAL_DOMAIN] } },
+  });
   // Team groups and memberships go with the organisation (cascade)
-  await db.group.deleteMany({ where: { emailDomain: TEST_EMAIL_DOMAIN } });
+  await db.group.deleteMany({
+    where: {
+      emailDomain: { in: [TEST_EMAIL_DOMAIN, RIVAL_DOMAIN, PENDING_DOMAIN] },
+    },
+  });
   return users.count;
 }
 
@@ -166,6 +183,62 @@ export async function POST(req: NextRequest) {
   });
   kudos++;
 
+  // A second, approved organisation with its own team, members and a
+  // thank-you, plus one member of an organisation awaiting approval.
+  await db.domain.create({
+    data: { name: RIVAL_DOMAIN, enabled: true, description: "E2E rival org" },
+  });
+  const rivalTeam = await db.department.create({
+    data: { name: "Rival Team", domain: RIVAL_DOMAIN },
+  });
+  const rivals = [];
+  for (const [i, name] of RIVALS.entries()) {
+    const email = `rival${i + 1}@${TEST_EMAIL_DOMAIN}`;
+    rivals.push(
+      await db.user.create({
+        data: {
+          email,
+          emailVerified: now,
+          name,
+          firstName: name.split(" ")[0],
+          lastName: name.split(" ")[1],
+          domain: RIVAL_DOMAIN,
+          departmentId: rivalTeam.id,
+          amazonWishlistUrl: wishlistUrl(901 + i),
+          profileCompleted: true,
+          profileCompletedAt: now,
+          // rival1 organises the rival organisation
+          ...(i === 0 ? { adminLevel: "DOMAIN" as const, adminScope: RIVAL_DOMAIN } : {}),
+        },
+      }),
+    );
+  }
+  const rivalAssignment = await db.wishlistAssignment.create({
+    data: { assignedUserId: rivals[1]!.id, wishlistOwnerId: rivals[2]!.id },
+  });
+  const rivalPurchase = await db.purchase.create({
+    data: { userId: rivals[1]!.id, wishlistAssignmentId: rivalAssignment.id },
+  });
+  await db.kudos.create({
+    data: {
+      userId: rivals[2]!.id,
+      purchaseId: rivalPurchase.id,
+      message: RIVAL_KUDOS,
+      images: "[]",
+    },
+  });
+  await db.user.create({
+    data: {
+      email: `pending@${TEST_EMAIL_DOMAIN}`,
+      emailVerified: now,
+      name: "Penny Pending",
+      domain: PENDING_DOMAIN,
+      amazonWishlistUrl: wishlistUrl(950),
+      profileCompleted: true,
+      profileCompletedAt: now,
+    },
+  });
+
   // Mirror the seed into groups, as the profile and admin flows do
   const seeded = await db.user.findMany({
     where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
@@ -185,6 +258,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     domain: TEST_EMAIL_DOMAIN,
+    rivalDomain: RIVAL_DOMAIN,
+    rivalKudos: RIVAL_KUDOS,
     groups,
     memberships,
     departments: departments.map((d) => d.name),

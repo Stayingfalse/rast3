@@ -35,10 +35,12 @@ export function ShareSheet({
 }) {
   const create = api.share.create.useMutation();
   const [path, setPath] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const { mutate, reset } = create;
 
   useEffect(() => {
     setPath(null);
+    setLoaded(false);
     reset();
     if (!request) return;
     mutate(request, { onSuccess: (r) => setPath(r.path) });
@@ -96,15 +98,17 @@ export function ShareSheet({
               : "Share your thank-you, photos and all. Your Santa stays anonymous, and so does the card."}
           </p>
 
-          <div className="bg-label-shade border-rule aspect-[1200/630] w-full overflow-hidden rounded-sm border">
-            {path ? (
+          <div className="bg-label-shade border-rule relative aspect-[1200/630] w-full overflow-hidden rounded-sm border">
+            {path && (
               <img
                 src={`${path}/card.png`}
                 alt="Your share card"
-                className="h-full w-full object-cover"
+                onLoad={() => setLoaded(true)}
+                className={`h-full w-full object-cover transition-opacity ${loaded ? "opacity-100" : "opacity-0"}`}
               />
-            ) : (
-              <div className="text-ink-soft flex h-full items-center justify-center text-sm">
+            )}
+            {!loaded && (
+              <div className="text-ink-soft absolute inset-0 flex items-center justify-center text-sm">
                 {create.isError
                   ? "Couldn't make the card. Try again later."
                   : "Making your card…"}
@@ -137,12 +141,10 @@ export function ShareSheet({
                 download={`random-act-of-santa-${request.kind}.png`}
                 className="btn-quiet text-ink"
               >
-                Download image
+                Save image
               </a>
             ) : (
-              <span className="btn-quiet text-ink opacity-50">
-                Download image
-              </span>
+              <span className="btn-quiet text-ink opacity-50">Save image</span>
             )}
           </div>
           <button

@@ -8,7 +8,9 @@ import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
 
 export type ShareRequest =
-  { kind: "sent"; purchaseId: string } | { kind: "thanks"; kudosId: string };
+  | { kind: "sent"; purchaseId: string }
+  | { kind: "thanks"; kudosId: string }
+  | { kind: "team"; scope: "org" | "team"; label: string };
 
 const COPY = {
   sent: {
@@ -18,6 +20,10 @@ const COPY = {
   thanks: {
     title: "Share your thank-you",
     text: "Someone sent me a random act of kindness. Thank you, Santa!",
+  },
+  team: {
+    title: "Share your total",
+    text: "Our Christmas of random acts of kindness so far:",
   },
 } as const;
 
@@ -95,7 +101,9 @@ export function ShareSheet({
           <p className="text-ink-soft text-sm">
             {request.kind === "sent"
               ? "Post it in your team chat or community. The card never shows who it was for, what you sent or anyone's address."
-              : "Share your thank-you, photos and all. Your Santa stays anonymous, and so does the card."}
+              : request.kind === "thanks"
+                ? "Share your thank-you, photos and all. Your Santa stays anonymous, and so does the card."
+                : "This season's totals, rounded and never named. The link stays live, so it always shows the latest total."}
           </p>
 
           <div className="bg-label-shade border-rule relative aspect-[1200/630] w-full overflow-hidden rounded-sm border">

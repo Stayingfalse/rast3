@@ -111,6 +111,39 @@ test("a thank-you can be shared as a public card", async ({
   await visitor.close();
 });
 
+test("an organiser can share the organisation's total", async ({
+  page,
+  browser,
+}, testInfo) => {
+  // The seeded giver, made an organiser (site admin) for this test.
+  await loginAs(page, { email: giverEmail, adminLevel: "SITE" });
+  await page.goto("/");
+  const panel = page.getByRole("region", { name: "Your Christmas so far" });
+  await expect(panel.getByText("10+").first()).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Share the organisation total" })
+    .click();
+
+  const sheet = page.getByRole("dialog", { name: "Share your total" });
+  const card = sheet.getByRole("img", { name: "Your share card" });
+  await expect
+    .poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBe(1200);
+  const src = await card.getAttribute("src");
+  expect(src).toMatch(/^\/team\/[A-Za-z0-9]+\/card\.png$/);
+
+  const { baseURL, proxy } = testInfo.project.use;
+  const visitor = await browser.newContext({ baseURL, proxy });
+  const pub = await visitor.newPage();
+  const res = await pub.goto(src!.replace(/\/card\.png$/, ""));
+  expect(res?.status()).toBe(200);
+  await expect(
+    pub.getByRole("heading", { name: /^A Christmas of random acts at / }),
+  ).toBeVisible();
+  await snap(pub, testInfo, "share-team-public");
+  await visitor.close();
+});
+
 test("seeded kudos appear on the home page", async ({ page }, testInfo) => {
   await page.goto("/");
   await expect(page.getByText(/mystery Santa/).first()).toBeVisible();

@@ -219,6 +219,10 @@ model ShareCard {
   userId     String
   purchaseId String?       @unique
   kudosId    String?       @unique
+  /// Group cards: "org:<domain>" or "team:<departmentId>", one card per group
+  groupKey   String?       @unique
+  /// Group cards: the name shown on the card, chosen by the organiser
+  label      String?
   views      Int           @default(0)
   createdAt  DateTime      @default(now())
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -231,6 +235,8 @@ model ShareCard {
 enum ShareCardKind {
   SENT
   THANKS
+  ORG
+  TEAM
 }
 
 enum AdminLevel {

@@ -201,6 +201,158 @@ export async function renderShareCardImage(card: PublicShareCard) {
   const photo =
     card.kind === "thanks" ? await photoDataUri(card.images[0]) : null;
 
+  if (card.kind === "team" && card.group) {
+    const g = card.group;
+    const tiles = [
+      { k: "GIFTS SENT", v: g.gifts },
+      { k: "THANK-YOUS", v: g.thanks },
+      { k: "TAKING PART", v: g.members },
+    ].filter((t): t is { k: string; v: string } => t.v !== null);
+    return new ImageResponse(
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          padding: "56px 64px",
+          background: C.night,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 40,
+          }}
+        >
+          <div
+            style={{ display: "flex", flexDirection: "column", maxWidth: 820 }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                fontFamily: "ArchivoX",
+                fontSize: 52,
+                lineHeight: 1.1,
+                color: C.frost,
+              }}
+            >
+              {[
+                ...clip(g.label, 40)
+                  .split(/\s+/)
+                  .map((w) => ({ w, gold: true })),
+                ...`sent ${g.gifts} random acts of kindness this Christmas`
+                  .split(" ")
+                  .map((w) => ({ w, gold: false })),
+              ].map(({ w, gold }, i) => (
+                <span
+                  key={i}
+                  style={{
+                    color: gold ? C.goldSoft : C.frost,
+                    marginRight: 15,
+                  }}
+                >
+                  {w}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              position: "relative",
+              width: 230,
+              height: 250,
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src={stamp}
+              width={150}
+              height={183}
+              style={{ transform: "rotate(-6deg)" }}
+              alt=""
+            />
+            <div
+              style={{
+                display: "flex",
+                position: "absolute",
+                right: -18,
+                bottom: -16,
+              }}
+            >
+              <Postmark text="SENT" year={card.season} />
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 24,
+            marginTop: "auto",
+            marginBottom: 36,
+          }}
+        >
+          {tiles.map((t) => (
+            <div
+              key={t.k}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: 300,
+                background: C.label,
+                borderRadius: 8,
+                overflow: "hidden",
+              }}
+            >
+              <Airmail />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "18px 26px 22px",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "ArchivoX",
+                    fontSize: 18,
+                    letterSpacing: 2,
+                    color: C.inkSoft,
+                  }}
+                >
+                  {t.k}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "ArchivoX",
+                    fontSize: 56,
+                    color: C.ink,
+                    marginTop: 6,
+                  }}
+                >
+                  {t.v}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Footer />
+      </div>,
+      {
+        width: 1200,
+        height: 630,
+        fonts: fontList,
+        headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
+      },
+    );
+  }
+
   const body =
     card.kind === "sent" ? (
       <div

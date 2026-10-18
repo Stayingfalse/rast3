@@ -159,8 +159,7 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   design each year, a sponsored stamp in 2027, and possibly showing a member's
   album to their group.
 - **Share cards**: built on 18 Oct (see the log). Next: an "I collected the 2026
-  stamp" card, a group total card for organisers, and counting clicks back
-  from shared links.
+  stamp" card, and counting clicks back from shared links.
 - **Hero cancellation mark**: strike a gold cancellation across the hero stamp's
   corner, to bring the franking device back into the lockup (finish-review idea,
   18 Oct).
@@ -276,3 +275,13 @@ that don't touch the data model. Known items to include:
     own postcards.
   - **Checks.** e2e: 38/38 on dev. A thank-you with a real photo upload was
     checked on dev.
+  - **Group totals (same PR, at the owner's request).** Organisers (site
+    admins, the organisation's domain admin, the department's admin) see "Your
+    Christmas so far" on the home page.
+  - **What the organisation or team card shows.** This season's rounded gifts,
+    thank-yous and members (under 10 shows as "Under 10" and can't be shared),
+    under a name the organiser chooses.
+  - **Live link.** The card at `/team/<code>` is live, so the same link always
+    shows the latest total.
+  - **Database.** A second additive migration, `share_card_groups`, adds
+    `groupKey` and `label` and extends the kind enum.

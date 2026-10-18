@@ -36,6 +36,7 @@ export function ProfileSetupModal({
   const [domain, setDomain] = useState("");
   const [domainForChecking, setDomainForChecking] = useState(""); // Domain state for API queries (only updated on blur)
   const [domainDescription, setDomainDescription] = useState("");
+  const [joinCode, setJoinCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [forceEditEmail, setForceEditEmail] = useState(false);
   const [showDomainSetup, setShowDomainSetup] = useState(false);
@@ -203,6 +204,7 @@ export function ProfileSetupModal({
         workEmail: formData.workEmail,
         departmentId: formData.departmentId ?? undefined,
         amazonWishlistUrl: trimmedWishlistUrl ?? undefined,
+        joinCode: joinCode.trim() || undefined,
       });
     }
   };
@@ -489,6 +491,31 @@ export function ProfileSetupModal({
               </div>
             )}
           </div>
+          {/* Organisation join code (Day 11), only when the organisation asks for one */}
+          {domainStatus?.codeRequired && !existingProfile?.domain && (
+            <div>
+              <label
+                htmlFor="joinCode"
+                className="block text-sm font-medium text-ink-soft"
+              >
+                Organisation join code
+              </label>
+              <input
+                id="joinCode"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="ABCD-2345"
+                className="mt-1 block min-h-11 w-full rounded-label border border-rule bg-white px-3 py-2 font-bold tracking-widest text-ink"
+              />
+              <p className="mt-1 text-sm text-ink-soft">
+                Your organisation asks new members for a code. Your organiser
+                can give it to you.
+              </p>
+            </div>
+          )}
           {/* Department */}
           {departments.length > 0 && (
             <div>

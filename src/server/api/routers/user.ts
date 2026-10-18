@@ -323,6 +323,74 @@ export const userRouter = createTRPCRouter({
       return synced;
     }),
 
+  /** Organisers: people who joined their groups in the last 30 days (Day 11). */
+  recentJoiners: adminProcedure.query(async ({ ctx }) => {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const groupScope =
+      ctx.admin.adminLevel === "SITE"
+        ? { kind: { in: ["ORG" as const, "TEAM" as const] } }
+        : { id: { in: await adminGroupIds(ctx.admin.id) } };
+    const rows = await ctx.db.membership.findMany({
+      where: { joinedAt: { gte: since }, role: "MEMBER", group: groupScope },
+      orderBy: { joinedAt: "desc" },
+      take: 50,
+      select: {
+        joinedAt: true,
+        group: { select: { name: true, kind: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            workEmail: true,
+            email: true,
+          },
+        },
+      },
+    });
+    const seen = new Set<string>();
+    return rows
+      .filter((r) => !seen.has(r.user.id) && seen.add(r.user.id))
+      .map((r) => {
+        const full = [r.user.firstName, r.user.lastName]
+          .filter(Boolean)
+          .join(" ");
+        return {
+          userId: r.user.id,
+          name: full !== "" ? full : (r.user.name ?? "Unnamed"),
+          email: r.user.workEmail ?? r.user.email,
+          group: r.group.name,
+          joinedAt: r.joinedAt,
+        };
+      });
+  }),
+
+  /**
+   * Organisers: take someone out of the organisation without deleting their
+   * account. Their organisation, department and admin role are cleared.
+   */
+  removeFromOrganisation: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!(await canManageUser(ctx.admin, input.userId))) throw forbidden();
+      await ctx.db.user.update({
+        where: { id: input.userId },
+        data: {
+          domain: null,
+          departmentId: null,
+          adminLevel: "USER",
+          adminScope: null,
+        },
+      });
+      await ctx.db.wishlistAssignment.updateMany({
+        where: { assignedUserId: input.userId, isActive: true },
+        data: { isActive: false },
+      });
+      await syncUserGroups(ctx.db, input.userId);
+      return { ok: true };
+    }),
+
   // Get detailed user statistics for tooltips
   getUserStats: adminProcedure
     .input(

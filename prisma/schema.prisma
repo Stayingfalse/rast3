@@ -74,6 +74,7 @@ model User {
   posts                Post[]
   purchases            Purchase[]
   sessions             Session[]
+  shareCards           ShareCard[]
   department           Department?          @relation(fields: [departmentId], references: [id])
   assignedLinks        WishlistAssignment[] @relation("AssignedUser")
   ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
@@ -143,6 +144,7 @@ model Purchase {
   purchasedAt          DateTime           @default(now())
   notes                String?
   kudos                Kudos[]
+  shareCard            ShareCard?
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   wishlistAssignment   WishlistAssignment @relation(fields: [wishlistAssignmentId], references: [id], onDelete: Cascade)
 
@@ -169,19 +171,20 @@ model WishlistReport {
 }
 
 model Kudos {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   userId      String
   purchaseId  String?
-  message     String    @db.Text
-  images      String    @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  hidden      Boolean   @default(false)
+  message     String     @db.Text
+  images      String     @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  hidden      Boolean    @default(false)
   moderatedAt DateTime?
   moderatedBy String?
-  moderator   User?     @relation("KudosModerator", fields: [moderatedBy], references: [id])
-  purchase    Purchase? @relation(fields: [purchaseId], references: [id])
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moderator   User?      @relation("KudosModerator", fields: [moderatedBy], references: [id])
+  purchase    Purchase?  @relation(fields: [purchaseId], references: [id])
+  shareCard   ShareCard?
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([purchaseId])
@@ -197,7 +200,7 @@ model AuthProvider {
   clientSecret    String?
   enabled         Boolean  @default(false)
   isEmailProvider Boolean  @default(false)
-  emailConfig     Json?    // For email provider specific settings
+  emailConfig     Json? // For email provider specific settings
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   createdBy       String
@@ -205,6 +208,35 @@ model AuthProvider {
 
   @@index([enabled])
   @@index([createdBy])
+}
+
+/// A public, shareable card for one gift sent or one thank-you posted. The id
+/// is a random code used in the share URL; it reveals nothing about the
+/// recipient. Deleting the gift or thank-you deletes its card.
+model ShareCard {
+  id         String        @id
+  kind       ShareCardKind
+  userId     String
+  purchaseId String?       @unique
+  kudosId    String?       @unique
+  /// Group cards: "org:<domain>" or "team:<departmentId>", one card per group
+  groupKey   String?       @unique
+  /// Group cards: the name shown on the card, chosen by the organiser
+  label      String?
+  views      Int           @default(0)
+  createdAt  DateTime      @default(now())
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase   Purchase?     @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  kudos      Kudos?        @relation(fields: [kudosId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum ShareCardKind {
+  SENT
+  THANKS
+  ORG
+  TEAM
 }
 
 enum AdminLevel {

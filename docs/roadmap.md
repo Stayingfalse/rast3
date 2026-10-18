@@ -158,9 +158,8 @@ Suggestions beyond the brief, to schedule when the owner agrees:
 - **Stamp album (yearly)**: built 18 Oct (see the log). Still to do: a 2027 stamp
   design each year, a sponsored stamp in 2027, and possibly showing a member's
   album to their group.
-- **Gift-sent share card**: after "Gifted", offer a franked image ("I sent a random
-  act of kindness") for Slack, Teams or Discord, which never names the recipient.
-  This is organic growth into new orgs.
+- **Share cards**: built on 18 Oct (see the log). Next: an "I collected the 2026
+  stamp" card, and counting clicks back from shared links.
 - **Hero cancellation mark**: strike a gold cancellation across the hero stamp's
   corner, to bring the franking device back into the lockup (finish-review idea,
   18 Oct).
@@ -260,3 +259,29 @@ that don't touch the data model. Known items to include:
   - **Plumbing.** `stamps.getMyAlbum` returns your own activity only. The seed
     gives the test giver a December 2025 thank-you, and the e2e test checks the
     album before and after a gift.
+- **Extra (18 Oct, at the owner's request): share cards.** Two cards, both
+  1200×630 images generated on the server.
+  - **Giving card.** Offered right after marking a gift as Gifted: a parcel
+    label to a colleague, from Santa, address withheld, franked SENT.
+  - **Thank-you card.** Offered after posting kudos: the message plus the first
+    photo. Its public page shows every photo.
+  - **Pages and links.** Public pages at `/sent/<code>` and `/thanks/<code>`
+    carry previews for Slack, Teams and Discord, are noindex, and count views.
+    Hidden thank-yous return 404.
+  - **Database.** A new `ShareCard` table (additive migration
+    `add_share_cards`). Cards never show names, departments, the gift or an
+    address.
+  - **Sharing later.** "Share this act" on gifted parcels and "Share" on your
+    own postcards.
+  - **Checks.** e2e: 38/38 on dev. A thank-you with a real photo upload was
+    checked on dev.
+  - **Group totals (same PR, at the owner's request).** Organisers (site
+    admins, the organisation's domain admin, the department's admin) see "Your
+    Christmas so far" on the home page.
+  - **What the organisation or team card shows.** This season's rounded gifts,
+    thank-yous and members (under 10 shows as "Under 10" and can't be shared),
+    under a name the organiser chooses.
+  - **Live link.** The card at `/team/<code>` is live, so the same link always
+    shows the latest total.
+  - **Database.** A second additive migration, `share_card_groups`, adds
+    `groupKey` and `label` and extends the kind enum.

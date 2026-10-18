@@ -21,6 +21,14 @@ export function seasonYearOf(date: Date): number {
   return date.getUTCMonth() >= 7 ? year : year - 1;
 }
 
+/** The [start, end) dates of season Y: 1 August Y to 1 August Y+1 (UTC). */
+export function seasonRange(year: number): { gte: Date; lt: Date } {
+  return {
+    gte: new Date(Date.UTC(year, 7, 1)),
+    lt: new Date(Date.UTC(year + 1, 7, 1)),
+  };
+}
+
 export interface AlbumPage {
   year: number;
   design: string;

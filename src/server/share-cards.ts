@@ -52,7 +52,15 @@ export async function groupTotals(
   label: string,
   season: number = seasonYearOf(new Date()),
 ): Promise<GroupTotals> {
-  const who = scope === "org" ? { domain: id } : { departmentId: id };
+  // Members by group (Day 9); ids stay the email domain / department id so
+  // existing card links keep working
+  const who = {
+    memberships: {
+      some: {
+        group: scope === "org" ? { emailDomain: id } : { departmentId: id },
+      },
+    },
+  };
   const range = seasonRange(season);
   const [gifts, thanks, members] = await Promise.all([
     db.purchase.count({ where: { user: who, purchasedAt: range } }),

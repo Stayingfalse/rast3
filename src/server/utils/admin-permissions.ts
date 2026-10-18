@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { db } from "~/server/db";
 
 export type AdminLevel = "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
@@ -11,74 +12,67 @@ export interface AdminUser {
 }
 
 /**
+ * Day 9: organisers are the ADMIN members of a group (Membership table).
+ * Site admins stay a flag on the user. `adminLevel` / `adminScope` on User are
+ * still written (and shown in the UI) but no longer decide access.
+ */
+export async function adminGroupIds(userId: string): Promise<string[]> {
+  const rows = await db.membership.findMany({
+    where: { userId, role: "ADMIN", group: { kind: { in: ["ORG", "TEAM"] } } },
+    select: { groupId: true },
+  });
+  return rows.map((r) => r.groupId);
+}
+
+/** Users in any of these groups (an empty list matches nobody). */
+export const inAnyGroup = (groupIds: string[]): Prisma.UserWhereInput => ({
+  memberships: { some: { groupId: { in: groupIds } } },
+});
+
+async function isInGroups(userId: string, groupIds: string[]) {
+  if (groupIds.length === 0) return false;
+  const hit = await db.membership.findFirst({
+    where: { userId, groupId: { in: groupIds } },
+    select: { id: true },
+  });
+  return !!hit;
+}
+
+/**
  * Check if a user has admin permissions to moderate content within their scope
  */
 export async function checkAdminPermissions(
   userId: string,
   targetUserId?: string,
-): Promise<{ canModerate: boolean; adminLevel: AdminLevel; scope?: string }> {
+): Promise<{
+  canModerate: boolean;
+  adminLevel: AdminLevel;
+  scope?: string;
+  groupIds?: string[];
+}> {
   const currentUser = await db.user.findUnique({
     where: { id: userId },
-    select: {
-      adminLevel: true,
-      adminScope: true,
-      domain: true,
-      departmentId: true,
-    },
+    select: { adminLevel: true, adminScope: true },
   });
-  if (!currentUser?.adminLevel || currentUser.adminLevel === "USER") {
-    return { canModerate: false, adminLevel: "USER" };
-  }
+  if (!currentUser) return { canModerate: false, adminLevel: "USER" };
 
-  // SITE admins can moderate everything
   if (currentUser.adminLevel === "SITE") {
-    return {
-      canModerate: true,
-      adminLevel: currentUser.adminLevel,
-      scope: "site",
-    };
-  }
-  // If no target user specified, just return their admin status
-  if (!targetUserId) {
-    return {
-      canModerate: true,
-      adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined,
-    };
+    return { canModerate: true, adminLevel: "SITE", scope: "site" };
   }
 
-  // Get target user's information for scope checking
-  const targetUser = await db.user.findUnique({
-    where: { id: targetUserId },
-    select: {
-      domain: true,
-      departmentId: true,
-    },
-  });
+  const groupIds = await adminGroupIds(userId);
+  if (groupIds.length === 0) return { canModerate: false, adminLevel: "USER" };
+  const adminLevel =
+    currentUser.adminLevel === "USER" ? "DEPARTMENT" : currentUser.adminLevel;
+  const scope = currentUser.adminScope ?? undefined;
 
-  if (!targetUser) {
-    return { canModerate: false, adminLevel: currentUser.adminLevel };
-  }
-  // DOMAIN admins can moderate users in their domain
-  if (currentUser.adminLevel === "DOMAIN") {
-    const canModerate = currentUser.adminScope === targetUser.domain;
-    return {
-      canModerate,
-      adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined,
-    };
-  }
-  // DEPARTMENT admins can moderate users in their department
-  if (currentUser.adminLevel === "DEPARTMENT") {
-    const canModerate = currentUser.adminScope === targetUser.departmentId;
-    return {
-      canModerate,
-      adminLevel: currentUser.adminLevel,
-      scope: currentUser.adminScope ?? undefined,
-    };
-  }
-
-  return { canModerate: false, adminLevel: currentUser.adminLevel };
+  if (!targetUserId) return { canModerate: true, adminLevel, scope, groupIds };
+  return {
+    canModerate: await isInGroups(targetUserId, groupIds),
+    adminLevel,
+    scope,
+    groupIds,
+  };
 }
 
 /**
@@ -98,9 +92,9 @@ const RANK: Record<AdminLevel, number> = {
 };
 
 /**
- * Can this admin act on that user? SITE admins can act on anyone; domain and
- * department admins only on people in their scope who rank below them, so
- * they can't remove or demote fellow or more senior organisers.
+ * Can this admin act on that user? SITE admins can act on anyone; other
+ * organisers only on members of a group they administer who rank below them,
+ * so they can't remove or demote fellow or more senior organisers.
  */
 export async function canManageUser(
   admin: AdminUser,
@@ -110,28 +104,43 @@ export async function canManageUser(
   if (admin.id === targetUserId) return false;
   const target = await db.user.findUnique({
     where: { id: targetUserId },
-    select: { domain: true, departmentId: true, adminLevel: true },
+    select: { adminLevel: true },
   });
   if (!target) return false;
   if (RANK[target.adminLevel] >= RANK[admin.adminLevel]) return false;
-  if (admin.adminLevel === "DOMAIN") return target.domain === admin.adminScope;
-  if (admin.adminLevel === "DEPARTMENT") {
-    return target.departmentId === admin.adminScope;
-  }
-  return false;
+  return isInGroups(targetUserId, await adminGroupIds(admin.id));
 }
 
-/** Can this admin manage the named organisation (domain)? */
-export function canManageDomain(admin: AdminUser, domain: string): boolean {
+/** Can this admin manage the named organisation (by email domain)? */
+export async function canManageDomain(
+  admin: AdminUser,
+  domain: string,
+): Promise<boolean> {
   if (admin.adminLevel === "SITE") return true;
-  return admin.adminLevel === "DOMAIN" && admin.adminScope === domain;
+  const hit = await db.membership.findFirst({
+    where: {
+      userId: admin.id,
+      role: "ADMIN",
+      group: { kind: "ORG", emailDomain: domain.trim().toLowerCase() },
+    },
+    select: { id: true },
+  });
+  return !!hit;
 }
 
-/** Can this admin manage the department (by id) in that organisation? */
-export function canManageDepartment(
+/** Can this admin manage the department (legacy id) in that organisation? */
+export async function canManageDepartment(
   admin: AdminUser,
   department: { id: string; domain: string },
-): boolean {
-  if (canManageDomain(admin, department.domain)) return true;
-  return admin.adminLevel === "DEPARTMENT" && admin.adminScope === department.id;
+): Promise<boolean> {
+  if (await canManageDomain(admin, department.domain)) return true;
+  const hit = await db.membership.findFirst({
+    where: {
+      userId: admin.id,
+      role: "ADMIN",
+      group: { kind: "TEAM", departmentId: department.id },
+    },
+    select: { id: true },
+  });
+  return !!hit;
 }

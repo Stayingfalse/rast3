@@ -2,27 +2,26 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { syncUserGroups } from "~/server/groups";
+import type { Prisma } from "@prisma/client";
 import {
+  adminGroupIds,
   canManageDepartment,
   canManageDomain,
   canManageUser,
   checkAdminPermissions,
+  inAnyGroup,
 } from "~/server/utils/admin-permissions";
 
 const forbidden = (message = "That member isn't in your scope") =>
   new TRPCError({ code: "FORBIDDEN", message });
 
-/** Prisma filter for the members an organiser can see. */
-const scopeWhere = (admin: {
+/** Prisma filter for the members an organiser can see: everyone for site
+ * admins, otherwise members of the groups they administer (Day 9). */
+const scopeWhere = async (admin: {
+  id: string;
   adminLevel: string;
-  adminScope: string | null;
-}): Record<string, unknown> => {
-  if (admin.adminLevel === "DOMAIN") return { domain: admin.adminScope };
-  if (admin.adminLevel === "DEPARTMENT") {
-    return { departmentId: admin.adminScope };
-  }
-  return {};
-};
+}): Promise<Prisma.UserWhereInput> =>
+  admin.adminLevel === "SITE" ? {} : inAnyGroup(await adminGroupIds(admin.id));
 
 // Define AdminLevelEnum to represent the possible admin level values
 type AdminLevelEnum = "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
@@ -126,7 +125,7 @@ export const userRouter = createTRPCRouter({
   // Get all users with their profile and domain information
   getAll: adminProcedure.query(
     async ({ ctx }): Promise<UserWithDepartment[]> => {
-      const where = scopeWhere(ctx.admin);
+      const where = await scopeWhere(ctx.admin);
 
       return ctx.db.user.findMany({
         where,
@@ -144,7 +143,7 @@ export const userRouter = createTRPCRouter({
 
   // Get user statistics
   getStats: adminProcedure.query(async ({ ctx }) => {
-    const scope = scopeWhere(ctx.admin);
+    const scope = await scopeWhere(ctx.admin);
     const totalUsers = await ctx.db.user.count({ where: scope });
     const completedProfiles = await ctx.db.user.count({
       where: { ...scope, profileCompleted: true },
@@ -231,7 +230,7 @@ export const userRouter = createTRPCRouter({
         if (
           !department ||
           department.domain !== target?.domain ||
-          !canManageDepartment(ctx.admin, department)
+          !(await canManageDepartment(ctx.admin, department))
         ) {
           throw forbidden("That department isn't in your scope");
         }
@@ -293,7 +292,7 @@ export const userRouter = createTRPCRouter({
         if (
           !input.adminScope ||
           input.adminScope !== target?.domain ||
-          !canManageDomain(currentUser, input.adminScope)
+          !(await canManageDomain(currentUser, input.adminScope))
         ) {
           throw forbidden("That organisation isn't in your scope");
         }
@@ -304,7 +303,7 @@ export const userRouter = createTRPCRouter({
         if (
           !department ||
           input.adminScope !== target?.departmentId ||
-          !canManageDepartment(currentUser, department)
+          !(await canManageDepartment(currentUser, department))
         ) {
           throw forbidden("That department isn't in your scope");
         }

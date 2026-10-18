@@ -5,6 +5,12 @@ import {
   protectedProcedure,
   rateLimit,
 } from "~/server/api/trpc";
+import {
+  inGroup,
+  inOrgOutsideTeam,
+  inOtherActiveOrg,
+  requireGiverScope,
+} from "~/server/scope";
 
 const HOUR = 60 * 60_000;
 // Picking up wishlists hands out other people's links, so cap how fast one
@@ -308,13 +314,7 @@ export const wishlistRouter = createTRPCRouter({
       });
     }
 
-    if (!currentUser.domain || !currentUser.departmentId) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message:
-          "Please ensure your domain and department are set in your profile",
-      });
-    }
+    const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
 
     // Check if user already has assignments
     const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -343,8 +343,7 @@ export const wishlistRouter = createTRPCRouter({
           { id: { notIn: assignedUserIds } },
           { profileCompleted: true },
           { amazonWishlistUrl: { not: null } },
-          { domain: currentUser.domain }, // Same domain only
-          { departmentId: currentUser.departmentId }, // Same department only
+          inGroup(scope.teamId!), // Same team (department) only
         ],
       },
       select: {
@@ -418,22 +417,7 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Get current user's domain and department
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: {
-          domain: true,
-          departmentId: true,
-        },
-      });
-
-      if (!currentUser?.domain || !currentUser?.departmentId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message:
-            "Please ensure your domain and department are set in your profile",
-        });
-      }
+      const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
 
       // Check current assignment count
       const currentAssignmentCount = await ctx.db.wishlistAssignment.count({
@@ -469,8 +453,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
-            { domain: currentUser.domain }, // Same domain only
-            { departmentId: currentUser.departmentId }, // Same department only
+            inGroup(scope.teamId!), // Same team (department) only
           ],
         },
         select: {
@@ -543,21 +526,7 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Get current user's domain (but allow different departments)
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: {
-          domain: true,
-          departmentId: true,
-        },
-      });
-
-      if (!currentUser?.domain) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Please ensure your domain is set in your profile",
-        });
-      }
+      const scope = await requireGiverScope(ctx.db, userId, { needTeam: false });
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -580,8 +549,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
-            { domain: currentUser.domain }, // Same domain
-            { departmentId: { not: currentUser.departmentId } }, // Different department
+            inOrgOutsideTeam(scope.orgId, scope.teamId), // Same organisation, other teams
           ],
         },
         select: {
@@ -663,18 +631,7 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Get current user's domain
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { domain: true },
-      });
-
-      if (!currentUser?.domain) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Please ensure your domain is set in your profile",
-        });
-      }
+      const scope = await requireGiverScope(ctx.db, userId, { needTeam: false });
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -696,7 +653,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
-            { domain: { not: currentUser.domain } }, // Different domain only
+            inOtherActiveOrg(scope.orgId), // Another approved organisation
           ],
         },
         select: {

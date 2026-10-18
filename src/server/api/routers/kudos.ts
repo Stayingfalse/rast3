@@ -1,7 +1,11 @@
 import sharp from "sharp";
 import { z } from "zod";
 import { db } from "~/server/db";
-import { checkAdminPermissions } from "~/server/utils/admin-permissions";
+import { getMemberships, inGroup } from "~/server/scope";
+import {
+  checkAdminPermissions,
+  inAnyGroup,
+} from "~/server/utils/admin-permissions";
 import { deleteFromE2, uploadToE2 } from "~/server/utils/e2-upload";
 import { createChildLogger } from "~/utils/logger";
 import {
@@ -73,18 +77,14 @@ export const kudosRouter = createTRPCRouter({
 
       // Step 1: Apply scope filtering (department/domain/site)
       let scopeFilter: Record<string, unknown> = {};
-      if (
-        currentUser &&
-        input.scope === "department" &&
-        currentUser.departmentId
-      ) {
-        scopeFilter = { user: { departmentId: currentUser.departmentId } };
-      } else if (
-        currentUser &&
-        input.scope === "domain" &&
-        currentUser.domain
-      ) {
-        scopeFilter = { user: { domain: currentUser.domain } };
+      // Team and organisation feeds go by group membership (Day 9)
+      const mine = currentUser
+        ? await getMemberships(db, currentUser.id)
+        : null;
+      if (input.scope === "department" && mine?.team) {
+        scopeFilter = { user: inGroup(mine.team.id) };
+      } else if (input.scope === "domain" && mine?.org) {
+        scopeFilter = { user: inGroup(mine.org.id) };
       }
       // For "site" scope or unauthenticated users, no scope filter needed
 
@@ -111,7 +111,7 @@ export const kudosRouter = createTRPCRouter({
               {
                 AND: [
                   { hidden: true },
-                  { user: { domain: userPermissions.scope } },
+                  { user: inAnyGroup(userPermissions.groupIds ?? []) },
                   ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : []),
                 ],
               },
@@ -128,7 +128,7 @@ export const kudosRouter = createTRPCRouter({
               {
                 AND: [
                   { hidden: true },
-                  { user: { departmentId: userPermissions.scope } },
+                  { user: inAnyGroup(userPermissions.groupIds ?? []) },
                   ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : []),
                 ],
               },
@@ -154,8 +154,7 @@ export const kudosRouter = createTRPCRouter({
               image: true,
               firstName: true,
               lastName: true,
-              domain: true,
-              departmentId: true,
+              memberships: { select: { groupId: true } },
               department: {
                 select: {
                   name: true,
@@ -184,20 +183,15 @@ export const kudosRouter = createTRPCRouter({
 
       // The feed is public and shows posters under festive names, so real
       // identities only go to organisers who could moderate the post.
-      const seesIdentity = (poster: {
-        domain: string | null;
-        departmentId: string | null;
-      }) =>
+      const moderates = new Set(userPermissions?.groupIds ?? []);
+      const seesIdentity = (memberships: { groupId: string }[]) =>
         userPermissions?.adminLevel === "SITE" ||
-        (userPermissions?.adminLevel === "DOMAIN" &&
-          poster.domain === userPermissions.scope) ||
-        (userPermissions?.adminLevel === "DEPARTMENT" &&
-          poster.departmentId === userPermissions.scope);
+        memberships.some((m) => moderates.has(m.groupId));
 
       const results = page.map(
-        ({ user: { domain, departmentId, ...user }, ...item }) => ({
+        ({ user: { memberships, ...user }, ...item }) => ({
           ...item,
-          user: seesIdentity({ domain, departmentId })
+          user: seesIdentity(memberships)
             ? user
             : {
                 id: user.id,
@@ -221,77 +215,31 @@ export const kudosRouter = createTRPCRouter({
     }),
 
   getRecommendedScope: publicProcedure.query(async ({ ctx }) => {
-    // For unauthenticated users, default to site
-    if (!ctx.session?.user?.id) {
-      return "site";
-    }
-
-    const currentUser = await db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      include: {
-        department: true,
-      },
-    });
-
-    if (!currentUser) {
-      return "site";
-    }
-
-    // Check if user has a department and it's valid
-    if (currentUser.departmentId && currentUser.department) {
-      return "department";
-    }
-
-    // Check if user has a domain and it's enabled
-    if (currentUser.domain) {
-      const domain = await db.domain.findUnique({
-        where: { name: currentUser.domain },
-      });
-      if (domain?.enabled) {
-        return "domain";
-      }
-    } // Default to site
-    return "site";
+    // Signed out: the public, site-wide feed
+    if (!ctx.session?.user?.id) return "site";
+    const { org, team } = await getMemberships(db, ctx.session.user.id);
+    if (org?.status !== "ACTIVE") return "site";
+    return team ? "department" : "domain";
   }),
 
   // Check if a scope has content
   departmentHasContent: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.session?.user?.id) return false;
-
-    const user = await db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: { departmentId: true },
-    });
-
-    if (!user?.departmentId) return false;
-
+    const { team } = await getMemberships(db, ctx.session.user.id);
+    if (!team) return false;
     const count = await db.kudos.count({
-      where: {
-        user: { departmentId: user.departmentId },
-        hidden: false,
-      },
+      where: { user: inGroup(team.id), hidden: false },
     });
-
     return count > 0;
   }),
 
   domainHasContent: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.session?.user?.id) return false;
-
-    const user = await db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: { domain: true },
-    });
-
-    if (!user?.domain) return false;
-
+    const { org } = await getMemberships(db, ctx.session.user.id);
+    if (!org) return false;
     const count = await db.kudos.count({
-      where: {
-        user: { domain: user.domain },
-        hidden: false,
-      },
+      where: { user: inGroup(org.id), hidden: false },
     });
-
     return count > 0;
   }),
 

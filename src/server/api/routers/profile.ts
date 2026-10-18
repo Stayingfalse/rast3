@@ -6,7 +6,11 @@ import {
   protectedProcedure,
   rateLimit,
 } from "~/server/api/trpc";
-import { syncOrgGroupStatus, syncUserGroups } from "~/server/groups";
+import {
+  ensureTeamGroup,
+  syncOrgGroupStatus,
+  syncUserGroups,
+} from "~/server/groups";
 import { canManageDomain } from "~/server/utils/admin-permissions";
 
 type UserWithDepartment = {
@@ -333,17 +337,19 @@ export const profileRouter = createTRPCRouter({
         domain: z.string().min(1, "Domain is required"),
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const domain = input.domain.toLowerCase();
-      if (!canManageDomain(ctx.admin, domain)) {
+      if (!(await canManageDomain(ctx.admin, domain))) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Not your organisation",
         });
       }
-      return ctx.db.department.create({
+      const department = await ctx.db.department.create({
         data: { name: input.name, domain },
       });
+      await ensureTeamGroup(ctx.db, department.id);
+      return department;
     }),
   // Setup new domain and complete profile (for new domains)
   setupNewDomain: protectedProcedure

@@ -1,3 +1,7 @@
+import {
+  adminGroupIds,
+  inAnyGroup,
+} from "~/server/utils/admin-permissions";
 import { adminProcedure, createTRPCRouter } from "../trpc";
 
 // Define types for better type safety
@@ -28,12 +32,10 @@ export const linkRouter = createTRPCRouter({
       amazonWishlistUrl: { not: null },
     };
 
-    if (currentUser.adminLevel === "DOMAIN") {
-      where.domain = currentUser.adminScope;
-    } else if (currentUser.adminLevel === "DEPARTMENT") {
-      where.departmentId = currentUser.adminScope;
+    // Organisers see members of the groups they administer; site admins all
+    if (currentUser.adminLevel !== "SITE") {
+      Object.assign(where, inAnyGroup(await adminGroupIds(currentUser.id)));
     }
-    // SITE admins see all users (no additional filter)
 
     // Fetch users with a wishlist URL, including department info
     const users = await ctx.db.user.findMany({

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "~/server/db";
+import { syncUserGroups } from "~/server/groups";
 import {
   isTestAuthAuthorised,
   TEST_EMAIL_DOMAIN,
@@ -65,6 +66,9 @@ export async function POST(req: NextRequest) {
       emailVerified: new Date(),
     },
   });
+
+  // Admin roles live in group memberships since Day 9
+  await syncUserGroups(db, user.id);
 
   const sessionToken = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + SESSION_TTL_MS);

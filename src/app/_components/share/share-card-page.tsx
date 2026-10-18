@@ -22,6 +22,11 @@ const COPY: Record<ShareKind, { title: string; description: string }> = {
     description:
       "Someone received a Christmas gift from a mystery Santa, and said thank you.",
   },
+  team: {
+    title: "Our Christmas of random acts",
+    description:
+      "Colleagues sending each other Christmas gifts through their wishlists. No names, no addresses, no draw.",
+  },
 };
 
 export async function shareCardMetadata(
@@ -62,7 +67,9 @@ export async function ShareCardPage({
       <h1 className="font-expanded text-frost text-3xl leading-tight font-extrabold sm:text-4xl">
         {kind === "sent"
           ? "Someone sent a random act of kindness"
-          : "Someone said thank you to their Santa"}
+          : kind === "thanks"
+            ? "Someone said thank you to their Santa"
+            : `A Christmas of random acts at ${card.group?.label ?? "this team"}`}
       </h1>
 
       <img
@@ -70,7 +77,15 @@ export async function ShareCardPage({
         alt={
           kind === "thanks" && card.message
             ? `Thank-you card: “${card.message}”`
-            : "Parcel label: to a colleague, from Santa, address withheld"
+            : kind === "team" && card.group
+              ? `${card.group.label}: ${[
+                  card.group.gifts && `${card.group.gifts} gifts sent`,
+                  card.group.thanks && `${card.group.thanks} thank-yous`,
+                  card.group.members && `${card.group.members} taking part`,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}`
+              : "Parcel label: to a colleague, from Santa, address withheld"
         }
         width={1200}
         height={630}

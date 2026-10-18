@@ -7,6 +7,7 @@ import { HydrateClient } from "~/trpc/server";
 import { HomeHero } from "./_components/home-hero";
 import HomeMarketingServer from "./_components/home-marketing-server";
 import KudosAreaClient from "./_components/kudos-area-client";
+import { GroupTotals } from "./_components/share/group-totals";
 import { StampAlbum } from "./_components/stamp-album";
 import { Wordmark } from "./_components/post/wordmark";
 
@@ -35,6 +36,7 @@ export default async function Home() {
         </div>
         <WishlistManager />
         <StampAlbum />
+        <GroupTotals />
         <div id="kudos-section" className="w-full">
           {/* Client-gated kudos form to avoid server/client mismatch */}
           <div className="mb-14">

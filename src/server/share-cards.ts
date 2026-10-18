@@ -1,7 +1,8 @@
 import { randomBytes } from "node:crypto";
 
 import { db } from "~/server/db";
-import { seasonYearOf } from "~/server/stamps";
+import { roundForPublic } from "~/server/public-stats";
+import { seasonRange, seasonYearOf } from "~/server/stamps";
 
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -11,7 +12,7 @@ export function newShareCode(): string {
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
 }
 
-export type ShareKind = "sent" | "thanks";
+export type ShareKind = "sent" | "thanks" | "team";
 
 export const sharePath = (kind: ShareKind, code: string) => `/${kind}/${code}`;
 
@@ -23,6 +24,48 @@ export interface PublicShareCard {
   message: string | null;
   /** Stored image URLs (thanks cards only) */
   images: string[];
+  /** Live, rounded season totals (team cards only) */
+  group: GroupTotals | null;
+}
+
+export type GroupScope = "org" | "team";
+
+export interface GroupTotals {
+  scope: GroupScope;
+  label: string;
+  /** Rounded for public display ("120+"); null when under 10 */
+  gifts: string | null;
+  thanks: string | null;
+  members: string | null;
+}
+
+export const groupKeyOf = (scope: GroupScope, id: string) => `${scope}:${id}`;
+
+/**
+ * This season's totals for an organisation (email domain) or a team
+ * (department), rounded like the public totals so small groups can't be
+ * picked apart.
+ */
+export async function groupTotals(
+  scope: GroupScope,
+  id: string,
+  label: string,
+  season: number = seasonYearOf(new Date()),
+): Promise<GroupTotals> {
+  const who = scope === "org" ? { domain: id } : { departmentId: id };
+  const range = seasonRange(season);
+  const [gifts, thanks, members] = await Promise.all([
+    db.purchase.count({ where: { user: who, purchasedAt: range } }),
+    db.kudos.count({ where: { user: who, hidden: false, createdAt: range } }),
+    db.user.count({ where: { ...who, profileCompleted: true } }),
+  ]);
+  return {
+    scope,
+    label,
+    gifts: roundForPublic(gifts),
+    thanks: roundForPublic(thanks),
+    members: roundForPublic(members),
+  };
 }
 
 /**
@@ -53,6 +96,7 @@ export async function getPublicShareCard(
       season: seasonYearOf(card.purchase.purchasedAt),
       message: null,
       images: [],
+      group: null,
     };
   }
   if (kind === "thanks" && card.kind === "THANKS" && card.kudos) {
@@ -71,7 +115,27 @@ export async function getPublicShareCard(
       season: seasonYearOf(card.kudos.createdAt),
       message: card.kudos.message,
       images,
+      group: null,
     };
+  }
+  if (
+    kind === "team" &&
+    (card.kind === "ORG" || card.kind === "TEAM") &&
+    card.groupKey
+  ) {
+    const [scope, ...rest] = card.groupKey.split(":");
+    const id = rest.join(":");
+    if ((scope !== "org" && scope !== "team") || !id) return null;
+    const season = seasonYearOf(new Date());
+    const group = await groupTotals(
+      scope,
+      id,
+      card.label ?? "Our team",
+      season,
+    );
+    // Too few gifts to show yet: the card stays private until there are.
+    if (!group.gifts) return null;
+    return { code, kind, season, message: null, images: [], group };
   }
   return null;
 }

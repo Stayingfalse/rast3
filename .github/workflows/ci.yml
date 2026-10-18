@@ -96,6 +96,13 @@ jobs:
       - run: npm ci
         env:
           SKIP_ENV_VALIDATION: "1"
+      - name: Check the test login secret
+        run: |
+          if [ -z "$E2E_TEST_LOGIN_SECRET" ]; then
+            echo "::warning::E2E_TEST_LOGIN_SECRET is not set for this workflow; signed-in tests will be skipped"
+          else
+            echo "::notice::E2E_TEST_LOGIN_SECRET is set; running the full suite"
+          fi
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
       - uses: actions/upload-artifact@v4

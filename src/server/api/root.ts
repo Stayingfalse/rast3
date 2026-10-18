@@ -4,6 +4,7 @@ import { domainRouter } from "~/server/api/routers/domain";
 import { kudosRouter } from "~/server/api/routers/kudos";
 import { linkRouter } from "~/server/api/routers/link";
 import { profileRouter } from "~/server/api/routers/profile";
+import { stampsRouter } from "~/server/api/routers/stamps";
 import { userRouter } from "~/server/api/routers/user";
 import { wishlistRouter } from "~/server/api/routers/wishlist";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   kudos: kudosRouter,
   authProvider: authProviderRouter,
   admin: adminRouter,
+  stamps: stampsRouter,
 });
 
 // export type definition of API

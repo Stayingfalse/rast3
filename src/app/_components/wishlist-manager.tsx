@@ -116,9 +116,11 @@ export function WishlistManager() {
         setModalType(null);
       },
     });
+  const utils = api.useUtils();
   const markPurchase = api.wishlist.markPurchase.useMutation({
     onSuccess: () => {
       void refetch();
+      void utils.stamps.getMyAlbum.invalidate();
       setSelectedAssignment(null);
       setModalType(null);
       setPurchaseNotes("");
@@ -142,6 +144,7 @@ export function WishlistManager() {
 
   const undoPurchase = api.wishlist.undoPurchase.useMutation({
     onSuccess: () => {
+      void utils.stamps.getMyAlbum.invalidate();
       void refetch();
     },
   });

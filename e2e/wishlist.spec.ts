@@ -33,6 +33,11 @@ test("member gets 3 wishlists and marks one as gifted", async ({ page }, testInf
   await settle(page);
   await snap(page, testInfo, "wishlist-assigned");
 
+  // Stamp album: 2025 collected from last year's thank-you, 2026 still open.
+  const album = page.getByRole("region", { name: "Your stamp album" });
+  await expect(album.getByText("1 thank-you")).toBeVisible();
+  await expect(album.getByText("Still to collect this season")).toBeVisible();
+
   await page.getByRole("button", { name: "Gifted" }).first().click();
   await expect(
     page.getByRole("heading", { name: "Mark Purchase Complete" }),
@@ -43,6 +48,8 @@ test("member gets 3 wishlists and marks one as gifted", async ({ page }, testInf
   await expect(page.getByText(/Purchased:/)).toHaveCount(1);
   await expect(page.getByText('"A very festive jumper"')).toBeVisible();
   await expect(page.getByRole("button", { name: "Gifted" })).toHaveCount(2);
+  await expect(album.getByText("1 gift", { exact: true })).toBeVisible();
+  await expect(album.getByText("Still to collect this season")).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "wishlist-gifted");
   expect(errors).toEqual([]);

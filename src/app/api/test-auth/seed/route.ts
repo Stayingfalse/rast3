@@ -151,6 +151,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // The giver thanked their Santa last Christmas, so their stamp album has a
+  // collected 2025 stamp (seasons run August to July; see src/server/stamps.ts).
+  await db.kudos.create({
+    data: {
+      userId: giver.id,
+      message: "Last year's parcel was perfect. Thank you, Santa!",
+      images: "[]",
+      createdAt: new Date("2025-12-20T10:00:00Z"),
+    },
+  });
+  kudos++;
+
   return NextResponse.json({
     domain: TEST_EMAIL_DOMAIN,
     departments: departments.map((d) => d.name),

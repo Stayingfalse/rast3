@@ -95,38 +95,38 @@
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
 | 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
 
-### Week 3: the Christmas season and wishlists (26 Oct – 1 Nov)
+### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
 |---|---|---|
 | 19 | Mon 26 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 20 | Tue 27 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
-| 21 | Wed 28 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
-| 22 | Thu 29 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
-| 23 | Fri 30 Oct | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
-| 24 | Sat 31 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
-| 25 | Sun 1 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
+| 20 | Tue 27 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
+| 21 | Wed 28 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
+| 22 | Thu 29 Oct | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
+| 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 24 | Sat 31 Oct | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
 
-### Week 4: engagement and launch prep (2–8 Nov)
+### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 26 | Mon 2 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
-| 27 | Tue 3 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
-| 28 | Wed 4 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
-| 29 | Thu 5 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 30 | Fri 6 Nov | Accessibility + mobile pass |
-| 31 | Sat 7 Nov | Performance pass |
-| 32 | Sun 8 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
+| 25 | Sun 1 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
+| 26 | Mon 2 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
+| 27 | Tue 3 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 28 | Wed 4 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 29 | Thu 5 Nov | Accessibility + mobile pass |
+| 30 | Fri 6 Nov | Performance pass |
+| 31 | Sat 7 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 
-### Week 5: launch (9–15 Nov)
+### Week 5: launch (8–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 33 | Mon 9 Nov | Full regression on dev + launch checklist |
-| 34 | Tue 10 Nov | Fixes from regression |
-| 35 | Wed 11 Nov | Release candidate → prod (with the owner's approval) |
+| 32 | Sun 8 Nov | Full regression on dev + launch checklist |
+| 33 | Mon 9 Nov | Fixes from regression |
+| 34 | Tue 10 Nov | Release candidate → prod (with the owner's approval) |
+| 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 36 | Thu 12 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 37 | Fri 13 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 38 | Sat 14 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
-| 39 | Sun 15 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 39 | Sun 15 Nov | **Spare day** (Amazon-only this year, owner 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 
 ## Monetisation (2027; this year only collects the evidence)
 
@@ -150,6 +150,8 @@
   instead.
 
 ## Ideas backlog
+
+- **2027: wishlists beyond Amazon** (Throne, Etsy, any URL), taken off the 2026 plan by the owner on 18 Oct.
 
 Suggestions beyond the brief, to schedule when the owner agrees:
 - **Address privacy as a selling point**: Amazon wishlists can ship to the owner
@@ -459,4 +461,7 @@ that don't touch the data model. Known items to include:
   17 site admin console, legacy Domains/Departments retired). Everything
   else moved three days later; the release candidate is now Wed 11 Nov with
   four spare days after it.
+- **Owner decision (18 Oct):** Amazon wishlists only this year. "Wishlists
+  beyond Amazon" is off the 2026 plan (backlog for 2027); later days moved
+  one day earlier and the freed day is a fifth spare day.
 

@@ -70,10 +70,21 @@ export function bauble({
 }
 
 let uid = 0;
+// Stamp faces by season. 2025: a gold star on postal red; 2026: the bauble.
+export const SEASON_FACES = { 2025: "star", 2026: "bauble" };
+
+function starFace(cx, cy, r) {
+  return `${star(cx, cy, r * 1.15, C.goldSoft)}
+  ${star(cx - r * 0.95, cy - r * 0.95, r * 0.22, C.paper)}
+  ${star(cx + r * 0.9, cy - r * 0.6, r * 0.16, C.paper)}
+  ${star(cx + r * 0.75, cy + r * 0.95, r * 0.2, C.paper)}`;
+}
+
 // The stamp: a portrait perforated stamp, night panel, red bauble on gold thread.
 export function stampMark({
   year = "2026",
   showYear = true,
+  face = "bauble",
   w = 100,
   h = 124,
 } = {}) {
@@ -86,8 +97,8 @@ export function stampMark({
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ${w + 8} ${h + 8}">
   <defs><mask id="${id}"><rect x="-4" y="-4" width="${w + 8}" height="${h + 8}" fill="#fff"/>${perfHoles(w, h, 10, 3.4)}</mask></defs>
   <rect width="${w}" height="${h}" fill="${C.paper}" mask="url(#${id})"/>
-  <rect x="${inset}" y="${inset}" width="${pw}" height="${ph}" fill="${C.night}"/>
-  ${bauble({ cx: w / 2, cy, r, stringTop: inset, sw: 2 })}
+  <rect x="${inset}" y="${inset}" width="${pw}" height="${ph}" fill="${face === "star" ? C.post : C.night}"/>
+  ${face === "star" ? starFace(w / 2, cy, r) : bauble({ cx: w / 2, cy, r, stringTop: inset, sw: 2 })}
   ${showYear ? `<text x="${w / 2}" y="${h - inset - 6}" text-anchor="middle" font-family="Archivo" font-stretch="125%" font-weight="800" font-size="12" letter-spacing="1" fill="${C.goldSoft}">${year}</text>` : ""}
 </svg>`;
 }

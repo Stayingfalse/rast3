@@ -75,46 +75,47 @@
 | 3 | Sat 17 Oct | Prisma migrations baseline from the prod schema, so prod schema changes go through `migrate deploy` (needed before Week 2). **Pulled forward a day at the owner's request; every later day moved one day earlier.** |
 | 4 | Sun 18 Oct | **Brand mark and sky (owner feedback, 17 Oct).** Rethink the logo for 2026 for design and readability while keeping the name "Random Acts of Santa", and replace or redraw the background and hanging baubles if something better suits the Christmas Post world. Use the impeccable skill and present directions before building. **Inserted at the owner's request: every later day moved one day later, using up the spare day.** |
 | 5 | Sun 18 Oct | UX audit report (desktop + mobile) with screenshots, plus quick wins that don't touch the data model **Pulled forward to Sun 18 Oct at the owner's request; every later day moved one day earlier and the spare day is back.** |
-| 6 | Sun 18 Oct | **Pulled forward to Sun 18 Oct at the owner's request; no run on Mon 19 Oct (weekly allowance), Day 7 stays on Tue 20 Oct.** Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
-| 7 | Tue 20 Oct | CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
+| 6 | Sun 18 Oct | **Pulled forward to Sun 18 Oct at the owner's request; no run on Mon 19 Oct (weekly allowance), Day 7 was then also done on 18 Oct.** Security pass: server-side admin gating, remove or gate `/success` (shows thank-you posters' first names publicly; found in the Day 5 audit), `/debug` and `/pwa-test`; admin-only `wishlist.getAllReports` (any signed-in member can read every report with reporters' names), authorisation on every tRPC procedure, rate limits |
+| 7 | Sun 18 Oct | **Done early on 18 Oct at the owner's request; every later day moved one day earlier and a second spare day added.** CI on PRs (typecheck, lint, build, e2e); a single deploy trigger so pushes stop cancelling each other |
 
-### Week 2: groups (21–27 Oct), the core change
+### Week 2: groups (20–26 Oct), the core change
 | Day | Date | Focus |
 |---|---|---|
-| 8 | Wed 21 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
-| 9 | Thu 22 Oct | Scope every query to a group and season; tenant-isolation tests |
-| 10 | Fri 23 Oct | Create a group + invite links/codes (friends groups) |
-| 11 | Sat 24 Oct | Org joining via verified work email, moved onto the new model |
-| 12 | Sun 25 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
-| 13 | Mon 26 Oct | Group switcher + per-group home, designed mobile-first |
-| 14 | Tue 27 Oct | Group admin console: members, roles, settings, moderation |
+| 8 | Tue 20 Oct | Data model: Group, Membership, yearly Season, plus a migration of existing domains/departments into ORG groups (rehearsed on an anonymised copy; confirm prod DB backups first) |
+| 9 | Wed 21 Oct | Scope every query to a group and season; tenant-isolation tests |
+| 10 | Thu 22 Oct | Create a group + invite links/codes (friends groups) |
+| 11 | Fri 23 Oct | **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live |
+| 12 | Sat 24 Oct | Community joining via Discord: verify server membership (and optionally a role) with Discord OAuth |
+| 13 | Sun 25 Oct | Group switcher + per-group home, designed mobile-first |
+| 14 | Mon 26 Oct | Group admin console: members, roles, settings, moderation |
 
-### Week 3: the Christmas season and wishlists (28 Oct – 3 Nov)
+### Week 3: the Christmas season and wishlists (27 Oct – 2 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 15 | Wed 28 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
-| 16 | Thu 29 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 17 | Fri 30 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
-| 18 | Sat 31 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
-| 19 | Sun 1 Nov | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
-| 20 | Mon 2 Nov | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
-| 21 | Tue 3 Nov | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 15 | Tue 27 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules |
+| 16 | Wed 28 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
+| 17 | Thu 29 Oct | Wishlists beyond Amazon (Throne, Etsy, any URL) + URL validation and normalisation |
+| 18 | Fri 30 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
+| 19 | Sat 31 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
+| 20 | Sun 1 Nov | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
+| 21 | Mon 2 Nov | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
 
-### Week 4: engagement, polish, launch (4–15 Nov)
+### Week 4: engagement, polish, launch (3–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 22 | Wed 4 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
-| 23 | Thu 5 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
-| 24 | Fri 6 Nov | Public landing page + "start a group" onboarding (mobile-first) |
-| 25 | Sat 7 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
-| 26 | Sun 8 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 27 | Mon 9 Nov | Accessibility + mobile pass |
-| 28 | Tue 10 Nov | Performance pass |
-| 29 | Wed 11 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
-| 30 | Thu 12 Nov | Full regression on dev + launch checklist |
-| 31 | Fri 13 Nov | Fixes from regression |
-| 32 | Sat 14 Nov | Release candidate → prod (with the owner's approval) |
-| 33 | Sun 15 Nov | **Spare day** (gained by pulling Day 5 forward): launch support, last fixes, or an extra feature from the backlog |
+| 22 | Tue 3 Nov | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
+| 23 | Wed 4 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
+| 24 | Thu 5 Nov | Public landing page + "start a group" onboarding (mobile-first) |
+| 25 | Fri 6 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 26 | Sat 7 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 27 | Sun 8 Nov | Accessibility + mobile pass |
+| 28 | Mon 9 Nov | Performance pass |
+| 29 | Tue 10 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
+| 30 | Wed 11 Nov | Full regression on dev + launch checklist |
+| 31 | Thu 12 Nov | Fixes from regression |
+| 32 | Fri 13 Nov | Release candidate → prod (with the owner's approval) |
+| 33 | Sat 14 Nov | **Spare day** (gained by pulling Day 5 forward): launch support, last fixes, or an extra feature from the backlog |
+| 34 | Sun 15 Nov | **Spare day** (gained by doing Day 7 early on 18 Oct) |
 
 ## Monetisation (2027; this year only collects the evidence)
 
@@ -330,6 +331,22 @@ that don't touch the data model. Known items to include:
     minute overall, plus hourly caps on wishlist requests, reports, thank-yous,
     share cards and new-organisation setup.
   - **Still open.** Anyone can join an organisation, or set up a new one and
-    become its admin, by typing a work email they don't own. That's Day 11
-    (verified work email). `/api/images/*` serves any key in the photo bucket.
+    become its admin, by typing a work email they don't own. The owner decided
+    against email verification (most organisations block outside email); Day 11
+    adds trust-based safeguards instead. `/api/images/*` serves any key in the photo bucket.
+- **Day 7 (18 Oct, pulled forward): CI.** One workflow, `.github/workflows/ci.yml`,
+  replaces "Lint Code" (which pushed auto-fix commits to PR branches) and
+  "Auto Deploy".
+  - **Every PR and push:** typecheck, lint, Prisma schema check and build.
+  - **Pushes to dev/main:** deploy only after the checks pass, one deploy per
+    branch at a time. The deploy job waits until `/api/health` reports a
+    process started after its webhook call, so a second push queues behind
+    the first instead of cancelling its build.
+  - **Pushes to dev:** the Playwright suite (desktop + Pixel 7) runs against
+    dev once it's live; the report is kept for 14 days.
+  - **Needs the owner:** add the `E2E_TEST_LOGIN_SECRET` repo secret (the same
+    value as dev's `TEST_LOGIN_SECRET`); until then only the public e2e tests
+    run in CI. Claude can't set GitHub secrets.
+  - **Owner decision (18 Oct):** no work-email verification; Day 11 is now
+    trust-based joining with lighter safeguards.
 

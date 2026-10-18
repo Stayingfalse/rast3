@@ -1,0 +1,106 @@
+# One pipeline for checks and deploys.
+#
+# - Pull requests: typecheck, lint and build.
+# - Pushes to dev/main: the same checks, then ONE deploy webhook call per
+#   branch at a time. The deploy job waits until the new container is serving
+#   (/api/health reports a process started after the job began), so a second
+#   push queues behind it instead of cancelling the build in progress, and a
+#   commit that fails the checks is never deployed.
+# - Pushes to dev: the Playwright suite runs against https://dev.raosanta.uk
+#   once the deploy is live (desktop + Pixel 7).
+#
+# Secrets: WEBHOOK_URL (prod), DEV_WEBHOOK_URI (dev), E2E_TEST_LOGIN_SECRET
+# (dev-only test login; without it the signed-in e2e tests are skipped).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Newer commits on a PR replace older runs; deploy branches never cancel.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma validate
+        env:
+          DATABASE_URL: mysql://ci:ci@localhost:3306/ci
+      - run: npx tsc --noEmit
+      - run: npx eslint .
+      - run: npm run build
+
+  deploy:
+    name: Deploy ${{ github.ref_name }}
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # One deploy per branch at a time; a newer push waits rather than
+    # interrupting a build that's already running.
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
+    env:
+      SITE: ${{ github.ref_name == 'main' && 'https://raosanta.uk' || 'https://dev.raosanta.uk' }}
+      WEBHOOK: ${{ github.ref_name == 'main' && secrets.WEBHOOK_URL || secrets.DEV_WEBHOOK_URI }}
+    steps:
+      - name: Call deploy webhook
+        run: |
+          echo "STARTED=$(date -u +%s)" >> "$GITHUB_ENV"
+          curl -fsS -X POST "$WEBHOOK" -H "Content-Type: application/json" \
+            -d '{"repository": "${{ github.repository }}", "commit": "${{ github.sha }}"}'
+      - name: Wait for the new build to serve
+        run: |
+          for i in $(seq 1 90); do
+            started=$(curl -fsS "$SITE/api/health" | jq -r '.process.startedAt // empty' || true)
+            if [ -n "$started" ] && [ "$(date -u -d "$started" +%s)" -gt "$STARTED" ]; then
+              echo "Live: process started $started"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$SITE did not restart within 15 minutes"
+          exit 1
+
+  e2e:
+    name: E2E on dev
+    needs: deploy
+    if: github.event_name == 'push' && github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    env:
+      E2E_BASE_URL: https://dev.raosanta.uk
+      E2E_TEST_LOGIN_SECRET: ${{ secrets.E2E_TEST_LOGIN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+        env:
+          SKIP_ENV_VALIDATION: "1"
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-report
+          path: test-results/
+          retention-days: 14

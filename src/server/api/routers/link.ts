@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { adminProcedure, createTRPCRouter } from "../trpc";
 
 // Define types for better type safety
 type UserWithWishlist = {
@@ -21,21 +20,8 @@ type UserWithWishlist = {
 };
 
 export const linkRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    // Get current user to check admin level and scope
-    const currentUser = await ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: {
-        adminLevel: true,
-        adminScope: true,
-        domain: true,
-        departmentId: true,
-      },
-    });
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    const currentUser = ctx.admin;
 
     // Build where clause based on admin level
     const where: Record<string, unknown> = {
@@ -48,7 +34,6 @@ export const linkRouter = createTRPCRouter({
       where.departmentId = currentUser.adminScope;
     }
     // SITE admins see all users (no additional filter)
-    // USER level shouldn't access this endpoint
 
     // Fetch users with a wishlist URL, including department info
     const users = await ctx.db.user.findMany({
@@ -153,13 +138,4 @@ export const linkRouter = createTRPCRouter({
       };
     });
   }),
-  incrementWishlistViews: protectedProcedure
-    .input(z.object({ userId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.user.update({
-        where: { id: input.userId },
-        data: { wishlistViews: { increment: 1 } },
-      });
-      return { success: true };
-    }),
 });

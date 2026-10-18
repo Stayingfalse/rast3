@@ -52,7 +52,7 @@ NODE_ENV=development
 
 ## 🧪 **Testing Results**
 
-### Test Endpoint: `/api/test-logging`
+### Test Endpoint: `/api/test-logging` (removed in Oct 2026 security pass)
 ```json
 {
   "success": true,

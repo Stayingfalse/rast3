@@ -4,12 +4,18 @@ import { db } from "~/server/db";
 import { checkAdminPermissions } from "~/server/utils/admin-permissions";
 import { deleteFromE2, uploadToE2 } from "~/server/utils/e2-upload";
 import { createChildLogger } from "~/utils/logger";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+  rateLimit,
+} from "../trpc";
 
 const logger = createChildLogger('kudos');
 
 export const kudosRouter = createTRPCRouter({
   createKudos: protectedProcedure
+    .use(rateLimit("kudos.create", 20, 60 * 60_000))
     .input(
       z.object({
         message: z.string().min(1).max(500),
@@ -148,6 +154,8 @@ export const kudosRouter = createTRPCRouter({
               image: true,
               firstName: true,
               lastName: true,
+              domain: true,
+              departmentId: true,
               department: {
                 select: {
                   name: true,
@@ -156,17 +164,10 @@ export const kudosRouter = createTRPCRouter({
             },
           },
           purchase: {
-            include: {
+            select: {
               wishlistAssignment: {
-                include: {
-                  wishlistOwner: {
-                    select: {
-                      id: true,
-                      name: true,
-                      firstName: true,
-                      lastName: true,
-                    },
-                  },
+                select: {
+                  wishlistOwner: { select: { id: true } },
                 },
               },
             },
@@ -179,7 +180,35 @@ export const kudosRouter = createTRPCRouter({
       });
 
       const hasNextPage = kudos.length > input.limit;
-      const results = hasNextPage ? kudos.slice(0, -1) : kudos;
+      const page = hasNextPage ? kudos.slice(0, -1) : kudos;
+
+      // The feed is public and shows posters under festive names, so real
+      // identities only go to organisers who could moderate the post.
+      const seesIdentity = (poster: {
+        domain: string | null;
+        departmentId: string | null;
+      }) =>
+        userPermissions?.adminLevel === "SITE" ||
+        (userPermissions?.adminLevel === "DOMAIN" &&
+          poster.domain === userPermissions.scope) ||
+        (userPermissions?.adminLevel === "DEPARTMENT" &&
+          poster.departmentId === userPermissions.scope);
+
+      const results = page.map(
+        ({ user: { domain, departmentId, ...user }, ...item }) => ({
+          ...item,
+          user: seesIdentity({ domain, departmentId })
+            ? user
+            : {
+                id: user.id,
+                name: null,
+                image: null,
+                firstName: null,
+                lastName: null,
+                department: null,
+              },
+        }),
+      );
       const nextCursor = hasNextPage
         ? results[results.length - 1]?.createdAt.toISOString()
         : undefined;

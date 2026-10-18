@@ -55,9 +55,13 @@ export const wishlistReportsRouter = createTRPCRouter({
   resolveByIds: protectedProcedure
     .input(z.object({ reportIds: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
+      // Only reports on the caller's own wishlist (matches /api/wishlist-reports)
       const result = await ctx.db.wishlistReport.updateMany({
-        where: { id: { in: input.reportIds } },
-        data: { resolved: true },
+        where: {
+          id: { in: input.reportIds },
+          wishlistAssignment: { wishlistOwnerId: ctx.session.user.id },
+        },
+        data: { resolved: true, resolvedAt: new Date() },
       });
 
       // returning count is useful for the client

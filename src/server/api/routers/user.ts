@@ -1,5 +1,27 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter } from "~/server/api/trpc";
+import {
+  canManageDepartment,
+  canManageDomain,
+  canManageUser,
+  checkAdminPermissions,
+} from "~/server/utils/admin-permissions";
+
+const forbidden = (message = "That member isn't in your scope") =>
+  new TRPCError({ code: "FORBIDDEN", message });
+
+/** Prisma filter for the members an organiser can see. */
+const scopeWhere = (admin: {
+  adminLevel: string;
+  adminScope: string | null;
+}): Record<string, unknown> => {
+  if (admin.adminLevel === "DOMAIN") return { domain: admin.adminScope };
+  if (admin.adminLevel === "DEPARTMENT") {
+    return { departmentId: admin.adminScope };
+  }
+  return {};
+};
 
 // Define AdminLevelEnum to represent the possible admin level values
 type AdminLevelEnum = "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
@@ -101,21 +123,9 @@ type AssignmentWithUser = {
 
 export const userRouter = createTRPCRouter({
   // Get all users with their profile and domain information
-  getAll: protectedProcedure.query(
+  getAll: adminProcedure.query(
     async ({ ctx }): Promise<UserWithDepartment[]> => {
-      // Get current user
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-      });
-      if (!currentUser) return [];
-
-      let where: Record<string, unknown> = {};
-      if (currentUser.adminLevel === "DOMAIN") {
-        where = { domain: currentUser.adminScope };
-      } else if (currentUser.adminLevel === "DEPARTMENT") {
-        where = { departmentId: currentUser.adminScope };
-      }
-      // SITE gets all, USER should never reach here
+      const where = scopeWhere(ctx.admin);
 
       return ctx.db.user.findMany({
         where,
@@ -132,10 +142,11 @@ export const userRouter = createTRPCRouter({
   ),
 
   // Get user statistics
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    const totalUsers = await ctx.db.user.count();
+  getStats: adminProcedure.query(async ({ ctx }) => {
+    const scope = scopeWhere(ctx.admin);
+    const totalUsers = await ctx.db.user.count({ where: scope });
     const completedProfiles = await ctx.db.user.count({
-      where: { profileCompleted: true },
+      where: { ...scope, profileCompleted: true },
     });
     const pendingProfiles = totalUsers - completedProfiles;
 
@@ -147,6 +158,7 @@ export const userRouter = createTRPCRouter({
       },
       where: {
         domain: { not: null },
+        ...scope,
       },
     });
     return {
@@ -161,7 +173,7 @@ export const userRouter = createTRPCRouter({
   }),
 
   // Update user's profile completion status (admin only)
-  toggleProfileCompletion: protectedProcedure
+  toggleProfileCompletion: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -169,6 +181,7 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!(await canManageUser(ctx.admin, input.userId))) throw forbidden();
       return ctx.db.user.update({
         where: { id: input.userId },
         data: {
@@ -179,7 +192,7 @@ export const userRouter = createTRPCRouter({
     }),
 
   // Delete user (admin only)
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -190,13 +203,14 @@ export const userRouter = createTRPCRouter({
       if (input.userId === ctx.session.user.id) {
         throw new Error("You cannot delete your own account");
       }
+      if (!(await canManageUser(ctx.admin, input.userId))) throw forbidden();
       return ctx.db.user.delete({
         where: { id: input.userId },
       });
     }),
 
   // Update user's department
-  updateDepartment: protectedProcedure
+  updateDepartment: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -204,6 +218,23 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!(await canManageUser(ctx.admin, input.userId))) throw forbidden();
+      if (input.departmentId) {
+        const [target, department] = await Promise.all([
+          ctx.db.user.findUnique({
+            where: { id: input.userId },
+            select: { domain: true },
+          }),
+          ctx.db.department.findUnique({ where: { id: input.departmentId } }),
+        ]);
+        if (
+          !department ||
+          department.domain !== target?.domain ||
+          !canManageDepartment(ctx.admin, department)
+        ) {
+          throw forbidden("That department isn't in your scope");
+        }
+      }
       return ctx.db.user.update({
         where: { id: input.userId },
         data: {
@@ -215,7 +246,7 @@ export const userRouter = createTRPCRouter({
       });
     }),
   // Update user's admin level and scope
-  updateAdminLevel: protectedProcedure
+  updateAdminLevel: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -224,15 +255,11 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Get current user to check permissions
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { adminLevel: true },
-      });
-
-      if (!currentUser) {
-        throw new Error("Current user not found");
+      const currentUser = ctx.admin;
+      if (input.userId === currentUser.id) {
+        throw forbidden("You can't change your own admin level");
       }
+      if (!(await canManageUser(currentUser, input.userId))) throw forbidden();
 
       // DEPARTMENT admins can only promote to DEPARTMENT level, not DOMAIN
       if (
@@ -254,6 +281,32 @@ export const userRouter = createTRPCRouter({
         );
       }
 
+      // Organisers are scoped to the member's own organisation or department
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        select: { domain: true, departmentId: true },
+      });
+      if (input.adminLevel === "DOMAIN") {
+        if (
+          !input.adminScope ||
+          input.adminScope !== target?.domain ||
+          !canManageDomain(currentUser, input.adminScope)
+        ) {
+          throw forbidden("That organisation isn't in your scope");
+        }
+      } else if (input.adminLevel === "DEPARTMENT") {
+        const department = await ctx.db.department.findUnique({
+          where: { id: input.adminScope ?? "" },
+        });
+        if (
+          !department ||
+          input.adminScope !== target?.departmentId ||
+          !canManageDepartment(currentUser, department)
+        ) {
+          throw forbidden("That department isn't in your scope");
+        }
+      }
+
       return ctx.db.user.update({
         where: { id: input.userId },
         data: {
@@ -267,13 +320,18 @@ export const userRouter = createTRPCRouter({
     }),
 
   // Get detailed user statistics for tooltips
-  getUserStats: protectedProcedure
+  getUserStats: adminProcedure
     .input(
       z.object({
         userId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      const { canModerate } = await checkAdminPermissions(
+        ctx.admin.id,
+        input.userId,
+      );
+      if (!canModerate) throw forbidden();
       // Get user's assignment statistics
       const assignmentStats = (await ctx.db.wishlistAssignment.findMany({
         where: { assignedUserId: input.userId },

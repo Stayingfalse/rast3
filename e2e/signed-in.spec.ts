@@ -54,13 +54,18 @@ test.describe("signed-in user", () => {
     expect(errors).toEqual([]);
   });
 
-  test("non-admin is sent away from /admin", async ({ page }, testInfo) => {
+  test("non-admin gets a 404 from /admin", async ({ page }, testInfo) => {
     await loginAs(page, {
       email: `plain-${testInfo.project.name}@e2e.raosanta.test`,
       adminLevel: "USER",
     });
-    await page.goto("/admin");
-    await expect(page).toHaveURL(/\/$/);
+    for (const path of ["/admin", "/admin/users"]) {
+      const res = await page.goto(path);
+      expect(res?.status()).toBe(404);
+      await expect(
+        page.getByRole("heading", { name: "Return to sender" }),
+      ).toBeVisible();
+    }
   });
 });
 

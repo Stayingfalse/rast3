@@ -19,7 +19,7 @@ export function StampMark({ year, className = "" }: StampMarkProps) {
     >
       <img src="/brand/stamp.svg" alt="" className="block h-full w-full" />
       {year && (
-        <span className="font-expanded text-gold-soft tabular absolute inset-x-0 bottom-[10%] text-center text-[13cqw] leading-none font-extrabold tracking-[0.06em]">
+        <span className="font-expanded text-gold-soft tabular absolute inset-x-0 bottom-[10%] text-center text-[max(13cqw,10px)] leading-none font-extrabold tracking-[0.06em]">
           {year}
         </span>
       )}

@@ -10,12 +10,7 @@
     <defs><mask id="hs1"><rect x="-4" y="-4" width="58" height="70" fill="#fff"/><circle cx="0.00" cy="0.00" r="1.9" fill="#000"/><circle cx="0.00" cy="62.00" r="1.9" fill="#000"/><circle cx="6.25" cy="0.00" r="1.9" fill="#000"/><circle cx="6.25" cy="62.00" r="1.9" fill="#000"/><circle cx="12.50" cy="0.00" r="1.9" fill="#000"/><circle cx="12.50" cy="62.00" r="1.9" fill="#000"/><circle cx="18.75" cy="0.00" r="1.9" fill="#000"/><circle cx="18.75" cy="62.00" r="1.9" fill="#000"/><circle cx="25.00" cy="0.00" r="1.9" fill="#000"/><circle cx="25.00" cy="62.00" r="1.9" fill="#000"/><circle cx="31.25" cy="0.00" r="1.9" fill="#000"/><circle cx="31.25" cy="62.00" r="1.9" fill="#000"/><circle cx="37.50" cy="0.00" r="1.9" fill="#000"/><circle cx="37.50" cy="62.00" r="1.9" fill="#000"/><circle cx="43.75" cy="0.00" r="1.9" fill="#000"/><circle cx="43.75" cy="62.00" r="1.9" fill="#000"/><circle cx="50.00" cy="0.00" r="1.9" fill="#000"/><circle cx="50.00" cy="62.00" r="1.9" fill="#000"/><circle cx="0.00" cy="6.20" r="1.9" fill="#000"/><circle cx="50.00" cy="6.20" r="1.9" fill="#000"/><circle cx="0.00" cy="12.40" r="1.9" fill="#000"/><circle cx="50.00" cy="12.40" r="1.9" fill="#000"/><circle cx="0.00" cy="18.60" r="1.9" fill="#000"/><circle cx="50.00" cy="18.60" r="1.9" fill="#000"/><circle cx="0.00" cy="24.80" r="1.9" fill="#000"/><circle cx="50.00" cy="24.80" r="1.9" fill="#000"/><circle cx="0.00" cy="31.00" r="1.9" fill="#000"/><circle cx="50.00" cy="31.00" r="1.9" fill="#000"/><circle cx="0.00" cy="37.20" r="1.9" fill="#000"/><circle cx="50.00" cy="37.20" r="1.9" fill="#000"/><circle cx="0.00" cy="43.40" r="1.9" fill="#000"/><circle cx="50.00" cy="43.40" r="1.9" fill="#000"/><circle cx="0.00" cy="49.60" r="1.9" fill="#000"/><circle cx="50.00" cy="49.60" r="1.9" fill="#000"/><circle cx="0.00" cy="55.80" r="1.9" fill="#000"/><circle cx="50.00" cy="55.80" r="1.9" fill="#000"/></mask></defs>
     <rect width="50" height="62" fill="#fffdf8" mask="url(#hs1)"/>
     <rect x="5" y="5" width="40" height="52" fill="#1b3363"/>
-    
-  <rect x="22.24" y="19.119999999999997" width="5.5200000000000005" height="3.5999999999999996" rx="0.72" fill="#caa24c"/>
-  <circle cx="25" cy="34" r="12" fill="#b8262c"/>
-  <path d="M 13.24 31.6 Q 25 37.36 36.76 31.6" stroke="#f6f0e2" stroke-width="1.56" fill="none"/>
-  <path d="M 14.2 37.84 Q 25 43.36 35.8 37.84" stroke="#caa24c" stroke-width="0.96" fill="none"/>
-  <ellipse cx="20.439999999999998" cy="28.6" rx="1.92" ry="2.64" transform="rotate(-30 20.439999999999998 28.6)" fill="#fffdf8" opacity="0.45"/>
+    <path d="M 25 20 Q 26.98 29.02 36 31 Q 26.98 32.98 25 42 Q 23.02 32.98 14 31 Q 23.02 29.02 25 20 Z" fill="#e5cf98"/>
   </g>
 <line x1="246" y1="0" x2="246" y2="70" stroke="#caa24c" stroke-width="1.5"/>
   <circle cx="246" cy="70" r="2.25" fill="none" stroke="#caa24c" stroke-width="1.5"/>
@@ -37,6 +32,6 @@
   <path d="M 397.34 54.6 Q 414 62.76 430.66 54.6" stroke="#b8262c" stroke-width="2.21" fill="none"/>
   <path d="M 398.7 63.44 Q 414 71.26 429.3 63.44" stroke="#fffdf8" stroke-width="1.36" fill="none"/>
   <ellipse cx="407.54" cy="50.35" rx="2.72" ry="3.74" transform="rotate(-30 407.54 50.35)" fill="#fffdf8" opacity="0.45"/>
-<path d="M 206 207 Q 207.26 212.74 213 214 Q 207.26 215.26 206 221 Q 204.74 215.26 199 214 Q 204.74 212.74 206 207 Z" fill="#e5cf98"/>
+<path d="M 206 189 Q 207.26 194.74 213 196 Q 207.26 197.26 206 203 Q 204.74 197.26 199 196 Q 204.74 194.74 206 189 Z" fill="#e5cf98"/>
 <path d="M 470 121 Q 471.62 128.38 479 130 Q 471.62 131.62 470 139 Q 468.38 131.62 461 130 Q 468.38 128.38 470 121 Z" fill="#e5cf98"/>
 <path d="M 120 35 Q 120.9 39.1 125 40 Q 120.9 40.9 120 45 Q 119.1 40.9 115 40 Q 119.1 39.1 120 35 Z" fill="#e5cf98"/></svg>

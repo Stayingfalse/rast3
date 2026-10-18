@@ -64,7 +64,13 @@ export function GroupTotals() {
                   {stats.map((s) => (
                     <div key={s.k} className="py-3">
                       <dt className="text-ink-soft text-sm">{s.k}</dt>
-                      <dd className="font-expanded tabular text-ink text-2xl font-extrabold">
+                      <dd
+                        className={
+                          s.v
+                            ? "font-expanded tabular text-ink text-2xl font-extrabold"
+                            : "text-ink-soft pt-1.5 text-base font-semibold"
+                        }
+                      >
                         {s.v ?? "Under 10"}
                       </dd>
                     </div>

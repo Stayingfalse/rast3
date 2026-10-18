@@ -1,0 +1,1649 @@
+{
+ "desktop/out-home": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-privacy": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 47,
+    "sample": [
+     ".text-lg",
+     ".mb-6:nth-child(2)"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/privacy",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Privacy Policy"
+   ],
+   "title": "Privacy Policy | Random Acts of Santa 2025"
+  }
+ },
+ "desktop/out-success": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "n": 1,
+    "sample": [
+     "html"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/success",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-verify-request": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/auth/verify-request",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Check your email"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-magic": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/auth/magic",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Sign in"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-debug": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "n": 1,
+    "sample": [
+     "html"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/debug",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-pwa-test": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 3,
+    "sample": [
+     ".bg-red-500",
+     ".bg-green-500"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "help": "Scrollable region must have keyboard access",
+    "n": 1,
+    "sample": [
+     "pre"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/pwa-test",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "PWA Test Page"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-not-found": {
+  "status": 404,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/no-such-page",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "404"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/out-admin-signed-out": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/new-profile-setup": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/member-empty": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "label",
+    "impact": "critical",
+    "help": "Form elements must have labels",
+    "n": 1,
+    "sample": [
+     "input"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/member-with-gifts": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "label",
+    "impact": "critical",
+    "help": "Form elements must have labels",
+    "n": 1,
+    "sample": [
+     "input"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 5,
+    "sample": [
+     ".bg-green-600\\/80 > h3",
+     ".text-green-100"
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "n": 1,
+    "sample": [
+     ".sm\\:p-6.bg-black\\/85.p-4:nth-child(1) > h3"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Admin Overview"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-users": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 23,
+    "sample": [
+     "#domain-filter",
+     "#department-filter"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/users",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "User Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-departments": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 2,
+    "sample": [
+     ".sm\\:p-4 > .justify-between.items-center.flex > .rounded-full.px-2.py-1",
+     ".sm\\:mb-4.justify-between.mb-3 > .rounded-full.px-2.py-1"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/departments",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Department Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-domains": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 2,
+    "sample": [
+     ".whitespace-nowrap:nth-child(2) > .rounded-full.px-2.py-1",
+     ".text-white\\/40"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/domains",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Domain Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-links": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     "#domain-filter"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/links",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Wishlist Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-kudos": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 5,
+    "sample": [
+     ".hover\\:bg-white\\/5:nth-child(1) > .gap-2 > .bg-yellow-600.hover\\:bg-yellow-700.disabled\\:opacity-60",
+     ".hover\\:bg-white\\/5:nth-child(2) > .gap-2 > .bg-yellow-600.hover\\:bg-yellow-700.disabled\\:opacity-60"
+    ]
+   },
+   {
+    "id": "label-title-only",
+    "impact": "serious",
+    "help": "Form elements should have a visible label",
+    "n": 1,
+    "sample": [
+     "select"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/kudos",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Kudos Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "desktop/admin-admin-settings": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/settings",
+   "sw": 1280,
+   "vw": 1280,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Site Settings"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-home": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-privacy": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 47,
+    "sample": [
+     ".text-lg",
+     ".mb-6:nth-child(2)"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/privacy",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Privacy Policy"
+   ],
+   "title": "Privacy Policy | Random Acts of Santa 2025"
+  }
+ },
+ "mobile/out-success": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "n": 1,
+    "sample": [
+     "html"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/success",
+   "sw": 412,
+   "vw": 412,
+   "h1": [],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-verify-request": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/auth/verify-request",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Check your email"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-magic": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/auth/magic",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Sign in"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-debug": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "n": 1,
+    "sample": [
+     "html"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/debug",
+   "sw": 412,
+   "vw": 412,
+   "h1": [],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-pwa-test": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 3,
+    "sample": [
+     ".bg-red-500",
+     ".bg-green-500"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   },
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "help": "Scrollable region must have keyboard access",
+    "n": 1,
+    "sample": [
+     "pre"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/pwa-test",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "PWA Test Page"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-not-found": {
+  "status": 404,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/no-such-page",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "404"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/out-admin-signed-out": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/new-profile-setup": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/member-empty": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "label",
+    "impact": "critical",
+    "help": "Form elements must have labels",
+    "n": 1,
+    "sample": [
+     "input"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/member-with-gifts": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".text-ink-soft\\/80"
+    ]
+   },
+   {
+    "id": "label",
+    "impact": "critical",
+    "help": "Form elements must have labels",
+    "n": 1,
+    "sample": [
+     "input"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Random Actsof Santa 2026"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 5,
+    "sample": [
+     ".bg-green-600\\/80 > h3",
+     ".text-green-100"
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "n": 1,
+    "sample": [
+     ".sm\\:p-6.bg-black\\/85.p-4:nth-child(1) > h3"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Admin Overview"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-users": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 23,
+    "sample": [
+     "#domain-filter",
+     "#department-filter"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/users",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "User Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-departments": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 2,
+    "sample": [
+     ".sm\\:p-4 > .justify-between.items-center.flex > .rounded-full.px-2.py-1",
+     ".sm\\:mb-4.justify-between.mb-3 > .rounded-full.px-2.py-1"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/departments",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Department Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-domains": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     ".mt-1.flex-wrap.gap-2 > .rounded-full.px-2.py-1"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/domains",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Domain Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-links": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 1,
+    "sample": [
+     "#domain-filter"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/links",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Wishlist Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-kudos": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "n": 5,
+    "sample": [
+     ".hover\\:bg-white\\/5:nth-child(1) > .gap-2 > .bg-yellow-600.hover\\:bg-yellow-700.disabled\\:opacity-60",
+     ".hover\\:bg-white\\/5:nth-child(2) > .gap-2 > .bg-yellow-600.hover\\:bg-yellow-700.disabled\\:opacity-60"
+    ]
+   },
+   {
+    "id": "label-title-only",
+    "impact": "serious",
+    "help": "Form elements should have a visible label",
+    "n": 1,
+    "sample": [
+     "select"
+    ]
+   },
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/kudos",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Kudos Management"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ },
+ "mobile/admin-admin-settings": {
+  "status": 200,
+  "errs": [],
+  "axe": [
+   {
+    "id": "landmark-main-is-top-level",
+    "impact": "moderate",
+    "help": "Main landmark should not be contained in another landmark",
+    "n": 1,
+    "sample": [
+     ".lg\\:pl-64 > main"
+    ]
+   },
+   {
+    "id": "landmark-no-duplicate-main",
+    "impact": "moderate",
+    "help": "Document should not have more than one main landmark",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "landmark-unique",
+    "impact": "moderate",
+    "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+    "n": 1,
+    "sample": [
+     ".bg-night"
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "n": 1,
+    "sample": [
+     "meta[name=\"viewport\"]"
+    ]
+   }
+  ],
+  "metrics": {
+   "url": "/admin/settings",
+   "sw": 412,
+   "vw": 412,
+   "h1": [
+    "Admin Panel",
+    "Admin Panel",
+    "Site Settings"
+   ],
+   "title": "Random Acts of Santa 2026"
+  }
+ }
+}

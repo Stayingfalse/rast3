@@ -35,43 +35,13 @@ export function AuthShowcase() {
       refetch: () => void;
     };
 
-  // Check domain status for completed profiles with domains
-  const { data: domainStatus } = api.profile.checkDomainStatus.useQuery(
-    { domain: userProfile?.domain ?? "" },
-    {
-      enabled: !!(
-        sessionData?.user &&
-        userProfile?.profileCompleted &&
-        userProfile?.domain
-      ),
-    },
-  );
-  // Check if profile setup is needed when user signs in
+  // Day 12: only an unfinished profile (name + wishlist) opens the window;
+  // joining groups happens on /groups.
   useEffect(() => {
-    if (sessionData?.user && userProfile) {
-      // If user has completed profile but domain is disabled, show profile modal with restriction
-      if (
-        userProfile.profileCompleted &&
-        userProfile.domain &&
-        userProfile.domainEnabled === false
-      ) {
-        setIsProfileSetupModalOpen(true);
-      }
-      // If user has completed profile but domain doesn't exist in system, show profile modal
-      else if (
-        userProfile.profileCompleted &&
-        userProfile.domain &&
-        domainStatus &&
-        !domainStatus.exists
-      ) {
-        setIsProfileSetupModalOpen(true);
-      }
-      // If profile is not completed, show profile setup
-      else if (!userProfile.profileCompleted) {
-        setIsProfileSetupModalOpen(true);
-      }
+    if (sessionData?.user && userProfile && !userProfile.profileCompleted) {
+      setIsProfileSetupModalOpen(true);
     }
-  }, [sessionData, userProfile, domainStatus]);
+  }, [sessionData, userProfile]);
   // Early return if user is not authenticated - prevents rendering authenticated content
   if (!sessionData?.user) return null;
 
@@ -94,10 +64,13 @@ export function AuthShowcase() {
         {userProfile && (
           <p className="text-frost-soft text-sm">
             {userProfile.profileCompleted ? (
-              <>
-                {userProfile.workEmail}
-                {userProfile.department && ` · ${userProfile.department.name}`}
-              </>
+              userProfile.domain && (
+                <>
+                  {userProfile.workEmail}
+                  {userProfile.department &&
+                    ` · ${userProfile.department.name}`}
+                </>
+              )
             ) : (
               <span className="text-gold-soft">Profile setup needed</span>
             )}
@@ -115,30 +88,15 @@ export function AuthShowcase() {
           it&apos;s approved.
         </p>
       )}
-      {userProfile?.profileCompleted &&
-        userProfile.domain &&
-        userProfile.domainEnabled === false && (
-          <p
-            role="status"
-            className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
-          >
-            Your organisation&apos;s domain ({userProfile.domain}) is currently
-            disabled. Ask your organiser for access.
-          </p>
-        )}
-      {userProfile?.profileCompleted &&
-        userProfile.domain &&
-        userProfile.domainEnabled !== false &&
-        domainStatus &&
-        !domainStatus.exists && (
-          <p
-            role="status"
-            className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
-          >
-            Your organisation&apos;s domain ({userProfile.domain}) isn&apos;t
-            set up yet. You can set it up or ask your employer.
-          </p>
-        )}
+      {userProfile?.profileCompleted && userProfile.orgStatus === "DISABLED" && (
+        <p
+          role="status"
+          className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
+        >
+          Your organisation ({userProfile.domain}) is closed on Random Acts of
+          Santa. You can join another group from Your groups.
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <Link

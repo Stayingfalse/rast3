@@ -6,12 +6,16 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { api, type RouterOutputs } from "~/trpc/react";
+import { WorkplaceCard } from "./workplace-card";
 
 type Group = RouterOutputs["groups"]["mine"][number];
 
 const KIND_LABEL = { FRIENDS: "Friends", COMMUNITY: "Community" } as const;
 const STATUS: Record<Group["status"], { label: string; className: string }> = {
-  PENDING: { label: "Waiting for approval", className: "bg-gold-soft text-ink" },
+  PENDING: {
+    label: "Waiting for approval",
+    className: "bg-gold-soft text-ink",
+  },
   ACTIVE: { label: "Live", className: "bg-pine-tint text-pine" },
   DISABLED: { label: "Closed", className: "bg-label-shade text-ink-soft" },
 };
@@ -52,11 +56,14 @@ export function GroupsPanel() {
           Your groups
         </h1>
         <p className="text-frost-soft max-w-2xl text-lg">
-          Start a group for friends or a community (a Discord server, a club, a
-          street) and invite people with a link or code. Nobody needs a work
-          email. We check each new group before it goes live.
+          Gifting happens inside groups. Join your workplace with your work
+          email, or a friends group or community (a Discord server, a club, a
+          street) with an invite code, or start your own. You can be in more
+          than one. We check each new group before it goes live.
         </p>
       </header>
+
+      <WorkplaceCard />
 
       <div className="grid gap-6 md:grid-cols-2">
         <form
@@ -69,7 +76,7 @@ export function GroupsPanel() {
           <div className="airmail h-2.5" aria-hidden />
           <div className="flex flex-col gap-4 px-5 pb-5">
             <h2 className="font-expanded text-ink text-xl font-bold">
-              Start a group
+              Start a friends or community group
             </h2>
             <label className="flex flex-col gap-1">
               <span className="label-caps text-ink-soft">Group name</span>
@@ -89,14 +96,20 @@ export function GroupsPanel() {
               </legend>
               {(
                 [
-                  ["FRIENDS", "Friends or family", "People who know each other"],
+                  [
+                    "FRIENDS",
+                    "Friends or family",
+                    "People who know each other",
+                  ],
                   ["COMMUNITY", "Community", "A Discord server, club or forum"],
                 ] as const
               ).map(([value, title, hint]) => (
                 <label
                   key={value}
                   className={`rounded-label flex min-h-11 cursor-pointer items-start gap-3 border px-3 py-2 ${
-                    kind === value ? "border-post bg-post-tint" : "border-rule bg-white"
+                    kind === value
+                      ? "border-post bg-post-tint"
+                      : "border-rule bg-white"
                   }`}
                 >
                   <input
@@ -108,7 +121,9 @@ export function GroupsPanel() {
                     className="accent-post mt-1.5"
                   />
                   <span>
-                    <span className="text-ink block font-semibold">{title}</span>
+                    <span className="text-ink block font-semibold">
+                      {title}
+                    </span>
                     <span className="text-ink-soft block text-sm">{hint}</span>
                   </span>
                 </label>
@@ -160,7 +175,10 @@ export function GroupsPanel() {
         </form>
       </div>
 
-      <section aria-labelledby="my-groups-heading" className="flex flex-col gap-4">
+      <section
+        aria-labelledby="my-groups-heading"
+        className="flex flex-col gap-4"
+      >
         <h2
           id="my-groups-heading"
           className="font-expanded text-frost text-2xl font-extrabold uppercase"
@@ -212,7 +230,9 @@ function GroupCard({ group }: { group: Group }) {
     if (!link) return;
     const text = `Join ${group.name} on Random Acts of Santa`;
     if (navigator.share) {
-      await navigator.share({ title: text, text, url: link }).catch(() => undefined);
+      await navigator
+        .share({ title: text, text, url: link })
+        .catch(() => undefined);
       return;
     }
     await navigator.clipboard.writeText(link);
@@ -251,13 +271,20 @@ function GroupCard({ group }: { group: Group }) {
             </p>
             {link && (
               <p className="text-ink-soft text-sm break-all">
-                <Link href={`/join/${group.joinCode}`} className="underline underline-offset-4">
+                <Link
+                  href={`/join/${group.joinCode}`}
+                  className="underline underline-offset-4"
+                >
                   {link.replace(/^https?:\/\//, "")}
                 </Link>
               </p>
             )}
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void shareInvite()} className="btn-post">
+              <button
+                type="button"
+                onClick={() => void shareInvite()}
+                className="btn-post"
+              >
                 Share invite
               </button>
               <button
@@ -276,7 +303,8 @@ function GroupCard({ group }: { group: Group }) {
           type="button"
           disabled={leave.isPending}
           onClick={() => {
-            if (window.confirm(`Leave ${group.name}?`)) leave.mutate({ groupId: group.id });
+            if (window.confirm(`Leave ${group.name}?`))
+              leave.mutate({ groupId: group.id });
           }}
           className="text-ink-soft mt-1 self-start text-sm underline underline-offset-4"
         >

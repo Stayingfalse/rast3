@@ -185,7 +185,7 @@ export function WishlistManager() {
     count?: number;
   }>(null);
 
-  const updateProfileForWishlist = api.profile.updateProfile.useMutation({
+  const updateProfileForWishlist = api.profile.saveProfile.useMutation({
     onSuccess: async () => {
       // Refresh profile and close prompt, then retry pending request
       await refetchProfile();
@@ -246,10 +246,37 @@ export function WishlistManager() {
           Finish your profile first
         </h2>
         <p className="text-ink-soft mt-2">
-          Add your work email, department and wishlist, then you can start
-          picking up wishlists.
+          Add your name and wishlist, then join your workplace or a group to
+          start picking up wishlists.
         </p>
       </div>
+    );
+  }
+
+  // Day 12: gifting happens inside a group. No live organisation yet?
+  const orgStatus = (userProfile as { orgStatus?: string | null }).orgStatus;
+  if (orgStatus !== "ACTIVE") {
+    return (
+      <section className="label-stock w-full overflow-hidden" aria-labelledby="join-a-group">
+        <div className="airmail h-2.5" aria-hidden />
+        <div className="flex flex-col gap-3 p-6 sm:p-8">
+          <h2 id="join-a-group" className="font-expanded text-ink text-2xl font-extrabold">
+            {orgStatus === "PENDING"
+              ? "Your organisation is waiting for approval"
+              : "Join a group to start gifting"}
+          </h2>
+          <p className="text-ink-soft max-w-xl">
+            {orgStatus === "PENDING"
+              ? "We check every new organisation before it goes live. You'll be able to pick up wishlists as soon as it's approved; meanwhile, invite colleagues so there are lists waiting."
+              : "Wishlists are shared inside groups: your workplace, a group of friends, or a community such as a Discord server. Join one with your work email or an invite code, or start your own."}
+          </p>
+          <div>
+            <a href="/groups" className="btn-post">
+              {orgStatus === "PENDING" ? "Your groups" : "Join or start a group"}
+            </a>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -1003,8 +1030,6 @@ export function WishlistManager() {
                   updateProfileForWishlist.mutate({
                     firstName: userProfile.firstName ?? "",
                     lastName: userProfile.lastName ?? "",
-                    workEmail: userProfile.workEmail ?? "",
-                    departmentId: userProfile.departmentId ?? undefined,
                     amazonWishlistUrl: newWishlistUrl ?? undefined,
                   });
                 }}

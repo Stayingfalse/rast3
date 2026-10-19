@@ -9,6 +9,12 @@ import {
   siteAdminProcedure,
 } from "~/server/api/trpc";
 import type { PrismaClient } from "@prisma/client";
+import {
+  fetchMyGuilds,
+  fetchMyRoles,
+  getDiscordToken,
+  isSnowflake,
+} from "~/server/discord";
 import { ensureOrgGroup, findOrgGroup, syncUserGroups } from "~/server/groups";
 import {
   findInvite,
@@ -85,6 +91,8 @@ export const groupsRouter = createTRPCRouter({
             kind: true,
             status: true,
             joinCode: true,
+            discordGuildId: true,
+            discordRoleId: true,
             _count: { select: { memberships: true } },
           },
         },
@@ -99,6 +107,10 @@ export const groupsRouter = createTRPCRouter({
       members: group._count.memberships,
       // only organisers can see and share the code
       joinCode: role === "ADMIN" ? group.joinCode : null,
+      discord:
+        role === "ADMIN"
+          ? { guildId: group.discordGuildId, roleId: group.discordRoleId }
+          : null,
     }));
   }),
 
@@ -430,6 +442,168 @@ export const groupsRouter = createTRPCRouter({
     await syncUserGroups(ctx.db, userId);
     return { ok: true };
   }),
+
+  /**
+   * Day 13, organisers: link a community group to a Discord server (and
+   * optionally a role) so members can join by being in that server.
+   */
+  setDiscordLink: protectedProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        guildId: z.string().trim().nullable(),
+        roleId: z.string().trim().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const m = await ctx.db.membership.findUnique({
+        where: {
+          groupId_userId: {
+            groupId: input.groupId,
+            userId: ctx.session.user.id,
+          },
+        },
+        select: { role: true, group: { select: { kind: true } } },
+      });
+      if (m?.role !== "ADMIN" || m.group.kind !== "COMMUNITY") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Community organisers only",
+        });
+      }
+      const guildId = input.guildId ?? null;
+      const roleId = (input.roleId ?? "") === "" ? null : input.roleId!;
+      if (
+        (guildId && !isSnowflake(guildId)) ||
+        (roleId && !isSnowflake(roleId))
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Discord ids are 17 to 20 digits. Copy them with Developer Mode on.",
+        });
+      }
+      if (guildId) {
+        const taken = await ctx.db.group.findUnique({
+          where: { discordGuildId: guildId },
+          select: { id: true },
+        });
+        if (taken && taken.id !== input.groupId) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "That Discord server is already linked to another group.",
+          });
+        }
+      }
+      return ctx.db.group.update({
+        where: { id: input.groupId },
+        data: {
+          discordGuildId: guildId,
+          discordRoleId: guildId ? roleId : null,
+        },
+        select: { id: true, discordGuildId: true, discordRoleId: true },
+      });
+    }),
+
+  /**
+   * Day 13: community groups linked to Discord servers you're in. Returns
+   * { needsDiscord } when you haven't connected Discord (with server access).
+   */
+  discordMatches: protectedProcedure
+    .use(rateLimit("groups.discordMatches", 30, HOUR))
+    .mutation(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      const token = await getDiscordToken(userId);
+      if (!token) return { needsDiscord: true as const, groups: [] };
+      const guilds = await fetchMyGuilds(token);
+      if (!guilds) return { needsDiscord: true as const, groups: [] };
+      const groups = await ctx.db.group.findMany({
+        where: {
+          kind: "COMMUNITY",
+          status: { not: "DISABLED" },
+          discordGuildId: { in: guilds.map((g) => g.id) },
+        },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          discordGuildId: true,
+          discordRoleId: true,
+          memberships: { where: { userId }, select: { id: true } },
+          _count: { select: { memberships: true } },
+        },
+      });
+      const out = [];
+      for (const g of groups) {
+        const roleOk = g.discordRoleId
+          ? ((await fetchMyRoles(token, g.discordGuildId!)) ?? []).includes(
+              g.discordRoleId,
+            )
+          : true;
+        out.push({
+          id: g.id,
+          name: g.name,
+          status: g.status,
+          members: g._count.memberships,
+          server: guilds.find((x) => x.id === g.discordGuildId)?.name ?? "",
+          alreadyMember: g.memberships.length > 0,
+          roleOk,
+        });
+      }
+      return { needsDiscord: false as const, groups: out };
+    }),
+
+  /** Join a community group because you're in its Discord server (re-checked). */
+  joinViaDiscord: protectedProcedure
+    .use(rateLimit("groups.joinViaDiscord", 20, HOUR))
+    .input(z.object({ groupId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const group = await ctx.db.group.findUnique({
+        where: { id: input.groupId },
+        select: {
+          id: true,
+          name: true,
+          kind: true,
+          status: true,
+          discordGuildId: true,
+          discordRoleId: true,
+        },
+      });
+      if (
+        !group?.discordGuildId ||
+        group.kind !== "COMMUNITY" ||
+        group.status === "DISABLED"
+      ) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      const token = await getDiscordToken(userId);
+      if (!token) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Connect Discord first.",
+        });
+      }
+      const roles = await fetchMyRoles(token, group.discordGuildId);
+      if (!roles) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You're not in that Discord server.",
+        });
+      }
+      if (group.discordRoleId && !roles.includes(group.discordRoleId)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "That community needs a Discord role you don't have yet.",
+        });
+      }
+      await ctx.db.membership.upsert({
+        where: { groupId_userId: { groupId: group.id, userId } },
+        update: {},
+        create: { groupId: group.id, userId },
+      });
+      return { id: group.id, name: group.name };
+    }),
 
   /** Site admins: groups and organisations by status, newest first. */
   forReview: siteAdminProcedure

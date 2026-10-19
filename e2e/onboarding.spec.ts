@@ -59,7 +59,7 @@ test("a new member fills in their profile, then joins their workplace", async ({
   await workplace.getByRole("button", { name: "Join workplace" }).click();
 
   const joined = page.getByRole("region", { name: E });
-  await expect(joined.getByText("Live")).toBeVisible();
+  await expect(joined.getByText("Live", { exact: true })).toBeVisible();
   await joined.getByLabel("Your team").selectOption({ label: "Elves Workshop" });
   await expect(page.getByText("Team saved")).toBeVisible();
   await settle(page);
@@ -89,6 +89,11 @@ test("an unknown work domain offers to start an organisation", async ({
   const errors = trackPageErrors(page);
   const domain = `startup-${testInfo.project.name}.${E}`;
   await loginAs(page, { email: `starter-${testInfo.project.name}@${E}` });
+  // profile first (name and wishlist), as the real flow requires
+  const saved = await page.request.post("/api/trpc/profile.saveProfile", {
+    data: { json: { firstName: "Sam", lastName: "Starter" } },
+  });
+  expect(saved.status()).toBe(200);
   await page.goto("/groups");
   const workplace = page.getByRole("region", { name: "Join your workplace" });
   await workplace.getByLabel("Work email").fill(`sam@${domain}`);

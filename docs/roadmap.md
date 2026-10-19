@@ -93,7 +93,7 @@
 | 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. |
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
-| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. |
+| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
 
 ### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
@@ -518,4 +518,7 @@ that don't touch the data model. Known items to include:
 - **Day 12 merged to prod (19 Oct, owner approved).** The `onboarding_cleanup`
   migration ran on prod. Owner liked the "Bring your team" idea: added to
   Day 16 (organiser console).
+- **Owner decision (19 Oct): yearly re-onboarding.** Keep old data; every
+  member re-does onboarding each season (wishlist and groups confirmed)
+  before taking part. Added to Day 18 (Christmas season).
 

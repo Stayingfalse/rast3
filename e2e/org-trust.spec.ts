@@ -31,12 +31,8 @@ const query = (r: APIRequestContext, path: string, input?: unknown) =>
 const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
   r.post(`/api/trpc/${path}`, { data: { json: input ?? null } });
 
-const profile = (workEmail: string, joinCode?: string) => ({
-  firstName: "Newbie",
-  lastName: "Joiner",
-  workEmail,
-  ...(joinCode ? { joinCode } : {}),
-});
+const joinOrg = (r: APIRequestContext, workEmail: string, joinCode?: string) =>
+  mutate(r, "groups.joinOrganisation", { workEmail, ...(joinCode ? { joinCode } : {}) });
 
 let code = "";
 
@@ -72,14 +68,14 @@ test("joining that organisation needs the code", async ({ page }, testInfo) => {
   const email = `newbie-${testInfo.project.name}@${E}`;
   await loginAs(page, { email });
   const work = `newbie-${testInfo.project.name}@${RIVAL}`;
-  const without = await mutate(page.request, "profile.completeProfile", profile(work));
-  expect(without.status()).toBe(400);
-  const withCode = await mutate(
-    page.request,
-    "profile.completeProfile",
-    profile(work, `${code.slice(0, 4).toLowerCase()}-${code.slice(4)}`),
-  );
-  expect(withCode.status()).toBe(200);
+  const without = (await unwrap(await joinOrg(page.request, work))) as { result: string };
+  expect(without.result).toBe("needsCode");
+  const wrong = (await unwrap(await joinOrg(page.request, work, "AAAA-AAAA"))) as { result: string };
+  expect(wrong.result).toBe("wrongCode");
+  const withCode = (await unwrap(
+    await joinOrg(page.request, work, `${code.slice(0, 4).toLowerCase()}-${code.slice(4)}`),
+  )) as { result: string };
+  expect(withCode.result).toBe("joined");
 });
 
 test("organisers see recent joiners and can remove them", async ({ page }, testInfo) => {
@@ -113,9 +109,7 @@ test("a new organisation waits for a site admin", async ({ page }, testInfo) => 
   const errors = trackPageErrors(page);
   const domain = `brandnew-${testInfo.project.name}.${E}`;
   await loginAs(page, { email: `founder-${testInfo.project.name}@${E}` });
-  const setup = await mutate(page.request, "profile.setupNewDomain", {
-    firstName: "Fay",
-    lastName: "Founder",
+  const setup = await mutate(page.request, "groups.startOrganisation", {
     workEmail: `fay@${domain}`,
   });
   expect(setup.status()).toBe(200);

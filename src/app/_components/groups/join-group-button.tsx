@@ -5,7 +5,13 @@ import { toast } from "react-hot-toast";
 
 import { api } from "~/trpc/react";
 
-export function JoinGroupButton({ code, name }: { code: string; name: string }) {
+export function JoinGroupButton({
+  code,
+  name,
+}: {
+  code: string;
+  name: string;
+}) {
   const router = useRouter();
   const join = api.groups.join.useMutation({
     onSuccess: () => {

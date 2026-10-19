@@ -2,7 +2,11 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { db } from "~/server/db";
-import { syncUserGroups } from "~/server/groups";
+import {
+  ensureOrgGroup,
+  syncOrgGroupStatus,
+  syncUserGroups,
+} from "~/server/groups";
 import {
   isTestAuthAuthorised,
   TEST_EMAIL_DOMAIN,
@@ -241,6 +245,14 @@ export async function POST(req: NextRequest) {
       profileCompletedAt: now,
     },
   });
+
+  // Organisations are never created from an email (Day 12), so the seed
+  // creates them explicitly, as an admin would: the two approved ones are
+  // live and the pending one waits for approval.
+  await syncOrgGroupStatus(db, TEST_EMAIL_DOMAIN);
+  await syncOrgGroupStatus(db, RIVAL_DOMAIN);
+  const pendingOrg = await ensureOrgGroup(db, PENDING_DOMAIN);
+  await db.group.update({ where: { id: pendingOrg!.id }, data: { status: "PENDING" } });
 
   // Mirror the seed into groups, as the profile and admin flows do
   const seeded = await db.user.findMany({

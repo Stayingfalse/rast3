@@ -48,7 +48,7 @@ export async function ensureTeamGroup(db: Db, departmentId: string) {
     where: { id: departmentId },
   });
   if (!department) return null;
-  const org = await ensureOrgGroup(db, department.domain);
+  const org = await findOrgGroup(db, department.domain);
   if (!org) return null;
   return db.group.upsert({
     where: { departmentId },
@@ -80,6 +80,13 @@ export async function syncOrgGroupStatus(db: Db, rawDomain: string) {
   }
 }
 
+/** The existing ORG group for an email domain (never creates one). */
+export async function findOrgGroup(db: Db, rawDomain: string) {
+  const domain = norm(rawDomain);
+  if (!domain) return null;
+  return db.group.findUnique({ where: { emailDomain: domain } });
+}
+
 /**
  * Recomputes one person's ORG and TEAM memberships from their legacy domain,
  * department and admin scope. COMMUNITY and FRIENDS memberships are untouched.
@@ -105,11 +112,12 @@ export async function syncUserGroups(db: Db, userId: string) {
   const domain = norm(user.domain);
   const scope = user.adminScope?.trim() ?? "";
   if (domain) {
-    const org = await ensureOrgGroup(db, domain);
+    // Organisations are only ever started explicitly (owner, 18 Oct)
+    const org = await findOrgGroup(db, domain);
     add(org?.id, user.adminLevel === "DOMAIN" && norm(scope) === domain ? "ADMIN" : "MEMBER");
   }
   if (user.adminLevel === "DOMAIN" && scope) {
-    add((await ensureOrgGroup(db, scope))?.id, "ADMIN");
+    add((await findOrgGroup(db, scope))?.id, "ADMIN");
   }
   if (user.departmentId) {
     const team = await ensureTeamGroup(db, user.departmentId);

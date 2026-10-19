@@ -1,18 +1,11 @@
-import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   adminProcedure,
   createTRPCRouter,
   protectedProcedure,
-  rateLimit,
 } from "~/server/api/trpc";
-import {
-  ensureOrgGroup,
-  ensureTeamGroup,
-  syncUserGroups,
-} from "~/server/groups";
-import { normaliseJoinCode } from "~/server/invites";
+import { ensureTeamGroup } from "~/server/groups";
 import { canManageDomain } from "~/server/utils/admin-permissions";
 
 type UserWithDepartment = {
@@ -50,43 +43,6 @@ const normalizeWishlistUrl = (url: string | undefined): string | null => {
   if (!url || url.trim() === "") return null;
   return url.trim();
 };
-
-/**
- * Day 11: joining an organisation is on trust (no email verification), with
- * two safeguards: closed organisations can't be joined, and an organisation
- * with a join code needs it from anyone who isn't already a member.
- */
-async function checkOrgEntry(
-  db: Pick<PrismaClient, "group" | "membership">,
-  userId: string,
-  domain: string,
-  joinCode: string | undefined,
-) {
-  const org = await db.group.findUnique({
-    where: { emailDomain: domain.trim().toLowerCase() },
-    select: { id: true, status: true, joinCode: true },
-  });
-  if (!org) return;
-  if (org.status === "DISABLED") {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message:
-        "Your organisation is closed on Random Acts of Santa. Ask your organiser.",
-    });
-  }
-  if (!org.joinCode) return;
-  const member = await db.membership.findUnique({
-    where: { groupId_userId: { groupId: org.id, userId } },
-    select: { id: true },
-  });
-  if (!member && normaliseJoinCode(joinCode ?? "") !== org.joinCode) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message:
-        "Your organisation needs a join code. Ask your organiser for it.",
-    });
-  }
-}
 
 export const profileRouter = createTRPCRouter({
   // Get current user's profile with domain status
@@ -185,16 +141,15 @@ export const profileRouter = createTRPCRouter({
         orderBy: [{ domain: "asc" }, { name: "asc" }],
       });
     }),
-  // Complete profile setup
-  completeProfile: protectedProcedure
+  /**
+   * Day 12: your profile is just you and your wishlist. Joining or starting
+   * an organisation or group is a separate step (groups router).
+   */
+  saveProfile: protectedProcedure
     .input(
       z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
-        workEmail: z.string().email("Valid work email is required"),
-        departmentId: z.string().optional(),
-        /** Required when the organisation has a join code (Day 11) */
-        joinCode: z.string().max(200).optional(),
+        firstName: z.string().trim().min(1, "First name is required").max(60),
+        lastName: z.string().trim().min(1, "Last name is required").max(60),
         amazonWishlistUrl: z
           .string()
           .optional()
@@ -206,155 +161,21 @@ export const profileRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const {
-        firstName,
-        lastName,
-        workEmail,
-        departmentId,
-        amazonWishlistUrl,
-      } = input;
-
-      // Extract domain from work email
-      const domain = workEmail.split("@")[1];
-
-      if (domain) {
-        await checkOrgEntry(ctx.db, ctx.session.user.id, domain, input.joinCode);
-      }
-
-      // Check if another user already has this work email
-      const existingUser = await ctx.db.user.findUnique({
-        where: { workEmail },
+      const current = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { profileCompletedAt: true },
       });
-
-      if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error(
-          "This work email is already registered by another user",
-        );
-      }
-
-      // Validate departmentId if provided
-      let validDepartmentId: string | null = null;
-      if (departmentId) {
-        const department = await ctx.db.department.findUnique({
-          where: { id: departmentId },
-        });
-
-        if (!department) {
-          throw new Error("Selected department does not exist");
-        }
-
-        if (department.domain !== domain) {
-          throw new Error(
-            "Selected department does not belong to your organization",
-          );
-        }
-
-        validDepartmentId = departmentId;
-      }
-
-      const synced = await ctx.db.user.update({
+      return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
-          firstName,
-          lastName,
-          workEmail,
-          domain,
-          departmentId: validDepartmentId,
-          amazonWishlistUrl,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          amazonWishlistUrl: input.amazonWishlistUrl,
           profileCompleted: true,
-          profileCompletedAt: new Date(),
+          profileCompletedAt: current?.profileCompletedAt ?? new Date(),
         },
-        include: {
-          department: true,
-        },
+        select: { id: true, profileCompleted: true },
       });
-      await syncUserGroups(ctx.db, ctx.session.user.id);
-      return synced;
-    }),
-
-  // Update profile
-  updateProfile: protectedProcedure
-    .input(
-      z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
-        workEmail: z.string().email("Valid work email is required"),
-        departmentId: z.string().optional(),
-        /** Required when the organisation has a join code (Day 11) */
-        joinCode: z.string().max(200).optional(),
-        amazonWishlistUrl: z
-          .string()
-          .optional()
-          .transform((val) => normalizeWishlistUrl(val))
-          .refine(
-            (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
-          ),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const {
-        firstName,
-        lastName,
-        workEmail,
-        departmentId,
-        amazonWishlistUrl,
-      } = input;
-
-      // Extract domain from work email
-      const domain = workEmail.split("@")[1];
-
-      if (domain) {
-        await checkOrgEntry(ctx.db, ctx.session.user.id, domain, input.joinCode);
-      }
-
-      // Check if another user already has this work email
-      const existingUser = await ctx.db.user.findUnique({
-        where: { workEmail },
-      });
-
-      if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error(
-          "This work email is already registered by another user",
-        );
-      }
-
-      // Validate departmentId if provided
-      let validDepartmentId: string | null = null;
-      if (departmentId) {
-        const department = await ctx.db.department.findUnique({
-          where: { id: departmentId },
-        });
-
-        if (!department) {
-          throw new Error("Selected department does not exist");
-        }
-
-        if (department.domain !== domain) {
-          throw new Error(
-            "Selected department does not belong to your organization",
-          );
-        }
-
-        validDepartmentId = departmentId;
-      }
-
-      const synced = await ctx.db.user.update({
-        where: { id: ctx.session.user.id },
-        data: {
-          firstName,
-          lastName,
-          workEmail,
-          domain,
-          departmentId: validDepartmentId,
-          amazonWishlistUrl,
-        },
-        include: {
-          department: true,
-        },
-      });
-      await syncUserGroups(ctx.db, ctx.session.user.id);
-      return synced;
     }),
 
   // Admin: Create department
@@ -378,128 +199,6 @@ export const profileRouter = createTRPCRouter({
       });
       await ensureTeamGroup(ctx.db, department.id);
       return department;
-    }),
-  // Setup new domain and complete profile (for new domains)
-  setupNewDomain: protectedProcedure
-    .use(rateLimit("setupNewDomain", 5, 60 * 60_000))
-    .input(
-      z.object({
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
-        workEmail: z.string().email("Valid work email is required"),
-        departmentId: z.string().optional(),
-        /** Required when the organisation has a join code (Day 11) */
-        joinCode: z.string().max(200).optional(),
-        amazonWishlistUrl: z
-          .string()
-          .optional()
-          .transform((val) => normalizeWishlistUrl(val))
-          .refine(
-            (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
-          ),
-        domainDescription: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const {
-        firstName,
-        lastName,
-        workEmail,
-        departmentId,
-        amazonWishlistUrl,
-        domainDescription,
-      } = input;
-
-      // Extract domain from work email
-      const domain = workEmail.split("@")[1];
-      if (!domain) {
-        throw new Error("Invalid email domain");
-      }
-
-      // Check if domain already exists
-      const existingDomain = await ctx.db.domain.findUnique({
-        where: { name: domain },
-      });
-
-      if (existingDomain) {
-        throw new Error(
-          "Domain already exists. Please contact your domain administrator.",
-        );
-      }
-
-      // Check if another user already has this work email
-      const existingUser = await ctx.db.user.findUnique({
-        where: { workEmail },
-      });
-
-      if (existingUser && existingUser.id !== ctx.session.user.id) {
-        throw new Error(
-          "This work email is already registered by another user",
-        );
-      }
-
-      // Create domain
-      const newDomain = await ctx.db.domain.create({
-        data: {
-          name: domain,
-          description: domainDescription,
-          enabled: false, // goes live when a site admin approves it (owner, 18 Oct)
-          createdById: ctx.session.user.id,
-        },
-      });
-
-      // Validate departmentId if provided
-      let validDepartmentId: string | null = null;
-      if (departmentId) {
-        const department = await ctx.db.department.findUnique({
-          where: { id: departmentId },
-        });
-
-        if (!department) {
-          throw new Error("Selected department does not exist");
-        }
-
-        if (department.domain !== domain) {
-          throw new Error(
-            "Selected department does not belong to your organization",
-          );
-        }
-
-        validDepartmentId = departmentId;
-      }
-
-      // Update user profile and make them domain admin
-      const updatedUser = await ctx.db.user.update({
-        where: { id: ctx.session.user.id },
-        data: {
-          firstName,
-          lastName,
-          workEmail,
-          domain,
-          departmentId: validDepartmentId,
-          amazonWishlistUrl,
-          profileCompleted: true,
-          profileCompletedAt: new Date(),
-          adminLevel: "DOMAIN",
-          adminScope: domain,
-        },
-        include: {
-          department: true,
-        },
-      });
-
-      // New organisations wait for a site admin's approval while it's free
-      const org = await ensureOrgGroup(ctx.db, domain);
-      if (org) {
-        await ctx.db.group.update({
-          where: { id: org.id },
-          data: { status: "PENDING", createdById: ctx.session.user.id },
-        });
-      }
-      await syncUserGroups(ctx.db, ctx.session.user.id);
-
-      return { user: updatedUser, domain: newDomain };
     }),
 });
 

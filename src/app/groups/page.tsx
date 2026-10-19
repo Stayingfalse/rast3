@@ -9,8 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function GroupsPage() {
+export default async function GroupsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const session = await auth();
+  const { welcome } = await searchParams;
   if (!session?.user) {
     return (
       <div className="flex w-full max-w-2xl flex-col items-start gap-4">
@@ -25,5 +30,18 @@ export default async function GroupsPage() {
       </div>
     );
   }
-  return <GroupsPanel />;
+  return (
+    <div className="flex w-full max-w-4xl flex-col gap-6">
+      {welcome && (
+        <p
+          role="status"
+          className="rounded-label border-gold/50 text-gold-soft border px-4 py-3"
+        >
+          Profile saved. Now join your workplace or a group, or start one, and
+          you&apos;re ready to gift.
+        </p>
+      )}
+      <GroupsPanel />
+    </div>
+  );
 }

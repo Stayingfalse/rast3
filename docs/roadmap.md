@@ -87,7 +87,7 @@
 | 9 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Scope every query to a group and season; tenant-isolation tests |
 | 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
 | 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
-| 12 | Mon 19 Oct | **Profile and onboarding rework (owner, 18 Oct).** Your profile is just you and your wishlist. Nothing is ever created from an email address alone. After the profile, two journeys: **(a) Join a group**: enter an invite code or link (friends and communities), use Discord (Day 13), or enter a work email for an organisation that already exists (plus its join code when it has one). If the work email's domain isn't linked to any organisation yet, offer to **start one** (journey b); if it's a public email domain (gmail.com, outlook.com, icloud.com and the like), don't offer an organisation and point them to joining or starting a **community or friends group** instead. **(b) Start a group**: an organisation (claims a non-public email domain, waits for site-admin approval) or a friends or community group (invite code, also waits for approval). People can be in several groups and add more any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also: the existing gmail.com (and any other public-domain) "organisation" is wound down with its members kept, and membership join dates from the Day 8 backfill are re-dated from each person's earliest activity (assignments, purchases, thank-yous) or the 2025 season start, so long-standing members stop showing as recent joiners. |
+| 12 | Mon 19 Oct | **Done (nightly run, 19 Oct).** **Profile and onboarding rework (owner, 18 Oct).** Your profile is just you and your wishlist. Nothing is ever created from an email address alone. After the profile, two journeys: **(a) Join a group**: enter an invite code or link (friends and communities), use Discord (Day 13), or enter a work email for an organisation that already exists (plus its join code when it has one). If the work email's domain isn't linked to any organisation yet, offer to **start one** (journey b); if it's a public email domain (gmail.com, outlook.com, icloud.com and the like), don't offer an organisation and point them to joining or starting a **community or friends group** instead. **(b) Start a group**: an organisation (claims a non-public email domain, waits for site-admin approval) or a friends or community group (invite code, also waits for approval). People can be in several groups and add more any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also: the existing gmail.com (and any other public-domain) "organisation" is wound down with its members kept, and membership join dates from the Day 8 backfill are re-dated from each person's earliest activity (assignments, purchases, thank-yous) or the 2025 season start, so long-standing members stop showing as recent joiners. |
 | 13 | Tue 20 Oct | **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
 | 14 | Wed 21 Oct | **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
@@ -477,4 +477,42 @@ that don't touch the data model. Known items to include:
   existing organisation), or start one. An unlinked work domain prompts
   "start an organisation?", but public email domains are pointed to
   community or friends groups instead. Written into Day 12.
+- **Day 12 (Mon 19 Oct, nightly): profile and onboarding rework.**
+  - **Profile is just you and your wishlist.** The profile window (name and
+    Amazon wishlist) replaces the old one that mixed in work email,
+    departments and setting up domains. Saving it the first time takes you
+    to Your groups.
+  - **Join your workplace** (on Your groups): enter a work email to join an
+    existing organisation, plus its join code when it has one; a wrong code
+    gets a clear message. If the domain isn't on the site, it offers "Start
+    <domain>": you become its organiser and it waits for approval. Personal
+    email providers (gmail.com, outlook.com, icloud.com and about 40 more)
+    get "That's a personal email address" and are pointed to friends and
+    community groups.
+  - **Never automatic.** Organisations are never created from an email
+    address any more: syncing a profile only joins existing ones. Once in a
+    workplace you can pick your team or leave it.
+  - **Home without a live organisation** shows "Join a group to start
+    gifting", or "waiting for approval" for a pending one.
+  - **API.** Removed `profile.completeProfile`, `updateProfile` and
+    `setupNewDomain`. Added `profile.saveProfile` and
+    `groups.myOrganisation`, `joinOrganisation`, `startOrganisation`,
+    `setMyTeam` and `leaveOrganisation`.
+  - **Data migration `onboarding_cleanup`** (rehearsed on a scratch
+    MariaDB):
+    - re-dates the Day 8 backfilled memberships from each person's earliest
+      activity (2025 season start if none), so long-standing members stop
+      showing as recent joiners;
+    - removes public-email-domain "organisations" (e.g. gmail.com), with
+      their departments and Domain rows. Members keep their accounts,
+      wishlists and history; site admins keep their role.
+  - **Tests.** New `e2e/onboarding.spec.ts`: profile, then join workplace
+    and pick team; personal email pointed to communities; unknown domain,
+    then start an organisation, which is waiting. `org-trust.spec.ts`
+    moved to the new API.
+  - **Still single-workplace.** One organisation per person for now (the
+    legacy domain column); any number of friends and community groups.
+    Multiple workplaces would come with retiring the legacy columns (Day 17)
+    if wanted.
+  - **Next: Day 13 (Tue 20 Oct), Discord joining by server.**
 

@@ -8,7 +8,18 @@ import {
   rateLimit,
   siteAdminProcedure,
 } from "~/server/api/trpc";
-import { findInvite, INVITE_KINDS, newJoinCode } from "~/server/invites";
+import type { PrismaClient } from "@prisma/client";
+import { ensureOrgGroup, findOrgGroup, syncUserGroups } from "~/server/groups";
+import {
+  findInvite,
+  INVITE_KINDS,
+  newJoinCode,
+  normaliseJoinCode,
+} from "~/server/invites";
+import {
+  emailDomain,
+  isPublicEmailDomain,
+} from "~/server/public-email-domains";
 
 const HOUR = 60 * 60_000;
 /** Most groups one person can start (while it's free, owner approves each). */
@@ -33,6 +44,30 @@ const notFound = () =>
  * others to with a link or code. New groups wait for a site admin's approval
  * (owner, 18 Oct) before they can be used for gifting.
  */
+const workEmail = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email("Enter a valid work email");
+
+/** Another account already using this work email? */
+async function assertWorkEmailFree(
+  db: PrismaClient,
+  email: string,
+  userId: string,
+) {
+  const owner = await db.user.findUnique({
+    where: { workEmail: email },
+    select: { id: true },
+  });
+  if (owner && owner.id !== userId) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "That work email is already used by another account.",
+    });
+  }
+}
+
 export const groupsRouter = createTRPCRouter({
   mine: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db.membership.findMany({
@@ -180,6 +215,221 @@ export const groupsRouter = createTRPCRouter({
       });
       return { deleted: false };
     }),
+
+  /**
+   * Day 12: your organisation (work email, team, status) and its teams, for
+   * the "Your workplace" card. Null if you're not in one.
+   */
+  myOrganisation: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { domain: true, workEmail: true, departmentId: true },
+    });
+    if (!user?.domain) return null;
+    const org = await findOrgGroup(ctx.db, user.domain);
+    if (!org) return null;
+    const teams = await ctx.db.department.findMany({
+      where: { domain: org.emailDomain ?? "" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
+    return {
+      id: org.id,
+      name: org.name,
+      status: org.status,
+      workEmail: user.workEmail,
+      teamId: user.departmentId,
+      teams,
+    };
+  }),
+
+  /**
+   * Join your organisation with your work email (on trust, plus its join code
+   * when it has one). Expected outcomes come back as a result, not an error,
+   * so the page can offer the next step.
+   */
+  joinOrganisation: protectedProcedure
+    .use(rateLimit("groups.joinOrganisation", 20, HOUR))
+    .input(z.object({ workEmail, joinCode: z.string().max(200).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const domain = emailDomain(input.workEmail);
+      if (isPublicEmailDomain(domain))
+        return { result: "publicDomain" as const, domain };
+      const org = await findOrgGroup(ctx.db, domain);
+      if (!org) return { result: "noOrganisation" as const, domain };
+      if (org.status === "DISABLED")
+        return { result: "closed" as const, domain, name: org.name };
+
+      const already = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: org.id, userId } },
+        select: { id: true },
+      });
+      if (org.joinCode && !already) {
+        const given = normaliseJoinCode(input.joinCode ?? "");
+        if (given !== org.joinCode) {
+          return {
+            result: given ? ("wrongCode" as const) : ("needsCode" as const),
+            domain,
+            name: org.name,
+          };
+        }
+      }
+      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+
+      const current = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { domain: true },
+      });
+      const switching = current?.domain?.trim().toLowerCase() !== domain;
+      await ctx.db.user.update({
+        where: { id: userId },
+        data: {
+          workEmail: input.workEmail,
+          domain,
+          ...(switching ? { departmentId: null } : {}),
+        },
+      });
+      await syncUserGroups(ctx.db, userId);
+      return {
+        result: "joined" as const,
+        domain,
+        name: org.name,
+        status: org.status,
+      };
+    }),
+
+  /**
+   * Start an organisation for your work email's domain. Personal email
+   * providers can't; new organisations wait for a site admin (owner, 18 Oct).
+   */
+  startOrganisation: protectedProcedure
+    .use(rateLimit("groups.startOrganisation", 3, HOUR))
+    .input(
+      z.object({
+        workEmail,
+        description: z.string().trim().max(200).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const domain = emailDomain(input.workEmail);
+      if (isPublicEmailDomain(domain)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Personal email addresses can't start an organisation. Start a community or friends group instead.",
+        });
+      }
+      if (
+        (await findOrgGroup(ctx.db, domain)) ??
+        (await ctx.db.domain.findUnique({ where: { name: domain } }))
+      ) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `${domain} is already on Random Acts of Santa. Join it with your work email instead.`,
+        });
+      }
+      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+
+      await ctx.db.domain.create({
+        data: {
+          name: domain,
+          enabled: false,
+          description: input.description,
+          createdById: userId,
+        },
+      });
+      const org = await ensureOrgGroup(ctx.db, domain);
+      await ctx.db.group.update({
+        where: { id: org!.id },
+        data: {
+          status: "PENDING",
+          createdById: userId,
+          description: input.description,
+        },
+      });
+      const me = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { adminLevel: true },
+      });
+      await ctx.db.user.update({
+        where: { id: userId },
+        data: {
+          workEmail: input.workEmail,
+          domain,
+          departmentId: null,
+          // the founder organises it (site admins keep their site role)
+          ...(me?.adminLevel === "SITE"
+            ? {}
+            : { adminLevel: "DOMAIN" as const, adminScope: domain }),
+        },
+      });
+      await syncUserGroups(ctx.db, userId);
+      return { domain, status: "PENDING" as const };
+    }),
+
+  /** Choose (or clear) your team within your organisation. */
+  setMyTeam: protectedProcedure
+    .input(z.object({ departmentId: z.string().nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { domain: true },
+      });
+      if (!user?.domain) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Join your organisation first.",
+        });
+      }
+      if (input.departmentId) {
+        const dept = await ctx.db.department.findUnique({
+          where: { id: input.departmentId },
+        });
+        if (
+          dept?.domain.trim().toLowerCase() !== user.domain.trim().toLowerCase()
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "That team isn't in your organisation.",
+          });
+        }
+      }
+      await ctx.db.user.update({
+        where: { id: userId },
+        data: { departmentId: input.departmentId },
+      });
+      await syncUserGroups(ctx.db, userId);
+      return { ok: true };
+    }),
+
+  /** Leave your organisation (e.g. wrong work email). Your account stays. */
+  leaveOrganisation: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const me = await ctx.db.user.findUnique({
+      where: { id: userId },
+      select: { adminLevel: true },
+    });
+    await ctx.db.user.update({
+      where: { id: userId },
+      data: {
+        domain: null,
+        departmentId: null,
+        workEmail: null,
+        ...(me?.adminLevel === "SITE"
+          ? {}
+          : { adminLevel: "USER" as const, adminScope: null }),
+      },
+    });
+    await ctx.db.wishlistAssignment.updateMany({
+      where: { assignedUserId: userId, isActive: true },
+      data: { isActive: false },
+    });
+    await syncUserGroups(ctx.db, userId);
+    return { ok: true };
+  }),
 
   /** Site admins: groups and organisations by status, newest first. */
   forReview: siteAdminProcedure

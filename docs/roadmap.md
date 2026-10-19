@@ -90,7 +90,7 @@
 | 12 | Mon 19 Oct | **Done (nightly run, 19 Oct).** **Profile and onboarding rework (owner, 18 Oct).** Your profile is just you and your wishlist. Nothing is ever created from an email address alone. After the profile, two journeys: **(a) Join a group**: enter an invite code or link (friends and communities), use Discord (Day 13), or enter a work email for an organisation that already exists (plus its join code when it has one). If the work email's domain isn't linked to any organisation yet, offer to **start one** (journey b); if it's a public email domain (gmail.com, outlook.com, icloud.com and the like), don't offer an organisation and point them to joining or starting a **community or friends group** instead. **(b) Start a group**: an organisation (claims a non-public email domain, waits for site-admin approval) or a friends or community group (invite code, also waits for approval). People can be in several groups and add more any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also: the existing gmail.com (and any other public-domain) "organisation" is wound down with its members kept, and membership join dates from the Day 8 backfill are re-dated from each person's earliest activity (assignments, purchases, thank-yous) or the 2025 season start, so long-standing members stop showing as recent joiners. |
 | 13 | Tue 20 Oct | **Done early (19 Oct, owner asked to run Days 13–15 back to back).** **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
 | 14 | Wed 21 Oct | **Done early (19 Oct, back to back with 13 and 15).** **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
-| 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
+| 15 | Thu 22 Oct | **Done early (19 Oct, back to back with 13 and 14).** **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. |
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
 | 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
@@ -560,4 +560,25 @@ that don't touch the data model. Known items to include:
     more wishlists" once the group is exhausted.
   - **Later.** Thank-yous and totals per friends/community group (Day 27
     kudos per group); fair-share limits (Day 19).
+- **Day 15 (19 Oct, pulled forward): adopt shadcn/ui.**
+  - **Init.** `shadcn init` with the Radix base and "nova" style
+    (`components.json`, `src/lib/utils.ts` on clsx + tailwind-merge).
+  - **Theme on our tokens.** shadcn's theme variables are mapped onto the
+    Christmas Post tokens in `globals.css` (label-stock surfaces, post-red
+    primary, rule borders, gold focus ring, 6px radius; one theme). Init's
+    global base overrides (body background, default border colour, Geist
+    font) were removed so the rest of the site is unchanged.
+  - **Components:** button, input, label, field, dialog, alert-dialog, tabs,
+    table, dropdown-menu, badge and separator, with buttons and inputs
+    resized to 44px.
+  - **First real use:** the profile window is now a shadcn `Dialog` with
+    `Field`s. A first-time profile can't be dismissed (Escape and clicking
+    outside are blocked); editing can.
+  - **DESIGN.md** documents when and how to use the components.
+  - **Fixed along the way.** The CLI added a bogus `cn` npm package and
+    imported from it; removed and pointed at `~/lib/utils`.
+  - **Not yet.** Toasts stay on react-hot-toast; the admin rework (Days 16
+    and 17) is the first big consumer.
+  - **Next: Day 16 (nightly), the group organiser console, including "Bring
+    your team".**
 

@@ -89,7 +89,7 @@
 | 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Mon 19 Oct | **Done (nightly run, 19 Oct).** **Profile and onboarding rework (owner, 18 Oct).** Your profile is just you and your wishlist. Nothing is ever created from an email address alone. After the profile, two journeys: **(a) Join a group**: enter an invite code or link (friends and communities), use Discord (Day 13), or enter a work email for an organisation that already exists (plus its join code when it has one). If the work email's domain isn't linked to any organisation yet, offer to **start one** (journey b); if it's a public email domain (gmail.com, outlook.com, icloud.com and the like), don't offer an organisation and point them to joining or starting a **community or friends group** instead. **(b) Start a group**: an organisation (claims a non-public email domain, waits for site-admin approval) or a friends or community group (invite code, also waits for approval). People can be in several groups and add more any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also: the existing gmail.com (and any other public-domain) "organisation" is wound down with its members kept, and membership join dates from the Day 8 backfill are re-dated from each person's earliest activity (assignments, purchases, thank-yous) or the 2025 season start, so long-standing members stop showing as recent joiners. |
 | 13 | Tue 20 Oct | **Done early (19 Oct, owner asked to run Days 13–15 back to back).** **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
-| 14 | Wed 21 Oct | **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
+| 14 | Wed 21 Oct | **Done early (19 Oct, back to back with 13 and 15).** **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. |
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
@@ -541,4 +541,23 @@ that don't touch the data model. Known items to include:
     real server check needs a manual try on prod.
   - **Later.** A server picker instead of pasting ids (needs the
     organiser's managed servers), and a bot for channel reminders (Day 25).
+- **Day 14 (19 Oct, pulled forward): group switcher and gifting in friends
+  and community groups.**
+  - **Switcher.** The home page has a "Gifting in" tab row when you're in
+    any friends or community group: Workplace (if you have one) and each
+    group. The last choice is remembered per browser.
+  - **Group home.** Each group's tab shows its name and member count, a
+    "Pick up a wishlist" button (fewest-gifted first, never yourself or
+    someone you already hold), and your parcels from that group with "Open
+    wishlist" and "Mark as gifted". Waiting or closed groups explain why
+    there's no button.
+  - **Under the hood.** `wishlist.requestFromGroup`; `getMyAssignments`
+    takes an optional group (default: workplace pick-ups only). Migration
+    `assignment_group` adds `WishlistAssignment.groupId`.
+  - **Tests.** `e2e/group-home.spec.ts`: a friends group can't hand out
+    while waiting (412), a friend joins with the code, a site admin
+    approves, then a member switches tab, picks up, gifts, and gets "no
+    more wishlists" once the group is exhausted.
+  - **Later.** Thank-yous and totals per friends/community group (Day 27
+    kudos per group); fair-share limits (Day 19).
 

@@ -1,5 +1,6 @@
 import { AuthShowcase } from "~/app/_components/auth-showcase";
 import { KudosFeed } from "~/app/_components/kudos-feed";
+import { GiftingSwitcher } from "~/app/_components/groups/gifting-switcher";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { auth } from "~/server/auth";
 import { getPublicTotals } from "~/server/public-stats";
@@ -34,7 +35,9 @@ export default async function Home() {
           <Wordmark size="masthead" asHeading />
           <AuthShowcase />
         </div>
-        <WishlistManager />
+        <GiftingSwitcher>
+          <WishlistManager />
+        </GiftingSwitcher>
         <StampAlbum />
         <GroupTotals />
         <div id="kudos-section" className="w-full">

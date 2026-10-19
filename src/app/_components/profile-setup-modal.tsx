@@ -1,8 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
 import { api } from "~/trpc/react";
 
 interface ProfileSetupModalProps {
@@ -35,6 +52,7 @@ const cleanWishlistUrl = (url: string) => {
 /**
  * Day 12: your profile is just you and your wishlist. Joining a workplace,
  * a friends group or a community happens next, on "Your groups".
+ * Day 15: built on shadcn/ui Dialog + Field (first real use).
  */
 export function ProfileSetupModal({
   isOpen,
@@ -48,7 +66,6 @@ export function ProfileSetupModal({
   const [lastName, setLastName] = useState("");
   const [wishlist, setWishlist] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const firstField = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -56,15 +73,7 @@ export function ProfileSetupModal({
     setLastName(existingProfile?.lastName ?? "");
     setWishlist(existingProfile?.amazonWishlistUrl ?? "");
     setErrors({});
-    firstField.current?.focus();
   }, [isOpen, existingProfile]);
-
-  useEffect(() => {
-    if (!isOpen || !isEditing || !onClose) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, isEditing, onClose]);
 
   const save = api.profile.saveProfile.useMutation({
     onSuccess: () => {
@@ -74,8 +83,6 @@ export function ProfileSetupModal({
     },
     onError: (error) => setErrors({ submit: error.message }),
   });
-
-  if (!isOpen) return null;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,133 +98,103 @@ export function ProfileSetupModal({
     save.mutate({ firstName, lastName, amazonWishlistUrl: url });
   };
 
-  const field = (hasError: boolean) =>
-    `border-rule text-ink rounded-label mt-1 block min-h-11 w-full border bg-white px-3 py-2 ${
-      hasError ? "border-post" : ""
-    }`;
-
   return (
-    <div className="bg-night-deep/75 fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="profile-title"
-        className="label-stock w-full max-w-md overflow-hidden"
+    <Dialog
+      open={isOpen}
+      // A first-time profile can't be dismissed; edits can
+      onOpenChange={(open) => !open && isEditing && onClose?.()}
+    >
+      <DialogContent
+        showCloseButton={isEditing}
+        className="overflow-hidden pt-8 sm:max-w-md"
+        onEscapeKeyDown={(e) => !isEditing && e.preventDefault()}
+        onInteractOutside={(e) => !isEditing && e.preventDefault()}
       >
-        <div className="airmail h-2.5" aria-hidden />
-        <div className="p-6">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <h2
-                id="profile-title"
-                className="font-expanded text-ink text-2xl font-extrabold"
-              >
-                {isEditing ? "Edit your profile" : "Complete Your Profile"}
-              </h2>
-              <p className="text-ink-soft mt-2 text-sm">
-                {isEditing
-                  ? "Your name and your Amazon wishlist."
-                  : "Just your name and your Amazon wishlist. Next you'll join your workplace, a friends group or a community."}
-              </p>
-            </div>
-            {isEditing && onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="text-ink-soft hover:text-ink -mt-1 text-2xl font-bold"
-              >
-                ×
-              </button>
-            )}
-          </div>
+        <div className="airmail absolute inset-x-0 top-0 h-2.5" aria-hidden />
+        <DialogHeader>
+          <DialogTitle className="font-expanded text-2xl font-extrabold">
+            {isEditing ? "Edit your profile" : "Complete Your Profile"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Your name and your Amazon wishlist."
+              : "Just your name and your Amazon wishlist. Next you'll join your workplace, a friends group or a community."}
+          </DialogDescription>
+        </DialogHeader>
 
-          <form onSubmit={submit} className="space-y-4" noValidate>
+        <form onSubmit={submit} noValidate className="flex flex-col gap-6">
+          <FieldGroup>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="firstName" className="label-caps text-ink-soft">
-                  First name
-                </label>
-                <input
-                  ref={firstField}
+              <Field data-invalid={!!errors.firstName || undefined}>
+                <FieldLabel htmlFor="firstName">First name</FieldLabel>
+                <Input
                   id="firstName"
                   autoComplete="given-name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   aria-invalid={!!errors.firstName}
-                  className={field(!!errors.firstName)}
                 />
-                {errors.firstName && (
-                  <p className="text-post mt-1 text-sm">{errors.firstName}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="lastName" className="label-caps text-ink-soft">
-                  Last name
-                </label>
-                <input
+                {errors.firstName && <FieldError>{errors.firstName}</FieldError>}
+              </Field>
+              <Field data-invalid={!!errors.lastName || undefined}>
+                <FieldLabel htmlFor="lastName">Last name</FieldLabel>
+                <Input
                   id="lastName"
                   autoComplete="family-name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   aria-invalid={!!errors.lastName}
-                  className={field(!!errors.lastName)}
                 />
-                {errors.lastName && (
-                  <p className="text-post mt-1 text-sm">{errors.lastName}</p>
-                )}
-              </div>
+                {errors.lastName && <FieldError>{errors.lastName}</FieldError>}
+              </Field>
             </div>
-
-            <div>
-              <label htmlFor="amazonWishlist" className="label-caps text-ink-soft">
+            <Field data-invalid={!!errors.wishlist || undefined}>
+              <FieldLabel htmlFor="amazonWishlist">
                 Amazon UK wishlist link
-              </label>
-              <input
+              </FieldLabel>
+              <Input
                 id="amazonWishlist"
                 type="url"
                 inputMode="url"
                 value={wishlist}
                 onChange={(e) => setWishlist(e.target.value)}
                 aria-invalid={!!errors.wishlist}
-                aria-describedby="wishlist-hint"
                 placeholder="https://www.amazon.co.uk/hz/wishlist/ls/…"
-                className={field(!!errors.wishlist)}
               />
               {errors.wishlist ? (
-                <p className="text-post mt-1 text-sm">{errors.wishlist}</p>
+                <FieldError>{errors.wishlist}</FieldError>
               ) : (
-                <p id="wishlist-hint" className="text-ink-soft mt-1 text-sm">
+                <FieldDescription>
                   You can add it later, but you&apos;ll need it before you pick
                   up anyone else&apos;s. Make the list public or shared so
                   Santas can open it.
-                </p>
+                </FieldDescription>
               )}
-            </div>
+            </Field>
+          </FieldGroup>
 
-            {errors.submit && (
-              <p role="alert" className="bg-post-tint text-post rounded-label p-3 text-sm">
-                {errors.submit}
-              </p>
+          {errors.submit && (
+            <p role="alert" className="text-destructive text-sm">
+              {errors.submit}
+            </p>
+          )}
+
+          <DialogFooter>
+            {isEditing && onClose && (
+              <Button type="button" variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
             )}
-
-            <div className="flex gap-3 pt-2">
-              {isEditing && onClose && (
-                <button type="button" onClick={onClose} className="btn-quiet text-ink">
-                  Cancel
-                </button>
-              )}
-              <button type="submit" disabled={save.isPending} className="btn-post flex-1">
-                {save.isPending
-                  ? "Saving…"
-                  : isEditing
-                    ? "Save profile"
-                    : "Save and choose a group"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            <Button type="submit" disabled={save.isPending} className="flex-1">
+              {save.isPending
+                ? "Saving…"
+                : isEditing
+                  ? "Save profile"
+                  : "Save and choose a group"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

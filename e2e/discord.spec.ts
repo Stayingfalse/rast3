@@ -42,7 +42,11 @@ test("organisers link a community to a Discord server", async ({ page }, testInf
   expect((await mutate(r, "groups.setDiscordLink", { groupId: b, guildId: guild })).status()).toBe(409);
 
   await page.goto("/groups");
-  const form = page.getByRole("form", { name: "Discord server" }).first();
+  // newest group first, so find group A's card by name
+  const form = page
+    .getByRole("listitem")
+    .filter({ hasText: `E2E Discord A ${p}` })
+    .getByRole("form", { name: "Discord server" });
   await expect(form.getByLabel("Server ID")).toHaveValue(guild);
 
   // someone else can't change it

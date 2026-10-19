@@ -6,6 +6,8 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { api, type RouterOutputs } from "~/trpc/react";
+import { DiscordJoinCard } from "./discord-join-card";
+import { DiscordLinkEditor } from "./discord-link-editor";
 import { WorkplaceCard } from "./workplace-card";
 
 type Group = RouterOutputs["groups"]["mine"][number];
@@ -64,6 +66,8 @@ export function GroupsPanel() {
       </header>
 
       <WorkplaceCard />
+
+      <DiscordJoinCard />
 
       <div className="grid gap-6 md:grid-cols-2">
         <form
@@ -259,6 +263,14 @@ function GroupCard({ group }: { group: Group }) {
         <p className="text-ink-soft text-sm">
           {group.members} {group.members === 1 ? "member" : "members"}
         </p>
+
+        {group.kind === "COMMUNITY" && group.discord && (
+          <DiscordLinkEditor
+            groupId={group.id}
+            guildId={group.discord.guildId}
+            roleId={group.discord.roleId}
+          />
+        )}
 
         {group.joinCode && (
           <div className="border-rule flex flex-col gap-3 border-t border-dashed pt-4">

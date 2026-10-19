@@ -88,7 +88,7 @@
 | 10 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** Create a group + invite links/codes (friends groups) |
 | 11 | Sun 18 Oct | **Done early on 18 Oct at the owner's request.** **Org joining on trust (owner, 18 Oct: verifying work emails won't work, many organisations block outside email).** Members keep typing their work email, moved onto the new model, with lighter safeguards: an optional join code the organiser can share, organisers see who joined recently and can remove people, and a new organisation needs a site admin's OK before it goes live (**owner confirmed 18 Oct**: required while the service is free; later tied to the paid plans) |
 | 12 | Mon 19 Oct | **Done (nightly run, 19 Oct).** **Profile and onboarding rework (owner, 18 Oct).** Your profile is just you and your wishlist. Nothing is ever created from an email address alone. After the profile, two journeys: **(a) Join a group**: enter an invite code or link (friends and communities), use Discord (Day 13), or enter a work email for an organisation that already exists (plus its join code when it has one). If the work email's domain isn't linked to any organisation yet, offer to **start one** (journey b); if it's a public email domain (gmail.com, outlook.com, icloud.com and the like), don't offer an organisation and point them to joining or starting a **community or friends group** instead. **(b) Start a group**: an organisation (claims a non-public email domain, waits for site-admin approval) or a friends or community group (invite code, also waits for approval). People can be in several groups and add more any time from "Your groups". The work email becomes a detail of the organisation membership, not the profile. Existing members carry on unchanged: their organisation is already a membership. Also: the existing gmail.com (and any other public-domain) "organisation" is wound down with its members kept, and membership join dates from the Day 8 backfill are re-dated from each person's earliest activity (assignments, purchases, thank-yous) or the 2025 season start, so long-standing members stop showing as recent joiners. |
-| 13 | Tue 20 Oct | **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
+| 13 | Tue 20 Oct | **Done early (19 Oct, owner asked to run Days 13–15 back to back).** **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
 | 14 | Wed 21 Oct | **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. |
@@ -521,4 +521,24 @@ that don't touch the data model. Known items to include:
 - **Owner decision (19 Oct): yearly re-onboarding.** Keep old data; every
   member re-does onboarding each season (wishlist and groups confirmed)
   before taking part. Added to Day 18 (Christmas season).
+- **Day 13 (19 Oct, pulled forward): Discord joining by server.**
+  - **Organisers** of a community group link it to a Discord server ID (and
+    optionally a required role ID) from its card on Your groups. One server
+    links to one group; ids are validated.
+  - **Members** get "Join with Discord" on Your groups. "Find my Discord
+    communities" lists linked servers they're in and joins with one click,
+    re-checking the server and role. If Discord isn't connected (or was
+    connected before the new permission), "Connect Discord" links it to the
+    current account and comes back.
+  - **Under the hood.** Discord sign-in now asks for `guilds` and
+    `guilds.members.read`; tokens are saved on every Discord sign-in and
+    refreshed when they expire. Migration `group_discord` adds
+    `Group.discordGuildId` (unique) and `discordRoleId`.
+  - **Privacy policy** updated (19 Oct): we check servers and roles only
+    when asked and don't keep the list.
+  - **Testing.** Dev has no Discord sign-in, so e2e covers linking (valid,
+    invalid, duplicate, non-organiser) and the "connect Discord" prompt; the
+    real server check needs a manual try on prod.
+  - **Later.** A server picker instead of pasting ids (needs the
+    organiser's managed servers), and a bot for channel reminders (Day 25).
 

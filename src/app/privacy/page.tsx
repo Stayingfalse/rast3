@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "18 October 2026";
+const LAST_UPDATED = "19 October 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -79,6 +79,13 @@ export default function PrivacyPolicyPage() {
             Discord, Twitch, GitHub, Reddit or an email link). We also store the
             sign-in tokens that provider gives us, so you stay signed in. We
             never see your password for those services.
+          </p>
+          <p>
+            <strong>If you join a community with Discord.</strong> When you
+            ask us to, we check which Discord servers you are in and, for a
+            server that requires one, whether you have the right role. We use
+            this only to decide whether you can join, and we don&apos;t keep
+            your server list. We never read or post messages.
           </p>
           <p>
             <strong>Your profile.</strong> Your first and last name, your work

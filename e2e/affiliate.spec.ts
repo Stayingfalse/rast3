@@ -121,10 +121,12 @@ test("a picked-up wishlist opens from a public gift page", async ({ page, browse
   expect(res?.status()).toBe(200);
   await expect(pub.getByRole("heading", { name: "A wishlist to gift" })).toBeVisible();
   const amazon = pub.getByRole("link", { name: "Open the wishlist on Amazon" });
-  await expect(amazon).toHaveAttribute("href", new RegExp(`ls/E2EAFA0001\\?tag=${TAG}$`));
+  // dev isn't the registered site, so it gets the dummy ID (the group's own
+  // ID is only used on raosanta.uk)
+  await expect(amazon).toHaveAttribute("href", /ls\/E2EAFA0001\?tag=raosantatest-21$/);
   await expect(amazon).toHaveAttribute("rel", /sponsored/);
   await expect(amazon).toHaveAttribute("referrerpolicy", "no-referrer-when-downgrade");
-  await expect(pub.getByText("Affiliate link", { exact: true })).toBeVisible();
+  await expect(pub.getByText("Ad · Affiliate link", { exact: true })).toBeVisible();
   await expect(pub.locator("main")).not.toContainText("Alma");
   await expect(pub.locator("main")).not.toContainText(groupName);
   await settle(pub);
@@ -156,7 +158,7 @@ test("switching the group off opens wishlists straight on Amazon", async ({ page
     "href",
     "https://www.amazon.co.uk/hz/wishlist/ls/E2EAFA0001",
   );
-  await expect(page.getByText("Affiliate link", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Ad · Affiliate link", { exact: true })).toHaveCount(0);
 });
 
 test("only site admins change affiliate settings; unknown gift pages 404", async ({

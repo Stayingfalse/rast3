@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { amazonWishlistRegex, WISHLIST_HINT } from "~/lib/wishlist";
+import { amazonWishlistRegex, cleanWishlistUrl, WISHLIST_HINT } from "~/lib/wishlist";
 import {
   checkIn,
   currentSeason,
@@ -25,7 +25,7 @@ export const seasonRouter = createTRPCRouter({
       ctx.db.membership.findMany({
         where: { userId, group: { kind: { not: "TEAM" } } },
         select: {
-          group: { select: { id: true, name: true, kind: true, openEarly: true } },
+          group: { select: { id: true, name: true, kind: true, openEarlySeason: true } },
         },
       }),
     ]);
@@ -37,11 +37,11 @@ export const seasonRouter = createTRPCRouter({
       closesAt: w.closesAt,
       phase: now < w.opensAt ? ("before" as const) : inWindow ? ("open" as const) : ("after" as const),
       /** can you pick up anywhere right now (the season, or a group opened early) */
-      openNow: inWindow || groups.some((m) => m.group.openEarly),
+      openNow: inWindow || groups.some((m) => m.group.openEarlySeason === season),
       checkedIn: done,
       profileCompleted: !!me?.profileCompleted,
       wishlistUrl: me?.amazonWishlistUrl ?? null,
-      groups: groups.map(({ group: { openEarly: _o, ...g } }) => g),
+      groups: groups.map(({ group: { openEarlySeason: _o, ...g } }) => g),
     };
   }),
 
@@ -61,7 +61,7 @@ export const seasonRouter = createTRPCRouter({
       if (input.amazonWishlistUrl) {
         await ctx.db.user.update({
           where: { id: userId },
-          data: { amazonWishlistUrl: input.amazonWishlistUrl },
+          data: { amazonWishlistUrl: cleanWishlistUrl(input.amazonWishlistUrl) },
         });
       } else {
         const me = await ctx.db.user.findUnique({

@@ -71,8 +71,9 @@ test("a returning member checks in before gifting", async ({ page }, testInfo) =
   await card.getByRole("button", { name: `Check in for ${before.season}` }).click();
   await expect(card.getByText("That isn't an Amazon UK wishlist link.", { exact: false })).toBeVisible();
 
+  // anyone's own ?tag= is stripped when the link is saved
   await card.getByLabel("Amazon UK wishlist link").fill(
-    "https://www.amazon.co.uk/hz/wishlist/ls/E2ERET0002",
+    "https://www.amazon.co.uk/hz/wishlist/ls/E2ERET0002?tag=someone-21&ref_=x",
   );
   await card.getByRole("button", { name: `Check in for ${before.season}` }).click();
   await expect(card).toHaveCount(0);
@@ -82,8 +83,19 @@ test("a returning member checks in before gifting", async ({ page }, testInfo) =
     amazonWishlistUrl: string;
   };
   expect(me.amazonWishlistUrl).toBe("https://www.amazon.co.uk/hz/wishlist/ls/E2ERET0002");
-  // their workplace was opened early by the seed, so gifting is open for them
+  // their workplace was opened early by the seed, so gifting is open. Rory
+  // held every team-mate's list last Christmas, so these come round again
   expect((await mutate(r, "wishlist.requestInitialAssignments")).status()).toBe(200);
+  const parcels = (await unwrap(await query(r, "wishlist.getMyAssignments"))) as Record<
+    string,
+    unknown
+  >[];
+  expect(parcels.length).toBe(3);
+  // buyers never get the owner's id (an organiser could look it up)
+  for (const p of parcels) {
+    expect(p).not.toHaveProperty("wishlistOwnerId");
+    expect(p.wishlistOwner).not.toHaveProperty("id");
+  }
   expect(errors).toEqual([]);
 });
 

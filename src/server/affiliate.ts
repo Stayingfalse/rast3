@@ -103,20 +103,39 @@ export function taggedUrl(wishlistUrl: string, tag: string): string | null {
   }
 }
 
-/** The fixed gift page for this wishlist, group and season (made on first use). */
+/**
+ * The fixed gift page for this wishlist, group and season (made on first
+ * use). It keeps the wishlist link it was made for (owner, 20 Oct); if the
+ * owner swaps lists during the season, this season's page follows them.
+ */
 export async function giftPageFor(
   db: Db,
   ownerId: string,
   groupId: string,
+  wishlistUrl: string,
   season = seasonYearOf(new Date()),
 ) {
   const where = { ownerId_groupId_season: { ownerId, groupId, season } };
-  const existing = await db.giftPage.findUnique({ where, select: { id: true } });
-  if (existing) return existing.id;
+  const existing = await db.giftPage.findUnique({
+    where,
+    select: { id: true, wishlistUrl: true },
+  });
+  if (existing) {
+    if (existing.wishlistUrl !== wishlistUrl) {
+      await db.giftPage.update({ where: { id: existing.id }, data: { wishlistUrl } });
+    }
+    return existing.id;
+  }
   const created = await db.giftPage.upsert({
     where,
     update: {},
-    create: { id: randomBytes(16).toString("base64url"), ownerId, groupId, season },
+    create: {
+      id: randomBytes(16).toString("base64url"),
+      ownerId,
+      groupId,
+      season,
+      wishlistUrl,
+    },
     select: { id: true },
   });
   return created.id;

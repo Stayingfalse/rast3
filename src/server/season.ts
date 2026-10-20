@@ -35,11 +35,18 @@ export async function giftingOpen(db: Db, groupId: string | null, now = new Date
   const w = await seasonWindow(db);
   if (now >= w.opensAt && now <= w.closesAt) return true;
   if (!groupId) return false;
+  const season = currentSeason();
   const g = await db.group.findUnique({
     where: { id: groupId },
-    select: { openEarly: true, parent: { select: { openEarly: true } } },
+    select: { openEarlySeason: true, parent: { select: { openEarlySeason: true } } },
   });
-  return g?.openEarly === true || g?.parent?.openEarly === true;
+  return g?.openEarlySeason === season || g?.parent?.openEarlySeason === season;
+}
+
+/** Is the season's gifting window open right now? */
+export async function inSeasonWindow(db: Db, now = new Date()) {
+  const w = await seasonWindow(db);
+  return now >= w.opensAt && now <= w.closesAt;
 }
 
 /** Prisma filter: people who have checked in this season. */

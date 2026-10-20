@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import sharp from "sharp";
 import { z } from "zod";
 import { db } from "~/server/db";
@@ -28,6 +29,16 @@ export const kudosRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // A thank-you can only be tied to a gift you received
+      if (input.purchaseId) {
+        const purchase = await db.purchase.findUnique({
+          where: { id: input.purchaseId },
+          select: { wishlistAssignment: { select: { wishlistOwnerId: true } } },
+        });
+        if (purchase?.wishlistAssignment.wishlistOwnerId !== ctx.session.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "That isn't a gift you received." });
+        }
+      }
       // Optimize and upload images to iDrive E2
       const imageUrls: string[] = [];
       for (const img of input.images) {

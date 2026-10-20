@@ -42,9 +42,8 @@ export interface GroupTotals {
 export const groupKeyOf = (scope: GroupScope, id: string) => `${scope}:${id}`;
 
 /**
- * This season's totals for an organisation (email domain) or a team
- * (department), rounded like the public totals so small groups can't be
- * picked apart.
+ * This season's totals for a workplace or a team (by group id), rounded like
+ * the public totals so small groups can't be picked apart.
  */
 export async function groupTotals(
   scope: GroupScope,
@@ -52,15 +51,8 @@ export async function groupTotals(
   label: string,
   season: number = seasonYearOf(new Date()),
 ): Promise<GroupTotals> {
-  // Members by group (Day 9); ids stay the email domain / department id so
-  // existing card links keep working
-  const who = {
-    memberships: {
-      some: {
-        group: scope === "org" ? { emailDomain: id } : { departmentId: id },
-      },
-    },
-  };
+  // Members by group; card keys were moved onto group ids on 20 Oct
+  const who = { memberships: { some: { groupId: id } } };
   const range = seasonRange(season);
   const [gifts, thanks, members] = await Promise.all([
     db.purchase.count({ where: { user: who, purchasedAt: range } }),

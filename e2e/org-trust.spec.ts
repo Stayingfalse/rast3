@@ -48,7 +48,7 @@ test.afterAll(async ({ playwright }, testInfo) => {
 });
 
 test("an organiser can require a join code", async ({ page }) => {
-  await loginAs(page, { email: `rival1@${E}`, adminLevel: "DOMAIN" });
+  await loginAs(page, { email: `rival1@${E}` });
   const orgs = (await unwrap(await query(page.request, "groups.myOrgs"))) as {
     id: string;
     name: string;
@@ -80,12 +80,15 @@ test("joining that organisation needs the code", async ({ page }, testInfo) => {
 
 test("organisers see recent joiners and can remove them", async ({ page }, testInfo) => {
   const errors = trackPageErrors(page);
-  await loginAs(page, { email: `rival1@${E}`, adminLevel: "DOMAIN" });
-  const joiners = (await unwrap(await query(page.request, "user.recentJoiners"))) as {
-    userId: string;
-    email: string;
-  }[];
-  const newbie = joiners.find((j) => j.email.startsWith(`newbie-${testInfo.project.name}@`));
+  await loginAs(page, { email: `rival1@${E}` });
+  const org = (await unwrap(await query(page.request, "groups.myOrganisation"))) as { id: string };
+  const members = async () =>
+    ((await unwrap(await query(page.request, "groups.manage", { groupId: org.id }))) as {
+      members: { userId: string; email: string }[];
+    }).members;
+  const newbie = (await members()).find((m) =>
+    m.email.startsWith(`newbie-${testInfo.project.name}@`),
+  );
   expect(newbie).toBeTruthy();
 
   // organisers who open /admin land on their own console (Day 17)
@@ -95,14 +98,12 @@ test("organisers see recent joiners and can remove them", async ({ page }, testI
   await settle(page);
   await snap(page, testInfo, "admin-org-trust");
 
-  const res = await mutate(page.request, "user.removeFromOrganisation", {
+  const res = await mutate(page.request, "groups.removeMember", {
+    groupId: org.id,
     userId: newbie!.userId,
   });
   expect(res.status()).toBe(200);
-  const after = (await unwrap(await query(page.request, "user.recentJoiners"))) as {
-    userId: string;
-  }[];
-  expect(after.some((j) => j.userId === newbie!.userId)).toBe(false);
+  expect((await members()).some((m) => m.userId === newbie!.userId)).toBe(false);
   expect(errors).toEqual([]);
 });
 

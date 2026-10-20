@@ -15,7 +15,15 @@ import {
   isSnowflake,
   manageable,
 } from "~/server/discord";
-import { ensureOrgGroup, findOrgGroup, syncUserGroups } from "~/server/groups";
+import {
+  createOrgGroup,
+  createTeam,
+  findOrgGroup,
+  getWorkplace,
+  leaveWorkplace,
+  setTeam,
+  setWorkplace,
+} from "~/server/groups";
 import {
   findInvite,
   INVITE_KINDS,
@@ -269,32 +277,25 @@ export const groupsRouter = createTRPCRouter({
    * the "Your workplace" card. Null if you're not in one.
    */
   myOrganisation: protectedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: { domain: true, workEmail: true, departmentId: true },
-    });
-    if (!user?.domain) return null;
-    const org = await findOrgGroup(ctx.db, user.domain);
+    const userId = ctx.session.user.id;
+    const { org, team } = await getWorkplace(ctx.db, userId);
     if (!org) return null;
-    const mine = await ctx.db.membership.findUnique({
-      where: {
-        groupId_userId: { groupId: org.id, userId: ctx.session.user.id },
-      },
-      select: { role: true },
-    });
-    const teams = await ctx.db.department.findMany({
-      where: { domain: org.emailDomain ?? "" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    });
+    const [user, teams] = await Promise.all([
+      ctx.db.user.findUnique({ where: { id: userId }, select: { workEmail: true } }),
+      ctx.db.group.findMany({
+        where: { kind: "TEAM", parentId: org.group.id },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      }),
+    ]);
     return {
-      id: org.id,
-      name: org.name,
-      status: org.status,
-      workEmail: user.workEmail,
-      teamId: user.departmentId,
+      id: org.group.id,
+      name: org.group.name,
+      status: org.group.status,
+      workEmail: user?.workEmail ?? null,
+      teamId: team?.group.id ?? null,
       teams,
-      isOrganiser: mine?.role === "ADMIN",
+      isOrganiser: org.role === "ADMIN",
     };
   }),
 
@@ -332,20 +333,11 @@ export const groupsRouter = createTRPCRouter({
       }
       await assertWorkEmailFree(ctx.db, input.workEmail, userId);
 
-      const current = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { domain: true },
-      });
-      const switching = current?.domain?.trim().toLowerCase() !== domain;
       await ctx.db.user.update({
         where: { id: userId },
-        data: {
-          workEmail: input.workEmail,
-          domain,
-          ...(switching ? { departmentId: null } : {}),
-        },
+        data: { workEmail: input.workEmail },
       });
-      await syncUserGroups(ctx.db, userId);
+      await setWorkplace(ctx.db, userId, org.id);
       return {
         result: "joined" as const,
         domain,
@@ -376,10 +368,7 @@ export const groupsRouter = createTRPCRouter({
             "Personal email addresses can't start an organisation. Start a community or friends group instead.",
         });
       }
-      if (
-        (await findOrgGroup(ctx.db, domain)) ??
-        (await ctx.db.domain.findUnique({ where: { name: domain } }))
-      ) {
+      if (await findOrgGroup(ctx.db, domain)) {
         throw new TRPCError({
           code: "CONFLICT",
           message: `${domain} is already on Random Acts of Santa. Join it with your work email instead.`,
@@ -387,102 +376,65 @@ export const groupsRouter = createTRPCRouter({
       }
       await assertWorkEmailFree(ctx.db, input.workEmail, userId);
 
-      await ctx.db.domain.create({
-        data: {
-          name: domain,
-          enabled: false,
-          description: input.description,
-          createdById: userId,
-        },
+      const org = await createOrgGroup(ctx.db, domain, {
+        status: "PENDING",
+        createdById: userId,
       });
-      const org = await ensureOrgGroup(ctx.db, domain);
-      await ctx.db.group.update({
-        where: { id: org!.id },
-        data: {
-          status: "PENDING",
-          createdById: userId,
-          description: input.description,
-        },
-      });
-      const me = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { adminLevel: true },
-      });
+      if (input.description) {
+        await ctx.db.group.update({
+          where: { id: org.id },
+          data: { description: input.description },
+        });
+      }
       await ctx.db.user.update({
         where: { id: userId },
-        data: {
-          workEmail: input.workEmail,
-          domain,
-          departmentId: null,
-          // the founder organises it (site admins keep their site role)
-          ...(me?.adminLevel === "SITE"
-            ? {}
-            : { adminLevel: "DOMAIN" as const, adminScope: domain }),
-        },
+        data: { workEmail: input.workEmail },
       });
-      await syncUserGroups(ctx.db, userId);
+      // the founder organises it
+      await setWorkplace(ctx.db, userId, org.id, "ADMIN");
       return { domain, status: "PENDING" as const };
     }),
 
   /** Choose (or clear) your team within your organisation. */
   setMyTeam: protectedProcedure
-    .input(z.object({ departmentId: z.string().nullable() }))
+    .input(z.object({ teamId: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const user = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { domain: true },
-      });
-      if (!user?.domain) {
+      const { org } = await getWorkplace(ctx.db, userId);
+      if (!org) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Join your organisation first.",
         });
       }
-      if (input.departmentId) {
-        const dept = await ctx.db.department.findUnique({
-          where: { id: input.departmentId },
+      if (input.teamId) {
+        const team = await ctx.db.group.findUnique({
+          where: { id: input.teamId },
+          select: { kind: true, parentId: true },
         });
-        if (
-          dept?.domain.trim().toLowerCase() !== user.domain.trim().toLowerCase()
-        ) {
+        if (team?.kind !== "TEAM" || team.parentId !== org.group.id) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "That team isn't in your organisation.",
           });
         }
       }
-      await ctx.db.user.update({
-        where: { id: userId },
-        data: { departmentId: input.departmentId },
-      });
-      await syncUserGroups(ctx.db, userId);
+      await setTeam(ctx.db, userId, org.group.id, input.teamId);
       return { ok: true };
     }),
 
   /** Leave your organisation (e.g. wrong work email). Your account stays. */
   leaveOrganisation: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    const me = await ctx.db.user.findUnique({
-      where: { id: userId },
-      select: { adminLevel: true },
-    });
     await ctx.db.user.update({
       where: { id: userId },
-      data: {
-        domain: null,
-        departmentId: null,
-        workEmail: null,
-        ...(me?.adminLevel === "SITE"
-          ? {}
-          : { adminLevel: "USER" as const, adminScope: null }),
-      },
+      data: { workEmail: null },
     });
     await ctx.db.wishlistAssignment.updateMany({
-      where: { assignedUserId: userId, isActive: true },
+      where: { assignedUserId: userId, isActive: true, groupId: null },
       data: { isActive: false },
     });
-    await syncUserGroups(ctx.db, userId);
+    await leaveWorkplace(ctx.db, userId);
     return { ok: true };
   }),
 
@@ -678,14 +630,14 @@ export const groupsRouter = createTRPCRouter({
       });
       const firstTwoDays = new Date(group.createdAt.getTime() + 48 * 3600_000);
       const teams =
-        group.kind === "ORG" && group.emailDomain
-          ? await ctx.db.department.findMany({
-              where: { domain: group.emailDomain },
+        group.kind === "ORG"
+          ? await ctx.db.group.findMany({
+              where: { kind: "TEAM", parentId: group.id },
               orderBy: { name: "asc" },
               select: {
                 id: true,
                 name: true,
-                _count: { select: { users: true } },
+                _count: { select: { memberships: true } },
               },
             })
           : [];
@@ -717,7 +669,7 @@ export const groupsRouter = createTRPCRouter({
         teams: teams.map((t) => ({
           id: t.id,
           name: t.name,
-          members: t._count.users,
+          members: t._count.memberships,
         })),
         members: members.map((m) => {
           const full = [m.user.firstName, m.user.lastName]
@@ -816,15 +768,6 @@ export const groupsRouter = createTRPCRouter({
             message: "Only site admins can remove an organiser.",
           });
         }
-        await ctx.db.user.update({
-          where: { id: input.userId },
-          data: {
-            domain: null,
-            departmentId: null,
-            adminLevel: "USER",
-            adminScope: null,
-          },
-        });
         await ctx.db.wishlistAssignment.updateMany({
           where: {
             assignedUserId: input.userId,
@@ -833,7 +776,7 @@ export const groupsRouter = createTRPCRouter({
           },
           data: { isActive: false },
         });
-        await syncUserGroups(ctx.db, input.userId);
+        await leaveWorkplace(ctx.db, input.userId);
       } else {
         await ctx.db.membership.delete({
           where: {
@@ -850,6 +793,30 @@ export const groupsRouter = createTRPCRouter({
         });
       }
       return { ok: true };
+    }),
+
+  /** Workplace organisers (and site admins): add a team. */
+  addTeam: protectedProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        name: z.string().trim().min(1, "Give the team a name").max(100),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const group = await requireOrganiser(ctx.db, input.groupId, ctx.session.user.id);
+      if (group.kind !== "ORG") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Only workplaces have teams." });
+      }
+      const clash = await ctx.db.group.findFirst({
+        where: { kind: "TEAM", parentId: group.id, name: input.name },
+        select: { id: true },
+      });
+      if (clash) {
+        throw new TRPCError({ code: "CONFLICT", message: "There's already a team with that name." });
+      }
+      const team = await createTeam(ctx.db, group, input.name);
+      return { id: team.id, name: team.name };
     }),
 
   /** Friends/community organisers: rename the group. */
@@ -901,10 +868,7 @@ export const groupsRouter = createTRPCRouter({
       }));
     }),
 
-  /**
-   * Site admins: approve (ACTIVE), close (DISABLED) or re-queue a group. For
-   * organisations the legacy Domain row follows, so older screens agree.
-   */
+  /** Site admins: approve (ACTIVE), close (DISABLED) or re-queue a group. */
   setStatus: siteAdminProcedure
     .input(
       z.object({
@@ -916,19 +880,8 @@ export const groupsRouter = createTRPCRouter({
       const group = await ctx.db.group.update({
         where: { id: input.groupId },
         data: { status: input.status },
-        select: { id: true, status: true, kind: true, emailDomain: true },
+        select: { id: true, status: true },
       });
-      if (group.kind === "ORG" && group.emailDomain) {
-        await ctx.db.domain.upsert({
-          where: { name: group.emailDomain },
-          update: { enabled: input.status === "ACTIVE" },
-          create: {
-            name: group.emailDomain,
-            enabled: input.status === "ACTIVE",
-            createdById: ctx.session.user.id,
-          },
-        });
-      }
       return { id: group.id, status: group.status };
     }),
 

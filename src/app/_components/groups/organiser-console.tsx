@@ -406,7 +406,7 @@ function Settings({ g }: { g: Console }) {
     },
     onError: (e) => toast.error(e.message),
   });
-  const addTeam = api.profile.createDepartment.useMutation({
+  const addTeam = api.groups.addTeam.useMutation({
     onSuccess: async () => {
       toast.success("Team added");
       setTeam("");
@@ -534,8 +534,7 @@ function Settings({ g }: { g: Console }) {
               className="flex flex-col gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (g.emailDomain)
-                  addTeam.mutate({ name: team, domain: g.emailDomain });
+                addTeam.mutate({ groupId: g.id, name: team });
               }}
             >
               <Field>

@@ -18,20 +18,18 @@ import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('server');
 
-// Augment Session type to include adminLevel and adminScope
+// Augment Session type to include adminLevel
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
-      adminScope?: string | null;
+      adminLevel?: "USER" | "SITE";
     } & DefaultSession["user"];
   }
 
-  // Augment User type to include admin fields
+  // Augment User type to include the site admin flag
   interface User {
-    adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
-    adminScope?: string | null;
+    adminLevel?: "USER" | "SITE";
   }
 }
 

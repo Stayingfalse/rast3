@@ -15,8 +15,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      adminLevel?: "USER" | "DEPARTMENT" | "DOMAIN" | "SITE";
-      adminScope?: string | null;
+      adminLevel?: "USER" | "SITE";
     } & DefaultSession["user"];
   }
 

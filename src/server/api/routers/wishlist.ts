@@ -11,6 +11,7 @@ import {
   inOtherActiveOrg,
   requireGiverScope,
 } from "~/server/scope";
+import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
 import { getWorkplace } from "~/server/groups";
 
 const HOUR = 60 * 60_000;
@@ -62,7 +63,26 @@ export const wishlistRouter = createTRPCRouter({
         },
         select: { userId: true, group: { select: { id: true, kind: true, name: true } } },
       });
-      return assignments.map((a) => {
+      // Affiliate links (20 Oct): when they're on for the group a list was
+      // picked up in (a friends/community group, else your workplace), it is
+      // opened from its public gift page; otherwise straight from Amazon.
+      const settings = await getAffiliateSettings(ctx.db);
+      const affiliate = new Map<string, boolean>();
+      const linkFor = async (a: (typeof assignments)[number]) => {
+        const url = a.wishlistOwner.amazonWishlistUrl;
+        const contextId = a.groupId ?? org?.group.id;
+        if (!url || !contextId || !settings.enabled) return url;
+        if (!affiliate.has(contextId)) {
+          const on = await affiliateFor(ctx.db, contextId, undefined, settings);
+          affiliate.set(contextId, on.enabled);
+        }
+        if (!affiliate.get(contextId)) return url;
+        return `/gift/${await giftPageFor(ctx.db, a.wishlistOwnerId, contextId)}`;
+      };
+      const links = await Promise.all(assignments.map(linkFor));
+
+      return assignments.map((a, i) => {
+        const link = links[i] ?? null;
         const theirs = owners.filter((m) => m.userId === a.wishlistOwnerId).map((m) => m.group);
         const sameOrg = !!org && theirs.some((g) => g.id === org.group.id);
         const theirTeam = theirs.find((g) => g.kind === "TEAM");
@@ -73,7 +93,14 @@ export const wishlistRouter = createTRPCRouter({
             : team && theirTeam && theirTeam.id !== team.group.id
               ? "otherTeam"
               : "yourTeam";
-        return { ...a, from, fromTeam: from === "otherTeam" ? theirTeam!.name : null };
+        return {
+          ...a,
+          from,
+          fromTeam: from === "otherTeam" ? theirTeam!.name : null,
+          /** Where "open wishlist" goes: our gift page (affiliate on) or Amazon */
+          link,
+          viaGiftPage: !!link?.startsWith("/gift/"),
+        };
       });
     }),
 

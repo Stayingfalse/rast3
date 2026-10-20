@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { api, type RouterOutputs } from "~/trpc/react";
+import { AffiliateNote } from "./affiliate-note";
 import { DiscordJoinCard } from "./discord-join-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
 import { WorkplaceCard } from "./workplace-card";
@@ -263,6 +264,7 @@ function GroupCard({ group }: { group: Group }) {
         <p className="text-ink-soft text-sm">
           {group.members} {group.members === 1 ? "member" : "members"}
         </p>
+        {group.affiliate && <AffiliateNote tone="label" />}
 
         {group.role === "ADMIN" && (
           <Link

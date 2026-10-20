@@ -76,6 +76,7 @@ model User {
   reports              WishlistReport[]
   memberships          Membership[]
   createdGroups        Group[]              @relation("GroupCreator")
+  giftPages            GiftPage[]
 }
 
 model VerificationToken {
@@ -261,6 +262,10 @@ model Group {
   createdBy      User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
   memberships    Membership[]
   assignments    WishlistAssignment[]
+  /// Amazon affiliate links in this group: the site default for its kind, or forced on/off
+  affiliate      AffiliateMode        @default(DEFAULT)
+  affiliateTags  AffiliateTag[]
+  giftPages      GiftPage[]
 
   @@index([parentId])
   @@index([kind, status])
@@ -297,6 +302,62 @@ enum GroupStatus {
 enum MembershipRole {
   MEMBER
   ADMIN
+}
+
+/// Amazon Associates settings (one row, id "site"). Site admins only.
+model AffiliateSettings {
+  id               String   @id @default("site")
+  /// master switch: nothing is tagged while this is off
+  enabled          Boolean  @default(false)
+  /// the account's default tracking ID, used when a group has none this season
+  defaultTag       String   @default("raosanta04-21")
+  /// defaults for groups left on DEFAULT, by kind (teams follow their workplace)
+  orgDefault       Boolean  @default(false)
+  communityDefault Boolean  @default(true)
+  friendsDefault   Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
+
+enum AffiliateMode {
+  DEFAULT
+  ON
+  OFF
+}
+
+/// A group's own Amazon tracking ID for one season (created in Associates Central)
+model AffiliateTag {
+  id      String @id @default(cuid())
+  groupId String
+  season  Int
+  tag     String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, season])
+  /// one group per tracking ID per season, so earnings are attributable
+  @@unique([season, tag])
+}
+
+/// Tracking IDs created in Associates Central, ready to give to groups
+model AffiliateTrackingId {
+  tag       String   @id
+  createdAt DateTime @default(now())
+}
+
+/// The public page a picked-up wishlist is opened from when affiliate links are
+/// on: one fixed, unguessable address per wishlist, group and season, so the
+/// referring page Amazon sees is public (Associates rules). Shows no names.
+model GiftPage {
+  /// the unguessable token in /gift/<id>
+  id        String   @id
+  ownerId   String
+  groupId   String
+  season    Int
+  createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, groupId, season])
+  @@index([groupId])
 }
 
 /// Archive of the retired Domain/Department tables and User.domain,

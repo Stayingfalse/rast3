@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { api, type RouterOutputs } from "~/trpc/react";
+import { AffiliateNote } from "./affiliate-note";
 
 type JoinOutcome = RouterOutputs["groups"]["joinOrganisation"];
 
@@ -110,6 +111,7 @@ export function WorkplaceCard() {
               colleagues now; gifting opens once it&apos;s approved.
             </p>
           )}
+          {org.affiliate && <AffiliateNote tone="label" />}
           {org.teams.length > 0 && (
             <label className="flex flex-col gap-1">
               <span className="label-caps text-ink-soft">Your team</span>

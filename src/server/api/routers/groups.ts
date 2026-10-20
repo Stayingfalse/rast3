@@ -15,6 +15,7 @@ import {
   isSnowflake,
   manageable,
 } from "~/server/discord";
+import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
   createTeam,
@@ -145,17 +146,22 @@ export const groupsRouter = createTRPCRouter({
         },
       },
     });
-    return rows.map(({ role, group }) => ({
-      id: group.id,
-      name: group.name,
-      kind: group.kind,
-      status: group.status,
-      role,
-      members: group._count.memberships,
-      // only organisers can see and share the code
-      joinCode: role === "ADMIN" ? group.joinCode : null,
-      discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
-    }));
+    const settings = await getAffiliateSettings(ctx.db);
+    return Promise.all(
+      rows.map(async ({ role, group }) => ({
+        id: group.id,
+        name: group.name,
+        kind: group.kind,
+        status: group.status,
+        role,
+        members: group._count.memberships,
+        // only organisers can see and share the code
+        joinCode: role === "ADMIN" ? group.joinCode : null,
+        discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
+        /** wishlists here open from gift pages with affiliate links */
+        affiliate: (await affiliateFor(ctx.db, group.id, undefined, settings)).enabled,
+      })),
+    );
   }),
 
   create: protectedProcedure
@@ -296,6 +302,7 @@ export const groupsRouter = createTRPCRouter({
       teamId: team?.group.id ?? null,
       teams,
       isOrganiser: org.role === "ADMIN",
+      affiliate: (await affiliateFor(ctx.db, org.group.id)).enabled,
     };
   }),
 

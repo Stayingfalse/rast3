@@ -424,14 +424,15 @@ export function WishlistManager() {
 
           <div className="mt-auto flex flex-col gap-2">
             <a
-              href={assignment.wishlistOwner.amazonWishlistUrl ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={assignment.link ?? "#"}
+              {...(assignment.viaGiftPage
+                ? {}
+                : { target: "_blank", rel: "noopener noreferrer" })}
               className={
                 hasPurchase || archived ? "btn-quiet text-ink" : "btn-post"
               }
             >
-              View Wishlist on Amazon
+              View Wishlist{assignment.viaGiftPage ? "" : " on Amazon"}
             </a>
 
             {!archived && !hasPurchase && !hasReport && (

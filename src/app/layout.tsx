@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
 import { TRPCReactProvider } from "~/trpc/react";
 import { AddToHomeScreen } from "./_components/add-to-home-screen";
+import { SiteFooter } from "./_components/site-footer";
 import AdminButton from "./_components/admin-button";
 import { Sky } from "./_components/post/sky";
 import AuthButton from "./_components/auth-button";
@@ -135,6 +136,7 @@ export default function RootLayout({
                 <TRPCReactProvider>{children}</TRPCReactProvider>
               </AuthProvider>{" "}
             </div>{" "}
+            <SiteFooter />
             {/* Cookie Consent Banner */}
             <CookieConsent />
             {/* Add to Home Screen Prompt */}

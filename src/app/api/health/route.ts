@@ -7,7 +7,7 @@ export async function GET(_req: NextRequest) {
   try {
     // Test database connection
     const userCount = await db.user.count();
-    const departmentCount = await db.department.count();
+    const groupCount = await db.group.count();
 
     return NextResponse.json({
       status: "healthy",
@@ -15,7 +15,7 @@ export async function GET(_req: NextRequest) {
       database: {
         connected: true,
         users: userCount,
-        departments: departmentCount,
+        groups: groupCount,
       },
       migrations: await getMigrations(),
       schemaSync: await getSchemaSync(),

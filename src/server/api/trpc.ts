@@ -220,32 +220,14 @@ export const rateLimit = (name: string, limit: number, windowMs: number) =>
     return next();
   });
 
-/**
- * Organiser (department, organisation or site admin) procedure. Loads the
- * caller's admin level and scope into `ctx.admin`; members get FORBIDDEN.
- * Procedures still have to check the target is inside `ctx.admin`'s scope.
- */
-export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+/** Site admin only. Loads the caller into `ctx.admin`; everyone else gets FORBIDDEN. */
+export const siteAdminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const admin = await ctx.db.user.findUnique({
     where: { id: ctx.session.user.id },
-    select: {
-      id: true,
-      adminLevel: true,
-      adminScope: true,
-      domain: true,
-      departmentId: true,
-    },
+    select: { id: true, adminLevel: true },
   });
-  if (!admin || admin.adminLevel === "USER") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Organisers only" });
-  }
-  return next({ ctx: { admin } });
-});
-
-/** Site admin only. */
-export const siteAdminProcedure = adminProcedure.use(({ ctx, next }) => {
-  if (ctx.admin.adminLevel !== "SITE") {
+  if (admin?.adminLevel !== "SITE") {
     throw new TRPCError({ code: "FORBIDDEN", message: "Site admin required" });
   }
-  return next();
+  return next({ ctx: { admin } });
 });

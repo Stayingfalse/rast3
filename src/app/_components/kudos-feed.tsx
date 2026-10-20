@@ -97,7 +97,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
   );
 };
 
-type ScopeType = "department" | "domain" | "site";
+type ScopeType = "team" | "workplace" | "site";
 
 // Christmas-themed names for anonymization
 const CHRISTMAS_NAMES = [
@@ -334,11 +334,11 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
 
   // Check content availability for fallback logic
-  const { data: departmentHasContent } =
-    api.kudos.departmentHasContent.useQuery(undefined, {
+  const { data: teamHasContent } =
+    api.kudos.teamHasContent.useQuery(undefined, {
       enabled: !!session,
     });
-  const { data: domainHasContent } = api.kudos.domainHasContent.useQuery(
+  const { data: workplaceHasContent } = api.kudos.workplaceHasContent.useQuery(
     undefined,
     {
       enabled: !!session,
@@ -350,34 +350,34 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     const requestedScope = selectedScope ?? recommendedScope ?? "site";
 
     // If the requested scope has content, use it
-    if (requestedScope === "department" && departmentHasContent) {
-      setActualDisplayScope("department");
-      return "department";
+    if (requestedScope === "team" && teamHasContent) {
+      setActualDisplayScope("team");
+      return "team";
     }
-    if (requestedScope === "domain" && domainHasContent) {
-      setActualDisplayScope("domain");
-      return "domain";
+    if (requestedScope === "workplace" && workplaceHasContent) {
+      setActualDisplayScope("workplace");
+      return "workplace";
     }
 
     // Fallback logic: try next available scope
-    if (requestedScope === "department" && !departmentHasContent) {
-      if (domainHasContent) {
-        setActualDisplayScope("domain");
-        return "domain";
+    if (requestedScope === "team" && !teamHasContent) {
+      if (workplaceHasContent) {
+        setActualDisplayScope("workplace");
+        return "workplace";
       } else {
         setActualDisplayScope("site");
         return "site";
       }
     }
 
-    if (requestedScope === "domain" && !domainHasContent) {
+    if (requestedScope === "workplace" && !workplaceHasContent) {
       setActualDisplayScope("site");
       return "site";
     }
 
     setActualDisplayScope(requestedScope);
     return requestedScope;
-  }, [selectedScope, recommendedScope, departmentHasContent, domainHasContent]);
+  }, [selectedScope, recommendedScope, teamHasContent, workplaceHasContent]);
 
   // Generate fallback message
   const getFallbackMessage = () => {
@@ -476,9 +476,9 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
 
   const getScopeDisplayName = (scope: ScopeType) => {
     switch (scope) {
-      case "department":
-        return "Department";
-      case "domain":
+      case "team":
+        return "Team";
+      case "workplace":
         return "Organisation";
       case "site":
         return "Site";
@@ -489,9 +489,9 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
 
   const getScopeDescription = (scope: ScopeType) => {
     switch (scope) {
-      case "department":
-        return "See kudos from your department colleagues";
-      case "domain":
+      case "team":
+        return "See kudos from your team";
+      case "workplace":
         return "See kudos from your organisation";
       case "site":
         return "See all kudos from the entire site";
@@ -637,7 +637,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
             aria-label="Kudos from"
             className="rounded-label border-frost/25 flex border p-1"
           >
-            {(["department", "domain", "site"] as ScopeType[]).map((scope) => (
+            {(["team", "workplace", "site"] as ScopeType[]).map((scope) => (
               <button
                 key={scope}
                 role="tab"

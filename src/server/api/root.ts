@@ -1,13 +1,11 @@
 import { groupsRouter } from "~/server/api/routers/groups";
 import { adminRouter } from "~/server/api/routers/admin";
 import { authProviderRouter } from "~/server/api/routers/auth-provider";
-import { domainRouter } from "~/server/api/routers/domain";
 import { kudosRouter } from "~/server/api/routers/kudos";
 import { linkRouter } from "~/server/api/routers/link";
 import { profileRouter } from "~/server/api/routers/profile";
 import { shareRouter } from "~/server/api/routers/share";
 import { stampsRouter } from "~/server/api/routers/stamps";
-import { userRouter } from "~/server/api/routers/user";
 import { wishlistRouter } from "~/server/api/routers/wishlist";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
@@ -18,8 +16,6 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   profile: profileRouter,
-  domain: domainRouter,
-  user: userRouter,
   wishlist: wishlistRouter,
   link: linkRouter,
   kudos: kudosRouter,

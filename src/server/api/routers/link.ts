@@ -1,56 +1,38 @@
-import {
-  adminGroupIds,
-  inAnyGroup,
-} from "~/server/utils/admin-permissions";
-import { adminProcedure, createTRPCRouter } from "../trpc";
-
-// Define types for better type safety
-type UserWithWishlist = {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  amazonWishlistUrl?: string | null;
-  domain?: string | null;
-  departmentId?: string | null;
-  department?: {
-    id: string;
-    name: string;
-    domain: string;
-    createdAt: Date;
-    updatedAt: Date;
-  } | null;
-};
+import { createTRPCRouter, siteAdminProcedure } from "../trpc";
 
 export const linkRouter = createTRPCRouter({
-  getAll: adminProcedure.query(async ({ ctx }) => {
-    const currentUser = ctx.admin;
-
-    // Build where clause based on admin level
-    const where: Record<string, unknown> = {
-      amazonWishlistUrl: { not: null },
-    };
-
-    // Organisers see members of the groups they administer; site admins all
-    if (currentUser.adminLevel !== "SITE") {
-      Object.assign(where, inAnyGroup(await adminGroupIds(currentUser.id)));
-    }
-
-    // Fetch users with a wishlist URL, including department info
-    const users = await ctx.db.user.findMany({
-      where,
-      include: {
-        department: true,
+  /** Site admins: everyone with a wishlist, with their workplace and team. */
+  getAll: siteAdminProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db.user.findMany({
+      where: { amazonWishlistUrl: { not: null } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        workEmail: true,
+        firstName: true,
+        lastName: true,
+        amazonWishlistUrl: true,
+        memberships: {
+          where: { group: { kind: { in: ["ORG", "TEAM"] } } },
+          select: { group: { select: { kind: true, name: true } } },
+        },
       },
-      orderBy: [
-        { domain: "asc" },
-        { departmentId: "asc" },
-        { lastName: "asc" },
-        { firstName: "asc" },
-      ],
-    }); // For each user, fetch assignment and purchase counts, and errors
-    const userIds = users.map((u: UserWithWishlist) => u.id);
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    });
+    const users = rows
+      .map(({ memberships, ...u }) => ({
+        ...u,
+        workplace: memberships.find((m) => m.group.kind === "ORG")?.group.name ?? null,
+        team: memberships.find((m) => m.group.kind === "TEAM")?.group.name ?? null,
+      }))
+      .sort(
+        (a, b) =>
+          (a.workplace ?? "~").localeCompare(b.workplace ?? "~") ||
+          (a.team ?? "~").localeCompare(b.team ?? "~"),
+      );
+
+    const userIds = users.map((u) => u.id);
     // Get assignment counts
     const assignments = await ctx.db.wishlistAssignment.groupBy({
       by: ["wishlistOwnerId"],
@@ -112,7 +94,7 @@ export const linkRouter = createTRPCRouter({
     }
 
     // For each user, aggregate all error messages from their assignments
-    return users.map((user: UserWithWishlist) => {
+    return users.map((user) => {
       const assignment = assignments.find(
         (a: { wishlistOwnerId: string; _count: { id: number } }) =>
           a.wishlistOwnerId === user.id,

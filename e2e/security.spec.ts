@@ -53,7 +53,7 @@ test.describe("public surface", () => {
   });
 
   test("admin APIs need a session", async ({ request }) => {
-    const res = await query(request, "user.getAll");
+    const res = await query(request, "admin.users", { q: "" });
     expect(res.status()).toBe(401);
   });
 });
@@ -75,28 +75,19 @@ test.describe("members can't use organiser APIs", () => {
     });
     const req = page.request;
 
-    for (const path of [
-      "user.getAll",
-      "user.getStats",
-      "link.getAll",
-      "domain.getAll",
-    ]) {
-      expect((await query(req, path)).status(), path).toBe(403);
+    for (const [path, input] of [
+      ["admin.overview", undefined],
+      ["admin.users", { q: "" }],
+      ["admin.groups", {}],
+      ["link.getAll", undefined],
+    ] as const) {
+      expect((await query(req, path, input)).status(), path).toBe(403);
     }
-    expect(
-      (await query(req, "user.getUserStats", { userId })).status(),
-    ).toBe(403);
 
     const mutations: Array<[string, unknown]> = [
-      [
-        "user.updateAdminLevel",
-        { userId, adminLevel: "DOMAIN", adminScope: "e2e.raosanta.test" },
-      ],
-      ["user.toggleProfileCompletion", { userId, completed: true }],
-      ["user.delete", { userId: "someone-else" }],
-      ["domain.create", { name: "e2e-sec.raosanta.test" }],
-      ["domain.toggleEnabled", { id: "any" }],
-      ["profile.createDepartment", { name: "Sneaky", domain: "e2e.raosanta.test" }],
+      ["admin.setSiteAdmin", { userId, siteAdmin: true }],
+      ["admin.deleteUser", { userId: "someone-else" }],
+      ["groups.setStatus", { groupId: "any", status: "ACTIVE" }],
     ];
     for (const [path, input] of mutations) {
       expect((await mutate(req, path, input)).status(), path).toBe(403);

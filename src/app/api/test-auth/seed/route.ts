@@ -2,11 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { db } from "~/server/db";
-import {
-  ensureOrgGroup,
-  syncOrgGroupStatus,
-  syncUserGroups,
-} from "~/server/groups";
+import { createOrgGroup, createTeam, setTeam, setWorkplace } from "~/server/groups";
 import {
   isTestAuthAuthorised,
   TEST_EMAIL_DOMAIN,
@@ -16,7 +12,7 @@ import {
  * Test-only seed data for dev and e2e tests (same gate as ../login).
  *
  * POST   -> wipe and recreate a realistic, deterministic dataset: one org
- *           (domain e2e.raosanta.test) with three departments, 15 members
+ *           (domain e2e.raosanta.test) with three teams, 15 members
  *           with wishlists, assignments, purchases and kudos, plus a "giver"
  *           with a complete profile and no assignments yet.
  * DELETE -> remove everything the seed created.
@@ -24,7 +20,7 @@ import {
  * Only rows on the test email domain are ever created or deleted.
  */
 
-const DEPARTMENTS = ["Elves Workshop", "Reindeer Logistics", "Sleigh Engineering"];
+const TEAMS = ["Elves Workshop", "Reindeer Logistics", "Sleigh Engineering"];
 
 const MEMBERS: [first: string, last: string][] = [
   ["Holly", "Berry"], ["Jingle", "Bell"], ["Noel", "Frost"], ["Ivy", "Wreath"], ["Rudy", "Antler"],
@@ -64,14 +60,9 @@ async function clearSeed() {
   const users = await db.user.deleteMany({
     where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
   });
-  await db.department.deleteMany({ where: { domain: TEST_EMAIL_DOMAIN } });
   // Any test organisation: the seed's own plus ones e2e tests set up
   // (all on subdomains of the test domain)
   const testOrg = { endsWith: `.${TEST_EMAIL_DOMAIN}` };
-  await db.department.deleteMany({ where: { domain: testOrg } });
-  await db.domain.deleteMany({
-    where: { OR: [{ name: TEST_EMAIL_DOMAIN }, { name: testOrg }] },
-  });
   // Team groups and memberships go with the organisation (cascade)
   await db.group.deleteMany({
     where: {
@@ -86,19 +77,19 @@ export async function POST(req: NextRequest) {
 
   await clearSeed();
 
-  await db.domain.create({
-    data: {
-      name: TEST_EMAIL_DOMAIN,
-      enabled: true,
-      description: "E2E test organisation (seed data)",
-    },
+  // Organisations are never created from an email (Day 12), so the seed
+  // creates them explicitly, as an admin would: two live, one pending.
+  const org = await createOrgGroup(db, TEST_EMAIL_DOMAIN, { status: "ACTIVE" });
+  await db.group.update({
+    where: { id: org.id },
+    data: { description: "E2E test organisation (seed data)" },
   });
-
-  const departments = await Promise.all(
-    DEPARTMENTS.map((name) =>
-      db.department.create({ data: { name, domain: TEST_EMAIL_DOMAIN } }),
-    ),
-  );
+  const teams = [];
+  for (const name of TEAMS) teams.push(await createTeam(db, org, name));
+  const join = async (userId: string, orgId: string, teamId: string | null, role?: "ADMIN") => {
+    await setWorkplace(db, userId, orgId, role);
+    if (teamId) await setTeam(db, userId, orgId, teamId);
+  };
 
   const now = new Date();
   const members = [];
@@ -113,15 +104,15 @@ export async function POST(req: NextRequest) {
           name: `${firstName} ${lastName}`,
           firstName,
           lastName,
-          domain: TEST_EMAIL_DOMAIN,
-          departmentId: departments[i % departments.length]!.id,
           amazonWishlistUrl: wishlistUrl(i + 1),
           profileCompleted: true,
           profileCompletedAt: now,
         },
       }),
     );
+    await join(members[i]!.id, org.id, teams[i % teams.length]!.id);
   }
+  const teamOf = (i: number) => i % teams.length;
 
   const giver = await db.user.create({
     data: {
@@ -131,22 +122,21 @@ export async function POST(req: NextRequest) {
       name: "Gail Giver",
       firstName: "Gail",
       lastName: "Giver",
-      domain: TEST_EMAIL_DOMAIN,
-      departmentId: departments[0]!.id,
       amazonWishlistUrl: wishlistUrl(999),
       profileCompleted: true,
       profileCompletedAt: now,
     },
   });
+  await join(giver.id, org.id, teams[0]!.id);
 
-  // Each member holds two wishlists from their own department; every other
+  // Each member holds two wishlists from their own team; every other
   // assignment has been gifted, and some of those gifts have kudos.
   let assignments = 0;
   let purchases = 0;
   let kudos = 0;
   for (const [i, member] of members.entries()) {
     const sameDept = members.filter(
-      (m) => m.departmentId === member.departmentId && m.id !== member.id,
+      (m, j) => teamOf(j) === teamOf(i) && m.id !== member.id,
     );
     for (const k of [0, 1]) {
       const owner = sameDept[(i + k) % sameDept.length]!;
@@ -192,12 +182,9 @@ export async function POST(req: NextRequest) {
 
   // A second, approved organisation with its own team, members and a
   // thank-you, plus one member of an organisation awaiting approval.
-  await db.domain.create({
-    data: { name: RIVAL_DOMAIN, enabled: true, description: "E2E rival org" },
-  });
-  const rivalTeam = await db.department.create({
-    data: { name: "Rival Team", domain: RIVAL_DOMAIN },
-  });
+  const rivalOrg = await createOrgGroup(db, RIVAL_DOMAIN, { status: "ACTIVE" });
+  await db.group.update({ where: { id: rivalOrg.id }, data: { description: "E2E rival org" } });
+  const rivalTeam = await createTeam(db, rivalOrg, "Rival Team");
   const rivals = [];
   for (const [i, name] of RIVALS.entries()) {
     const email = `rival${i + 1}@${TEST_EMAIL_DOMAIN}`;
@@ -209,16 +196,14 @@ export async function POST(req: NextRequest) {
           name,
           firstName: name.split(" ")[0],
           lastName: name.split(" ")[1],
-          domain: RIVAL_DOMAIN,
-          departmentId: rivalTeam.id,
           amazonWishlistUrl: wishlistUrl(901 + i),
           profileCompleted: true,
           profileCompletedAt: now,
-          // rival1 organises the rival organisation
-          ...(i === 0 ? { adminLevel: "DOMAIN" as const, adminScope: RIVAL_DOMAIN } : {}),
         },
       }),
     );
+    // rival1 organises the rival organisation
+    await join(rivals[i]!.id, rivalOrg.id, rivalTeam.id, i === 0 ? "ADMIN" : undefined);
   }
   const rivalAssignment = await db.wishlistAssignment.create({
     data: { assignedUserId: rivals[1]!.id, wishlistOwnerId: rivals[2]!.id },
@@ -234,32 +219,19 @@ export async function POST(req: NextRequest) {
       images: "[]",
     },
   });
-  await db.user.create({
+  const pendingOrg = await createOrgGroup(db, PENDING_DOMAIN, { status: "PENDING" });
+  const pending = await db.user.create({
     data: {
       email: `pending@${TEST_EMAIL_DOMAIN}`,
       emailVerified: now,
       name: "Penny Pending",
-      domain: PENDING_DOMAIN,
       amazonWishlistUrl: wishlistUrl(950),
       profileCompleted: true,
       profileCompletedAt: now,
     },
   });
+  await join(pending.id, pendingOrg.id, null);
 
-  // Organisations are never created from an email (Day 12), so the seed
-  // creates them explicitly, as an admin would: the two approved ones are
-  // live and the pending one waits for approval.
-  await syncOrgGroupStatus(db, TEST_EMAIL_DOMAIN);
-  await syncOrgGroupStatus(db, RIVAL_DOMAIN);
-  const pendingOrg = await ensureOrgGroup(db, PENDING_DOMAIN);
-  await db.group.update({ where: { id: pendingOrg!.id }, data: { status: "PENDING" } });
-
-  // Mirror the seed into groups, as the profile and admin flows do
-  const seeded = await db.user.findMany({
-    where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
-    select: { id: true },
-  });
-  for (const { id } of seeded) await syncUserGroups(db, id);
   const inSeedOrg = {
     OR: [
       { emailDomain: TEST_EMAIL_DOMAIN },
@@ -277,12 +249,12 @@ export async function POST(req: NextRequest) {
     rivalKudos: RIVAL_KUDOS,
     groups,
     memberships,
-    departments: departments.map((d) => d.name),
+    teams: TEAMS,
     members: members.length + 1,
     assignments,
     purchases,
     kudos,
-    giver: { email: giver.email, department: DEPARTMENTS[0] },
+    giver: { email: giver.email, team: TEAMS[0] },
   });
 }
 

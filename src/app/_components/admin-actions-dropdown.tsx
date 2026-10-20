@@ -115,8 +115,7 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
         <div className="absolute top-8 right-0 z-50 min-w-[150px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
           {/* Admin Level Badge */}
           <div className="border-b border-gray-100 px-3 py-1 text-xs text-gray-500">
-            {permissions.adminLevel} Admin
-            {permissions.scope && ` (${permissions.scope})`}
+            {permissions.adminLevel === "SITE" ? "Site admin" : "Organiser"}
           </div>
 
           {/* Hide/Unhide Action */}

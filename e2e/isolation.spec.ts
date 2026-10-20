@@ -83,12 +83,12 @@ test("team and organisation feeds only show your own organisation", async ({
   page,
 }) => {
   await loginAs(page, { email: `giver@${E}` });
-  for (const scope of ["department", "domain"]) {
+  for (const scope of ["team", "workplace"]) {
     expect(await feedMessages(page.request, scope)).not.toContain(rivalKudos);
   }
 
   await loginAs(page, { email: `rival2@${E}` });
-  const rivalFeed = await feedMessages(page.request, "domain");
+  const rivalFeed = await feedMessages(page.request, "workplace");
   expect(rivalFeed).toContain(rivalKudos);
   expect(rivalFeed.every((m) => m === rivalKudos)).toBe(true);
 });
@@ -97,25 +97,27 @@ test("an organisation's organiser only manages their own members", async ({
   page,
 }) => {
   await loginAs(page, { email: `giver@${E}` });
-  const giverProfile = (await unwrap(
-    await query(page.request, "profile.getCurrentProfile"),
+  const mine = (await unwrap(
+    await query(page.request, "groups.myOrganisation"),
   )) as { id: string };
 
-  await loginAs(page, { email: `rival1@${E}`, adminLevel: "DOMAIN" });
+  // rival1 organises the rival organisation (seeded ADMIN membership)
+  await loginAs(page, { email: `rival1@${E}` });
   const r = page.request;
-  const users = (await unwrap(await query(r, "user.getAll"))) as {
-    email: string;
-  }[];
-  expect(users.length).toBeGreaterThan(0);
-  expect(users.every((u) => /^rival\d@/.test(u.email))).toBe(true);
+  const theirs = (await unwrap(await query(r, "groups.myOrganisation"))) as {
+    id: string;
+    isOrganiser: boolean;
+  };
+  expect(theirs.isOrganiser).toBe(true);
+  const managed = (await unwrap(await query(r, "groups.manage", { groupId: theirs.id }))) as {
+    members: { email: string }[];
+  };
+  expect(managed.members.length).toBeGreaterThan(0);
+  expect(managed.members.every((m) => /^rival\d@/.test(m.email))).toBe(true);
 
+  expect((await query(r, "groups.manage", { groupId: mine.id })).status()).toBe(403);
   expect(
-    (
-      await mutate(r, "user.toggleProfileCompletion", {
-        userId: giverProfile.id,
-        completed: false,
-      })
-    ).status(),
+    (await mutate(r, "groups.addTeam", { groupId: mine.id, name: "Sneaky" })).status(),
   ).toBe(403);
 });
 

@@ -14,26 +14,7 @@ export function AuthShowcase() {
   const { data: userProfile, refetch: refetchProfile } =
     api.profile.getCurrentProfile.useQuery(undefined, {
       enabled: !!sessionData?.user,
-    }) as {
-      data:
-        | {
-            id: string;
-            firstName?: string | null;
-            lastName?: string | null;
-            workEmail?: string | null;
-            domain?: string | null;
-            departmentId?: string | null;
-            department?: { id: string; name: string; domain: string } | null;
-            amazonWishlistUrl?: string | null;
-            profileCompleted: boolean;
-            profileCompletedAt?: Date | null;
-            domainEnabled?: boolean | null;
-            orgStatus?: "PENDING" | "ACTIVE" | "DISABLED" | null;
-          }
-        | null
-        | undefined;
-      refetch: () => void;
-    };
+    });
 
   // Day 12: only an unfinished profile (name + wishlist) opens the window;
   // joining groups happens on /groups.
@@ -64,11 +45,11 @@ export function AuthShowcase() {
         {userProfile && (
           <p className="text-frost-soft text-sm">
             {userProfile.profileCompleted ? (
-              userProfile.domain && (
+              userProfile.workplace && (
                 <>
-                  {userProfile.workEmail}
-                  {userProfile.department &&
-                    ` · ${userProfile.department.name}`}
+                  {userProfile.workEmail ?? userProfile.workplace.name}
+                  {userProfile.workplace.team &&
+                    ` · ${userProfile.workplace.team.name}`}
                 </>
               )
             ) : (
@@ -83,7 +64,7 @@ export function AuthShowcase() {
           role="status"
           className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
         >
-          Your organisation ({userProfile.domain}) is new and waiting for our
+          Your organisation ({userProfile.workplace?.name}) is new and waiting for our
           approval. You can get your profile ready now; gifting opens once
           it&apos;s approved.
         </p>
@@ -93,7 +74,7 @@ export function AuthShowcase() {
           role="status"
           className="rounded-label border-gold/50 text-gold-soft max-w-md border px-3 py-2 text-sm"
         >
-          Your organisation ({userProfile.domain}) is closed on Random Acts of
+          Your organisation ({userProfile.workplace?.name}) is closed on Random Acts of
           Santa. You can join another group from Your groups.
         </p>
       )}

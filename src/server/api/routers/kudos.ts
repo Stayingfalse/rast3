@@ -53,7 +53,7 @@ export const kudosRouter = createTRPCRouter({
   getFeed: publicProcedure
     .input(
       z.object({
-        scope: z.enum(["department", "domain", "site"]),
+        scope: z.enum(["team", "workplace", "site"]),
         limit: z.number().min(1).max(50).default(20),
         cursor: z.string().optional(),
       }),
@@ -66,24 +66,22 @@ export const kudosRouter = createTRPCRouter({
       if (ctx.session?.user?.id) {
         currentUser = await db.user.findUnique({
           where: { id: ctx.session.user.id },
-          include: {
-            department: true,
-          },
+          select: { id: true },
         });
 
         userPermissions = await checkAdminPermissions(ctx.session.user.id);
       } // Build the where clause step by step
       let whereClause: Record<string, unknown> = {};
 
-      // Step 1: Apply scope filtering (department/domain/site)
+      // Step 1: Apply scope filtering (team/workplace/site)
       let scopeFilter: Record<string, unknown> = {};
       // Team and organisation feeds go by group membership (Day 9)
       const mine = currentUser
         ? await getMemberships(db, currentUser.id)
         : null;
-      if (input.scope === "department" && mine?.team) {
+      if (input.scope === "team" && mine?.team) {
         scopeFilter = { user: inGroup(mine.team.id) };
-      } else if (input.scope === "domain" && mine?.org) {
+      } else if (input.scope === "workplace" && mine?.org) {
         scopeFilter = { user: inGroup(mine.org.id) };
       }
       // For "site" scope or unauthenticated users, no scope filter needed
@@ -99,42 +97,22 @@ export const kudosRouter = createTRPCRouter({
         // Site admins: see everything (all posts including hidden)
         whereClause = scopeFilter;
       } else {
-        // Domain/Department admins: complex filtering needed
-        if (userPermissions.adminLevel === "DOMAIN") {
-          // Domain admin: see all non-hidden posts + hidden posts only from their domain
-          whereClause = {
-            OR: [
-              {
-                hidden: false,
-                ...scopeFilter,
-              },
-              {
-                AND: [
-                  { hidden: true },
-                  { user: inAnyGroup(userPermissions.groupIds ?? []) },
-                  ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : []),
-                ],
-              },
-            ],
-          };
-        } else if (userPermissions.adminLevel === "DEPARTMENT") {
-          // Department admin: see all non-hidden posts + hidden posts only from their department
-          whereClause = {
-            OR: [
-              {
-                hidden: false,
-                ...scopeFilter,
-              },
-              {
-                AND: [
-                  { hidden: true },
-                  { user: inAnyGroup(userPermissions.groupIds ?? []) },
-                  ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : []),
-                ],
-              },
-            ],
-          };
-        }
+        // Organisers: all non-hidden posts, plus hidden ones from the groups they run
+        whereClause = {
+          OR: [
+            {
+              hidden: false,
+              ...scopeFilter,
+            },
+            {
+              AND: [
+                { hidden: true },
+                { user: inAnyGroup(userPermissions.groupIds ?? []) },
+                ...(Object.keys(scopeFilter).length > 0 ? [scopeFilter] : []),
+              ],
+            },
+          ],
+        };
       }
 
       const kudos = await db.kudos.findMany({
@@ -155,11 +133,6 @@ export const kudosRouter = createTRPCRouter({
               firstName: true,
               lastName: true,
               memberships: { select: { groupId: true } },
-              department: {
-                select: {
-                  name: true,
-                },
-              },
             },
           },
           purchase: {
@@ -199,7 +172,6 @@ export const kudosRouter = createTRPCRouter({
                 image: null,
                 firstName: null,
                 lastName: null,
-                department: null,
               },
         }),
       );
@@ -219,11 +191,11 @@ export const kudosRouter = createTRPCRouter({
     if (!ctx.session?.user?.id) return "site";
     const { org, team } = await getMemberships(db, ctx.session.user.id);
     if (org?.status !== "ACTIVE") return "site";
-    return team ? "department" : "domain";
+    return team ? "team" : "workplace";
   }),
 
   // Check if a scope has content
-  departmentHasContent: publicProcedure.query(async ({ ctx }) => {
+  teamHasContent: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.session?.user?.id) return false;
     const { team } = await getMemberships(db, ctx.session.user.id);
     if (!team) return false;
@@ -233,7 +205,7 @@ export const kudosRouter = createTRPCRouter({
     return count > 0;
   }),
 
-  domainHasContent: publicProcedure.query(async ({ ctx }) => {
+  workplaceHasContent: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.session?.user?.id) return false;
     const { org } = await getMemberships(db, ctx.session.user.id);
     if (!org) return false;

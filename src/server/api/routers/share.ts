@@ -9,58 +9,37 @@ import {
   sharePath,
   type GroupScope,
 } from "~/server/share-cards";
+import { getWorkplace } from "~/server/groups";
 import { createTRPCRouter, protectedProcedure, rateLimit } from "../trpc";
 
 /**
  * The groups this member may share a total for, with their default card
- * names. Organisers only: site admins, the organisation's domain admin, or
- * the department's admin. Always the member's own organisation and team.
+ * names. Organisers only: site admins, the workplace's organisers, or the
+ * team's organisers. Always the member's own workplace and team.
  */
 async function shareableGroups(db: typeof Db, userId: string) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: {
-      adminLevel: true,
-      adminScope: true,
-      domain: true,
-      departmentId: true,
-      department: { select: { name: true } },
-    },
+    select: { adminLevel: true },
   });
   if (!user) return [];
+  const { org, team } = await getWorkplace(db, userId);
   const groups: { scope: GroupScope; id: string; label: string }[] = [];
   const site = user.adminLevel === "SITE";
-  const domainAdmin =
-    user.adminLevel === "DOMAIN" &&
-    !!user.domain &&
-    user.adminScope === user.domain;
-  const deptAdmin =
-    user.adminLevel === "DEPARTMENT" &&
-    !!user.departmentId &&
-    user.adminScope === user.departmentId;
+  const orgAdmin = org?.role === "ADMIN";
 
-  if (user.domain && (site || domainAdmin)) {
-    const domain = await db.domain.findUnique({
-      where: { name: user.domain },
-      select: { description: true },
-    });
-    const described = domain?.description?.trim();
+  if (org && (site || orgAdmin)) {
+    const described = (
+      await db.group.findUnique({ where: { id: org.group.id }, select: { description: true } })
+    )?.description?.trim();
     groups.push({
       scope: "org",
-      id: user.domain,
-      label: described && described.length <= 40 ? described : user.domain,
+      id: org.group.id,
+      label: described && described.length <= 40 ? described : org.group.name,
     });
   }
-  if (
-    user.departmentId &&
-    user.department &&
-    (site || domainAdmin || deptAdmin)
-  ) {
-    groups.push({
-      scope: "team",
-      id: user.departmentId,
-      label: user.department.name,
-    });
+  if (team && (site || orgAdmin || team.role === "ADMIN")) {
+    groups.push({ scope: "team", id: team.group.id, label: team.group.name });
   }
   return groups;
 }

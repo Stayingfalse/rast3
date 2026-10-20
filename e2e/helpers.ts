@@ -29,6 +29,9 @@ export async function loginAs(
   page: Page,
   user: { email: string; name?: string; adminLevel?: AdminLevel },
 ) {
+  // Leave any open page first: a signed-in page can refresh its session in
+  // the background and write the previous user's cookie back.
+  if (page.url() !== "about:blank") await page.goto("about:blank");
   const res = await page.request.post("/api/test-auth/login", {
     headers: testHeaders,
     data: user,

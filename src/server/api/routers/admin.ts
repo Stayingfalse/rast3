@@ -8,6 +8,7 @@ import {
   TRACKING_ID,
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
+import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonYearOf } from "~/server/stamps";
 
 const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
@@ -105,6 +106,7 @@ export const adminRouter = createTRPCRouter({
           status: true,
           emailDomain: true,
           discordGuildId: true,
+          openEarly: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
           _count: { select: { memberships: true, children: true } },
@@ -366,6 +368,49 @@ export const adminRouter = createTRPCRouter({
         });
       }
       await ctx.db.affiliateTrackingId.deleteMany({ where: { tag: input.tag } });
+      return { ok: true };
+    }),
+
+  /** Day 18: this season's dates, check-ins and the groups opened early. */
+  season: siteAdminProcedure.query(async ({ ctx }) => {
+    const year = currentSeason();
+    const [w, members, checkedIn, early] = await Promise.all([
+      seasonWindow(ctx.db, year),
+      ctx.db.user.count({ where: { profileCompleted: true } }),
+      ctx.db.seasonCheckIn.count({ where: { season: year } }),
+      ctx.db.group.findMany({
+        where: { openEarly: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, kind: true },
+      }),
+    ]);
+    return { ...w, members, checkedIn, openEarly: early };
+  }),
+
+  setSeasonDates: siteAdminProcedure
+    .input(
+      z
+        .object({ opensAt: z.coerce.date(), closesAt: z.coerce.date() })
+        .refine((d) => d.closesAt > d.opensAt, "The season must close after it opens"),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const year = currentSeason();
+      await ctx.db.season.upsert({
+        where: { year },
+        update: input,
+        create: { id: `season_${year}`, year, ...input },
+      });
+      return { ok: true };
+    }),
+
+  /** Let a group (and its teams) pick up outside the season's dates. */
+  setOpenEarly: siteAdminProcedure
+    .input(z.object({ groupId: z.string(), open: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.group.update({
+        where: { id: input.groupId },
+        data: { openEarly: input.open },
+      });
       return { ok: true };
     }),
 });

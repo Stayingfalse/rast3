@@ -93,7 +93,7 @@
 | 15 | Thu 22 Oct | **Done early (19 Oct, back to back with 13 and 14).** **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Done early (20 Oct, at the owner's request).** **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. **First (owner feedback, 20 Oct): Discord linking without Developer Mode.** Replace the server/role ID fields with "Connect Discord" (OAuth), then a dropdown of servers the organiser manages (owner, Administrator or Manage Server permission), shown with name and icon. **Remove the role requirement** (owner, 20 Oct): drop the role field and role checks; anyone in a linked server can join. (The `discordRoleId` column can stay unused until a bot exists.) |
 | 17 | Sat 24 Oct | **Done early (nightly run, 20 Oct).** **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). *(The screens are retired; the columns still have about 300 readers, so their removal moved to the backlog as its own change.)* |
-| 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
+| 18 | Sun 25 Oct | **Done early (bonus day, 20 Oct).** Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
 
 ### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
@@ -716,3 +716,34 @@ that don't touch the data model. Known items to include:
     page at an unguessable, unindexed address counts as publicly
     available. Days 20 and 21 were re-planned so nothing reads or scrapes
     wishlists.
+- **Affiliate compliance pass merged (20 Oct, #47).**
+  - "Ad · Affiliate link" labels sit above the link.
+  - Live tracking IDs are used only on raosanta.uk.
+  - Gift pages are `noindex, follow`.
+  - `docs/AFFILIATE_COMPLIANCE.md` lists the rules and where each is handled.
+  - The owner sent Amazon an example gift page.
+- **Bonus day (20 Oct, owner's request): Day 18, the Christmas season.**
+  - **Season dates:** 15 Nov to 6 Jan by default, editable on
+    `/admin/season`, which also shows how many members have checked in.
+    - Before the season opens, members see a countdown and get their
+      wishlist ready, but pick-ups are refused.
+    - Site admins can open a group early from the Groups tab menu, for
+      testing or for the owner's Amazon example group.
+  - **Yearly check-in (owner, 19–20 Oct).**
+    - Every member, including those who joined in October, confirms their
+      wishlist ("keep" or "use a different one") and reviews their groups
+      once a season.
+    - Until then they can't pick up and their list isn't handed out.
+    - A new member's first profile counts as their check-in.
+  - **Archiving:**
+    - Pick-ups from before 1 Aug 2026 were archived by migration. The app
+      keeps archiving lazily as seasons roll over.
+    - Within a season, nobody is given the same list twice.
+    - Past gifts stay in the stamp album.
+  - **Gift pages are untouched** by dates, check-ins and archiving, so the
+    example sent to Amazon stays live. A page whose owner deletes their
+    account now says the list is gone instead of returning 404.
+  - **Not built yet** from the original Day 18: per-group budgets and
+    mixing rules. Budgets move to Day 20, which already has organiser
+    budget bands; mixing rules go to the backlog.
+  - **Next: Day 19 (nightly), fair-share assignment.**

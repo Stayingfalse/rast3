@@ -287,6 +287,37 @@ Two authored clusters (`public/brand/sky-left.svg`, `sky-right.svg`, 560×260 ea
 ### Motion: the Frank
 One authored animation: the postmark lands (520ms, cubic-bezier(0.16, 1, 0.3, 1)), scaling from 1.35 and -14deg with a slight blur to rest at -10deg. Used on the hero label's postmark and on a newly gifted parcel card. Under reduced motion every animation and transition collapses to an instant, so the postmark simply appears at rest.
 
+### shadcn/ui (adopted 19 Oct 2026, Day 15)
+
+Product UI (forms, dialogs, tables, menus, tabs, the admin area) is built
+from shadcn/ui components in `src/components/ui/` (Radix base, "nova" style,
+`components.json`). The brand moments stay bespoke: postcards, parcel labels,
+stamps, postmarks, the wordmark and the sky.
+
+- **Theme.** shadcn's roles are mapped onto this palette in
+  `src/styles/globals.css`, with one theme and no dark switch. Components are
+  label-stock surfaces on the night sky:
+  - background, card and popover are label or paper, with ink text;
+  - `primary` is post red; `secondary` and `muted` are label shade;
+  - `accent` is post tint; `destructive` is post deep;
+  - `border` and `input` are rule; `ring` is gold;
+  - radius is the 6px label radius.
+- **Sizes.** Buttons and inputs are 44px tall (`h-11`) to match touch targets
+  elsewhere. Buttons use Archivo bold, slightly expanded; the primary button
+  carries the same red lift shadow as `btn-post`.
+- **Use the components, not copies.** Use `Button` variants (`default` = post
+  red, `secondary`, `outline`, `ghost`, `link`) rather than restyling with
+  `className`. Forms use `FieldGroup` / `Field` / `FieldLabel` /
+  `FieldDescription` / `FieldError`, with `data-invalid` on the `Field` and
+  `aria-invalid` on the control. Dialogs always have a `DialogTitle`.
+- **Branding a dialog.** Add the airmail strip as the first child
+  (`<div className="airmail absolute inset-x-0 top-0 h-2.5" />`) and use the
+  expanded display face for the title. See `profile-setup-modal.tsx`.
+- **Toasts** stay on react-hot-toast for now; moving to sonner is a later
+  change.
+- **Existing utilities** (`btn-post`, `btn-quiet`, `label-stock`) remain for
+  bespoke surfaces. New product screens should prefer the components.
+
 ## Do's and Don'ts
 
 ### Do:

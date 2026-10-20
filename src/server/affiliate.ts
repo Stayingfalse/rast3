@@ -18,6 +18,19 @@ import { seasonYearOf } from "~/server/stamps";
 export const AMAZON_DISCLOSURE =
   "As an Amazon Associate, Random Acts of Santa earns from qualifying purchases.";
 
+/**
+ * Real tracking IDs only go out on the site registered with Amazon. Dev,
+ * previews and local runs get a dummy ID, so no live tag ever appears on an
+ * unregistered site (compliance pass, 20 Oct).
+ */
+export const LIVE_HOSTS = ["raosanta.uk", "www.raosanta.uk"];
+export const TEST_TAG = "raosantatest-21";
+
+export function tagForHost(tag: string, host: string | null | undefined) {
+  const name = (host ?? "").split(",")[0]!.trim().toLowerCase().replace(/:\d+$/, "");
+  return LIVE_HOSTS.includes(name) ? tag : TEST_TAG;
+}
+
 /** Amazon.co.uk tracking IDs end in -21. */
 export const TRACKING_ID = /^[a-z0-9][a-z0-9-]{1,38}-21$/;
 

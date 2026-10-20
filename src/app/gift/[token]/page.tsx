@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -6,6 +7,7 @@ import {
   affiliateFor,
   AMAZON_DISCLOSURE,
   taggedUrl,
+  tagForHost,
 } from "~/server/affiliate";
 import { db } from "~/server/db";
 import { seasonYearOf } from "~/server/stamps";
@@ -14,7 +16,8 @@ export const metadata: Metadata = {
   title: "A wishlist to gift · Random Acts of Santa",
   description:
     "A Christmas wishlist picked up on Random Acts of Santa: gift anonymously, no names, no addresses.",
-  robots: { index: false, follow: false },
+  // kept out of search results, but crawlers (Amazon's reviewers) may follow the link
+  robots: { index: false, follow: true },
 };
 
 type Props = { params: Promise<{ token: string }> };
@@ -44,8 +47,14 @@ export default async function GiftPage({ params }: Props) {
   const affiliate = current
     ? await affiliateFor(db, page.groupId, page.season)
     : { enabled: false as const };
+  const h = await headers();
   const tagged =
-    wishlist && affiliate.enabled ? taggedUrl(wishlist, affiliate.tag) : null;
+    wishlist && affiliate.enabled
+      ? taggedUrl(
+          wishlist,
+          tagForHost(affiliate.tag, h.get("x-forwarded-host") ?? h.get("host")),
+        )
+      : null;
 
   return (
     <article className="flex w-full max-w-3xl flex-col gap-8">
@@ -82,6 +91,13 @@ export default async function GiftPage({ params }: Props) {
                 don&apos;t know who, and they won&apos;t know it&apos;s you.
               </p>
               <div className="flex flex-col gap-2">
+                {tagged && (
+                  // UK ad rules: say it's an ad before the link, not after
+                  <p className="text-ink-soft text-sm">
+                    <span className="label-caps text-ink mr-2">Ad · Affiliate link</span>
+                    {AMAZON_DISCLOSURE} It costs you nothing extra.
+                  </p>
+                )}
                 <a
                   href={tagged ?? wishlist}
                   target="_blank"
@@ -93,12 +109,6 @@ export default async function GiftPage({ params }: Props) {
                 >
                   Open the wishlist on Amazon
                 </a>
-                {tagged && (
-                  <p className="text-ink-soft text-sm">
-                    <span className="label-caps text-ink mr-2">Affiliate link</span>
-                    {AMAZON_DISCLOSURE} It costs you nothing extra.
-                  </p>
-                )}
               </div>
             </>
           )}

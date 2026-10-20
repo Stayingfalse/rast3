@@ -7,7 +7,7 @@ export function AffiliateNote({ tone = "night" }: { tone?: "night" | "label" }) 
   return (
     <p className={`${text} max-w-2xl text-sm`}>
       <span className={`label-caps mr-2 ${tone === "night" ? "text-frost" : "text-ink"}`}>
-        Affiliate links
+        Ad · Affiliate links
       </span>
       Wishlists in this group open from a gift page with an Amazon affiliate
       link. When you buy through it, Amazon pays Random Acts of Santa a small

@@ -91,7 +91,7 @@
 | 13 | Tue 20 Oct | **Done early (19 Oct, owner asked to run Days 13–15 back to back).** **Discord joining by server.** Organisers link a community group to a Discord server (optionally a role). Members sign in with Discord and can join any linked server they belong to. Server membership uses the `guilds` scope; role checks use `guilds.members.read`; no bot needed. |
 | 14 | Wed 21 Oct | **Done early (19 Oct, back to back with 13 and 15).** **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Done early (19 Oct, back to back with 13 and 14).** **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
-| 16 | Fri 23 Oct | **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. |
+| 16 | Fri 23 Oct | **Done early (20 Oct, at the owner's request).** **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. **First (owner feedback, 20 Oct): Discord linking without Developer Mode.** Replace the server/role ID fields with "Connect Discord" (OAuth), then a dropdown of servers the organiser manages (owner, Administrator or Manage Server permission), shown with name and icon. **Remove the role requirement** (owner, 20 Oct): drop the role field and role checks; anyone in a linked server can join. (The `discordRoleId` column can stay unused until a bot exists.) |
 | 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
 | 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
 
@@ -108,25 +108,25 @@
 ### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 25 | Sun 1 Nov | Discord bot proof of concept: `/santa join`, `/santa status`, reminders in a channel |
-| 26 | Mon 2 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
-| 27 | Tue 3 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
-| 28 | Wed 4 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 29 | Thu 5 Nov | Accessibility + mobile pass |
-| 30 | Fri 6 Nov | Performance pass |
-| 31 | Sat 7 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
+| 25 | Sun 1 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
+| 26 | Mon 2 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 27 | Tue 3 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 28 | Wed 4 Nov | Accessibility + mobile pass |
+| 29 | Thu 5 Nov | Performance pass |
+| 30 | Fri 6 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 
 ### Week 5: launch (8–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 32 | Sun 8 Nov | Full regression on dev + launch checklist |
-| 33 | Mon 9 Nov | Fixes from regression |
-| 34 | Tue 10 Nov | Release candidate → prod (with the owner's approval) |
+| 31 | Sat 7 Nov | Full regression on dev + launch checklist |
+| 32 | Sun 8 Nov | Fixes from regression |
+| 33 | Mon 9 Nov | Release candidate → prod (with the owner's approval) |
+| 34 | Tue 10 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 36 | Thu 12 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 37 | Fri 13 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
-| 38 | Sat 14 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
-| 39 | Sun 15 Nov | **Spare day** (Amazon-only this year, owner 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 38 | Sat 14 Nov | **Spare day** (Amazon-only this year, owner 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 39 | Sun 15 Nov | **Spare day** (Discord bot moved to the backlog, owner 20 Oct) |
 
 ## Monetisation (2027; this year only collects the evidence)
 
@@ -150,6 +150,11 @@
   instead.
 
 ## Ideas backlog
+
+- **Discord bot (owner, 20 Oct: backlog, owner is considering a bot with
+  wider functionality).** Would enable: a role dropdown and role-gated
+  joining for community groups, `/santa join` and `/santa status`, and
+  reminders posted in a channel. Not in the 2026 plan.
 
 - **2027: wishlists beyond Amazon** (Throne, Etsy, any URL), taken off the 2026 plan by the owner on 18 Oct.
 
@@ -581,4 +586,37 @@ that don't touch the data model. Known items to include:
     and 17) is the first big consumer.
   - **Next: Day 16 (nightly), the group organiser console, including "Bring
     your team".**
+- **Owner feedback (20 Oct, 01:41): Discord linking.** Pasting IDs with
+  Developer Mode is too technical. Day 16 starts with a "Connect Discord"
+  button and a dropdown of manageable servers; a role dropdown needs a bot
+  (Day 25), since user OAuth can't list role names.
+- **Owner decision (20 Oct): no Discord bot for now.** Remove the Discord role
+  requirement (Day 16); the Discord bot day comes off the plan and goes to the
+  backlog, and the freed day becomes a spare.
+- **Day 16 (20 Oct, pulled forward): organiser console and "Bring your
+  team".**
+  - **Discord linking without Developer Mode.** Organisers press "Connect
+    Discord" and pick from a dropdown of the servers they own or manage
+    (name and icon; checked with Discord when saving). The role requirement
+    is gone and the scope is now just `identify email guilds`.
+  - **Organiser console** at `/groups/<id>/manage` (shadcn/ui), reached from
+    "Manage group" and "Manage workplace" buttons:
+    - **Members:** newest first with a "New" badge (last 30 days), email,
+      joined date and wishlist status; make or unmake organiser (friends
+      and community groups; at least one organiser is kept); remove with a
+      confirmation (a workplace removal takes them out of the organisation,
+      account kept).
+    - **Bring your team:** a ready-made invite message (copy, email,
+      WhatsApp, Teams/Slack) and a printable A4 poster with a QR code
+      (`/groups/<id>/poster`).
+    - **Stats:** members, joined in the first 48 hours, joined this week, and
+      wishlists gifted in friends and community groups.
+    - **Settings:** rename (friends and community), invite or join code,
+      Discord, and teams for workplaces (list and add).
+  - **Privacy policy** updated (20 Oct) for the Discord change.
+  - **Tests.** New `e2e/organiser-console.spec.ts` (manage members, invite
+    message, poster QR, non-organisers blocked); `discord.spec.ts` rewritten
+    for the picker (connect first, own servers only).
+  - **Next: Day 17 (nightly), the site admin console;** the legacy Domains
+    and Departments screens are retired.
 

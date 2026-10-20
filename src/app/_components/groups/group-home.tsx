@@ -33,7 +33,10 @@ export function GroupHome({ group }: { group: Group }) {
 
   const live = group.status === "ACTIVE";
   return (
-    <section aria-labelledby="group-home-heading" className="flex w-full flex-col gap-6">
+    <section
+      aria-labelledby="group-home-heading"
+      className="flex w-full flex-col gap-6"
+    >
       <div className="flex flex-col gap-2">
         <p className="label-caps text-frost-soft">
           {group.kind === "FRIENDS" ? "Friends group" : "Community"} ·{" "}
@@ -48,7 +51,10 @@ export function GroupHome({ group }: { group: Group }) {
       </div>
 
       {!live ? (
-        <p role="status" className="rounded-label border-gold/50 text-gold-soft max-w-xl border px-4 py-3">
+        <p
+          role="status"
+          className="rounded-label border-gold/50 text-gold-soft max-w-xl border px-4 py-3"
+        >
           {group.status === "PENDING"
             ? "This group is waiting for our approval. Gifting opens once it's approved; meanwhile, invite people so there are lists waiting."
             : "This group is closed."}

@@ -17,6 +17,11 @@ on:
   pull_request:
   push:
     branches: [main, dev]
+    # Roadmap and other docs don't change the app: no deploy, no e2e run
+    # (otherwise a docs push queues ahead of real changes on dev).
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 concurrency:
   group: ci-${{ github.ref }}

@@ -61,8 +61,8 @@ export function DiscordJoinCard() {
         </h2>
         <p className="text-ink-soft text-sm">
           Some communities are linked to their Discord server. We check which
-          servers you&apos;re in (and your roles there) and nothing else; we
-          never post or read messages.
+          servers you&apos;re in and nothing else; we never post or read
+          messages.
         </p>
 
         {matches?.needsDiscord ? (
@@ -105,7 +105,7 @@ export function DiscordJoinCard() {
                     <span className="text-pine text-sm font-semibold">
                       You&apos;re in
                     </span>
-                  ) : g.roleOk ? (
+                  ) : (
                     <button
                       type="button"
                       disabled={join.isPending}
@@ -114,10 +114,6 @@ export function DiscordJoinCard() {
                     >
                       Join
                     </button>
-                  ) : (
-                    <span className="text-ink-soft text-sm">
-                      Needs a server role
-                    </span>
                   )}
                 </li>
               ))}

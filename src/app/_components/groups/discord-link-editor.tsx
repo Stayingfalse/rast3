@@ -1,89 +1,159 @@
 "use client";
 
-import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
-import { api } from "~/trpc/react";
+import { Button } from "~/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "~/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { api, type RouterOutputs } from "~/trpc/react";
 
-/** Organisers of a community group: link it to a Discord server (Day 13). */
+type Servers = RouterOutputs["groups"]["discordServers"];
+
+/**
+ * Organisers of a community group: link it to a Discord server they own or
+ * manage, picked from a list after connecting Discord (Day 16; no ids to
+ * copy, no role requirement).
+ */
 export function DiscordLinkEditor({
   groupId,
   guildId,
-  roleId,
+  returnTo = "/groups",
 }: {
   groupId: string;
   guildId: string | null;
-  roleId: string | null;
+  returnTo?: string;
 }) {
   const utils = api.useUtils();
-  const [guild, setGuild] = useState(guildId ?? "");
-  const [role, setRole] = useState(roleId ?? "");
+  const [servers, setServers] = useState<Servers | null>(null);
+  const [picked, setPicked] = useState(guildId ?? "");
+
+  const load = api.groups.discordServers.useMutation({
+    onSuccess: setServers,
+    onError: (e) => toast.error(e.message),
+  });
   const save = api.groups.setDiscordLink.useMutation({
     onSuccess: async (g) => {
       toast.success(
         g.discordGuildId ? "Discord server linked" : "Discord server unlinked",
       );
       await utils.groups.mine.invalidate();
+      await utils.groups.manage.invalidate();
     },
     onError: (e) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    load.mutate({ groupId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
+
+  const linkedName = servers?.servers.find((s) => s.id === guildId)?.name;
+
   return (
-    <form
+    <section
       aria-label="Discord server"
       className="border-rule flex flex-col gap-3 border-t border-dashed pt-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        save.mutate({
-          groupId,
-          guildId: guild.trim() || null,
-          roleId: role.trim() || undefined,
-        });
-      }}
     >
       <p className="label-caps text-ink-soft">Discord server</p>
-      <p className="text-ink-soft text-sm">
-        Members of your server can join with Discord. In Discord turn on
-        Settings → Advanced → Developer Mode, then right-click your server (or a
-        role) and choose Copy ID.
-      </p>
-      <label className="flex flex-col gap-1">
-        <span className="text-ink text-sm font-semibold">Server ID</span>
-        <input
-          value={guild}
-          onChange={(e) => setGuild(e.target.value)}
-          inputMode="numeric"
-          placeholder="e.g. 112233445566778899"
-          className="border-rule text-ink rounded-label min-h-11 border bg-white px-3 py-2"
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-ink text-sm font-semibold">
-          Required role ID (optional)
-        </span>
-        <input
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          inputMode="numeric"
-          placeholder="Leave empty to let anyone in the server join"
-          className="border-rule text-ink rounded-label min-h-11 border bg-white px-3 py-2"
-        />
-      </label>
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={save.isPending} className="btn-post">
-          {guildId ? "Save" : "Link server"}
-        </button>
-        {guildId && (
-          <button
+      {guildId && (
+        <p className="text-ink text-sm">
+          Linked{linkedName ? ` to ${linkedName}` : ""}: anyone in the server
+          can join with &ldquo;Join with Discord&rdquo;.
+        </p>
+      )}
+
+      {servers?.needsDiscord ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-ink-soft text-sm">
+            Connect Discord to pick one of the servers you run.
+          </p>
+          <Button
             type="button"
-            disabled={save.isPending}
-            onClick={() => save.mutate({ groupId, guildId: null })}
-            className="btn-quiet text-ink"
+            className="self-start"
+            onClick={() => void signIn("discord", { callbackUrl: returnTo })}
           >
-            Unlink
-          </button>
-        )}
-      </div>
-    </form>
+            Connect Discord
+          </Button>
+        </div>
+      ) : servers ? (
+        servers.servers.length === 0 ? (
+          <p className="text-ink-soft text-sm">
+            You don&apos;t own or manage any Discord servers we can see. Ask the
+            server&apos;s owner to link it.
+          </p>
+        ) : (
+          <form
+            className="flex flex-col gap-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (picked) save.mutate({ groupId, guildId: picked });
+            }}
+          >
+            <Field>
+              <FieldLabel htmlFor={`discord-server-${groupId}`}>
+                Server
+              </FieldLabel>
+              <Select value={picked} onValueChange={setPicked}>
+                <SelectTrigger
+                  id={`discord-server-${groupId}`}
+                  className="w-full"
+                >
+                  <SelectValue placeholder="Choose a server you run" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {servers.servers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.icon && (
+                          // eslint-disable-next-line @next/next/no-img-element -- Discord CDN icon
+                          <img
+                            src={s.icon}
+                            alt=""
+                            className="size-5 rounded-full"
+                          />
+                        )}
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                Only servers you own or manage are listed.
+              </FieldDescription>
+            </Field>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="submit"
+                disabled={!picked || picked === guildId || save.isPending}
+              >
+                {guildId ? "Change server" : "Link server"}
+              </Button>
+              {guildId && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={save.isPending}
+                  onClick={() => save.mutate({ groupId, guildId: null })}
+                >
+                  Unlink
+                </Button>
+              )}
+            </div>
+          </form>
+        )
+      ) : (
+        <p className="text-ink-soft text-sm">Checking Discord…</p>
+      )}
+    </section>
   );
 }

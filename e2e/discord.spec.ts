@@ -3,9 +3,9 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 import { deleteTestUsers, hasTestLogin, loginAs } from "./helpers";
 
 /**
- * Day 13: community organisers link a Discord server; members without a
- * connected Discord account are asked to connect it. (Dev has no Discord
- * sign-in, so the server check itself is tested by hand on prod.)
+ * Discord linking (Day 13, picker since Day 16). Dev has no Discord sign-in,
+ * so this covers the guards and the "connect Discord" path; picking a real
+ * server is tried by hand on prod.
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
@@ -23,35 +23,34 @@ test.afterAll(async ({ playwright }, testInfo) => {
   await request.dispose();
 });
 
-test("organisers link a community to a Discord server", async ({ page }, testInfo) => {
+test("organisers must connect Discord and can only link servers they run", async ({
+  page,
+}, testInfo) => {
   const p = testInfo.project.name;
   await loginAs(page, { email: `discord-org-${p}@${E}` });
   const r = page.request;
-  const mk = async (name: string) =>
-    ((await unwrap(await mutate(r, "groups.create", { name, kind: "COMMUNITY" }))) as { id: string }).id;
-  const a = await mk(`E2E Discord A ${p}`);
-  const b = await mk(`E2E Discord B ${p}`);
-  // a fresh id per project so the two runs don't collide
-  const guild = p === "desktop" ? "112233445566778801" : "112233445566778802";
+  const a = ((await unwrap(
+    await mutate(r, "groups.create", { name: `E2E Discord A ${p}`, kind: "COMMUNITY" }),
+  )) as { id: string }).id;
 
+  const servers = (await unwrap(await mutate(r, "groups.discordServers", { groupId: a }))) as {
+    needsDiscord: boolean;
+  };
+  expect(servers.needsDiscord).toBe(true);
   expect((await mutate(r, "groups.setDiscordLink", { groupId: a, guildId: "not-an-id" })).status()).toBe(400);
   expect(
-    (await mutate(r, "groups.setDiscordLink", { groupId: a, guildId: guild, roleId: "998877665544332211" })).status(),
-  ).toBe(200);
-  // one server, one group
-  expect((await mutate(r, "groups.setDiscordLink", { groupId: b, guildId: guild })).status()).toBe(409);
+    (await mutate(r, "groups.setDiscordLink", { groupId: a, guildId: "112233445566778801" })).status(),
+  ).toBe(412);
+  expect((await mutate(r, "groups.setDiscordLink", { groupId: a, guildId: null })).status()).toBe(200);
 
   await page.goto("/groups");
-  // newest group first, so find group A's card by name
-  const form = page
-    .getByRole("listitem")
-    .filter({ hasText: `E2E Discord A ${p}` })
-    .getByRole("form", { name: "Discord server" });
-  await expect(form.getByLabel("Server ID")).toHaveValue(guild);
+  const card = page.getByRole("listitem").filter({ hasText: `E2E Discord A ${p}` });
+  await expect(
+    card.getByRole("region", { name: "Discord server" }).getByRole("button", { name: "Connect Discord" }),
+  ).toBeVisible();
 
-  // someone else can't change it
   await loginAs(page, { email: `discord-other-${p}@${E}` });
-  expect((await mutate(page.request, "groups.setDiscordLink", { groupId: a, guildId: null })).status()).toBe(403);
+  expect((await mutate(page.request, "groups.discordServers", { groupId: a })).status()).toBe(403);
 });
 
 test("without Discord connected, members are asked to connect it", async ({ page }, testInfo) => {

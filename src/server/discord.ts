@@ -4,11 +4,11 @@ import { createChildLogger } from "~/utils/logger";
 const logger = createChildLogger("discord");
 
 /**
- * Day 13: joining a community group through its Discord server.
- * `guilds` lists the servers someone is in; `guilds.members.read` lets us read
- * their roles in one server (for groups that require a role). No bot needed.
+ * Day 13: joining a community group through its Discord server. `guilds`
+ * lists the servers someone is in (with their permissions there). No bot, so
+ * no role checks (owner, 20 Oct).
  */
-export const DISCORD_SCOPES = "identify email guilds guilds.members.read";
+export const DISCORD_SCOPES = "identify email guilds";
 const API = "https://discord.com/api/v10";
 
 /** Discord ids are snowflakes: 17 to 20 digits. */
@@ -112,6 +112,14 @@ export async function getDiscordToken(userId: string): Promise<string | null> {
     : null;
 }
 
+type Guild = {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner?: boolean;
+  permissions?: string;
+};
+
 /** The servers this person is in. */
 export async function fetchMyGuilds(token: string) {
   const res = await fetch(`${API}/users/@me/guilds`, {
@@ -121,14 +129,25 @@ export async function fetchMyGuilds(token: string) {
     logger.warn({ status: res.status }, "Discord guild list failed");
     return null;
   }
-  return (await res.json()) as { id: string; name: string }[];
+  return (await res.json()) as Guild[];
 }
 
-/** Their role ids in one server, or null if they're not a member. */
-export async function fetchMyRoles(token: string, guildId: string) {
-  const res = await fetch(`${API}/users/@me/guilds/${guildId}/member`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) return null;
-  return ((await res.json()) as { roles?: string[] }).roles ?? [];
+const ADMINISTRATOR = 0x8n;
+const MANAGE_GUILD = 0x20n;
+
+/** Servers this person owns or manages (Administrator or Manage Server). */
+export function manageable(guilds: Guild[]) {
+  return guilds
+    .filter((g) => {
+      if (g.owner) return true;
+      const perms = BigInt(g.permissions ?? "0");
+      return (perms & ADMINISTRATOR) !== 0n || (perms & MANAGE_GUILD) !== 0n;
+    })
+    .map((g) => ({
+      id: g.id,
+      name: g.name,
+      icon: g.icon
+        ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`
+        : null,
+    }));
 }

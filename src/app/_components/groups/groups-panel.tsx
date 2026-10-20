@@ -264,11 +264,19 @@ function GroupCard({ group }: { group: Group }) {
           {group.members} {group.members === 1 ? "member" : "members"}
         </p>
 
+        {group.role === "ADMIN" && (
+          <Link
+            href={`/groups/${group.id}/manage`}
+            className="btn-quiet text-ink self-start"
+          >
+            Manage group
+          </Link>
+        )}
+
         {group.kind === "COMMUNITY" && group.discord && (
           <DiscordLinkEditor
             groupId={group.id}
             guildId={group.discord.guildId}
-            roleId={group.discord.roleId}
           />
         )}
 

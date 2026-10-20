@@ -22,7 +22,7 @@ export const wishlistRouter = createTRPCRouter({
   // Workplace pick-ups by default; pass a friends/community group id for that
   // group's (Day 14)
   getMyAssignments: protectedProcedure
-    .input(z.object({ groupId: z.string().nullable() }).optional())
+    .input(z.object({ groupId: z.string().nullable() }).nullish())
     .query(async ({ ctx, input }) => {
       const assignments = await ctx.db.wishlistAssignment.findMany({
         where: {

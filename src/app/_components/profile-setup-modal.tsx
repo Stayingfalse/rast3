@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -67,12 +67,17 @@ export function ProfileSetupModal({
   const [wishlist, setWishlist] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Fill the form when the window opens, not on every profile refetch:
+  // a background refetch must never wipe what someone is typing.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (!isOpen) return;
-    setFirstName(existingProfile?.firstName ?? "");
-    setLastName(existingProfile?.lastName ?? "");
-    setWishlist(existingProfile?.amazonWishlistUrl ?? "");
-    setErrors({});
+    if (isOpen && !wasOpen.current) {
+      setFirstName(existingProfile?.firstName ?? "");
+      setLastName(existingProfile?.lastName ?? "");
+      setWishlist(existingProfile?.amazonWishlistUrl ?? "");
+      setErrors({});
+    }
+    wasOpen.current = isOpen;
   }, [isOpen, existingProfile]);
 
   const save = api.profile.saveProfile.useMutation({

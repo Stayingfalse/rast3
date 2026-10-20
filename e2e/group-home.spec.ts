@@ -60,6 +60,12 @@ test("two friends set up a group that a site admin approves", async ({ page }, t
   expect(
     (await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status(),
   ).toBe(200);
+  // straight Amazon links here (affiliate gift pages have their own spec)
+  expect(
+    (
+      await mutate(page.request, "admin.setGroupAffiliate", { groupId, mode: "OFF", tag: null })
+    ).status(),
+  ).toBe(200);
 });
 
 test("a member switches to the group, picks up a wishlist and gifts it", async ({

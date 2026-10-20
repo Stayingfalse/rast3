@@ -2,7 +2,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, siteAdminProcedure } from "~/server/api/trpc";
+import {
+  affiliateFor,
+  getAffiliateSettings,
+  TRACKING_ID,
+} from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
+import { seasonYearOf } from "~/server/stamps";
 
 const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
 const STATUSES = ["PENDING", "ACTIVE", "DISABLED"] as const;
@@ -194,6 +200,107 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "You can't delete your own account here" });
       }
       await ctx.db.user.delete({ where: { id: input.userId } });
+      return { ok: true };
+    }),
+
+  /** Amazon affiliate links: site settings and every group's setting this season. */
+  affiliate: siteAdminProcedure.query(async ({ ctx }) => {
+    const season = seasonYearOf(new Date());
+    const settings = await getAffiliateSettings(ctx.db);
+    const groups = await ctx.db.group.findMany({
+      where: { kind: { not: "TEAM" } },
+      orderBy: [{ kind: "asc" }, { name: "asc" }],
+      take: 500,
+      select: {
+        id: true,
+        name: true,
+        kind: true,
+        status: true,
+        affiliate: true,
+        affiliateTags: { where: { season }, select: { tag: true } },
+        _count: { select: { memberships: true } },
+      },
+    });
+    return {
+      season,
+      settings: {
+        enabled: settings.enabled,
+        defaultTag: settings.defaultTag,
+        orgDefault: settings.orgDefault,
+        communityDefault: settings.communityDefault,
+        friendsDefault: settings.friendsDefault,
+      },
+      groups: await Promise.all(
+        groups.map(async ({ affiliateTags, _count, ...g }) => {
+          const now = await affiliateFor(ctx.db, g.id, season, settings);
+          return {
+            ...g,
+            members: _count.memberships,
+            tag: affiliateTags[0]?.tag ?? null,
+            active: now.enabled,
+            activeTag: now.enabled ? now.tag : null,
+          };
+        }),
+      ),
+    };
+  }),
+
+  setAffiliateSettings: siteAdminProcedure
+    .input(
+      z.object({
+        enabled: z.boolean(),
+        defaultTag: z.string().trim().toLowerCase().regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21"),
+        orgDefault: z.boolean(),
+        communityDefault: z.boolean(),
+        friendsDefault: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.affiliateSettings.upsert({
+        where: { id: "site" },
+        update: input,
+        create: { id: "site", ...input },
+      });
+      return { ok: true };
+    }),
+
+  /** One group's mode, and its tracking ID for this season (null = the default). */
+  setGroupAffiliate: siteAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        mode: z.enum(["DEFAULT", "ON", "OFF"]),
+        tag: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21")
+          .nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const season = seasonYearOf(new Date());
+      const group = await ctx.db.group.findUnique({
+        where: { id: input.groupId },
+        select: { kind: true },
+      });
+      if (!group || group.kind === "TEAM") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "No such group" });
+      }
+      await ctx.db.group.update({
+        where: { id: input.groupId },
+        data: { affiliate: input.mode },
+      });
+      const key = { groupId_season: { groupId: input.groupId, season } };
+      if (input.tag) {
+        await ctx.db.affiliateTag.upsert({
+          where: key,
+          update: { tag: input.tag },
+          create: { groupId: input.groupId, season, tag: input.tag },
+        });
+      } else {
+        await ctx.db.affiliateTag.deleteMany({ where: { groupId: input.groupId, season } });
+      }
       return { ok: true };
     }),
 });

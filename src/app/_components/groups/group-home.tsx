@@ -4,6 +4,7 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 
 import { api, type RouterOutputs } from "~/trpc/react";
+import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
 
@@ -48,6 +49,7 @@ export function GroupHome({ group }: { group: Group }) {
         >
           {group.name}
         </h2>
+        {group.affiliate && <AffiliateNote />}
       </div>
 
       {!live ? (
@@ -94,11 +96,12 @@ export function GroupHome({ group }: { group: Group }) {
                   {done ? "Gifted. Thank you!" : "A wishlist from this group"}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {a.wishlistOwner.amazonWishlistUrl && (
+                  {a.link && (
                     <a
-                      href={a.wishlistOwner.amazonWishlistUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={a.link}
+                      {...(a.viaGiftPage
+                        ? {}
+                        : { target: "_blank", rel: "noopener noreferrer" })}
                       className="btn-quiet text-ink"
                     >
                       Open wishlist

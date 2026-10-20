@@ -43,7 +43,6 @@ test.describe("public surface", () => {
         firstName: null,
         lastName: null,
         image: null,
-        department: null,
       });
       // Only the wishlist owner's id is sent, for the festive "to" name
       expect(JSON.stringify(item.purchase ?? {})).not.toMatch(

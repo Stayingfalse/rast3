@@ -92,7 +92,13 @@ test("an unknown work domain offers to start an organisation", async ({
   await loginAs(page, { email: `starter-${testInfo.project.name}@${E}` });
   // profile first (name and wishlist), as the real flow requires
   const saved = await page.request.post("/api/trpc/profile.saveProfile", {
-    data: { json: { firstName: "Sam", lastName: "Starter" } },
+    data: {
+      json: {
+        firstName: "Sam",
+        lastName: "Starter",
+        amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2ESTA0001",
+      },
+    },
   });
   expect(saved.status()).toBe(200);
   await page.goto("/groups");

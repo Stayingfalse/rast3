@@ -151,13 +151,6 @@
 
 ## Ideas backlog
 
-- **Retire the legacy organisation columns** (from Day 17). `User.domain`,
-  `departmentId`, `adminLevel` (below SITE) and `adminScope`, and the
-  `Domain` and `Department` tables, are still kept in sync with groups and
-  read in about 300 places (wishlist hand-out, sharing, kudos scope, the old
-  `user`/`domain` admin procedures). Moving those reads onto memberships and
-  dropping the columns is one careful day with a migration; best before the
-  Day 31 regression.
 - **Auto-approve rules** (idea, 20 Oct): approve friends groups straight away
   while they are small (say under 15 members), and keep manual approval for
   workplaces and communities, so the November rush doesn't queue behind one
@@ -662,3 +655,33 @@ that don't touch the data model. Known items to include:
     `wishlist` specs updated for the new screens.
   - **Next: Day 18, the Christmas season** (open and close, archive last
     season's pick-ups, yearly re-onboarding).
+- **Day 17 merged to prod (20 Oct, owner merged).**
+- **Bonus day (20 Oct, owner's request): legacy organisation model retired.**
+  - **Gone:** the `Domain` and `Department` tables, `User.domain`,
+    `departmentId` and `adminScope`, the DOMAIN and DEPARTMENT admin levels,
+    and `Group.departmentId`. Workplaces and teams are only groups and
+    memberships now; organisers are ADMIN memberships, and `adminLevel` is
+    just SITE or USER.
+  - **Migration `retire_legacy_org`:**
+    1. Archives the old rows into `_legacy_Domain`, `_legacy_Department` and
+       `_legacy_UserOrg`, which keep their data and have no foreign keys.
+    2. Re-runs the Day 8 backfill as a safety net.
+    3. Moves group share cards onto group ids.
+    4. Drops the old schema.
+
+    It was rehearsed on a scratch MariaDB with organisers, team admins, a
+    missing team and a missing membership. All were carried over correctly,
+    and the database matched the schema afterwards.
+  - **Code:**
+    - The old `user` and `domain` admin routers are deleted.
+    - Joining, starting and leaving a workplace and choosing a team write
+      memberships directly. `groups.addTeam` replaces `profile.createDepartment`.
+    - Kudos feed scopes are now team, workplace and site.
+    - Wishlist "from" labels and stats, sharing, the admin wishlist list and the
+      dev seed read groups. The compiler confirms nothing reads the old fields.
+  - **Behaviour changes:**
+    - Leaving a workplace now only deactivates workplace pick-ups; friends and
+      community pick-ups stay.
+    - The kudos moderation badge reads "Organiser" or "Site admin".
+  - **Later:** drop the `_legacy_*` archive tables after the 2026 season (one
+    small migration).

@@ -344,31 +344,13 @@ export function WishlistManager() {
     const hasPurchase = !!assignment.purchases;
     const hasReport = assignment.reports.length > 0;
     const archived = assignment.archived;
-    const wishlistDomain = (assignment.wishlistOwner as { domain?: string })
-      .domain;
-    const wishlistDeptId = assignment.wishlistOwner.department?.id;
-    const userDomain = userProfile?.domain;
-    const userDeptId = userProfile?.departmentId;
-    // A stranger is someone from another domain (or any domain when we have none)
-    const isStranger =
-      (wishlistDomain && userDomain && wishlistDomain !== userDomain) ??
-      (!userDomain && wishlistDomain);
-    const isCrossDept =
-      !isStranger &&
-      wishlistDomain &&
-      userDomain &&
-      wishlistDomain === userDomain &&
-      wishlistDeptId &&
-      userDeptId &&
-      wishlistDeptId !== userDeptId;
-
     const route = archived
       ? "Archived"
-      : isStranger
+      : assignment.from === "elsewhere"
         ? "Another organisation"
-        : isCrossDept && assignment.wishlistOwner.department?.name
-          ? assignment.wishlistOwner.department.name
-          : "Your department";
+        : assignment.from === "otherTeam" && assignment.fromTeam
+          ? assignment.fromTeam
+          : "Your team";
 
     return (
       <article
@@ -564,8 +546,8 @@ export function WishlistManager() {
     { value: stats?.totalUsers, label: "members" },
     { value: stats?.totalLinks, label: "wishlists" },
     { value: stats?.totalGiftsSent, label: "gifts sent" },
-    { value: stats?.totalLinksInDomain, label: "in your organisation" },
-    { value: stats?.totalLinksInDepartment, label: "in your department" },
+    { value: stats?.totalLinksInWorkplace, label: "in your organisation" },
+    { value: stats?.totalLinksInTeam, label: "in your team" },
     { value: stats?.totalUnallocatedLinks, label: "not yet picked up" },
   ].filter((s): s is { value: number; label: string } => s.value !== undefined);
 
@@ -577,7 +559,7 @@ export function WishlistManager() {
     (!assignments || assignments.length === 0) &&
     stats &&
     stats.totalLinks < 10 &&
-    (stats.totalLinksInDepartment ?? 0) < 2;
+    (stats.totalLinksInTeam ?? 0) < 2;
 
   return (
     <div className="w-full space-y-10">

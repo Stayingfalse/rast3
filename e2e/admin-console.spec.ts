@@ -129,7 +129,9 @@ test("only site admins get in", async ({ page }, testInfo) => {
   expect((await query(page.request, "admin.users", { q: "" })).status()).toBe(403);
   expect((await page.goto("/admin/groups"))?.status()).toBe(404);
 
-  await loginAs(page, { email: `ac-dept-${p}@${E}`, adminLevel: "DEPARTMENT" });
-  expect((await page.goto("/admin"))?.status()).toBe(404);
+  // an organiser of a friends group is sent to their own console instead
+  await loginAs(page, { email: `ac-host-${p}@${E}` });
+  await page.goto("/admin/users");
+  await expect(page).toHaveURL(/\/groups\/[^/]+\/manage$/);
   expect((await query(page.request, "admin.groups", {})).status()).toBe(403);
 });

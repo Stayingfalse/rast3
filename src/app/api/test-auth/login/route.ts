@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "~/server/db";
-import { syncUserGroups } from "~/server/groups";
 import {
   isTestAuthAuthorised,
   TEST_EMAIL_DOMAIN,
@@ -34,7 +33,7 @@ const loginSchema = z.object({
       message: `Test users must use an @${TEST_EMAIL_DOMAIN} email`,
     }),
   name: z.string().min(1).max(100).optional(),
-  adminLevel: z.enum(["SITE", "DOMAIN", "DEPARTMENT", "USER"]).optional(),
+  adminLevel: z.enum(["SITE", "USER"]).optional(),
 });
 
 function notFound() {
@@ -67,8 +66,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Admin roles live in group memberships since Day 9
-  await syncUserGroups(db, user.id);
+  // Organiser roles are group memberships (set up by the seed)
 
   const sessionToken = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + SESSION_TTL_MS);

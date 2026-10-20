@@ -12,23 +12,13 @@ type UserWithWishlist = {
   firstName?: string | null;
   lastName?: string | null;
   amazonWishlistUrl?: string | null;
-  domain?: string | null;
-  department?: {
-    id: string;
-    name: string;
-  } | null;
+  workplace?: string | null;
+  team?: string | null;
   amazonWishlistUrlStats?: {
     allocated?: number;
     purchased?: number;
     errors?: string[];
   };
-};
-
-type DomainData = {
-  id: string;
-  name: string;
-  enabled: boolean;
-  description?: string | null;
 };
 
 type GroupedUsers = Record<string, Record<string, UserWithWishlist[]>>;
@@ -37,8 +27,12 @@ export default function AdminLinksPage() {
   const [selectedDomain, setSelectedDomain] = useState<string>("all"); // Fetch all users with wishlist URLs
   const [onlyReported, setOnlyReported] = useState<boolean>(false);
   const { data: users = [], isLoading, isError } = api.link.getAll.useQuery();
-  const { data: domains = [], isLoading: isDomainsLoading } =
-    api.domain.getAll.useQuery();
+
+  const workplaces = useMemo(
+    () =>
+      Array.from(new Set(users.map((u) => u.workplace).filter((w): w is string => !!w))).sort(),
+    [users],
+  );
 
   // Filter users with wishlist URLs
   const wishlists = useMemo(() => {
@@ -50,7 +44,7 @@ export default function AdminLinksPage() {
     let filtered =
       selectedDomain === "all"
         ? wishlists
-        : wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
+        : wishlists.filter((u: UserWithWishlist) => u.workplace === selectedDomain);
     if (onlyReported) {
       filtered = filtered.filter(
         (u: UserWithWishlist) => (u.amazonWishlistUrlStats?.errors?.length ?? 0) > 0,
@@ -59,20 +53,20 @@ export default function AdminLinksPage() {
     return {
       total: filtered.length,
       domains: Array.from(
-        new Set(filtered.map((u: UserWithWishlist) => u.domain)),
+        new Set(filtered.map((u: UserWithWishlist) => u.workplace)),
       ).length,
       departments: Array.from(
-        new Set(filtered.map((u: UserWithWishlist) => u.department?.name)),
+        new Set(filtered.map((u: UserWithWishlist) => u.team)),
       ).length,
     };
   }, [wishlists, selectedDomain, onlyReported]);
 
-  // Group by domain and department
+  // Group by workplace and team
   const grouped: GroupedUsers = useMemo(() => {
     let filtered =
       selectedDomain === "all"
         ? wishlists
-        : wishlists.filter((u: UserWithWishlist) => u.domain === selectedDomain);
+        : wishlists.filter((u: UserWithWishlist) => u.workplace === selectedDomain);
     if (onlyReported) {
       filtered = filtered.filter(
         (u: UserWithWishlist) => (u.amazonWishlistUrlStats?.errors?.length ?? 0) > 0,
@@ -80,8 +74,8 @@ export default function AdminLinksPage() {
     }
     const result: GroupedUsers = {};
     for (const user of filtered) {
-      const domain = user.domain ?? "(No Domain)";
-      const dept = user.department?.name ?? "(No Department)";
+      const domain = user.workplace ?? "(No workplace)";
+      const dept = user.team ?? "(No team)";
       result[domain] ??= {};
       result[domain][dept] ??= [];
       result[domain][dept].push(user);
@@ -220,8 +214,8 @@ export default function AdminLinksPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white">Wishlist Management</h1>
           <p className="mb-3 sm:mb-4 text-sm sm:text-base text-white/80">
-            Manage and monitor all shared Amazon wishlists. Grouped by domain
-            and department.
+            Manage and monitor all shared Amazon wishlists. Grouped by workplace
+            and team.
           </p>
         </div>
 
@@ -272,7 +266,7 @@ export default function AdminLinksPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-white/80">Domains</p>
+                <p className="text-sm font-medium text-white/80">Workplaces</p>
                 <p className="text-lg font-semibold text-white">
                   {stats.domains}
                 </p>
@@ -297,7 +291,7 @@ export default function AdminLinksPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-white/80">Departments</p>
+                <p className="text-sm font-medium text-white/80">Teams</p>
                 <p className="text-lg font-semibold text-white">
                   {stats.departments}
                 </p>
@@ -311,19 +305,18 @@ export default function AdminLinksPage() {
               htmlFor="domain-filter"
               className="text-sm font-medium text-white"
             >
-              Filter by Domain:
+              Filter by workplace:
             </label>
             <select
               id="domain-filter"
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              disabled={isDomainsLoading}
             >
-              <option value="all">All Domains</option>
-              {domains.map((domain: DomainData) => (
-                <option key={domain.name} value={domain.name}>
-                  {domain.name} {domain.enabled === false ? "(Disabled)" : ""}
+              <option value="all">All workplaces</option>
+              {workplaces.map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
@@ -343,7 +336,7 @@ export default function AdminLinksPage() {
           </div>
         </div>
         {/* Loading/Error States */}
-        {(isLoading ?? isDomainsLoading) ? (
+        {isLoading ? (
           <div className="py-8 text-center text-white/80">
             Loading wishlists...
           </div>

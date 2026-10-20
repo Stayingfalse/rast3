@@ -1,38 +1,6 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
-import { ensureTeamGroup } from "~/server/groups";
-import { canManageDomain } from "~/server/utils/admin-permissions";
-
-type UserWithDepartment = {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  emailVerified?: Date | null;
-  image?: string | null;
-  amazonWishlistUrl?: string | null;
-  wishlistViews: number;
-  departmentId?: string | null;
-  domain?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  profileCompleted: boolean;
-  profileCompletedAt?: Date | null;
-  workEmail?: string | null;
-  adminLevel: string;
-  adminScope?: string | null;
-  department?: {
-    id: string;
-    name: string;
-    domain: string;
-    createdAt: Date;
-    updatedAt: Date;
-  } | null;
-};
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { getWorkplace } from "~/server/groups";
 
 // Amazon UK wishlist URL regex
 const amazonWishlistRegex =
@@ -45,34 +13,27 @@ const normalizeWishlistUrl = (url: string | undefined): string | null => {
 };
 
 export const profileRouter = createTRPCRouter({
-  // Get current user's profile with domain status
+  /** Your profile, plus your workplace and team (from memberships). */
   getCurrentProfile: protectedProcedure.query(async ({ ctx }) => {
-    const user = (await ctx.db.user.findUnique({
+    const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      include: {
-        department: true,
-      },
-    })) as UserWithDepartment | null;
-
+    });
     if (!user) return null;
 
     // Organisation status comes from its group (Day 11): PENDING ones wait
     // for a site admin; only ACTIVE ones are open for gifting.
-    const org = user.domain
-      ? await ctx.db.group.findUnique({
-          where: { emailDomain: user.domain.trim().toLowerCase() },
-          select: { status: true },
-        })
-      : null;
-    const domainEnabled =
-      org?.status === "ACTIVE" ? true : org?.status === "DISABLED" ? false : null;
-
+    const { org, team } = await getWorkplace(ctx.db, user.id);
     return {
       ...user,
-      domainEnabled,
-      orgStatus: org?.status ?? null,
-      adminLevel: user.adminLevel,
-      adminScope: user.adminScope,
+      workplace: org
+        ? {
+            id: org.group.id,
+            name: org.group.name,
+            status: org.group.status,
+            team: team ? { id: team.group.id, name: team.group.name } : null,
+          }
+        : null,
+      orgStatus: org?.group.status ?? null,
     };
   }),
 
@@ -92,54 +53,6 @@ export const profileRouter = createTRPCRouter({
         pending: org?.status === "PENDING",
         codeRequired: !!org?.joinCode,
       };
-    }),
-  // Get departments for a domain
-  getDepartmentsByDomain: protectedProcedure
-    .input(z.object({ domain: z.string() }))
-    .query(async ({ ctx, input }) => {
-      // Get current user to check admin level and scope
-      const currentUser = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: {
-          adminLevel: true,
-          adminScope: true,
-          domain: true,
-          departmentId: true,
-        },
-      });
-
-      if (!currentUser) {
-        throw new Error("User not found");
-      }
-
-      // Build where clause based on admin level
-      const where: Record<string, unknown> = {};
-
-      if (currentUser.adminLevel === "DOMAIN") {
-        // Domain admins see only departments in their domain
-        if (currentUser.adminScope) {
-          where.domain = currentUser.adminScope;
-        }
-      } else if (currentUser.adminLevel === "DEPARTMENT") {
-        // Department admins see only their own department
-        if (currentUser.adminScope) {
-          where.id = currentUser.adminScope;
-        }
-      } else if (currentUser.adminLevel === "SITE") {
-        // Site admins can see all departments or filter by domain
-        if (input.domain !== "all") {
-          where.domain = input.domain;
-        }
-      } else {
-        // Members choosing a department during setup: one organisation only
-        if (input.domain === "all") return [];
-        where.domain = input.domain;
-      }
-
-      return ctx.db.department.findMany({
-        where,
-        orderBy: [{ domain: "asc" }, { name: "asc" }],
-      });
     }),
   /**
    * Day 12: your profile is just you and your wishlist. Joining or starting
@@ -176,29 +89,6 @@ export const profileRouter = createTRPCRouter({
         },
         select: { id: true, profileCompleted: true },
       });
-    }),
-
-  // Admin: Create department
-  createDepartment: adminProcedure
-    .input(
-      z.object({
-        name: z.string().trim().min(1, "Department name is required").max(100),
-        domain: z.string().min(1, "Domain is required"),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const domain = input.domain.toLowerCase();
-      if (!(await canManageDomain(ctx.admin, domain))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not your organisation",
-        });
-      }
-      const department = await ctx.db.department.create({
-        data: { name: input.name, domain },
-      });
-      await ensureTeamGroup(ctx.db, department.id);
-      return department;
     }),
 });
 

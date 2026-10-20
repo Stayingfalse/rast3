@@ -18,12 +18,11 @@ interface AdminKudosItem {
     firstName?: string | null;
     lastName?: string | null;
     image?: string | null;
-    department?: { name: string } | null;
   };
 }
 
 // Custom hooks and utilities
-function useAdminKudosFeed(scope: "department" | "domain" | "site") {
+function useAdminKudosFeed(scope: "team" | "workplace" | "site") {
   const result = api.kudos.getFeed.useQuery({
     scope,
     limit: 30,
@@ -33,7 +32,7 @@ function useAdminKudosFeed(scope: "department" | "domain" | "site") {
 
 // Main component function
 export default function AdminKudosPage() {
-  const [scope, setScope] = useState<"department" | "domain" | "site">("site");
+  const [scope, setScope] = useState<"team" | "workplace" | "site">("site");
   const { data, isLoading, error, refetch } = useAdminKudosFeed(scope);
 
   // Logging page view
@@ -50,14 +49,14 @@ export default function AdminKudosPage() {
             title="Select scope for kudos management"
             onChange={(e) => {
               const value = e.target.value;
-              if (value === "department" || value === "domain" || value === "site") {
+              if (value === "team" || value === "workplace" || value === "site") {
                 setScope(value);
               }
             }}
           >
             <option value="site">Site</option>
-            <option value="domain">Domain</option>
-            <option value="department">Department</option>
+            <option value="workplace">Workplace</option>
+            <option value="team">Team</option>
           </select>
           <button
             className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
@@ -171,9 +170,6 @@ function KudosRow({ kudos, refetch }: { kudos: AdminKudosItem; refetch: () => vo
           <div>
             <div className="font-medium">
               {kudos.user.firstName} {kudos.user.lastName}
-            </div>
-            <div className="text-xs text-white/60">
-              {kudos.user.department?.name ?? "-"}
             </div>
           </div>
         </div>

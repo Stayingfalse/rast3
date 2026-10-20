@@ -22,7 +22,6 @@ export function toClientSession({
       email: user.email ?? "",
       image: user.image ?? null,
       adminLevel: user.adminLevel,
-      adminScope: user.adminScope ?? null,
     },
   };
 }

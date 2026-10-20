@@ -57,59 +57,25 @@ model User {
   image                String?
   amazonWishlistUrl    String?
   wishlistViews        Int                  @default(0)
-  departmentId         String?
-  domain               String?
   firstName            String?
   lastName             String?
   profileCompleted     Boolean              @default(false)
   profileCompletedAt   DateTime?
   workEmail            String?              @unique
   adminLevel           AdminLevel           @default(USER)
-  adminScope           String?
   accounts             Account[]
   createdAuthProviders AuthProvider[]
-  createdDomains       Domain[]
   moderatedKudos       Kudos[]              @relation("KudosModerator")
   kudosGiven           Kudos[]
   posts                Post[]
   purchases            Purchase[]
   sessions             Session[]
   shareCards           ShareCard[]
-  department           Department?          @relation(fields: [departmentId], references: [id])
   assignedLinks        WishlistAssignment[] @relation("AssignedUser")
   ownedWishlist        WishlistAssignment[] @relation("WishlistOwner")
   reports              WishlistReport[]
   memberships          Membership[]
   createdGroups        Group[]              @relation("GroupCreator")
-
-  @@index([departmentId], map: "User_departmentId_fkey")
-}
-
-model Department {
-  id        String   @id @default(cuid())
-  name      String
-  domain    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users     User[]
-
-  @@unique([name, domain])
-  @@index([domain])
-}
-
-model Domain {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  enabled     Boolean  @default(false)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdById String?
-  createdBy   User?    @relation(fields: [createdById], references: [id])
-
-  @@index([name])
-  @@index([enabled])
-  @@index([createdById], map: "Domain_createdById_fkey")
 }
 
 model VerificationToken {
@@ -225,7 +191,7 @@ model ShareCard {
   userId     String
   purchaseId String?       @unique
   kudosId    String?       @unique
-  /// Group cards: "org:<domain>" or "team:<departmentId>", one card per group
+  /// Group cards: "org:<groupId>" or "team:<groupId>", one card per group
   groupKey   String?       @unique
   /// Group cards: the name shown on the card, chosen by the organiser
   label      String?
@@ -245,10 +211,9 @@ enum ShareCardKind {
   TEAM
 }
 
+/// Site admins run the whole site; organisers are group ADMIN memberships
 enum AdminLevel {
   SITE
-  DOMAIN
-  DEPARTMENT
   USER
 }
 
@@ -283,8 +248,6 @@ model Group {
   parentId       String?
   /// ORG groups: the email domain members join with (legacy Domain.name)
   emailDomain    String?              @unique
-  /// TEAM groups backfilled from a legacy Department
-  departmentId   String?              @unique
   joinCode       String?              @unique
   /// COMMUNITY groups: the Discord server members join through (Day 13)
   discordGuildId String?              @unique
@@ -334,4 +297,37 @@ enum GroupStatus {
 enum MembershipRole {
   MEMBER
   ADMIN
+}
+
+/// Archive of the retired Domain/Department tables and User.domain,
+/// departmentId, adminLevel (organiser levels) and adminScope (20 Oct 2026).
+/// Read-only, kept until the 2026 season has run on groups; nothing reads it.
+model LegacyDomain {
+  id          String   @id
+  name        String
+  enabled     Boolean
+  description String?
+  createdById String?
+  createdAt   DateTime
+
+  @@map("_legacy_Domain")
+}
+
+model LegacyDepartment {
+  id        String   @id
+  name      String
+  domain    String
+  createdAt DateTime
+
+  @@map("_legacy_Department")
+}
+
+model LegacyUserOrg {
+  userId       String  @id
+  domain       String?
+  departmentId String?
+  adminLevel   String
+  adminScope   String?
+
+  @@map("_legacy_UserOrg")
 }

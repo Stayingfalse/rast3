@@ -11,6 +11,7 @@ import {
   inOtherActiveOrg,
   requireGiverScope,
 } from "~/server/scope";
+import { getWorkplace } from "~/server/groups";
 
 const HOUR = 60 * 60_000;
 // Picking up wishlists hands out other people's links, so cap how fast one
@@ -37,13 +38,6 @@ export const wishlistRouter = createTRPCRouter({
             select: {
               id: true,
               amazonWishlistUrl: true,
-              domain: true,
-              department: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
             },
           },
           purchases: true,
@@ -58,241 +52,58 @@ export const wishlistRouter = createTRPCRouter({
         },
       });
 
-      return assignments;
-    }), // Get statistics about assignments (dynamic based on user's domain/department status)
+      // Where each list comes from, relative to you: your team, another team
+      // in your workplace (named), elsewhere, or a friends/community group
+      const { org, team } = await getWorkplace(ctx.db, ctx.session.user.id);
+      const owners = await ctx.db.membership.findMany({
+        where: {
+          userId: { in: [...new Set(assignments.map((a) => a.wishlistOwnerId))] },
+          group: { kind: { in: ["ORG", "TEAM"] } },
+        },
+        select: { userId: true, group: { select: { id: true, kind: true, name: true } } },
+      });
+      return assignments.map((a) => {
+        const theirs = owners.filter((m) => m.userId === a.wishlistOwnerId).map((m) => m.group);
+        const sameOrg = !!org && theirs.some((g) => g.id === org.group.id);
+        const theirTeam = theirs.find((g) => g.kind === "TEAM");
+        const from: "group" | "elsewhere" | "otherTeam" | "yourTeam" = a.groupId
+          ? "group"
+          : !sameOrg
+            ? "elsewhere"
+            : team && theirTeam && theirTeam.id !== team.group.id
+              ? "otherTeam"
+              : "yourTeam";
+        return { ...a, from, fromTeam: from === "otherTeam" ? theirTeam!.name : null };
+      });
+    }),
+
+  /** Counts for the dashboard: site-wide, plus your workplace and team when you have them. */
   getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {
-    // Get current user with domain status
-    const currentUser = await ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: {
-        id: true,
-        departmentId: true,
-        domain: true,
-      },
-    });
-    const departmentId = currentUser?.departmentId;
-    const userId = currentUser?.id;
-    const domain = currentUser?.domain;
+    const userId = ctx.session.user.id;
+    const { org, team } = await getWorkplace(ctx.db, userId);
+    const withList = { amazonWishlistUrl: { not: null } };
+    const unpicked = { id: { not: userId }, ownedWishlist: { none: { isActive: true } } };
 
-    // Get domain status if user has a domain
-    let domainEnabled = null;
-    if (domain) {
-      const domainData = await ctx.db.domain.findUnique({
-        where: { name: domain },
-        select: { enabled: true },
-      });
-      domainEnabled = domainData ? domainData.enabled : null;
-    }
-
-    // Determine user's domain/department status
-    const hasEnabledDomain = domain && domainEnabled === true;
-    const hasDomain = domain && domainEnabled !== false; // true or null
-    const hasDepartment = departmentId && hasEnabledDomain;
-
-    let stats: {
-      totalUsers?: number;
-      totalLinks: number;
-      totalUnallocatedLinks?: number;
-      totalGiftsSent?: number;
-      usersInDomain?: number;
-      totalLinksInDomain?: number;
-      totalUnallocatedLinksInDomain?: number;
-      totalLinksInDepartment?: number;
-      totalUnallocatedLinksInDepartment?: number;
-      // Legacy stats for compatibility
-      departmentLinks?: number;
-      unallocatedLinks?: number;
-      unallocatedDepartmentLinks?: number;
-      totalAssignments?: number;
-      usersWithAssignments?: number;
-      averageAssignments?: number;
-    };
-
-    if (!hasDomain) {
-      // No domain or disabled domain: Show site-wide stats
-      const totalUsers = await ctx.db.user.count({
-        where: {
-          profileCompleted: true,
-          amazonWishlistUrl: { not: null },
-        },
-      });
-
-      const totalLinks = await ctx.db.user.count({
-        where: { amazonWishlistUrl: { not: null } },
-      });
-
-      const totalUnallocatedLinks = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          id: { not: userId },
-          ownedWishlist: {
-            none: { isActive: true },
-          },
-        },
-      });
-
-      const totalGiftsSent = await ctx.db.purchase.count();
-
-      stats = {
-        totalUsers,
-        totalLinks,
-        totalUnallocatedLinks,
-        totalGiftsSent,
-      };
-    } else if (!hasDepartment) {
-      // Domain but no department: Show domain-focused stats
-      const totalLinks = await ctx.db.user.count({
-        where: { amazonWishlistUrl: { not: null } },
-      });
-
-      const usersInDomain = await ctx.db.user.count({
-        where: {
-          domain,
-          profileCompleted: true,
-          amazonWishlistUrl: { not: null },
-        },
-      });
-
-      const totalLinksInDomain = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          domain,
-        },
-      });
-
-      const totalUnallocatedLinksInDomain = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          domain,
-          id: { not: userId },
-          ownedWishlist: {
-            none: { isActive: true },
-          },
-        },
-      });
-
-      stats = {
-        totalLinks,
-        usersInDomain,
-        totalLinksInDomain,
-        totalUnallocatedLinksInDomain,
-      };
-    } else {
-      // Domain and department: Show comprehensive stats
-      const totalLinks = await ctx.db.user.count({
-        where: { amazonWishlistUrl: { not: null } },
-      });
-
-      const totalLinksInDomain = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          domain,
-        },
-      });
-
-      const totalLinksInDepartment = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          departmentId,
-        },
-      });
-
-      const totalUnallocatedLinksInDomain = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          domain,
-          id: { not: userId },
-          ownedWishlist: {
-            none: { isActive: true },
-          },
-        },
-      });
-
-      const totalUnallocatedLinksInDepartment = await ctx.db.user.count({
-        where: {
-          amazonWishlistUrl: { not: null },
-          departmentId,
-          id: { not: userId },
-          ownedWishlist: {
-            none: { isActive: true },
-          },
-        },
-      });
-
-      stats = {
-        totalLinks,
-        totalLinksInDomain,
-        totalLinksInDepartment,
-        totalUnallocatedLinksInDomain,
-        totalUnallocatedLinksInDepartment,
-      };
-    }
-
-    // Add legacy stats for compatibility
-    const totalUsers = await ctx.db.user.count({
-      where: {
-        profileCompleted: true,
-        amazonWishlistUrl: { not: null },
-      },
-    });
-
-    const departmentLinks = departmentId
-      ? await ctx.db.user.count({
-          where: {
-            amazonWishlistUrl: { not: null },
-            departmentId,
-          },
-        })
-      : 0;
-
-    const unallocatedLinks = await ctx.db.user.count({
-      where: {
-        amazonWishlistUrl: { not: null },
-        id: { not: userId },
-        ownedWishlist: {
-          none: { isActive: true },
-        },
-      },
-    });
-
-    const unallocatedDepartmentLinks = departmentId
-      ? await ctx.db.user.count({
-          where: {
-            amazonWishlistUrl: { not: null },
-            departmentId,
-            id: { not: userId },
-            ownedWishlist: {
-              none: { isActive: true },
-            },
-          },
-        })
-      : 0;
-
-    const totalAssignments = await ctx.db.wishlistAssignment.count({
-      where: { isActive: true },
-    });
-
-    const usersWithAssignments = await ctx.db.user.count({
-      where: {
-        assignedLinks: {
-          some: { isActive: true },
-        },
-      },
-    });
-
-    const averageAssignments =
-      totalUsers > 0 ? totalAssignments / totalUsers : 0;
-
+    const [totalUsers, totalLinks, totalUnallocatedLinks, totalGiftsSent] = await Promise.all([
+      ctx.db.user.count({ where: { ...withList, profileCompleted: true } }),
+      ctx.db.user.count({ where: withList }),
+      ctx.db.user.count({ where: { ...withList, ...unpicked } }),
+      ctx.db.purchase.count(),
+    ]);
+    const live = org?.group.status === "ACTIVE";
+    const [totalLinksInWorkplace, totalLinksInTeam] = await Promise.all([
+      live ? ctx.db.user.count({ where: { ...withList, ...inGroup(org.group.id) } }) : undefined,
+      live && team
+        ? ctx.db.user.count({ where: { ...withList, ...inGroup(team.group.id) } })
+        : undefined,
+    ]);
     return {
-      ...stats,
-      // Legacy compatibility stats
-      totalUsers: stats.totalUsers ?? totalUsers,
-      departmentLinks,
-      unallocatedLinks,
-      unallocatedDepartmentLinks,
-      totalAssignments,
-      usersWithAssignments,
-      averageAssignments,
+      totalUsers,
+      totalLinks,
+      totalUnallocatedLinks,
+      totalGiftsSent,
+      totalLinksInWorkplace,
+      totalLinksInTeam,
     };
   }),
 
@@ -307,8 +118,6 @@ export const wishlistRouter = createTRPCRouter({
         select: {
           profileCompleted: true,
           amazonWishlistUrl: true,
-          domain: true,
-          departmentId: true,
         },
       });
 
@@ -563,11 +372,6 @@ export const wishlistRouter = createTRPCRouter({
         select: {
           id: true,
           name: true,
-          department: {
-            select: {
-              name: true,
-            },
-          },
           ownedWishlist: {
             where: { isActive: true },
             select: { assignedUserId: true },
@@ -581,7 +385,6 @@ export const wishlistRouter = createTRPCRouter({
           (user: {
             id: string;
             name: string | null;
-            department: { name: string } | null;
             ownedWishlist: { assignedUserId: string }[];
           }) => ({
             ...user,
@@ -613,11 +416,6 @@ export const wishlistRouter = createTRPCRouter({
                 select: {
                   id: true,
                   amazonWishlistUrl: true,
-                  department: {
-                    select: {
-                      name: true,
-                    },
-                  },
                 },
               },
             },

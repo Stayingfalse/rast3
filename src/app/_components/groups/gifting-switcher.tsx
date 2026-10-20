@@ -27,7 +27,7 @@ export function GiftingSwitcher({ children }: { children: React.ReactNode }) {
 
   if (!groups?.length) return <>{children}</>;
 
-  const hasWorkplace = !!profile?.domain;
+  const hasWorkplace = !!profile?.workplace;
   const tabs = [
     ...(hasWorkplace ? [{ id: WORKPLACE, label: "Workplace" }] : []),
     ...groups.map((g) => ({ id: g.id, label: g.name })),

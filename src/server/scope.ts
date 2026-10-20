@@ -51,7 +51,7 @@ export async function requireGiverScope(
   if (needTeam && !team) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "Please choose your department in your profile first",
+      message: "Please choose your team on Your groups first",
     });
   }
   return { orgId: org.id, teamId: team?.id ?? null };

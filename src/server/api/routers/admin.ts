@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, siteAdminProcedure } from "~/server/api/trpc";
-import { syncUserGroups } from "~/server/groups";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 
 const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
@@ -183,11 +182,8 @@ export const adminRouter = createTRPCRouter({
 
       await ctx.db.user.update({
         where: { id: input.userId },
-        data: input.siteAdmin
-          ? { adminLevel: "SITE", adminScope: null }
-          : { adminLevel: "USER", adminScope: null },
+        data: { adminLevel: input.siteAdmin ? "SITE" : "USER" },
       });
-      if (!input.siteAdmin) await syncUserGroups(ctx.db, input.userId);
       return { ok: true };
     }),
 

@@ -117,7 +117,7 @@ export function WorkplaceCard() {
                 value={org.teamId ?? ""}
                 disabled={setTeam.isPending}
                 onChange={(e) =>
-                  setTeam.mutate({ departmentId: e.target.value || null })
+                  setTeam.mutate({ teamId: e.target.value || null })
                 }
                 className="border-rule text-ink rounded-label min-h-11 border bg-white px-3 py-2"
               >

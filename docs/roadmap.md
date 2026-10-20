@@ -99,9 +99,9 @@
 | Day | Date | Focus |
 |---|---|---|
 | 19 | Mon 26 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 20 | Tue 27 Oct | Public Amazon wishlist reader (proof of concept): items, images, prices; cached and rate-limited |
-| 21 | Wed 28 Oct | On-site wishlist view + "I'm buying this" per item to prevent duplicate gifts |
-| 22 | Thu 29 Oct | Affiliate tagging of outbound links + disclosures (Amazon Associates rules) |
+| 20 | Tue 27 Oct | **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
+| 21 | Wed 28 Oct | **Re-planned 20 Oct.** Avoid duplicate gifts without reading wishlists: "I'm buying from this list" claims on a picked-up list and a short note to the next Santa (no item data from Amazon) |
+| 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
 | 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
 | 24 | Sat 31 Oct | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
 
@@ -685,3 +685,34 @@ that don't touch the data model. Known items to include:
     - The kudos moderation badge reads "Organiser" or "Site admin".
   - **Later:** drop the `_legacy_*` archive tables after the 2026 season (one
     small migration).
+- **Faster CI merged (20 Oct, #45).** Desktop and mobile e2e run in
+  parallel, each in its own test email subdomain. A dev run takes about
+  5½ minutes, down from 13–15.
+- **Bonus day (20 Oct, owner's request): Amazon affiliate links.**
+  - **Rules followed (Associates operating agreement and policies):**
+    - Tagged links sit only on public pages, and the full referring page
+      address is sent with the click.
+    - An "Affiliate link" label and the disclosure sit next to every link,
+      and the pages around links have real content.
+    - No redirects through our own site.
+    - No rewards for using links, and no commission sharing.
+    - The owner's own friends groups stay off.
+  - **Gift pages** (`/gift/<token>`): one fixed, unguessable, signed-out page
+    per wishlist, group and season. It shows the tagged link, the
+    disclosure and gifting guidance. It shows no names, groups or emails,
+    and it never 404s during the season.
+  - **Admin (`/admin/affiliate`):**
+    - a master switch (off until the owner turns it on);
+    - the default tracking ID `raosanta04-21`;
+    - defaults by kind (workplaces off, communities and friends on);
+    - per-group On/Off/Default and a tracking ID per group and season.
+    Tracking IDs are created by hand in Associates Central.
+  - **Members** see a note on group pages explaining the links. A site
+    footer and the privacy policy carry the disclosure.
+  - **Owner decisions (20 Oct):** only site admins switch it for now; a
+    paid opt-out for communities may come in 2027. Gift pages stay fixed
+    rather than expiring.
+  - **To do:** confirm with Amazon Associates support that a public gift
+    page at an unguessable, unindexed address counts as publicly
+    available. Days 20 and 21 were re-planned so nothing reads or scrapes
+    wishlists.

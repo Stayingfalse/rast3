@@ -11,9 +11,9 @@ import {
 import type { PrismaClient } from "@prisma/client";
 import {
   fetchMyGuilds,
-  fetchMyRoles,
   getDiscordToken,
   isSnowflake,
+  manageable,
 } from "~/server/discord";
 import { ensureOrgGroup, findOrgGroup, syncUserGroups } from "~/server/groups";
 import {
@@ -50,6 +50,46 @@ const notFound = () =>
  * others to with a link or code. New groups wait for a site admin's approval
  * (owner, 18 Oct) before they can be used for gifting.
  */
+/** The group, if this person organises it (or is a site admin); else throws. */
+async function requireOrganiser(
+  db: PrismaClient,
+  groupId: string,
+  userId: string,
+) {
+  const [group, m, me] = await Promise.all([
+    db.group.findUnique({ where: { id: groupId } }),
+    db.membership.findUnique({
+      where: { groupId_userId: { groupId, userId } },
+      select: { role: true },
+    }),
+    db.user.findUnique({ where: { id: userId }, select: { adminLevel: true } }),
+  ]);
+  if (!group || group.kind === "TEAM")
+    throw new TRPCError({ code: "NOT_FOUND" });
+  if (m?.role !== "ADMIN" && me?.adminLevel !== "SITE") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Organisers only" });
+  }
+  return group;
+}
+
+/** Throws unless this person organises this community group. */
+async function requireCommunityOrganiser(
+  db: PrismaClient,
+  groupId: string,
+  userId: string,
+) {
+  const m = await db.membership.findUnique({
+    where: { groupId_userId: { groupId, userId } },
+    select: { role: true, group: { select: { kind: true } } },
+  });
+  if (m?.role !== "ADMIN" || m.group.kind !== "COMMUNITY") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Community organisers only",
+    });
+  }
+}
+
 const workEmail = z
   .string()
   .trim()
@@ -92,7 +132,6 @@ export const groupsRouter = createTRPCRouter({
             status: true,
             joinCode: true,
             discordGuildId: true,
-            discordRoleId: true,
             _count: { select: { memberships: true } },
           },
         },
@@ -107,10 +146,7 @@ export const groupsRouter = createTRPCRouter({
       members: group._count.memberships,
       // only organisers can see and share the code
       joinCode: role === "ADMIN" ? group.joinCode : null,
-      discord:
-        role === "ADMIN"
-          ? { guildId: group.discordGuildId, roleId: group.discordRoleId }
-          : null,
+      discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
     }));
   }),
 
@@ -240,6 +276,12 @@ export const groupsRouter = createTRPCRouter({
     if (!user?.domain) return null;
     const org = await findOrgGroup(ctx.db, user.domain);
     if (!org) return null;
+    const mine = await ctx.db.membership.findUnique({
+      where: {
+        groupId_userId: { groupId: org.id, userId: ctx.session.user.id },
+      },
+      select: { role: true },
+    });
     const teams = await ctx.db.department.findMany({
       where: { domain: org.emailDomain ?? "" },
       orderBy: { name: "asc" },
@@ -252,6 +294,7 @@ export const groupsRouter = createTRPCRouter({
       workEmail: user.workEmail,
       teamId: user.departmentId,
       teams,
+      isOrganiser: mine?.role === "ADMIN",
     };
   }),
 
@@ -444,46 +487,62 @@ export const groupsRouter = createTRPCRouter({
   }),
 
   /**
-   * Day 13, organisers: link a community group to a Discord server (and
-   * optionally a role) so members can join by being in that server.
+   * Organisers of a community group: the Discord servers they can link (ones
+   * they own or manage), and the one currently linked. { needsDiscord } when
+   * Discord isn't connected yet. (Day 16: replaces pasting ids.)
+   */
+  discordServers: protectedProcedure
+    .use(rateLimit("groups.discordServers", 30, HOUR))
+    .input(z.object({ groupId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await requireCommunityOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
+      const token = await getDiscordToken(ctx.session.user.id);
+      const guilds = token ? await fetchMyGuilds(token) : null;
+      if (!guilds) return { needsDiscord: true as const, servers: [] };
+      return { needsDiscord: false as const, servers: manageable(guilds) };
+    }),
+
+  /**
+   * Link (or unlink) a community group to a Discord server the organiser
+   * manages, checked with Discord. Anyone in a linked server can join; no
+   * role requirement (owner, 20 Oct).
    */
   setDiscordLink: protectedProcedure
     .input(
-      z.object({
-        groupId: z.string(),
-        guildId: z.string().trim().nullable(),
-        roleId: z.string().trim().optional(),
-      }),
+      z.object({ groupId: z.string(), guildId: z.string().trim().nullable() }),
     )
     .mutation(async ({ ctx, input }) => {
-      const m = await ctx.db.membership.findUnique({
-        where: {
-          groupId_userId: {
-            groupId: input.groupId,
-            userId: ctx.session.user.id,
-          },
-        },
-        select: { role: true, group: { select: { kind: true } } },
-      });
-      if (m?.role !== "ADMIN" || m.group.kind !== "COMMUNITY") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Community organisers only",
-        });
-      }
+      await requireCommunityOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
       const guildId = input.guildId ?? null;
-      const roleId = (input.roleId ?? "") === "" ? null : input.roleId!;
-      if (
-        (guildId && !isSnowflake(guildId)) ||
-        (roleId && !isSnowflake(roleId))
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Discord ids are 17 to 20 digits. Copy them with Developer Mode on.",
-        });
-      }
       if (guildId) {
+        if (!isSnowflake(guildId)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "That isn't a Discord server.",
+          });
+        }
+        const token = await getDiscordToken(ctx.session.user.id);
+        const guilds = token ? await fetchMyGuilds(token) : null;
+        if (!guilds) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Connect Discord first.",
+          });
+        }
+        if (!manageable(guilds).some((g) => g.id === guildId)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You can only link a Discord server you own or manage.",
+          });
+        }
         const taken = await ctx.db.group.findUnique({
           where: { discordGuildId: guildId },
           select: { id: true },
@@ -497,25 +556,21 @@ export const groupsRouter = createTRPCRouter({
       }
       return ctx.db.group.update({
         where: { id: input.groupId },
-        data: {
-          discordGuildId: guildId,
-          discordRoleId: guildId ? roleId : null,
-        },
-        select: { id: true, discordGuildId: true, discordRoleId: true },
+        data: { discordGuildId: guildId, discordRoleId: null },
+        select: { id: true, discordGuildId: true },
       });
     }),
 
   /**
-   * Day 13: community groups linked to Discord servers you're in. Returns
-   * { needsDiscord } when you haven't connected Discord (with server access).
+   * Community groups linked to Discord servers you're in. Returns
+   * { needsDiscord } when you haven't connected Discord.
    */
   discordMatches: protectedProcedure
     .use(rateLimit("groups.discordMatches", 30, HOUR))
     .mutation(async ({ ctx }) => {
       const userId = ctx.session.user.id;
       const token = await getDiscordToken(userId);
-      if (!token) return { needsDiscord: true as const, groups: [] };
-      const guilds = await fetchMyGuilds(token);
+      const guilds = token ? await fetchMyGuilds(token) : null;
       if (!guilds) return { needsDiscord: true as const, groups: [] };
       const groups = await ctx.db.group.findMany({
         where: {
@@ -528,29 +583,21 @@ export const groupsRouter = createTRPCRouter({
           name: true,
           status: true,
           discordGuildId: true,
-          discordRoleId: true,
           memberships: { where: { userId }, select: { id: true } },
           _count: { select: { memberships: true } },
         },
       });
-      const out = [];
-      for (const g of groups) {
-        const roleOk = g.discordRoleId
-          ? ((await fetchMyRoles(token, g.discordGuildId!)) ?? []).includes(
-              g.discordRoleId,
-            )
-          : true;
-        out.push({
+      return {
+        needsDiscord: false as const,
+        groups: groups.map((g) => ({
           id: g.id,
           name: g.name,
           status: g.status,
           members: g._count.memberships,
           server: guilds.find((x) => x.id === g.discordGuildId)?.name ?? "",
           alreadyMember: g.memberships.length > 0,
-          roleOk,
-        });
-      }
-      return { needsDiscord: false as const, groups: out };
+        })),
+      };
     }),
 
   /** Join a community group because you're in its Discord server (re-checked). */
@@ -567,7 +614,6 @@ export const groupsRouter = createTRPCRouter({
           kind: true,
           status: true,
           discordGuildId: true,
-          discordRoleId: true,
         },
       });
       if (
@@ -578,23 +624,17 @@ export const groupsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       const token = await getDiscordToken(userId);
-      if (!token) {
+      const guilds = token ? await fetchMyGuilds(token) : null;
+      if (!guilds) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Connect Discord first.",
         });
       }
-      const roles = await fetchMyRoles(token, group.discordGuildId);
-      if (!roles) {
+      if (!guilds.some((g) => g.id === group.discordGuildId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You're not in that Discord server.",
-        });
-      }
-      if (group.discordRoleId && !roles.includes(group.discordRoleId)) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "That community needs a Discord role you don't have yet.",
         });
       }
       await ctx.db.membership.upsert({
@@ -603,6 +643,237 @@ export const groupsRouter = createTRPCRouter({
         create: { groupId: group.id, userId },
       });
       return { id: group.id, name: group.name };
+    }),
+
+  /**
+   * Day 16, organiser console: everything an organiser needs for one group.
+   * Organisers of the group (or site admins) only.
+   */
+  manage: protectedProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const group = await requireOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
+      const members = await ctx.db.membership.findMany({
+        where: { groupId: group.id },
+        orderBy: { joinedAt: "desc" },
+        select: {
+          role: true,
+          joinedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              workEmail: true,
+              amazonWishlistUrl: true,
+            },
+          },
+        },
+      });
+      const firstTwoDays = new Date(group.createdAt.getTime() + 48 * 3600_000);
+      const teams =
+        group.kind === "ORG" && group.emailDomain
+          ? await ctx.db.department.findMany({
+              where: { domain: group.emailDomain },
+              orderBy: { name: "asc" },
+              select: {
+                id: true,
+                name: true,
+                _count: { select: { users: true } },
+              },
+            })
+          : [];
+      const picked = await ctx.db.wishlistAssignment.count({
+        where: { groupId: group.id },
+      });
+      const gifted = await ctx.db.purchase.count({
+        where: { wishlistAssignment: { groupId: group.id } },
+      });
+      return {
+        id: group.id,
+        name: group.name,
+        kind: group.kind,
+        status: group.status,
+        emailDomain: group.emailDomain,
+        joinCode: group.joinCode,
+        discordGuildId: group.discordGuildId,
+        createdAt: group.createdAt,
+        stats: {
+          members: members.length,
+          joinedFirst48h: members.filter((m) => m.joinedAt <= firstTwoDays)
+            .length,
+          joinedLast7d: members.filter(
+            (m) => m.joinedAt.getTime() > Date.now() - 7 * 24 * 3600_000,
+          ).length,
+          picked,
+          gifted,
+        },
+        teams: teams.map((t) => ({
+          id: t.id,
+          name: t.name,
+          members: t._count.users,
+        })),
+        members: members.map((m) => {
+          const full = [m.user.firstName, m.user.lastName]
+            .filter(Boolean)
+            .join(" ");
+          return {
+            userId: m.user.id,
+            name: full !== "" ? full : (m.user.name ?? "Unnamed"),
+            email:
+              group.kind === "ORG"
+                ? (m.user.workEmail ?? m.user.email)
+                : m.user.email,
+            role: m.role,
+            joinedAt: m.joinedAt,
+            hasWishlist: !!m.user.amazonWishlistUrl,
+          };
+        }),
+      };
+    }),
+
+  /** Friends/community organisers: make someone an organiser, or not. */
+  setMemberRole: protectedProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        userId: z.string(),
+        role: z.enum(["MEMBER", "ADMIN"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const group = await requireOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
+      if (!(INVITE_KINDS as readonly string[]).includes(group.kind)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Workplace organisers are managed in the admin area for now.",
+        });
+      }
+      if (input.role === "MEMBER") {
+        const admins = await ctx.db.membership.count({
+          where: {
+            groupId: group.id,
+            role: "ADMIN",
+            userId: { not: input.userId },
+          },
+        });
+        if (admins === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "A group needs at least one organiser.",
+          });
+        }
+      }
+      await ctx.db.membership.update({
+        where: { groupId_userId: { groupId: group.id, userId: input.userId } },
+        data: { role: input.role },
+      });
+      return { ok: true };
+    }),
+
+  /**
+   * Remove someone from the group. For a workplace this takes them out of
+   * the organisation (their account stays), as on the Day 11 screen.
+   */
+  removeMember: protectedProcedure
+    .input(z.object({ groupId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const group = await requireOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
+      if (input.userId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Use Leave to remove yourself.",
+        });
+      }
+      const target = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: group.id, userId: input.userId } },
+        select: { role: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+      if (group.kind === "ORG") {
+        const me = await ctx.db.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { adminLevel: true },
+        });
+        if (target.role === "ADMIN" && me?.adminLevel !== "SITE") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only site admins can remove an organiser.",
+          });
+        }
+        await ctx.db.user.update({
+          where: { id: input.userId },
+          data: {
+            domain: null,
+            departmentId: null,
+            adminLevel: "USER",
+            adminScope: null,
+          },
+        });
+        await ctx.db.wishlistAssignment.updateMany({
+          where: {
+            assignedUserId: input.userId,
+            isActive: true,
+            groupId: null,
+          },
+          data: { isActive: false },
+        });
+        await syncUserGroups(ctx.db, input.userId);
+      } else {
+        await ctx.db.membership.delete({
+          where: {
+            groupId_userId: { groupId: group.id, userId: input.userId },
+          },
+        });
+        await ctx.db.wishlistAssignment.updateMany({
+          where: {
+            assignedUserId: input.userId,
+            isActive: true,
+            groupId: group.id,
+          },
+          data: { isActive: false },
+        });
+      }
+      return { ok: true };
+    }),
+
+  /** Friends/community organisers: rename the group. */
+  rename: protectedProcedure
+    .input(
+      z.object({ groupId: z.string(), name: z.string().trim().min(2).max(60) }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const group = await requireOrganiser(
+        ctx.db,
+        input.groupId,
+        ctx.session.user.id,
+      );
+      if (!(INVITE_KINDS as readonly string[]).includes(group.kind)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Workplaces are named after their domain.",
+        });
+      }
+      return ctx.db.group.update({
+        where: { id: group.id },
+        data: { name: input.name },
+        select: { id: true, name: true },
+      });
     }),
 
   /** Site admins: groups and organisations by status, newest first. */

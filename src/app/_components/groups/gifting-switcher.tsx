@@ -68,7 +68,10 @@ export function GiftingSwitcher({ children }: { children: React.ReactNode }) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-label={tabs.find((t) => t.id === current)?.label}>
+      <div
+        role="tabpanel"
+        aria-label={tabs.find((t) => t.id === current)?.label}
+      >
         {group ? <GroupHome group={group} /> : children}
       </div>
     </div>

@@ -65,6 +65,7 @@ test("set up: affiliate links on, and a friends group with its own tracking ID",
   await loginAs(page, { email: site(p), adminLevel: "SITE" });
   const r = page.request;
   expect((await mutate(r, "groups.setStatus", { groupId, status: "ACTIVE" })).status()).toBe(200);
+  expect((await mutate(r, "admin.setOpenEarly", { groupId, open: true })).status()).toBe(200);
   // dev only: the master switch stays on (other specs force their groups off)
   expect(
     (
@@ -152,8 +153,13 @@ test("switching the group off opens wishlists straight on Amazon", async ({ page
   expect(parcel?.viaGiftPage).toBe(false);
   expect(parcel?.link).toBe("https://www.amazon.co.uk/hz/wishlist/ls/E2EAFA0001");
 
-  // the fixed gift page still answers, now with a plain link and no label
-  await page.goto(giftPath);
+  // the fixed gift page still answers, now with a plain link and no label,
+  // even once the group is back to the season's dates (Day 18)
+  await loginAs(page, { email: site(p), adminLevel: "SITE" });
+  expect(
+    (await mutate(page.request, "admin.setOpenEarly", { groupId, open: false })).status(),
+  ).toBe(200);
+  expect((await page.goto(giftPath))?.status()).toBe(200);
   await expect(page.getByRole("link", { name: "Open the wishlist on Amazon" })).toHaveAttribute(
     "href",
     "https://www.amazon.co.uk/hz/wishlist/ls/E2EAFA0001",

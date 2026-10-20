@@ -4,6 +4,7 @@ import { authProviderRouter } from "~/server/api/routers/auth-provider";
 import { kudosRouter } from "~/server/api/routers/kudos";
 import { linkRouter } from "~/server/api/routers/link";
 import { profileRouter } from "~/server/api/routers/profile";
+import { seasonRouter } from "~/server/api/routers/season";
 import { shareRouter } from "~/server/api/routers/share";
 import { stampsRouter } from "~/server/api/routers/stamps";
 import { wishlistRouter } from "~/server/api/routers/wishlist";
@@ -24,6 +25,7 @@ export const appRouter = createTRPCRouter({
   stamps: stampsRouter,
   share: shareRouter,
   groups: groupsRouter,
+  season: seasonRouter,
 });
 
 // export type definition of API

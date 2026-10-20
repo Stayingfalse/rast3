@@ -88,6 +88,9 @@ clear enough: say **"Ad"** up front, before people engage. So:
 - Confirm with Associates support that gift pages at unguessable addresses,
   which search engines don't index, count as "publicly available".
 - Associates accounts need 3 qualifying sales within 180 days of sign-up.
+  The account was opened in mid-October 2026, so the deadline is around
+  mid-April 2027. The December season should clear it. Amazon reviews the
+  site after those first sales, so everything above must be live by then.
 - In Associates Central, list `raosanta.uk` only, not dev.
 - Make sure Cloudflare's bot protection doesn't block Amazon's crawler from
   `/gift/`.

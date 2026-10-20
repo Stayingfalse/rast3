@@ -60,6 +60,10 @@ test("two friends set up a group that a site admin approves", async ({ page }, t
   expect(
     (await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status(),
   ).toBe(200);
+  // gifting before the season opens needs the group opened early (Day 18)
+  expect(
+    (await mutate(page.request, "admin.setOpenEarly", { groupId, open: true })).status(),
+  ).toBe(200);
   // straight Amazon links here (affiliate gift pages have their own spec)
   expect(
     (

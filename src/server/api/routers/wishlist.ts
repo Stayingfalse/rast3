@@ -13,6 +13,13 @@ import {
 } from "~/server/scope";
 import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
 import { getWorkplace } from "~/server/groups";
+import {
+  archivePastSeasons,
+  checkedIn,
+  currentSeason,
+  requireCanPickUp,
+} from "~/server/season";
+import { seasonRange } from "~/server/stamps";
 
 const HOUR = 60 * 60_000;
 // Picking up wishlists hands out other people's links, so cap how fast one
@@ -26,6 +33,7 @@ export const wishlistRouter = createTRPCRouter({
   getMyAssignments: protectedProcedure
     .input(z.object({ groupId: z.string().nullable() }).nullish())
     .query(async ({ ctx, input }) => {
+      await archivePastSeasons(ctx.db);
       const assignments = await ctx.db.wishlistAssignment.findMany({
         where: {
           assignedUserId: ctx.session.user.id,
@@ -157,6 +165,7 @@ export const wishlistRouter = createTRPCRouter({
       }
 
       const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
+      await requireCanPickUp(ctx.db, userId, scope.orgId);
 
       // Check if user already has assignments
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -185,6 +194,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
+            checkedIn(), // checked in for this season (Day 18)
             inGroup(scope.teamId!), // Same team (department) only
           ],
         },
@@ -260,6 +270,7 @@ export const wishlistRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
 
       const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
+      await requireCanPickUp(ctx.db, userId, scope.orgId);
 
       // Check current assignment count
       const currentAssignmentCount = await ctx.db.wishlistAssignment.count({
@@ -295,6 +306,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
+            checkedIn(), // checked in for this season (Day 18)
             inGroup(scope.teamId!), // Same team (department) only
           ],
         },
@@ -371,6 +383,7 @@ export const wishlistRouter = createTRPCRouter({
       const scope = await requireGiverScope(ctx.db, userId, {
         needTeam: false,
       });
+      await requireCanPickUp(ctx.db, userId, scope.orgId);
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -393,6 +406,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
+            checkedIn(), // checked in for this season (Day 18)
             inOrgOutsideTeam(scope.orgId, scope.teamId), // Same organisation, other teams
           ],
         },
@@ -467,6 +481,7 @@ export const wishlistRouter = createTRPCRouter({
       const scope = await requireGiverScope(ctx.db, userId, {
         needTeam: false,
       });
+      await requireCanPickUp(ctx.db, userId, scope.orgId);
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -488,6 +503,7 @@ export const wishlistRouter = createTRPCRouter({
             { id: { notIn: assignedUserIds } },
             { profileCompleted: true },
             { amazonWishlistUrl: { not: null } },
+            checkedIn(), // checked in for this season (Day 18)
             inOtherActiveOrg(scope.orgId), // Another approved organisation
           ],
         },
@@ -588,6 +604,7 @@ export const wishlistRouter = createTRPCRouter({
             "This group is waiting for approval, so gifting hasn't opened yet.",
         });
       }
+      await requireCanPickUp(ctx.db, userId, input.groupId);
       const me = await ctx.db.user.findUnique({
         where: { id: userId },
         select: { profileCompleted: true, amazonWishlistUrl: true },
@@ -599,8 +616,9 @@ export const wishlistRouter = createTRPCRouter({
             "Add your wishlist to your profile first, so others can pick you up too.",
         });
       }
+      // lists you already hold this season (earlier seasons' can come round again)
       const held = await ctx.db.wishlistAssignment.findMany({
-        where: { assignedUserId: userId },
+        where: { assignedUserId: userId, assignedAt: seasonRange(currentSeason()) },
         select: { wishlistOwnerId: true },
       });
       const eligible = await ctx.db.user.findMany({
@@ -609,6 +627,7 @@ export const wishlistRouter = createTRPCRouter({
           profileCompleted: true,
           amazonWishlistUrl: { not: null },
           memberships: { some: { groupId: input.groupId } },
+          ...checkedIn(),
         },
         select: {
           id: true,

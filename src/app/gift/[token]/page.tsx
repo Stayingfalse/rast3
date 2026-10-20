@@ -43,7 +43,7 @@ export default async function GiftPage({ params }: Props) {
   if (!page) notFound();
 
   const current = seasonYearOf(new Date()) === page.season;
-  const wishlist = page.owner.amazonWishlistUrl;
+  const wishlist = page.owner?.amazonWishlistUrl ?? null;
   const affiliate = current
     ? await affiliateFor(db, page.groupId, page.season)
     : { enabled: false as const };

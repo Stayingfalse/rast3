@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getWorkplace } from "~/server/groups";
+import { checkIn } from "~/server/season";
 
-// Amazon UK wishlist URL regex
-const amazonWishlistRegex =
-  /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:\?.*)?$/i;
+import { amazonWishlistRegex } from "~/lib/wishlist";
 
 // Helper function to normalize wishlist URL
 const normalizeWishlistUrl = (url: string | undefined): string | null => {
@@ -78,6 +77,9 @@ export const profileRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
         select: { profileCompletedAt: true },
       });
+      // A new member's first profile is their check-in for this season (Day 18);
+      // returning members check in separately (season.checkIn)
+      if (!current?.profileCompletedAt) await checkIn(ctx.db, ctx.session.user.id);
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "~/server/db";
 import { createOrgGroup, createTeam, setTeam, setWorkplace } from "~/server/groups";
+import { currentSeason } from "~/server/season";
 import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
 
 /**
@@ -230,6 +231,43 @@ export async function POST(req: NextRequest) {
   });
   await join(pending.id, pendingOrg.id, null);
 
+  // Day 18: everyone above has checked in for this season, and the seed's
+  // organisations are open early so tests can pick up before the season
+  // opens. Rory is back from last year and hasn't checked in yet, and the
+  // giver still holds a list from last season (archived when next seen).
+  const returning = await db.user.create({
+    data: {
+      email: `returning@${domain}`,
+      workEmail: `returning@${domain}`,
+      emailVerified: now,
+      name: "Rory Returning",
+      firstName: "Rory",
+      lastName: "Returning",
+      amazonWishlistUrl: wishlistUrl(960),
+      profileCompleted: true,
+      profileCompletedAt: new Date("2025-11-20T10:00:00Z"),
+    },
+  });
+  await join(returning.id, org.id, teams[1]!.id);
+  await db.seasonCheckIn.createMany({
+    data: [...members, giver, ...rivals, pending].map((u) => ({
+      userId: u.id,
+      season: currentSeason(),
+    })),
+    skipDuplicates: true,
+  });
+  await db.group.updateMany({
+    where: { id: { in: [org.id, rivalOrg.id, pendingOrg.id] } },
+    data: { openEarly: true },
+  });
+  await db.wishlistAssignment.create({
+    data: {
+      assignedUserId: giver.id,
+      wishlistOwnerId: members[1]!.id,
+      assignedAt: new Date("2025-12-01T10:00:00Z"),
+    },
+  });
+
   const inSeedOrg = {
     OR: [
       { emailDomain: domain },
@@ -253,6 +291,7 @@ export async function POST(req: NextRequest) {
     purchases,
     kudos,
     giver: { email: giver.email, team: TEAMS[0] },
+    returning: { email: returning.email },
   });
 }
 

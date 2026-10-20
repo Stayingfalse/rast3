@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { api } from "../../../trpc/react";
-import { AdminLayout } from "../../_components/admin-layout";
 
 // Define types based on what's returned from the API
 type UserWithWishlist = {
@@ -215,7 +214,7 @@ export default function AdminLinksPage() {
     );
   }
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div>
@@ -489,6 +488,6 @@ export default function AdminLinksPage() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 }

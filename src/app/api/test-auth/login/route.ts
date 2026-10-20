@@ -4,10 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "~/server/db";
-import {
-  isTestAuthAuthorised,
-  TEST_EMAIL_DOMAIN,
-} from "~/server/utils/test-auth";
+import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
 
 /**
  * Test-only sign-in for end-to-end tests on non-production environments.
@@ -15,26 +12,28 @@ import {
  * Disabled (404) unless ENABLE_TEST_LOGIN === "true" and TEST_LOGIN_SECRET is
  * set (32+ chars). Callers must send the secret in the x-test-login-secret
  * header. It can only create and sign in users whose email ends with
- * @e2e.raosanta.test, so it cannot be used to impersonate real accounts.
+ * @e2e.raosanta.test (or the run's own subdomain of it, see testDomain), so
+ * it cannot be used to impersonate real accounts.
  *
  * POST   -> upsert the test user, create a database session, set the cookie
- * DELETE -> remove all test users (and, via cascades, their sessions/data)
+ * DELETE -> remove this run's test users (and, via cascades, their sessions/data)
  */
 
 const SESSION_COOKIE = "next-auth.session-token";
 // Same lifetime as real sessions (Auth.js maxAge, 30 days)
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-const loginSchema = z.object({
-  email: z
-    .string()
-    .email()
-    .refine((email) => email.toLowerCase().endsWith(`@${TEST_EMAIL_DOMAIN}`), {
-      message: `Test users must use an @${TEST_EMAIL_DOMAIN} email`,
-    }),
-  name: z.string().min(1).max(100).optional(),
-  adminLevel: z.enum(["SITE", "USER"]).optional(),
-});
+const loginSchema = (domain: string) =>
+  z.object({
+    email: z
+      .string()
+      .email()
+      .refine((email) => email.toLowerCase().endsWith(`@${domain}`), {
+        message: `Test users must use an @${domain} email`,
+      }),
+    name: z.string().min(1).max(100).optional(),
+    adminLevel: z.enum(["SITE", "USER"]).optional(),
+  });
 
 function notFound() {
   return new NextResponse("Not Found", { status: 404 });
@@ -43,7 +42,9 @@ function notFound() {
 export async function POST(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
 
-  const parsed = loginSchema.safeParse(await req.json().catch(() => null));
+  const parsed = loginSchema(testDomain(req)).safeParse(
+    await req.json().catch(() => null),
+  );
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -92,15 +93,16 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
 
+  const domain = testDomain(req);
   // Friends/community groups test users started (memberships cascade)
   await db.group.deleteMany({
     where: {
       kind: { in: ["FRIENDS", "COMMUNITY"] },
-      createdBy: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
+      createdBy: { email: { endsWith: `@${domain}` } },
     },
   });
   const { count } = await db.user.deleteMany({
-    where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
+    where: { email: { endsWith: `@${domain}` } },
   });
   return NextResponse.json({ deletedUsers: count });
 }

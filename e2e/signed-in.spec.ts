@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import {
   deleteTestUsers,
+  E2E_DOMAIN,
   hasTestLogin,
   loginAs,
   settle,
@@ -30,7 +31,7 @@ test.afterAll(async ({ playwright }, testInfo) => {
 
 test.describe("signed-in user", () => {
   test("test login creates a session", async ({ page }, testInfo) => {
-    const email = `user-${testInfo.project.name}@e2e.raosanta.test`;
+    const email = `user-${testInfo.project.name}@${E2E_DOMAIN}`;
     await loginAs(page, { email, name: "E2E User" });
 
     const session = await page.request.get("/api/auth/session");
@@ -41,7 +42,7 @@ test.describe("signed-in user", () => {
   test("new user is asked to complete their profile", async ({ page }, testInfo) => {
     const errors = trackPageErrors(page);
     await loginAs(page, {
-      email: `new-${testInfo.project.name}@e2e.raosanta.test`,
+      email: `new-${testInfo.project.name}@${E2E_DOMAIN}`,
       name: "New Santa",
     });
     await page.goto("/");
@@ -56,7 +57,7 @@ test.describe("signed-in user", () => {
 
   test("non-admin gets a 404 from /admin", async ({ page }, testInfo) => {
     await loginAs(page, {
-      email: `plain-${testInfo.project.name}@e2e.raosanta.test`,
+      email: `plain-${testInfo.project.name}@${E2E_DOMAIN}`,
       adminLevel: "USER",
     });
     for (const path of ["/admin", "/admin/users"]) {
@@ -74,7 +75,7 @@ test.describe("site admin", () => {
     test(`can open ${path}`, async ({ page }, testInfo) => {
       const errors = trackPageErrors(page);
       await loginAs(page, {
-        email: `admin-${testInfo.project.name}@e2e.raosanta.test`,
+        email: `admin-${testInfo.project.name}@${E2E_DOMAIN}`,
         name: "E2E Admin",
         adminLevel: "SITE",
       });

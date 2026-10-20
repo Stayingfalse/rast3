@@ -2,6 +2,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 
 import {
   deleteTestUsers,
+  E2E_DOMAIN,
   hasTestLogin,
   loginAs,
   seed,
@@ -18,7 +19,7 @@ import {
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
 
-const E = "e2e.raosanta.test";
+const E = E2E_DOMAIN;
 const RIVAL = `rival.${E}`;
 
 const unwrap = async (res: { json: () => Promise<unknown> }) =>

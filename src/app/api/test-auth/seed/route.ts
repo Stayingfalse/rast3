@@ -3,10 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "~/server/db";
 import { createOrgGroup, createTeam, setTeam, setWorkplace } from "~/server/groups";
-import {
-  isTestAuthAuthorised,
-  TEST_EMAIL_DOMAIN,
-} from "~/server/utils/test-auth";
+import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
 
 /**
  * Test-only seed data for dev and e2e tests (same gate as ../login).
@@ -40,13 +37,8 @@ const KUDOS_MESSAGES = [
  * them) but their organisation is set directly: a second, approved
  * organisation, and a member whose organisation is still pending approval.
  */
-const RIVAL_DOMAIN = `rival.${TEST_EMAIL_DOMAIN}`;
-const PENDING_DOMAIN = `pending.${TEST_EMAIL_DOMAIN}`;
 const RIVALS = ["Rival One", "Rival Two", "Rival Three"];
-const RIVAL_KUDOS = "Rival org thank-you: should never show in e2e.raosanta.test feeds";
-
-/** The seeded member e2e tests sign in as to walk the wishlist flow. */
-const GIVER_EMAIL = `giver@${TEST_EMAIL_DOMAIN}`;
+const RIVAL_KUDOS = "Rival org thank-you: should never show in the seed org's feeds";
 
 function notFound() {
   return new NextResponse("Not Found", { status: 404 });
@@ -56,17 +48,17 @@ function wishlistUrl(n: number) {
   return `https://www.amazon.co.uk/hz/wishlist/ls/E2E${String(n).padStart(6, "0")}`;
 }
 
-async function clearSeed() {
+async function clearSeed(domain: string) {
   const users = await db.user.deleteMany({
-    where: { email: { endsWith: `@${TEST_EMAIL_DOMAIN}` } },
+    where: { email: { endsWith: `@${domain}` } },
   });
   // Any test organisation: the seed's own plus ones e2e tests set up
   // (all on subdomains of the test domain)
-  const testOrg = { endsWith: `.${TEST_EMAIL_DOMAIN}` };
+  const testOrg = { endsWith: `.${domain}` };
   // Team groups and memberships go with the organisation (cascade)
   await db.group.deleteMany({
     where: {
-      OR: [{ emailDomain: TEST_EMAIL_DOMAIN }, { emailDomain: testOrg }],
+      OR: [{ emailDomain: domain }, { emailDomain: testOrg }],
     },
   });
   return users.count;
@@ -75,11 +67,17 @@ async function clearSeed() {
 export async function POST(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
 
-  await clearSeed();
+  // Everything lives under this run's test domain (see testDomain)
+  const domain = testDomain(req);
+  const RIVAL_DOMAIN = `rival.${domain}`;
+  const PENDING_DOMAIN = `pending.${domain}`;
+  // The seeded member e2e tests sign in as to walk the wishlist flow
+  const GIVER_EMAIL = `giver@${domain}`;
+  await clearSeed(domain);
 
   // Organisations are never created from an email (Day 12), so the seed
   // creates them explicitly, as an admin would: two live, one pending.
-  const org = await createOrgGroup(db, TEST_EMAIL_DOMAIN, { status: "ACTIVE" });
+  const org = await createOrgGroup(db, domain, { status: "ACTIVE" });
   await db.group.update({
     where: { id: org.id },
     data: { description: "E2E test organisation (seed data)" },
@@ -94,7 +92,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   const members = [];
   for (const [i, [firstName, lastName]] of MEMBERS.entries()) {
-    const email = `${firstName}.${lastName}@${TEST_EMAIL_DOMAIN}`.toLowerCase();
+    const email = `${firstName}.${lastName}@${domain}`.toLowerCase();
     members.push(
       await db.user.create({
         data: {
@@ -187,7 +185,7 @@ export async function POST(req: NextRequest) {
   const rivalTeam = await createTeam(db, rivalOrg, "Rival Team");
   const rivals = [];
   for (const [i, name] of RIVALS.entries()) {
-    const email = `rival${i + 1}@${TEST_EMAIL_DOMAIN}`;
+    const email = `rival${i + 1}@${domain}`;
     rivals.push(
       await db.user.create({
         data: {
@@ -222,7 +220,7 @@ export async function POST(req: NextRequest) {
   const pendingOrg = await createOrgGroup(db, PENDING_DOMAIN, { status: "PENDING" });
   const pending = await db.user.create({
     data: {
-      email: `pending@${TEST_EMAIL_DOMAIN}`,
+      email: `pending@${domain}`,
       emailVerified: now,
       name: "Penny Pending",
       amazonWishlistUrl: wishlistUrl(950),
@@ -234,8 +232,8 @@ export async function POST(req: NextRequest) {
 
   const inSeedOrg = {
     OR: [
-      { emailDomain: TEST_EMAIL_DOMAIN },
-      { parent: { emailDomain: TEST_EMAIL_DOMAIN } },
+      { emailDomain: domain },
+      { parent: { emailDomain: domain } },
     ],
   };
   const groups = await db.group.count({ where: inSeedOrg });
@@ -244,7 +242,7 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    domain: TEST_EMAIL_DOMAIN,
+    domain,
     rivalDomain: RIVAL_DOMAIN,
     rivalKudos: RIVAL_KUDOS,
     groups,
@@ -260,5 +258,5 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
-  return NextResponse.json({ deletedUsers: await clearSeed() });
+  return NextResponse.json({ deletedUsers: await clearSeed(testDomain(req)) });
 }

@@ -19,42 +19,47 @@ const requestLimit = rateLimit("wishlist.request", 30, HOUR);
 
 export const wishlistRouter = createTRPCRouter({
   // Get the current user's assigned wishlists (links they can shop from)
-  getMyAssignments: protectedProcedure.query(async ({ ctx }) => {
-    const assignments = await ctx.db.wishlistAssignment.findMany({
-      where: {
-        assignedUserId: ctx.session.user.id,
-        isActive: true,
-      },
-      include: {
-        // Never send the owner's name to the person buying for them: gifts
-        // are anonymous both ways (see /privacy).
-        wishlistOwner: {
-          select: {
-            id: true,
-            amazonWishlistUrl: true,
-            domain: true,
-            department: {
-              select: {
-                id: true,
-                name: true,
+  // Workplace pick-ups by default; pass a friends/community group id for that
+  // group's (Day 14)
+  getMyAssignments: protectedProcedure
+    .input(z.object({ groupId: z.string().nullable() }).nullish())
+    .query(async ({ ctx, input }) => {
+      const assignments = await ctx.db.wishlistAssignment.findMany({
+        where: {
+          assignedUserId: ctx.session.user.id,
+          isActive: true,
+          groupId: input?.groupId ?? null,
+        },
+        include: {
+          // Never send the owner's name to the person buying for them: gifts
+          // are anonymous both ways (see /privacy).
+          wishlistOwner: {
+            select: {
+              id: true,
+              amazonWishlistUrl: true,
+              domain: true,
+              department: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
-        },
-        purchases: true,
-        reports: {
-          where: {
-            userId: ctx.session.user.id,
+          purchases: true,
+          reports: {
+            where: {
+              userId: ctx.session.user.id,
+            },
           },
         },
-      },
-      orderBy: {
-        assignedAt: "asc",
-      },
-    });
+        orderBy: {
+          assignedAt: "asc",
+        },
+      });
 
-    return assignments;
-  }), // Get statistics about assignments (dynamic based on user's domain/department status)
+      return assignments;
+    }), // Get statistics about assignments (dynamic based on user's domain/department status)
   getAssignmentStats: protectedProcedure.query(async ({ ctx }) => {
     // Get current user with domain status
     const currentUser = await ctx.db.user.findUnique({
@@ -295,116 +300,117 @@ export const wishlistRouter = createTRPCRouter({
   requestInitialAssignments: protectedProcedure
     .use(requestLimit)
     .mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-    // Check if user has profile completed and wishlist URL
-    const currentUser = await ctx.db.user.findUnique({
-      where: { id: userId },
-      select: {
-        profileCompleted: true,
-        amazonWishlistUrl: true,
-        domain: true,
-        departmentId: true,
-      },
-    });
-
-    if (!currentUser?.profileCompleted || !currentUser?.amazonWishlistUrl) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Please complete your profile and add your wishlist URL first",
-      });
-    }
-
-    const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
-
-    // Check if user already has assignments
-    const existingAssignments = await ctx.db.wishlistAssignment.findMany({
-      where: {
-        assignedUserId: userId,
-        isActive: true,
-      },
-      select: { wishlistOwnerId: true },
-    });
-    const assignedUserIds = existingAssignments.map(
-      (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
-    );
-
-    if (assignedUserIds.length >= 3) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "You already have your initial 3 assignments",
-      });
-    }
-
-    // Get all eligible users (excluding current user, users without wishlists, different domain/department, and already assigned)
-    const eligibleUsers = await ctx.db.user.findMany({
-      where: {
-        AND: [
-          { id: { not: userId } },
-          { id: { notIn: assignedUserIds } },
-          { profileCompleted: true },
-          { amazonWishlistUrl: { not: null } },
-          inGroup(scope.teamId!), // Same team (department) only
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        ownedWishlist: {
-          where: { isActive: true },
-          select: { assignedUserId: true },
+      const userId = ctx.session.user.id;
+      // Check if user has profile completed and wishlist URL
+      const currentUser = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          profileCompleted: true,
+          amazonWishlistUrl: true,
+          domain: true,
+          departmentId: true,
         },
-      },
-    });
+      });
 
-    // Sort by assignment count (prioritize users with fewer assignments)
-    const sortedUsers = eligibleUsers
-      .map(
-        (user: {
-          id: string;
-          name: string | null;
-          ownedWishlist: { assignedUserId: string }[];
-        }) => ({
-          ...user,
-          assignmentCount: user.ownedWishlist.length,
-        }),
-      )
-      .sort(
-        (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
-          a.assignmentCount - b.assignmentCount,
+      if (!currentUser?.profileCompleted || !currentUser?.amazonWishlistUrl) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Please complete your profile and add your wishlist URL first",
+        });
+      }
+
+      const scope = await requireGiverScope(ctx.db, userId, { needTeam: true });
+
+      // Check if user already has assignments
+      const existingAssignments = await ctx.db.wishlistAssignment.findMany({
+        where: {
+          assignedUserId: userId,
+          isActive: true,
+        },
+        select: { wishlistOwnerId: true },
+      });
+      const assignedUserIds = existingAssignments.map(
+        (a: { wishlistOwnerId: string }) => a.wishlistOwnerId,
       );
 
-    // Select up to 3 users, avoiding duplicates
-    const neededAssignments = 3 - assignedUserIds.length;
-    const selectedUsers = sortedUsers.slice(0, neededAssignments);
-    if (selectedUsers.length === 0) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "No eligible wishlists available for assignment",
-      });
-    }
+      if (assignedUserIds.length >= 3) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You already have your initial 3 assignments",
+        });
+      }
 
-    // Create assignments
-    const assignments = await Promise.all(
-      selectedUsers.map((user: { id: string }) =>
-        ctx.db.wishlistAssignment.create({
-          data: {
-            assignedUserId: userId,
-            wishlistOwnerId: user.id,
+      // Get all eligible users (excluding current user, users without wishlists, different domain/department, and already assigned)
+      const eligibleUsers = await ctx.db.user.findMany({
+        where: {
+          AND: [
+            { id: { not: userId } },
+            { id: { notIn: assignedUserIds } },
+            { profileCompleted: true },
+            { amazonWishlistUrl: { not: null } },
+            inGroup(scope.teamId!), // Same team (department) only
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          ownedWishlist: {
+            where: { isActive: true },
+            select: { assignedUserId: true },
           },
-          include: {
-            wishlistOwner: {
-              select: {
-                id: true,
-                amazonWishlistUrl: true,
+        },
+      });
+
+      // Sort by assignment count (prioritize users with fewer assignments)
+      const sortedUsers = eligibleUsers
+        .map(
+          (user: {
+            id: string;
+            name: string | null;
+            ownedWishlist: { assignedUserId: string }[];
+          }) => ({
+            ...user,
+            assignmentCount: user.ownedWishlist.length,
+          }),
+        )
+        .sort(
+          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
+            a.assignmentCount - b.assignmentCount,
+        );
+
+      // Select up to 3 users, avoiding duplicates
+      const neededAssignments = 3 - assignedUserIds.length;
+      const selectedUsers = sortedUsers.slice(0, neededAssignments);
+      if (selectedUsers.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No eligible wishlists available for assignment",
+        });
+      }
+
+      // Create assignments
+      const assignments = await Promise.all(
+        selectedUsers.map((user: { id: string }) =>
+          ctx.db.wishlistAssignment.create({
+            data: {
+              assignedUserId: userId,
+              wishlistOwnerId: user.id,
+            },
+            include: {
+              wishlistOwner: {
+                select: {
+                  id: true,
+                  amazonWishlistUrl: true,
+                },
               },
             },
-          },
-        }),
-      ),
-    );
+          }),
+        ),
+      );
 
-    return assignments;
-  }),
+      return assignments;
+    }),
 
   // Request additional assignments beyond the initial 3
   requestAdditionalAssignments: protectedProcedure
@@ -526,7 +532,9 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      const scope = await requireGiverScope(ctx.db, userId, { needTeam: false });
+      const scope = await requireGiverScope(ctx.db, userId, {
+        needTeam: false,
+      });
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -631,7 +639,9 @@ export const wishlistRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      const scope = await requireGiverScope(ctx.db, userId, { needTeam: false });
+      const scope = await requireGiverScope(ctx.db, userId, {
+        needTeam: false,
+      });
 
       // Get users already assigned to this user
       const existingAssignments = await ctx.db.wishlistAssignment.findMany({
@@ -719,6 +729,93 @@ export const wishlistRouter = createTRPCRouter({
     }),
 
   // Mark a purchase as completed
+  /**
+   * Day 14: pick up wishlists inside a friends or community group you're in.
+   * Fewest-gifted first, never yourself or someone you already hold.
+   */
+  requestFromGroup: protectedProcedure
+    .use(requestLimit)
+    .input(
+      z.object({
+        groupId: z.string(),
+        count: z.number().min(1).max(3).default(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const membership = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: input.groupId, userId } },
+        select: { group: { select: { kind: true, status: true } } },
+      });
+      if (
+        !membership ||
+        !["FRIENDS", "COMMUNITY"].includes(membership.group.kind)
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You're not in that group.",
+        });
+      }
+      if (membership.group.status !== "ACTIVE") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "This group is waiting for approval, so gifting hasn't opened yet.",
+        });
+      }
+      const me = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { profileCompleted: true, amazonWishlistUrl: true },
+      });
+      if (!me?.profileCompleted || !me.amazonWishlistUrl) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Add your wishlist to your profile first, so others can pick you up too.",
+        });
+      }
+      const held = await ctx.db.wishlistAssignment.findMany({
+        where: { assignedUserId: userId },
+        select: { wishlistOwnerId: true },
+      });
+      const eligible = await ctx.db.user.findMany({
+        where: {
+          id: { notIn: [userId, ...held.map((h) => h.wishlistOwnerId)] },
+          profileCompleted: true,
+          amazonWishlistUrl: { not: null },
+          memberships: { some: { groupId: input.groupId } },
+        },
+        select: {
+          id: true,
+          ownedWishlist: { where: { isActive: true }, select: { id: true } },
+        },
+      });
+      if (eligible.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "No more wishlists in this group right now. Invite a few more people!",
+        });
+      }
+      const picks = eligible
+        .map((u) => ({
+          id: u.id,
+          load: u.ownedWishlist.length,
+          r: Math.random(),
+        }))
+        .sort((a, b) => a.load - b.load || a.r - b.r)
+        .slice(0, input.count);
+      await ctx.db.wishlistAssignment.createMany({
+        data: picks.map((p) => ({
+          assignedUserId: userId,
+          wishlistOwnerId: p.id,
+          groupId: input.groupId,
+        })),
+        skipDuplicates: true,
+      });
+      return { count: picks.length };
+    }),
+
   markPurchase: protectedProcedure
     .input(
       z.object({

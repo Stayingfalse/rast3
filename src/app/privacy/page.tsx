@@ -277,6 +277,21 @@ export default function PrivacyPolicyPage() {
           </p>
         </Section>
 
+        <Section id="affiliate" title="Amazon affiliate links">
+          <p>
+            In some groups, wishlists open from a gift page with an Amazon
+            affiliate link. As an Amazon Associate, Random Acts of Santa
+            earns from qualifying purchases. The price you pay is the same.
+          </p>
+          <p>
+            We don&apos;t send Amazon your name, email or anything else about
+            you. When you follow the link, Amazon may set its own cookies on
+            amazon.co.uk under Amazon&apos;s privacy notice. Amazon reports to
+            us only totals of clicks and orders for each tracking ID, never
+            who bought what. Gift pages show no names, groups or emails.
+          </p>
+        </Section>
+
         <Section id="rights" title="Your rights">
           <p>You have the right to:</p>
           <ul className="list-disc space-y-1 pl-5">

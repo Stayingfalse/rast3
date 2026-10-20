@@ -51,6 +51,13 @@ test.describe("public surface", () => {
     }
   });
 
+  test("health shows no exact counts", async ({ request }) => {
+    const body = (await (await request.get("/api/health")).json()) as {
+      database: Record<string, unknown>;
+    };
+    expect(body.database).toEqual({ connected: true });
+  });
+
   test("admin APIs need a session", async ({ request }) => {
     const res = await query(request, "admin.users", { q: "" });
     expect(res.status()).toBe(401);

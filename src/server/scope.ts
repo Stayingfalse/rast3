@@ -6,7 +6,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
  * memberships (Day 8 tables), not the legacy User.domain / departmentId
  * columns. Everything that scopes people goes through here.
  */
-type Db = Pick<PrismaClient, "membership" | "season">;
+type Db = Pick<PrismaClient, "membership">;
 
 export type GiverScope = {
   /** ACTIVE organisation the person belongs to */
@@ -81,10 +81,3 @@ export const inOtherActiveOrg = (orgId: string): Prisma.UserWhereInput => ({
     { NOT: inGroup(orgId) },
   ],
 });
-
-/** The season a date falls in (by the Season table), or null off-season. */
-export async function seasonAt(db: Db, at = new Date()) {
-  return db.season.findFirst({
-    where: { opensAt: { lte: at }, closesAt: { gte: at } },
-  });
-}

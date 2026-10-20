@@ -36,6 +36,8 @@ export default async function GiftPage({ params }: Props) {
     select: {
       season: true,
       groupId: true,
+      ownerId: true,
+      wishlistUrl: true,
       owner: { select: { amazonWishlistUrl: true } },
     },
   });
@@ -44,7 +46,9 @@ export default async function GiftPage({ params }: Props) {
   // Gift pages never expire (owner, 20 Oct): an old page keeps its link and
   // the group's tracking ID for the season it was made in. Nothing on the
   // site links to past seasons' pages, so only Amazon's reviewers revisit.
-  const wishlist = page.owner?.amazonWishlistUrl ?? null;
+  // the list this page was made for, never the owner's later ones; gone once
+  // the owner deletes their account
+  const wishlist = page.ownerId ? (page.wishlistUrl ?? page.owner?.amazonWishlistUrl ?? null) : null;
   const affiliate = await affiliateFor(db, page.groupId, page.season);
   const h = await headers();
   const tagged =

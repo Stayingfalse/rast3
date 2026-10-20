@@ -3,12 +3,12 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getWorkplace } from "~/server/groups";
 import { checkIn } from "~/server/season";
 
-import { amazonWishlistRegex } from "~/lib/wishlist";
+import { amazonWishlistRegex, cleanWishlistUrl } from "~/lib/wishlist";
 
 // Helper function to normalize wishlist URL
 const normalizeWishlistUrl = (url: string | undefined): string | null => {
   if (!url || url.trim() === "") return null;
-  return url.trim();
+  return cleanWishlistUrl(url);
 };
 
 export const profileRouter = createTRPCRouter({
@@ -75,11 +75,14 @@ export const profileRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const current = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { profileCompletedAt: true },
+        select: { profileCompleted: true, profileCompletedAt: true },
       });
-      // A new member's first profile is their check-in for this season (Day 18);
-      // returning members check in separately (season.checkIn)
-      if (!current?.profileCompletedAt) await checkIn(ctx.db, ctx.session.user.id);
+      // A new member's first profile, with their wishlist, is their check-in
+      // for this season (Day 18); returning members check in separately
+      // (season.checkIn), and so does anyone who adds their wishlist later
+      if (!current?.profileCompleted && input.amazonWishlistUrl) {
+        await checkIn(ctx.db, ctx.session.user.id);
+      }
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {

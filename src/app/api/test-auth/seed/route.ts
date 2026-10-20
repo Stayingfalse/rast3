@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     for (const k of [0, 1]) {
       const owner = sameDept[(i + k) % sameDept.length]!;
       const assignment = await db.wishlistAssignment.create({
-        data: { assignedUserId: member.id, wishlistOwnerId: owner.id },
+        data: { assignedUserId: member.id, wishlistOwnerId: owner.id, season: currentSeason() },
       });
       assignments++;
       if ((i + k) % 2 === 0) {
@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
     await join(rivals[i]!.id, rivalOrg.id, rivalTeam.id, i === 0 ? "ADMIN" : undefined);
   }
   const rivalAssignment = await db.wishlistAssignment.create({
-    data: { assignedUserId: rivals[1]!.id, wishlistOwnerId: rivals[2]!.id },
+    data: { assignedUserId: rivals[1]!.id, wishlistOwnerId: rivals[2]!.id, season: currentSeason() },
   });
   const rivalPurchase = await db.purchase.create({
     data: { userId: rivals[1]!.id, wishlistAssignmentId: rivalAssignment.id },
@@ -258,14 +258,18 @@ export async function POST(req: NextRequest) {
   });
   await db.group.updateMany({
     where: { id: { in: [org.id, rivalOrg.id, pendingOrg.id] } },
-    data: { openEarly: true },
+    data: { openEarlySeason: currentSeason() },
   });
+  const lastSeason = { season: currentSeason() - 1, assignedAt: new Date("2025-12-01T10:00:00Z") };
   await db.wishlistAssignment.create({
-    data: {
-      assignedUserId: giver.id,
-      wishlistOwnerId: members[1]!.id,
-      assignedAt: new Date("2025-12-01T10:00:00Z"),
-    },
+    data: { assignedUserId: giver.id, wishlistOwnerId: members[1]!.id, ...lastSeason },
+  });
+  // Rory held every one of his team-mates' lists last Christmas, so this
+  // season's pick-ups have to bring them round again
+  await db.wishlistAssignment.createMany({
+    data: members
+      .filter((_, j) => teamOf(j) === 1)
+      .map((m) => ({ assignedUserId: returning.id, wishlistOwnerId: m.id, ...lastSeason })),
   });
 
   const inSeedOrg = {

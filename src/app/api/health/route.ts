@@ -5,18 +5,13 @@ import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health"
 
 export async function GET(_req: NextRequest) {
   try {
-    // Test database connection
-    const userCount = await db.user.count();
-    const groupCount = await db.group.count();
+    // Test the database connection (no counts: exact numbers aren't public)
+    await db.$queryRaw`SELECT 1`;
 
     return NextResponse.json({
       status: "healthy",
       timestamp: new Date().toISOString(),
-      database: {
-        connected: true,
-        users: userCount,
-        groups: groupCount,
-      },
+      database: { connected: true },
       migrations: await getMigrations(),
       schemaSync: await getSchemaSync(),
       environment: process.env.NODE_ENV,

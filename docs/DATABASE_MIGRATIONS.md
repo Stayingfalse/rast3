@@ -39,3 +39,11 @@ inspect the database before deciding what to do.
    deploy once prod uses `PRISMA_SCHEMA_SYNC=migrate`.
 
 Never edit a migration that has already been applied anywhere; add a new one.
+
+## Archive tables
+
+`_legacy_Domain`, `_legacy_Department` and `_legacy_UserOrg` hold the retired
+organisation model (20 Oct 2026). They are declared in `schema.prisma`
+(`LegacyDomain`, `LegacyDepartment`, `LegacyUserOrg`) so Prisma doesn't see
+them as drift. Nothing reads them; drop them with a migration after the 2026
+season.

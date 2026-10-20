@@ -7,7 +7,7 @@
 #   push queues behind it instead of cancelling the build in progress, and a
 #   commit that fails the checks is never deployed.
 # - Pushes to dev: the Playwright suite runs against https://dev.raosanta.uk
-#   once the deploy is live (desktop + Pixel 7).
+#   once the deploy is live, desktop and Pixel 7 as two parallel jobs.
 #
 # Secrets: WEBHOOK_URL (prod), DEV_WEBHOOK_URI (dev), E2E_TEST_LOGIN_SECRET
 # (dev-only test login; without it the signed-in e2e tests are skipped).
@@ -85,13 +85,20 @@ jobs:
           exit 1
 
   e2e:
-    name: E2E on dev
+    name: E2E on dev (${{ matrix.project }})
     needs: deploy
     if: github.event_name == 'push' && github.ref_name == 'dev'
     runs-on: ubuntu-latest
+    # Desktop and mobile run side by side, each in its own test email
+    # subdomain (E2E_NS), so their seeds and clean-ups never collide.
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, mobile]
     env:
       E2E_BASE_URL: https://dev.raosanta.uk
       E2E_TEST_LOGIN_SECRET: ${{ secrets.E2E_TEST_LOGIN_SECRET }}
+      E2E_NS: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -108,11 +115,20 @@ jobs:
           else
             echo "::notice::E2E_TEST_LOGIN_SECRET is set; running the full suite"
           fi
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      - run: npx playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+      - run: npx playwright test --project=${{ matrix.project }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: e2e-report
+          name: e2e-report-${{ matrix.project }}
           path: test-results/
           retention-days: 14

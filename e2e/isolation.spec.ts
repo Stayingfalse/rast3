@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, hasTestLogin, loginAs, seed } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed } from "./helpers";
 
 /**
  * Day 9 tenant isolation: who people can give to, read and manage is decided
@@ -10,7 +10,7 @@ import { deleteTestUsers, hasTestLogin, loginAs, seed } from "./helpers";
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
 
-const E = "e2e.raosanta.test";
+const E = E2E_DOMAIN;
 // Rival members' wishlists are seeded as …/ls/E2E000901 to E2E000903
 const RIVAL_LIST = /E2E00090\d$/;
 

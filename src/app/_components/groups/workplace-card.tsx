@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -131,6 +132,14 @@ export function WorkplaceCard() {
                 Your team&apos;s wishlists are offered to you first.
               </span>
             </label>
+          )}
+          {org.isOrganiser && (
+            <Link
+              href={`/groups/${org.id}/manage`}
+              className="btn-quiet text-ink self-start"
+            >
+              Manage workplace
+            </Link>
           )}
           <button
             type="button"

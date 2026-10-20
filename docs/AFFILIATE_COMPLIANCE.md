@@ -24,7 +24,7 @@ UK CAP Code.
     shorteners.
   - *Rule:* don't cloak or obscure where a click comes from. Sales through an
     intermediate site may not qualify.
-- **Gift pages are fixed for the season** and never 404 while they exist.
+- **Gift pages never expire** (owner, 20 Oct). An old page keeps its link and its group's tracking ID for the season it was made in. Season dates, check-ins and archiving never touch it, and nothing on the site links to past seasons' pages.
   They stay out of search engines (`noindex`) but can be followed
   (`follow`), so Amazon's reviewers can check them.
 - **Gift pages show no names, groups or emails.** They show only the wishlist

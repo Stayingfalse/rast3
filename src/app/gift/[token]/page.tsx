@@ -10,7 +10,6 @@ import {
   tagForHost,
 } from "~/server/affiliate";
 import { db } from "~/server/db";
-import { seasonYearOf } from "~/server/stamps";
 
 export const metadata: Metadata = {
   title: "A wishlist to gift · Random Acts of Santa",
@@ -27,8 +26,8 @@ type Props = { params: Promise<{ token: string }> };
  * when affiliate links are on for its group. Public on purpose (Amazon
  * Associates links must sit on publicly reachable pages), so it shows no
  * names, groups or emails: only the wishlist link, guidance and the
- * disclosure. The address is fixed for the season and never 404s while the
- * page exists, even after the list is handed back.
+ * disclosure. The address is fixed and the page never expires, even after
+ * the list is handed back or the season ends.
  */
 export default async function GiftPage({ params }: Props) {
   const { token } = await params;
@@ -42,11 +41,11 @@ export default async function GiftPage({ params }: Props) {
   });
   if (!page) notFound();
 
-  const current = seasonYearOf(new Date()) === page.season;
-  const wishlist = page.owner.amazonWishlistUrl;
-  const affiliate = current
-    ? await affiliateFor(db, page.groupId, page.season)
-    : { enabled: false as const };
+  // Gift pages never expire (owner, 20 Oct): an old page keeps its link and
+  // the group's tracking ID for the season it was made in. Nothing on the
+  // site links to past seasons' pages, so only Amazon's reviewers revisit.
+  const wishlist = page.owner?.amazonWishlistUrl ?? null;
+  const affiliate = await affiliateFor(db, page.groupId, page.season);
   const h = await headers();
   const tagged =
     wishlist && affiliate.enabled
@@ -65,16 +64,7 @@ export default async function GiftPage({ params }: Props) {
       <section className="label-stock relative overflow-hidden">
         <div className="airmail h-2.5" aria-hidden />
         <div className="flex flex-col gap-4 p-6">
-          {!current ? (
-            <>
-              <p className="label-caps text-ink-soft">Season {page.season}</p>
-              <p className="text-ink text-lg">
-                This wishlist was from the {page.season} Christmas season,
-                which has closed. Random Acts of Santa opens again every
-                November.
-              </p>
-            </>
-          ) : !wishlist ? (
+          {!wishlist ? (
             <>
               <p className="label-caps text-ink-soft">Not available</p>
               <p className="text-ink text-lg">

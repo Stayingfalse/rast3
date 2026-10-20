@@ -77,6 +77,7 @@ model User {
   memberships          Membership[]
   createdGroups        Group[]              @relation("GroupCreator")
   giftPages            GiftPage[]
+  seasonCheckIns       SeasonCheckIn[]
 }
 
 model VerificationToken {
@@ -235,6 +236,18 @@ model Season {
   createdAt DateTime @default(now())
 }
 
+/// A member's yearly check-in (owner, 19 Oct): they confirmed or replaced
+/// their wishlist and reviewed their groups for this season. Nobody is handed
+/// out or picks up until they have. Season = the stamps' year (Aug to Jul).
+model SeasonCheckIn {
+  userId    String
+  season    Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, season])
+}
+
 /// A group people give within: a work organisation (ORG), a team inside one
 /// (TEAM, child of an ORG), a community such as a Discord server (COMMUNITY)
 /// or a friends group (FRIENDS). Replaces Domain/Department (Day 8 backfill;
@@ -262,6 +275,8 @@ model Group {
   createdBy      User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
   memberships    Membership[]
   assignments    WishlistAssignment[]
+  /// site admins can open gifting before the season starts (testing, early groups)
+  openEarly      Boolean              @default(false)
   /// Amazon affiliate links in this group: the site default for its kind, or forced on/off
   affiliate      AffiliateMode        @default(DEFAULT)
   affiliateTags  AffiliateTag[]
@@ -349,11 +364,12 @@ model AffiliateTrackingId {
 model GiftPage {
   /// the unguessable token in /gift/<id>
   id        String   @id
-  ownerId   String
+  /// null once the owner deletes their account: the page then says the list is gone
+  ownerId   String?
   groupId   String
   season    Int
   createdAt DateTime @default(now())
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([ownerId, groupId, season])

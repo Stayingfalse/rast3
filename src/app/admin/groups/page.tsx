@@ -71,6 +71,13 @@ function GroupsTable() {
     kind: kind === ALL ? null : kind,
     status: status === ALL ? null : status,
   });
+  const setOpenEarly = api.admin.setOpenEarly.useMutation({
+    onSuccess: async (_, v) => {
+      toast.success(v.open ? "Open early: pick-ups work now" : "Back to the season's dates");
+      await utils.admin.groups.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
   const setGroupStatus = api.groups.setStatus.useMutation({
     onSuccess: async (g) => {
       toast.success(g.status === "ACTIVE" ? "It's live" : "Closed");
@@ -171,6 +178,7 @@ function GroupsTable() {
                               g.emailDomain,
                               g.kind === "ORG" && `${g.teams} ${g.teams === 1 ? "team" : "teams"}`,
                               g.discord && "Discord linked",
+                              g.openEarly && "Open early",
                             ]
                               .filter(Boolean)
                               .join(" · ")}
@@ -200,6 +208,13 @@ function GroupsTable() {
                               <DropdownMenuGroup>
                                 <DropdownMenuItem asChild>
                                   <Link href={`/groups/${g.id}/manage`}>Open console</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={() =>
+                                    setOpenEarly.mutate({ groupId: g.id, open: !g.openEarly })
+                                  }
+                                >
+                                  {g.openEarly ? "Follow season dates" : "Open early"}
                                 </DropdownMenuItem>
                                 {g.status !== "ACTIVE" && (
                                   <DropdownMenuItem

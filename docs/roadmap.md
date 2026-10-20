@@ -92,7 +92,7 @@
 | 14 | Wed 21 Oct | **Done early (19 Oct, back to back with 13 and 15).** **Group switcher and per-group home** (mobile-first), including picking up wishlists inside friends and community groups. |
 | 15 | Thu 22 Oct | **Done early (19 Oct, back to back with 13 and 14).** **Adopt shadcn/ui (owner, 18 Oct).** Init on Tailwind v4, map the Christmas Post tokens (night, label, post, gold, pine, Archivo) onto its theme, add the core components (button, input, form, dialog, alert-dialog, tabs, table, dropdown, badge, toast) and move the profile window onto it as the first real use. Document component usage in DESIGN.md. |
 | 16 | Fri 23 Oct | **Done early (20 Oct, at the owner's request).** **Admin rework 1: group organiser console**, built with shadcn/ui in the Christmas Post design. One place per group: members and roles, join code, recent joiners and removal, teams (the old departments), moderation and totals. Includes **"Bring your team" (owner, 19 Oct)**: when someone starts an organisation or group, give them a ready-to-send invite message (email, Teams/Slack, WhatsApp) with their link and code, plus a printable A4 poster with a QR code for the office kitchen or noticeboard, and a simple "joined in the first 48 hours" count so organisers (and the monetisation case) can see which groups take off. **First (owner feedback, 20 Oct): Discord linking without Developer Mode.** Replace the server/role ID fields with "Connect Discord" (OAuth), then a dropdown of servers the organiser manages (owner, Administrator or Manage Server permission), shown with name and icon. **Remove the role requirement** (owner, 20 Oct): drop the role field and role checks; anyone in a linked server can join. (The `discordRoleId` column can stay unused until a bot exists.) |
-| 17 | Sat 24 Oct | **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). |
+| 17 | Sat 24 Oct | **Done early (nightly run, 20 Oct).** **Admin rework 2: site admin console.** Approvals, all groups and users (proper data table), sign-in providers and health. The legacy Domains and Departments screens, and the legacy domain/department/admin-scope columns, are retired once nothing reads them (with a migration). *(The screens are retired; the columns still have about 300 readers, so their removal moved to the backlog as its own change.)* |
 | 18 | Sun 25 Oct | Yearly Christmas season: site-wide open/close (default ~15 Nov → ~6 Jan), off-season countdown and wishlist prep, end-of-season archive; per-group budget and mixing rules Includes (owner, 18 Oct): **automatically archive wishlist pick-ups from previous seasons**, so 2025 assignments stop showing on dashboards, while past gifts stay in the stamp album and totals. Also **yearly re-onboarding (owner, 19 Oct)**: keep all past data, but at the start of each season put every member, new or returning, through the same onboarding: confirm name, refresh or re-confirm the wishlist link, and confirm or change groups (workplace, team, friends, communities). Nobody picks up or is handed out until they have checked in for the current season, so lists and groups are always current. |
 
 ### Week 3: the Christmas season and wishlists (26–31 Oct)
@@ -150,6 +150,18 @@
   instead.
 
 ## Ideas backlog
+
+- **Retire the legacy organisation columns** (from Day 17). `User.domain`,
+  `departmentId`, `adminLevel` (below SITE) and `adminScope`, and the
+  `Domain` and `Department` tables, are still kept in sync with groups and
+  read in about 300 places (wishlist hand-out, sharing, kudos scope, the old
+  `user`/`domain` admin procedures). Moving those reads onto memberships and
+  dropping the columns is one careful day with a migration; best before the
+  Day 31 regression.
+- **Auto-approve rules** (idea, 20 Oct): approve friends groups straight away
+  while they are small (say under 15 members), and keep manual approval for
+  workplaces and communities, so the November rush doesn't queue behind one
+  admin.
 
 - **Discord bot (owner, 20 Oct: backlog, owner is considering a bot with
   wider functionality).** Would enable: a role dropdown and role-gated
@@ -619,4 +631,34 @@ that don't touch the data model. Known items to include:
     for the picker (connect first, own servers only).
   - **Next: Day 17 (nightly), the site admin console;** the legacy Domains
     and Departments screens are retired.
-
+- **Day 16 merged to prod (20 Oct, owner approved).**
+- **Day 17 (20 Oct, nightly run): site admin console.**
+  - **Site admins only.** `/admin` is now just for site admins. An organiser
+    who opens it goes to their own console (Day 16); anyone else gets the
+    404. The top-right "Admin" button is now "Site admin" and only shows for
+    site admins.
+  - **Rebuilt on shadcn/ui** with a ruled tab bar: Overview, Approvals,
+    Groups, People, Wishlists, Kudos and Sign-in.
+    - **Overview:** groups waiting for approval and reported wishlist
+      problems, with links; people, wishlists, joined this week, picked up and
+      gifts sent; groups by kind (live, waiting, closed); health (database,
+      migrations, schema sync, running since); sign-in options on or off.
+    - **Approvals:** cards with confirm-before-close and a link to each
+      group's console.
+    - **Groups:** every group except teams, with search, kind and status
+      filters, members, who started it, and actions (open console, approve,
+      close).
+    - **People:** search by name or email, 25 a page, their groups (organiser
+      marked), wishlist, pick-ups and gifts; make or remove a site admin and
+      delete an account, both confirmed. You can't change or delete yourself.
+  - **Retired:** the Domains and Departments screens, the old users screen
+    (department and admin-scope editing) and the old overview with its
+    per-domain table. The Wishlists, Kudos and Sign-in pages are unchanged
+    inside the new frame; restyling them is a polish item.
+  - **Legacy columns** are not dropped yet (about 300 readers); see the
+    backlog.
+  - **Tests.** New `e2e/admin-console.spec.ts` (overview, groups search to
+    console, people actions, access rules). `org-trust`, `signed-in` and
+    `wishlist` specs updated for the new screens.
+  - **Next: Day 18, the Christmas season** (open and close, archive last
+    season's pick-ups, yearly re-onboarding).

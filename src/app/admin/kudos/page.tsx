@@ -2,7 +2,6 @@
 
 import { api } from "~/trpc/react";
 import { useState } from "react";
-import { AdminLayout } from "~/app/_components/admin-layout";
 import { loggers } from "~/utils/logger";
 import Image from "next/image";
 
@@ -41,7 +40,7 @@ export default function AdminKudosPage() {
   loggers.admin.info({ scope }, "Admin Kudos Management page viewed");
 
   return (
-    <AdminLayout>
+    <>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">Kudos Management</h1>
         <div className="flex gap-2">
@@ -74,7 +73,7 @@ export default function AdminKudosPage() {
         error={error}
         refetch={refetch}
       />
-    </AdminLayout>
+    </>
   );
 }
 

@@ -3,7 +3,6 @@
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { SiteAdminLayout } from "~/app/_components/site-admin-layout";
 import { api } from "~/trpc/react";
 import { clientLogger } from "~/utils/client-logger";
 
@@ -261,7 +260,7 @@ export default function SettingsPage() {
     return defaultValue;
   };
   return (
-    <SiteAdminLayout>
+    <>
       <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div>
@@ -959,6 +958,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </SiteAdminLayout>
+    </>
   );
 }

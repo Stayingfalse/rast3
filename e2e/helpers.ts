@@ -10,7 +10,19 @@ import {
 export const TEST_LOGIN_SECRET = process.env.E2E_TEST_LOGIN_SECRET ?? "";
 export const hasTestLogin = TEST_LOGIN_SECRET.length > 0;
 
-type AdminLevel = "SITE" | "DOMAIN" | "DEPARTMENT" | "USER";
+/**
+ * Each test run works in its own email subdomain (CI runs desktop and mobile
+ * side by side as "desktop" and "mobile"; local runs default to "local"), so
+ * one run's seed and clean-up never touch another's users.
+ */
+const NAMESPACE = process.env.E2E_NS ?? "local";
+export const E2E_DOMAIN = `${NAMESPACE}.e2e.raosanta.test`;
+const testHeaders = {
+  "x-test-login-secret": TEST_LOGIN_SECRET,
+  "x-test-namespace": NAMESPACE,
+};
+
+type AdminLevel = "SITE" | "USER";
 
 /** Signs the page's browser context in as a test user via the dev-only route. */
 export async function loginAs(
@@ -18,7 +30,7 @@ export async function loginAs(
   user: { email: string; name?: string; adminLevel?: AdminLevel },
 ) {
   const res = await page.request.post("/api/test-auth/login", {
-    headers: { "x-test-login-secret": TEST_LOGIN_SECRET },
+    headers: testHeaders,
     data: user,
   });
   expect(res.status(), await res.text()).toBe(200);
@@ -34,10 +46,10 @@ export async function loginAs(
   return (await res.json()) as { userId: string; email: string };
 }
 
-/** Removes every test user (emails ending @e2e.raosanta.test). */
+/** Removes this run's test users (emails ending @E2E_DOMAIN). */
 export async function deleteTestUsers(request: APIRequestContext) {
   const res = await request.delete("/api/test-auth/login", {
-    headers: { "x-test-login-secret": TEST_LOGIN_SECRET },
+    headers: testHeaders,
   });
   expect(res.status()).toBe(200);
 }
@@ -66,7 +78,7 @@ export async function settle(page: Page) {
 /** Wipes and recreates the dev seed dataset; returns its summary. */
 export async function seed(request: APIRequestContext) {
   const res = await request.post("/api/test-auth/seed", {
-    headers: { "x-test-login-secret": TEST_LOGIN_SECRET },
+    headers: testHeaders,
   });
   expect(res.status(), await res.text()).toBe(200);
   return (await res.json()) as {

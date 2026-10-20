@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, hasTestLogin, loginAs } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs } from "./helpers";
 
 /** Calls a tRPC query the way the client does (superjson, unbatched). */
 const query = (request: APIRequestContext, path: string, input?: unknown) =>
@@ -43,7 +43,6 @@ test.describe("public surface", () => {
         firstName: null,
         lastName: null,
         image: null,
-        department: null,
       });
       // Only the wishlist owner's id is sent, for the festive "to" name
       expect(JSON.stringify(item.purchase ?? {})).not.toMatch(
@@ -70,7 +69,7 @@ test.describe("members can't use organiser APIs", () => {
 
   test("queries and mutations are forbidden", async ({ page }, testInfo) => {
     const { userId } = await loginAs(page, {
-      email: `member-sec-${testInfo.project.name}@e2e.raosanta.test`,
+      email: `member-sec-${testInfo.project.name}@${E2E_DOMAIN}`,
       adminLevel: "USER",
     });
     const req = page.request;

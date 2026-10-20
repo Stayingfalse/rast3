@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import {
+  E2E_DOMAIN,
   hasTestLogin,
   loginAs,
   seed,
@@ -156,7 +157,7 @@ test("seeded kudos appear on the home page", async ({ page }, testInfo) => {
 
 test("admin overview shows the seeded org", async ({ page }, testInfo) => {
   await loginAs(page, {
-    email: `admin-${testInfo.project.name}@e2e.raosanta.test`,
+    email: `admin-${testInfo.project.name}@${E2E_DOMAIN}`,
     adminLevel: "SITE",
   });
   await page.goto("/admin");

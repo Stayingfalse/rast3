@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, hasTestLogin, loginAs } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs } from "./helpers";
 
 /**
  * Discord linking (Day 13, picker since Day 16). Dev has no Discord sign-in,
@@ -10,7 +10,7 @@ import { deleteTestUsers, hasTestLogin, loginAs } from "./helpers";
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
 
-const E = "e2e.raosanta.test";
+const E = E2E_DOMAIN;
 const unwrap = async (res: { json: () => Promise<unknown> }) =>
   ((await res.json()) as { result: { data: { json: unknown } } }).result.data.json;
 const mutate = (r: APIRequestContext, path: string, input?: unknown) =>

@@ -13,9 +13,9 @@ test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 
 const ADMIN_PAGES = [
   "/admin",
+  "/admin/approvals",
+  "/admin/groups",
   "/admin/users",
-  "/admin/departments",
-  "/admin/domains",
   "/admin/links",
   "/admin/kudos",
   "/admin/settings",

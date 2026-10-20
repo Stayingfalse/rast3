@@ -1,333 +1,191 @@
 "use client";
 
-import { toast } from "react-hot-toast";
-import { AdminLayout } from "~/app/_components/admin-layout";
-import { OrgTrustPanels } from "~/app/_components/org-trust-panels";
+import Link from "next/link";
+
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { api } from "~/trpc/react";
 
-type DomainData = {
-  id: string;
-  name: string;
-  enabled: boolean;
-  description?: string | null;
-};
+const KIND = {
+  ORG: "Workplaces",
+  COMMUNITY: "Communities",
+  FRIENDS: "Friends groups",
+  TEAM: "Teams",
+} as const;
 
-export default function AdminPage() {
-  return (
-    <AdminLayout>
-      <AdminOverview />
-    </AdminLayout>
-  );
-}
-
-function AdminOverview() {
-  // Get all departments and domains for overview
-  const { data: departments } = api.profile.getDepartmentsByDomain.useQuery({
-    domain: "all",
+const n = (v: number) => v.toLocaleString("en-GB");
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
-  const { data: domains } = api.domain.getAll.useQuery();
-  const { data: userStats } = api.user.getStats.useQuery();
-  const { data: domainDeptStats } = api.admin.getDomainDepartmentStats.useQuery({});
-  type DepartmentStat = {
-    departmentId: string | null;
-    departmentName: string | null;
-    users: number;
-    links: number;
-    errors: number;
-    purchases: number;
-    kudos: number;
-  };
+/** Site admin overview (Day 17): what needs you, the numbers, and health. */
+export default function AdminOverviewPage() {
+  const { data, error, isLoading } = api.admin.overview.useQuery();
 
-  type DomainStat = {
-    domain: string;
-    departments: DepartmentStat[];
-  };
+  if (error) return <p className="text-frost">{error.message}</p>;
+  if (isLoading || !data) return <p className="text-frost-soft">Loading…</p>;
 
-  const stats = domainDeptStats;
+  const figures = [
+    ["People", data.people.users, `${n(data.people.profiles)} finished their profile`],
+    ["Wishlists", data.people.wishlists, "people with a wishlist link"],
+    ["Joined this week", data.people.joinedThisWeek, "joined a group in 7 days"],
+    ["Picked up", data.gifting.pickUps, "wishlists picked up"],
+    ["Gifts sent", data.gifting.gifts, `${n(data.gifting.kudos)} kudos posted`],
+  ] as const;
 
-  const copyDomainCsv = async (domainStat: DomainStat) => {
-    // Build headers and rows
-    const headers = ["Domain", "Department", "Users", "Links", "Errors", "Purchases", "Kudos"];
-    const rows = domainStat.departments.map((d) => ({
-      department: d.departmentName ?? "(no department)",
-      users: d.users ?? 0,
-      links: d.links ?? 0,
-      errors: d.errors ?? 0,
-      purchases: d.purchases ?? 0,
-      kudos: d.kudos ?? 0,
-    }));
-
-    // Plain text (tab-separated) fallback
-    const plainLines = [headers.join("\t")].concat(
-      rows.map((r) => [domainStat.domain, r.department, String(r.users), String(r.links), String(r.errors), String(r.purchases), String(r.kudos)].join("\t")),
-    );
-    const plainText = plainLines.join("\n");
-
-    // HTML table for richer clipboard copy
-    const htmlRows = rows
-      .map(
-        (r) => `
-          <tr>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(domainStat.domain)}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(r.department)}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.users}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.links}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.errors}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.purchases}</td>
-            <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${r.kudos}</td>
-          </tr>`,
-      )
-      .join("");
-
-    const html = `
-      <table style="border-collapse:collapse;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;">
-        <thead>
-          <tr>
-            ${headers.map((h) => `<th style="padding:8px;text-align:left;background:#0f172a;color:#fff;border-bottom:1px solid #111827;">${escapeHtml(h)}</th>`).join("")}
-          </tr>
-        </thead>
-        <tbody style="background:#fff;color:#111827;">
-          ${htmlRows}
-        </tbody>
-      </table>`;
-
-    try {
-      // Try to copy the HTML table by inserting it into a hidden element,
-      // selecting it, and issuing the legacy `execCommand('copy')` which
-      // preserves rich HTML clipboard data in many browsers.
-      const container = document.createElement("div");
-      container.innerHTML = html;
-      // Keep off-screen and selectable
-      container.style.position = "fixed";
-      container.style.left = "-9999px";
-      container.style.top = "0";
-      document.body.appendChild(container);
-
-      const range = document.createRange();
-      range.selectNodeContents(container);
-      const sel = window.getSelection();
-      if (!sel) throw new Error("Selection not available");
-      sel.removeAllRanges();
-      sel.addRange(range);
-
-      const successful = document.execCommand("copy");
-      sel.removeAllRanges();
-      container.remove();
-
-      if (!successful) {
-        // Fallback to plain text copy
-        await navigator.clipboard.writeText(plainText);
-      }
-
-      toast.success("Copied domain stats to clipboard");
-    } catch {
-      try {
-        await navigator.clipboard.writeText(plainText);
-        toast.success("Copied domain stats to clipboard");
-      } catch {
-        toast.error("Could not copy stats to clipboard");
-      }
-    }
-  };
-
-  function escapeHtml(s: string) {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
   return (
-    <div className="w-full">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl font-bold text-white sm:text-3xl">Admin Overview</h1>
-      </div>
+    <div className="flex flex-col gap-8">
+      <h1 className="sr-only">Overview</h1>
 
-      <OrgTrustPanels />
-
-      {/* Statistics Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-        <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
-          <h3 className="text-sm font-medium text-white/80">Total Domains</h3>
-          <p className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-            {domains?.length ?? 0}
-          </p>
-          <p className="mt-1 text-sm text-white/60">
-            {domains?.filter((d: DomainData) => d.enabled).length ?? 0} enabled
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
-          <h3 className="text-sm font-medium text-white/80">
-            Total Departments
-          </h3>
-          <p className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-            {departments?.length ?? 0}
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
-          <h3 className="text-sm font-medium text-white/80">Total Users</h3>
-          <p className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-            {userStats?.totalUsers ?? 0}
-          </p>
-          <p className="mt-1 text-sm text-white/60">
-            {userStats?.completedProfiles ?? 0} profiles completed
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
-          <h3 className="text-sm font-medium text-white/80">
-            Pending Profiles
-          </h3>
-          <p className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-            {userStats?.pendingProfiles ?? 0}
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mb-6 sm:mb-8">
-        <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          <a
-            href="/admin/domains"
-            className="rounded-lg bg-purple-600/80 p-4 text-white transition-colors hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none"
-          >
-            <h3 className="font-medium">Manage Domains</h3>
-            <p className="mt-1 text-sm text-purple-100">
-              Add, edit, or enable/disable company domains
+      <Card>
+        <CardHeader>
+          <CardTitle>Needs you</CardTitle>
+          <CardDescription>
+            New groups wait for approval before gifting opens in them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <div className="flex items-center gap-4">
+            <p className="font-expanded text-ink text-4xl font-extrabold tabular-nums">
+              {n(data.waiting)}
             </p>
-          </a>          <a
-            href="/admin/departments"
-            className="rounded-lg bg-blue-600/80 p-4 text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none"
-          >
-            <h3 className="font-medium">Manage Departments</h3>
-            <p className="mt-1 text-sm text-blue-100">
-              Organize departments within domains
+            <p className="text-ink-soft text-sm">
+              {data.waiting === 1 ? "group waiting" : "groups waiting"}
             </p>
-          </a>
-
-          <a
-            href="/admin/users"
-            className="rounded-lg bg-green-600/80 p-4 text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none"
-          >
-            <h3 className="font-medium">View Users</h3>
-            <p className="mt-1 text-sm text-green-100">
-              Monitor user profiles and activity
+            <Button asChild variant={data.waiting ? "default" : "outline"}>
+              <Link href="/admin/approvals">Review approvals</Link>
+            </Button>
+          </div>
+          <div className="flex items-center gap-4">
+            <p className="font-expanded text-ink text-4xl font-extrabold tabular-nums">
+              {n(data.gifting.openReports)}
             </p>
-          </a>
-        </div>
-      </div>
-
-      {/* Recent Activity or Alerts */}
-      <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-6">
-        <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">System Status</h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80 sm:text-base">Database Connection</span>
-            <span className="rounded-full bg-green-600 px-2 py-1 text-xs text-white">
-              Connected
-            </span>
+            <p className="text-ink-soft text-sm">wishlist problems reported</p>
+            <Button asChild variant="outline">
+              <Link href="/admin/links">See wishlists</Link>
+            </Button>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80 sm:text-base">Profile System</span>
-            <span className="rounded-full bg-green-600 px-2 py-1 text-xs text-white">
-              Active
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80 sm:text-base">Authentication</span>
-            <span className="rounded-full bg-green-600 px-2 py-1 text-xs text-white">
-              Working
-            </span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Domain / Department Key Stats (table view) */}
-      <div className="rounded-lg bg-black/85 p-4 backdrop-blur-sm sm:p-">
-        <h2 className="text-sm text-white/80 sm:text-base">Key Stats by Domain & Department</h2>
-        {(!stats || stats.length === 0) && <p className="text-sm text-white/80 sm:text-base">No data available</p>}
+      <dl className="border-frost/25 text-frost grid grid-cols-2 border-y sm:grid-cols-3 lg:grid-cols-5">
+        {figures.map(([label, value, note]) => (
+          <div
+            key={label}
+            className="border-frost/25 flex flex-col gap-1 border-b py-4 pr-4 last:border-b-0 sm:border-b-0"
+          >
+            <dt className="label-caps text-frost-soft">{label}</dt>
+            <dd className="font-expanded text-3xl font-extrabold tabular-nums">
+              {n(value)}
+            </dd>
+            <dd className="text-frost-soft text-sm">{note}</dd>
+          </div>
+        ))}
+      </dl>
 
-        {stats && stats.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Domain / Department</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Users</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Links</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Errors</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Purchases</th>
-                  <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Kudos</th>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Groups</CardTitle>
+            <CardDescription>Teams are counted inside their workplace.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <table className="w-full text-sm tabular-nums">
+              <thead>
+                <tr className="text-ink-soft border-rule border-b text-left">
+                  <th className="py-2 font-semibold">Kind</th>
+                  <th className="py-2 text-right font-semibold">Live</th>
+                  <th className="py-2 text-right font-semibold">Waiting</th>
+                  <th className="py-2 text-right font-semibold">Closed</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {stats.map((domain) => (
-                  <>
-                    <tr key={`domain-${domain.domain}`} className="bg-black/85">
-                      <td colSpan={6} className="px-4 py-2 text-sm font-semibold text-white">
-                        <div className="flex items-center justify-between">
-                          <span>{domain.domain}</span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => void copyDomainCsv(domain)}
-                              className="ml-4 inline-flex items-center gap-2 rounded border border-white/10 bg-white/10 px-2 py-1 text-xs font-medium text-white hover:bg-white/20"
-                              aria-label={`Copy stats for ${domain.domain}`}
-                            >
-                              Copy
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Totals row for domain */}
-                    {(() => {
-                      const totals = domain.departments.reduce(
-                        (acc, d) => {
-                          acc.users += d.users ?? 0;
-                          acc.links += d.links ?? 0;
-                          acc.errors += d.errors ?? 0;
-                          acc.purchases += d.purchases ?? 0;
-                          acc.kudos += d.kudos ?? 0;
-                          return acc;
-                        },
-                        { users: 0, links: 0, errors: 0, purchases: 0, kudos: 0 },
-                      );
-                      return (
-                        <tr key={`domain-totals-${domain.domain}`} className="bg-black/70">
-                          <td className="px-4 py-2 text-sm font-medium text-white">Totals</td>
-                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.users}</td>
-                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.links}</td>
-                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.errors}</td>
-                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.purchases}</td>
-                          <td className="px-4 py-2 text-right text-sm font-medium text-white">{totals.kudos}</td>
-                        </tr>
-                      );
-                    })()}
-
-                    {domain.departments.map((dept: DepartmentStat) => (
-                      <tr key={dept.departmentId ?? dept.departmentName}>
-                        <td className="px-4 py-2 text-sm text-gray-700">{dept.departmentName ?? "(no department)"}</td>
-                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.users}</td>
-                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.links}</td>
-                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.errors}</td>
-                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.purchases}</td>
-                        <td className="px-4 py-2 text-right text-sm text-gray-700">{dept.kudos}</td>
-                      </tr>
-                    ))}
-                  </>
+              <tbody>
+                {data.groups.map((g) => (
+                  <tr key={g.kind} className="border-rule border-b last:border-b-0">
+                    <td className="py-2">
+                      <Link
+                        href={`/admin/groups?kind=${g.kind}`}
+                        className="text-ink underline underline-offset-4"
+                      >
+                        {KIND[g.kind]}
+                      </Link>
+                    </td>
+                    <td className="py-2 text-right">{n(g.live)}</td>
+                    <td className="py-2 text-right">{n(g.waiting)}</td>
+                    <td className="py-2 text-right">{n(g.closed)}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Health</CardTitle>
+            <CardDescription>This server, right now.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[8rem_1fr] text-sm">
+              {([
+                ["Database", <Badge key="db" variant="secondary">Connected</Badge>],
+                [
+                  "Migrations",
+                  data.health.migrations
+                    ? `${n(data.health.migrations.applied)} applied, latest ${data.health.migrations.latest ?? "none"}`
+                    : "No migration history",
+                ],
+                [
+                  "Schema sync",
+                  data.health.schemaSync
+                    ? `${data.health.schemaSync.mode ?? "?"}: ${data.health.schemaSync.result ?? "?"}`
+                    : "Not recorded",
+                ],
+                ["Running since", when(data.health.startedAt)],
+                ["Environment", data.health.environment],
+              ] as [string, React.ReactNode][]).map(([k, v]) => (
+                <div key={k} className="border-rule col-span-2 grid grid-cols-subgrid border-b py-2 last:border-b-0">
+                  <dt className="text-ink-soft">{k}</dt>
+                  <dd className="text-ink break-all">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sign-in options</CardTitle>
+          <CardDescription>
+            What people see in the sign-in window.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-2">
+          {data.providers.length === 0 && (
+            <p className="text-ink-soft text-sm">None set up yet.</p>
+          )}
+          {data.providers.map((p) => (
+            <Badge key={p.name} variant={p.enabled ? "secondary" : "outline"}>
+              {p.displayName}: {p.enabled ? "on" : "off"}
+            </Badge>
+          ))}
+          <Button asChild variant="link" className="ml-auto">
+            <Link href="/admin/settings">Change sign-in options</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

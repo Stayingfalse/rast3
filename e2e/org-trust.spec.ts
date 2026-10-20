@@ -88,9 +88,10 @@ test("organisers see recent joiners and can remove them", async ({ page }, testI
   const newbie = joiners.find((j) => j.email.startsWith(`newbie-${testInfo.project.name}@`));
   expect(newbie).toBeTruthy();
 
+  // organisers who open /admin land on their own console (Day 17)
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Joined in the last 30 days" })).toBeVisible();
-  await expect(page.getByText(newbie!.email)).toBeVisible();
+  await expect(page).toHaveURL(/\/groups\/[^/]+\/manage$/);
+  await expect(page.getByRole("cell", { name: newbie!.email })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "admin-org-trust");
 

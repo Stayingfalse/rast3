@@ -160,7 +160,8 @@ test("admin overview shows the seeded org", async ({ page }, testInfo) => {
     adminLevel: "SITE",
   });
   await page.goto("/admin");
-  await expect(page.getByText("Total Departments")).toBeVisible();
+  await expect(page.getByText("Needs you")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Workplaces" })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "admin-with-seed");
 });

@@ -1,104 +1,203 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { db } from "~/server/db";
-import { checkAdminPermissions } from "~/server/utils/admin-permissions";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-export type DepartmentStat = {
-  departmentId: string | null;
-  departmentName: string | null;
-  users: number;
-  links: number;
-  errors: number;
-  purchases: number;
-  kudos: number;
-};
+import { createTRPCRouter, siteAdminProcedure } from "~/server/api/trpc";
+import { syncUserGroups } from "~/server/groups";
+import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 
-export type DomainStat = {
-  domain: string;
-  departments: DepartmentStat[];
-};
+const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
+const STATUSES = ["PENDING", "ACTIVE", "DISABLED"] as const;
+const USERS_PAGE = 25;
 
+/**
+ * Site admin console (Day 17): one overview, every group and every person.
+ * Organisers run their own groups from /groups/[id]/manage (Day 16).
+ */
 export const adminRouter = createTRPCRouter({
-  getDomainDepartmentStats: protectedProcedure
-    .input(z.object({}))
-    .query(async ({ ctx }) => {
-      if (!ctx.session?.user?.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
+  overview: siteAdminProcedure.query(async ({ ctx }) => {
+    const week = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [
+      users,
+      profiles,
+      wishlists,
+      joinedThisWeek,
+      byKindStatus,
+      pickUps,
+      gifts,
+      kudos,
+      openReports,
+      providers,
+      migrations,
+      schemaSync,
+    ] = await Promise.all([
+      ctx.db.user.count(),
+      ctx.db.user.count({ where: { profileCompleted: true } }),
+      ctx.db.user.count({ where: { amazonWishlistUrl: { not: null } } }),
+      ctx.db.membership.findMany({
+        where: { joinedAt: { gte: week } },
+        select: { userId: true },
+        distinct: ["userId"],
+      }),
+      ctx.db.group.groupBy({ by: ["kind", "status"], _count: { _all: true } }),
+      ctx.db.wishlistAssignment.count({ where: { archived: false } }),
+      ctx.db.purchase.count(),
+      ctx.db.kudos.count({ where: { hidden: false } }),
+      ctx.db.wishlistReport.count({ where: { resolved: false } }),
+      ctx.db.authProvider.findMany({
+        select: { name: true, displayName: true, enabled: true },
+        orderBy: { displayName: "asc" },
+      }),
+      getMigrations(),
+      getSchemaSync(),
+    ]);
 
-      const perms = await checkAdminPermissions(ctx.session.user.id);
-      if (perms.adminLevel !== "SITE") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Site admin required" });
-      }
+    const groups = KINDS.filter((k) => k !== "TEAM").map((kind) => {
+      const count = (status: (typeof STATUSES)[number]) =>
+        byKindStatus.find((r) => r.kind === kind && r.status === status)?._count._all ?? 0;
+      return { kind, live: count("ACTIVE"), waiting: count("PENDING"), closed: count("DISABLED") };
+    });
 
-      // Raw SQL aggregation to avoid complex Prisma groupBy across relations
-      // Use aggregated derived tables per owner to avoid row multiplication
-      // and correlated subqueries. We pre-aggregate lists-with-errors, purchases,
-      // and kudos grouped by owner, join those to users, then aggregate by
-      // domain/department.
-      const sql = `
-        SELECT
-          COALESCE(u.domain, '') AS domain,
-          u.departmentId AS departmentId,
-          d.name AS departmentName,
-          COUNT(*) AS users,
-          SUM(CASE WHEN u.amazonWishlistUrl IS NOT NULL THEN 1 ELSE 0 END) AS links,
-          COALESCE(SUM(CASE WHEN wr.ownerId IS NOT NULL THEN 1 ELSE 0 END), 0) AS errors,
-          COALESCE(SUM(COALESCE(p.purchases_count, 0)), 0) AS purchases,
-          COALESCE(SUM(COALESCE(k.kudos_count, 0)), 0) AS kudos
-        FROM \`User\` u
-        LEFT JOIN \`Department\` d ON d.id = u.departmentId
-        LEFT JOIN (
-          -- owners who have at least one unresolved report on any of their assignments
-          SELECT DISTINCT wa.wishlistOwnerId AS ownerId
-          FROM \`WishlistAssignment\` wa
-          JOIN \`WishlistReport\` wr ON wr.wishlistAssignmentId = wa.id AND wr.resolved = 0
-        ) wr ON wr.ownerId = u.id
-        LEFT JOIN (
-          SELECT wa.wishlistOwnerId AS ownerId, COUNT(*) AS purchases_count
-          FROM \`Purchase\` p
-          JOIN \`WishlistAssignment\` wa ON wa.id = p.wishlistAssignmentId
-          GROUP BY wa.wishlistOwnerId
-        ) p ON p.ownerId = u.id
-        LEFT JOIN (
-          SELECT k2.userId AS ownerId, COUNT(*) AS kudos_count
-          FROM \`Kudos\` k2
-          GROUP BY k2.userId
-        ) k ON k.ownerId = u.id
-        GROUP BY u.domain, u.departmentId
-        ORDER BY domain ASC, departmentName ASC
-      `;
+    return {
+      people: { users, profiles, wishlists, joinedThisWeek: joinedThisWeek.length },
+      gifting: { pickUps, gifts, kudos, openReports },
+      groups,
+      waiting: groups.reduce((n, g) => n + g.waiting, 0),
+      providers,
+      health: {
+        database: true,
+        migrations: migrations && { applied: migrations.applied, latest: migrations.latest },
+        schemaSync,
+        startedAt: processStartedAt(),
+        environment: process.env.NODE_ENV ?? "unknown",
+      },
+    };
+  }),
 
-      type Row = {
-        domain: string | null;
-        departmentId: string | null;
-        departmentName: string | null;
-        users: number | null;
-        links: number | null;
-        errors: number | null;
-        purchases: number | null;
-        kudos: number | null;
+  /** Every group except teams (they're managed inside their organisation). */
+  groups: siteAdminProcedure
+    .input(
+      z.object({
+        q: z.string().trim().max(100).default(""),
+        kind: z.enum(KINDS).nullable().default(null),
+        status: z.enum(STATUSES).nullable().default(null),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db.group.findMany({
+        where: {
+          kind: input.kind ?? { not: "TEAM" },
+          ...(input.status && { status: input.status }),
+          ...(input.q && {
+            OR: [{ name: { contains: input.q } }, { emailDomain: { contains: input.q } }],
+          }),
+        },
+        orderBy: { createdAt: "desc" },
+        take: 200,
+        select: {
+          id: true,
+          name: true,
+          kind: true,
+          status: true,
+          emailDomain: true,
+          discordGuildId: true,
+          createdAt: true,
+          createdBy: { select: { name: true, email: true } },
+          _count: { select: { memberships: true, children: true } },
+        },
+      });
+      return rows.map(({ _count, discordGuildId, ...g }) => ({
+        ...g,
+        members: _count.memberships,
+        teams: _count.children,
+        discord: !!discordGuildId,
+      }));
+    }),
+
+  users: siteAdminProcedure
+    .input(
+      z.object({
+        q: z.string().trim().max(100).default(""),
+        page: z.number().int().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const where = input.q
+        ? {
+            OR: [
+              { name: { contains: input.q } },
+              { email: { contains: input.q } },
+              { workEmail: { contains: input.q } },
+            ],
+          }
+        : {};
+      const [total, rows] = await Promise.all([
+        ctx.db.user.count({ where }),
+        ctx.db.user.findMany({
+          where,
+          orderBy: [{ profileCompletedAt: { sort: "desc", nulls: "last" } }, { id: "asc" }],
+          skip: input.page * USERS_PAGE,
+          take: USERS_PAGE,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            workEmail: true,
+            adminLevel: true,
+            profileCompleted: true,
+            profileCompletedAt: true,
+            amazonWishlistUrl: true,
+            memberships: {
+              where: { group: { kind: { not: "TEAM" } } },
+              select: { role: true, group: { select: { id: true, name: true, kind: true } } },
+            },
+            _count: { select: { assignedLinks: true, purchases: true } },
+          },
+        }),
+      ]);
+      return {
+        total,
+        pageSize: USERS_PAGE,
+        users: rows.map(({ amazonWishlistUrl, memberships, _count, ...u }) => ({
+          ...u,
+          hasWishlist: !!amazonWishlistUrl,
+          groups: memberships.map((m) => ({ ...m.group, role: m.role })),
+          pickUps: _count.assignedLinks,
+          gifts: _count.purchases,
+        })),
       };
+    }),
 
-      const rows = await db.$queryRawUnsafe<Row[]>(sql);
-
-      const map: Record<string, DomainStat> = {};
-      for (const r of rows) {
-        const domain = r.domain ?? "(no domain)";
-        map[domain] ??= { domain, departments: [] };
-        map[domain].departments.push({
-          departmentId: r.departmentId ?? null,
-          departmentName: r.departmentName ?? null,
-          users: Number(r.users ?? 0),
-          links: Number(r.links ?? 0),
-          errors: Number(r.errors ?? 0),
-          purchases: Number(r.purchases ?? 0),
-          kudos: Number(r.kudos ?? 0),
-        });
+  /** Make someone a site admin, or take it away (never your own). */
+  setSiteAdmin: siteAdminProcedure
+    .input(z.object({ userId: z.string(), siteAdmin: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.admin.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can't change your own access" });
       }
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        select: { adminLevel: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "No such person" });
+      if (input.siteAdmin === (target.adminLevel === "SITE")) return { ok: true };
 
-      const result: DomainStat[] = Object.values(map);
-      return result;
+      await ctx.db.user.update({
+        where: { id: input.userId },
+        data: input.siteAdmin
+          ? { adminLevel: "SITE", adminScope: null }
+          : { adminLevel: "USER", adminScope: null },
+      });
+      if (!input.siteAdmin) await syncUserGroups(ctx.db, input.userId);
+      return { ok: true };
+    }),
+
+  deleteUser: siteAdminProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.admin.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can't delete your own account here" });
+      }
+      await ctx.db.user.delete({ where: { id: input.userId } });
+      return { ok: true };
     }),
 });

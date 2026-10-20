@@ -333,6 +333,14 @@ model AffiliateTag {
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, season])
+  /// one group per tracking ID per season, so earnings are attributable
+  @@unique([season, tag])
+}
+
+/// Tracking IDs created in Associates Central, ready to give to groups
+model AffiliateTrackingId {
+  tag       String   @id
+  createdAt DateTime @default(now())
 }
 
 /// The public page a picked-up wishlist is opened from when affiliate links are

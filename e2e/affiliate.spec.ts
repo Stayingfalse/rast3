@@ -15,7 +15,8 @@ test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
 
 const E = E2E_DOMAIN;
-const TAG = "raosantae2e-21";
+/** each parallel job has its own test tracking ID (one group per ID per season) */
+let TAG = "";
 const unwrap = async (res: { json: () => Promise<unknown> }) =>
   ((await res.json()) as { result: { data: { json: unknown } } }).result.data.json;
 const query = (r: APIRequestContext, path: string, input?: unknown) =>
@@ -49,6 +50,7 @@ test("set up: affiliate links on, and a friends group with its own tracking ID",
 }, testInfo) => {
   const p = testInfo.project.name;
   groupName = `E2E Gift Circle ${p}`;
+  TAG = `raosantae2e-${p}-21`;
   await loginAs(page, { email: `aff-a-${p}@${E}` });
   expect((await profile(page.request, "Alma", "E2EAFA0001")).status()).toBe(200);
   const created = (await unwrap(
@@ -75,6 +77,13 @@ test("set up: affiliate links on, and a friends group with its own tracking ID",
       })
     ).status(),
   ).toBe(200);
+  // tracking IDs come from the pool
+  expect(
+    (
+      await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: "raosantanopool-21" })
+    ).status(),
+  ).toBe(400);
+  expect((await mutate(r, "admin.addTrackingIds", { tags: [TAG] })).status()).toBe(200);
   expect(
     (await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: TAG })).status(),
   ).toBe(200);

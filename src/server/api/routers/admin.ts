@@ -221,8 +221,19 @@ export const adminRouter = createTRPCRouter({
         _count: { select: { memberships: true } },
       },
     });
+    const [pool, used] = await Promise.all([
+      ctx.db.affiliateTrackingId.findMany({ orderBy: { tag: "asc" }, select: { tag: true } }),
+      ctx.db.affiliateTag.findMany({
+        where: { season },
+        select: { tag: true, group: { select: { id: true, name: true } } },
+      }),
+    ]);
     return {
       season,
+      pool: pool.map(({ tag }) => ({
+        tag,
+        usedBy: used.find((u) => u.tag === tag)?.group ?? null,
+      })),
       settings: {
         enabled: settings.enabled,
         defaultTag: settings.defaultTag,
@@ -293,6 +304,22 @@ export const adminRouter = createTRPCRouter({
       });
       const key = { groupId_season: { groupId: input.groupId, season } };
       if (input.tag) {
+        if (!(await ctx.db.affiliateTrackingId.findUnique({ where: { tag: input.tag } }))) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Add that tracking ID to the pool first.",
+          });
+        }
+        const taken = await ctx.db.affiliateTag.findUnique({
+          where: { season_tag: { season, tag: input.tag } },
+          select: { groupId: true, group: { select: { name: true } } },
+        });
+        if (taken && taken.groupId !== input.groupId) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `${input.tag} is already used by ${taken.group.name} this season.`,
+          });
+        }
         await ctx.db.affiliateTag.upsert({
           where: key,
           update: { tag: input.tag },
@@ -301,6 +328,44 @@ export const adminRouter = createTRPCRouter({
       } else {
         await ctx.db.affiliateTag.deleteMany({ where: { groupId: input.groupId, season } });
       }
+      return { ok: true };
+    }),
+
+  /** Add tracking IDs (created in Associates Central) to the pool. */
+  addTrackingIds: siteAdminProcedure
+    .input(
+      z.object({
+        tags: z
+          .array(
+            z.string().trim().toLowerCase().regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21"),
+          )
+          .min(1)
+          .max(100),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { count } = await ctx.db.affiliateTrackingId.createMany({
+        data: [...new Set(input.tags)].map((tag) => ({ tag })),
+        skipDuplicates: true,
+      });
+      return { added: count };
+    }),
+
+  /** Take an ID out of the pool (not while a group uses it this season). */
+  removeTrackingId: siteAdminProcedure
+    .input(z.object({ tag: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const inUse = await ctx.db.affiliateTag.findUnique({
+        where: { season_tag: { season: seasonYearOf(new Date()), tag: input.tag } },
+        select: { id: true },
+      });
+      if (inUse) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A group uses that tracking ID this season. Change the group first.",
+        });
+      }
+      await ctx.db.affiliateTrackingId.deleteMany({ where: { tag: input.tag } });
       return { ok: true };
     }),
 });

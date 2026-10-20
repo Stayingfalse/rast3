@@ -1,3 +1,4 @@
+import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Discord from "next-auth/providers/discord";
@@ -57,6 +58,8 @@ if (process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET) {
       // Discord now returns an `iss` on the callback (RFC 9207); Auth.js
       // checks it against the issuer, which defaults to a placeholder.
       issuer: "https://discord.com",
+      // Day 13: list servers (and roles) to join community groups
+      authorization: { params: { scope: DISCORD_SCOPES } },
       clientId: process.env.AUTH_DISCORD_ID,
       clientSecret: process.env.AUTH_DISCORD_SECRET,
       allowDangerousEmailAccountLinking: true,
@@ -237,6 +240,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     session: ({ session, user }) => toClientSession({ session, user }),
+  },
+  events: {
+    // keep Discord tokens (and scopes) fresh on every Discord sign-in
+    signIn: ({ account }) => saveDiscordTokens(account),
   },
   debug: process.env.NODE_ENV === "development",
 });

@@ -1,4 +1,5 @@
 // Dynamic authentication provider configuration
+import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import type { Provider } from "next-auth/providers";
@@ -127,6 +128,8 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
         // Discord now returns an `iss` on the callback (RFC 9207); Auth.js
         // checks it against the issuer, which defaults to a placeholder.
         issuer: "https://discord.com",
+        // Day 13: list servers (and roles) to join community groups
+        authorization: { params: { scope: DISCORD_SCOPES } },
         clientId: discordConfig.clientId,
         clientSecret: discordConfig.clientSecret,
         allowDangerousEmailAccountLinking: true,
@@ -384,6 +387,10 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
     },
     callbacks: {
       session: ({ session, user }) => toClientSession({ session, user }),
+    },
+    events: {
+      // keep Discord tokens (and scopes) fresh on every Discord sign-in
+      signIn: ({ account }) => saveDiscordTokens(account),
     },
     debug: process.env.NODE_ENV === "development",
   };

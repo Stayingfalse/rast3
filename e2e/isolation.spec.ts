@@ -61,7 +61,8 @@ test("hand-outs stay in the organisation until you ask for strangers", async ({
 
   expect((await mutate(r, "wishlist.requestInitialAssignments")).status()).toBe(200);
   expect(
-    (await mutate(r, "wishlist.requestCrossDepartmentAssignments", { count: 3 })).status(),
+    // one from another team: room is left for strangers under the 5-list limit (Day 19)
+    (await mutate(r, "wishlist.requestCrossDepartmentAssignments", { count: 1 })).status(),
   ).toBe(200);
   const own = await myListUrls(r);
   expect(own.length).toBeGreaterThanOrEqual(4);

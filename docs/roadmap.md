@@ -98,7 +98,7 @@
 ### Week 3: the Christmas season and wishlists (26–31 Oct)
 | Day | Date | Focus |
 |---|---|---|
-| 19 | Mon 26 Oct | Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
+| 19 | Mon 26 Oct | **Done (21 Oct; the nightly run was missed and run by hand in the evening).** Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
 | 20 | Tue 27 Oct | **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
 | 21 | Wed 28 Oct | **Re-planned 20 Oct.** Avoid duplicate gifts without reading wishlists: "I'm buying from this list" claims on a picked-up list and a short note to the next Santa (no item data from Amazon) |
 | 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
@@ -778,3 +778,29 @@ that don't touch the data model. Known items to include:
     members' emails stay hidden from organisers until a group is approved.
   - **Not changed (noted):** a few legacy members may still hold two
     workplace memberships; this needs a look at prod data.
+- **Day 19 (21 Oct, nightly run done by hand in the evening): fair-share
+  hand-outs.**
+  - **One shared picker for every route:** initial, additional, other
+    teams, other organisations, and friends and community groups. It hands
+    out lists in this order:
+    1. fewest gifts received this season;
+    2. then fewest current holders;
+    3. then at random, so ties don't always favour the same person.
+
+    Previously each route sorted by current holders only, with no random
+    tie-break on the workplace routes, so the same lists came up first
+    every time.
+  - **Holding limit:** at most 5 un-gifted lists per person at once, across
+    all groups. Pick-ups are trimmed to the room left and refused with a
+    clear message when full; gifting frees a place.
+  - **Not done:** "views" as a fairness signal. We don't record when lists
+    are opened (gift pages are deliberately untracked). Gifts and holders
+    cover the intent.
+  - **Built on #49**, the pre-season fixes, which is still waiting for
+    approval: both change the same pick-up code.
+  - **Tests:** new `e2e/fair-share.spec.ts` with an eight-person group. A
+    gifted list waits behind the ones with no gifts; a sixth pick-up is
+    refused; gifting frees a place.
+  - **Next: Day 20, gift ideas and budget bands** (re-planned 20 Oct).
+    Members add a few gift ideas to their profile, shown anonymously on the
+    gift page, and organisers set a suggested budget band per group.

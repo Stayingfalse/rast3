@@ -14,6 +14,7 @@ import {
 } from "~/server/scope";
 import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
 import { cleanWishlistUrl } from "~/lib/wishlist";
+import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
 import { getWorkplace } from "~/server/groups";
 import {
   archivePastSeasons,
@@ -209,36 +210,16 @@ export const wishlistRouter = createTRPCRouter({
             inGroup(scope.teamId!), // Same team (department) only
           ],
         },
-        select: {
-          id: true,
-          name: true,
-          ownedWishlist: {
-            where: { isActive: true },
-            select: { assignedUserId: true },
-          },
-        },
+        select: fairShareFields(),
       });
 
-      // Sort by assignment count (prioritize users with fewer assignments)
-      const sortedUsers = eligibleUsers
-        .map(
-          (user: {
-            id: string;
-            name: string | null;
-            ownedWishlist: { assignedUserId: string }[];
-          }) => ({
-            ...user,
-            assignmentCount: user.ownedWishlist.length,
-          }),
-        )
-        .sort(
-          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
-            a.assignmentCount - b.assignmentCount,
-        );
 
-      // Select up to 3 users, avoiding duplicates
+      // Up to 3, fairest first (Day 19), within what they may still hold
       const neededAssignments = 3 - assignedUserIds.length;
-      const selectedUsers = sortedUsers.slice(0, neededAssignments);
+      const selectedUsers = pickFairly(
+        eligibleUsers,
+        await roomToPickUp(ctx.db, userId, neededAssignments),
+      );
       if (selectedUsers.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -306,34 +287,14 @@ export const wishlistRouter = createTRPCRouter({
             inGroup(scope.teamId!), // Same team (department) only
           ],
         },
-        select: {
-          id: true,
-          name: true,
-          ownedWishlist: {
-            where: { isActive: true },
-            select: { assignedUserId: true },
-          },
-        },
+        select: fairShareFields(),
       });
 
-      // Sort by assignment count (prioritize users with fewer assignments)
-      const sortedUsers = eligibleUsers
-        .map(
-          (user: {
-            id: string;
-            name: string | null;
-            ownedWishlist: { assignedUserId: string }[];
-          }) => ({
-            ...user,
-            assignmentCount: user.ownedWishlist.length,
-          }),
-        )
-        .sort(
-          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
-            a.assignmentCount - b.assignmentCount,
-        );
 
-      const selectedUsers = sortedUsers.slice(0, input.count);
+      const selectedUsers = pickFairly(
+        eligibleUsers,
+        await roomToPickUp(ctx.db, userId, input.count),
+      );
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -391,34 +352,14 @@ export const wishlistRouter = createTRPCRouter({
             inOrgOutsideTeam(scope.orgId, scope.teamId), // Same organisation, other teams
           ],
         },
-        select: {
-          id: true,
-          name: true,
-          ownedWishlist: {
-            where: { isActive: true },
-            select: { assignedUserId: true },
-          },
-        },
+        select: fairShareFields(),
       });
 
-      // Sort by assignment count (prioritize users with fewer assignments)
-      const sortedUsers = eligibleUsers
-        .map(
-          (user: {
-            id: string;
-            name: string | null;
-            ownedWishlist: { assignedUserId: string }[];
-          }) => ({
-            ...user,
-            assignmentCount: user.ownedWishlist.length,
-          }),
-        )
-        .sort(
-          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
-            a.assignmentCount - b.assignmentCount,
-        );
 
-      const selectedUsers = sortedUsers.slice(0, input.count);
+      const selectedUsers = pickFairly(
+        eligibleUsers,
+        await roomToPickUp(ctx.db, userId, input.count),
+      );
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -478,38 +419,14 @@ export const wishlistRouter = createTRPCRouter({
               : []),
           ],
         },
-        select: {
-          id: true,
-          name: true,
-          firstName: true,
-          lastName: true,
-          amazonWishlistUrl: true,
-          ownedWishlist: {
-            where: { isActive: true },
-            select: { assignedUserId: true },
-          },
-        },
-      }); // Sort by assignment count (prioritize users with fewer assignments)
-      const sortedUsers = eligibleUsers
-        .map(
-          (user: {
-            id: string;
-            name: string | null;
-            firstName: string | null;
-            lastName: string | null;
-            amazonWishlistUrl: string | null;
-            ownedWishlist: { assignedUserId: string }[];
-          }) => ({
-            ...user,
-            assignmentCount: user.ownedWishlist.length,
-          }),
-        )
-        .sort(
-          (a: { assignmentCount: number }, b: { assignmentCount: number }) =>
-            a.assignmentCount - b.assignmentCount,
-        );
+        // no names: buyers never learn whose list it is
+        select: fairShareFields(),
+      });
 
-      const selectedUsers = sortedUsers.slice(0, input.count);
+      const selectedUsers = pickFairly(
+        eligibleUsers,
+        await roomToPickUp(ctx.db, userId, input.count),
+      );
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -593,10 +510,7 @@ export const wishlistRouter = createTRPCRouter({
           memberships: { some: { groupId: input.groupId } },
           ...checkedIn(),
         },
-        select: {
-          id: true,
-          ownedWishlist: { where: { isActive: true }, select: { id: true } },
-        },
+        select: fairShareFields(),
       });
       if (eligible.length === 0) {
         throw new TRPCError({
@@ -605,14 +519,8 @@ export const wishlistRouter = createTRPCRouter({
             "No more wishlists in this group right now. Invite a few more people!",
         });
       }
-      const picks = eligible
-        .map((u) => ({
-          id: u.id,
-          load: u.ownedWishlist.length,
-          r: Math.random(),
-        }))
-        .sort((a, b) => a.load - b.load || a.r - b.r)
-        .slice(0, input.count);
+      // fairest first (Day 19), within what they may still hold
+      const picks = pickFairly(eligible, await roomToPickUp(ctx.db, userId, input.count));
       const created = await ctx.db.wishlistAssignment.createMany({
         data: picks.map((p) => ({
           assignedUserId: userId,

@@ -260,12 +260,7 @@ export const groupsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       const others = group.memberships.filter((m) => m.userId !== userId);
-      if (others.length === 0) {
-        // Last one out closes the group
-        await ctx.db.group.delete({ where: { id: input.groupId } });
-        return { deleted: true };
-      }
-      if (me.role === "ADMIN" && !others.some((m) => m.role === "ADMIN")) {
+      if (me.role === "ADMIN" && others.length > 0 && !others.some((m) => m.role === "ADMIN")) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
@@ -275,6 +270,20 @@ export const groupsRouter = createTRPCRouter({
       await ctx.db.membership.delete({
         where: { groupId_userId: { groupId: input.groupId, userId } },
       });
+      // Release the lists you held here, so others can pick them up
+      await ctx.db.wishlistAssignment.updateMany({
+        where: { assignedUserId: userId, groupId: input.groupId, isActive: true },
+        data: { isActive: false },
+      });
+      if (others.length === 0) {
+        // Last one out closes the group. It's never deleted, so its gift
+        // pages and pick-up history survive (gift pages never expire).
+        await ctx.db.group.update({
+          where: { id: input.groupId },
+          data: { status: "DISABLED" },
+        });
+        return { deleted: true };
+      }
       return { deleted: false };
     }),
 
@@ -616,6 +625,11 @@ export const groupsRouter = createTRPCRouter({
         input.groupId,
         ctx.session.user.id,
       );
+      const viewer = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { adminLevel: true },
+      });
+      const showEmails = group.status === "ACTIVE" || viewer?.adminLevel === "SITE";
       const members = await ctx.db.membership.findMany({
         where: { groupId: group.id },
         orderBy: { joinedAt: "desc" },
@@ -685,8 +699,11 @@ export const groupsRouter = createTRPCRouter({
           return {
             userId: m.user.id,
             name: full !== "" ? full : (m.user.name ?? "Unnamed"),
-            email:
-              group.kind === "ORG"
+            // hidden until a site admin approves the group (owner, 20 Oct):
+            // anyone can start one, including for a domain they don't own
+            email: !showEmails
+              ? null
+              : group.kind === "ORG"
                 ? (m.user.workEmail ?? m.user.email)
                 : m.user.email,
             role: m.role,
@@ -719,6 +736,11 @@ export const groupsRouter = createTRPCRouter({
             "Workplace organisers are managed in the admin area for now.",
         });
       }
+      const target = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: group.id, userId: input.userId } },
+        select: { id: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
       if (input.role === "MEMBER") {
         const admins = await ctx.db.membership.count({
           where: {
@@ -783,7 +805,14 @@ export const groupsRouter = createTRPCRouter({
           },
           data: { isActive: false },
         });
-        await leaveWorkplace(ctx.db, input.userId);
+        // Only this workplace and its teams (legacy data can leave someone
+        // in a second one, which they keep)
+        await ctx.db.membership.deleteMany({
+          where: {
+            userId: input.userId,
+            OR: [{ groupId: group.id }, { group: { parentId: group.id } }],
+          },
+        });
       } else {
         await ctx.db.membership.delete({
           where: {

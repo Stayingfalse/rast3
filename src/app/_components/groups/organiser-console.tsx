@@ -170,6 +170,7 @@ function Members({ g }: { g: Console }) {
         <CardDescription>
           Newest first. Joining is on trust, so check the newcomers; removing
           someone keeps their account.
+          {g.status !== "ACTIVE" && " Emails show once we've approved the group."}
         </CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">

@@ -98,13 +98,16 @@ model WishlistAssignment {
   isCrossDepartment Boolean          @default(false)
   /// friends/community group it was picked up in (Day 14); null = workplace
   groupId           String?
+  /// Christmas season it was picked up in (Aug–Jul year): a list can come
+  /// round again in a later season, never twice in one
+  season            Int
   purchases         Purchase?
   assignedUser      User             @relation("AssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
   wishlistOwner     User             @relation("WishlistOwner", fields: [wishlistOwnerId], references: [id], onDelete: Cascade)
   group             Group?           @relation(fields: [groupId], references: [id], onDelete: SetNull)
   reports           WishlistReport[]
 
-  @@unique([assignedUserId, wishlistOwnerId])
+  @@unique([assignedUserId, wishlistOwnerId, season])
   @@index([groupId])
   @@index([assignedUserId])
   @@index([wishlistOwnerId])
@@ -253,34 +256,35 @@ model SeasonCheckIn {
 /// or a friends group (FRIENDS). Replaces Domain/Department (Day 8 backfill;
 /// queries move over on Day 9).
 model Group {
-  id             String               @id @default(cuid())
-  kind           GroupKind
-  name           String
-  slug           String               @unique
-  status         GroupStatus          @default(PENDING)
-  description    String?
-  parentId       String?
+  id              String               @id @default(cuid())
+  kind            GroupKind
+  name            String
+  slug            String               @unique
+  status          GroupStatus          @default(PENDING)
+  description     String?
+  parentId        String?
   /// ORG groups: the email domain members join with (legacy Domain.name)
-  emailDomain    String?              @unique
-  joinCode       String?              @unique
+  emailDomain     String?              @unique
+  joinCode        String?              @unique
   /// COMMUNITY groups: the Discord server members join through (Day 13)
-  discordGuildId String?              @unique
+  discordGuildId  String?              @unique
   /// optional Discord role required to join
-  discordRoleId  String?
-  createdById    String?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  parent         Group?               @relation("GroupTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children       Group[]              @relation("GroupTree")
-  createdBy      User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  memberships    Membership[]
-  assignments    WishlistAssignment[]
-  /// site admins can open gifting before the season starts (testing, early groups)
-  openEarly      Boolean              @default(false)
+  discordRoleId   String?
+  createdById     String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  parent          Group?               @relation("GroupTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children        Group[]              @relation("GroupTree")
+  createdBy       User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  memberships     Membership[]
+  assignments     WishlistAssignment[]
+  /// the season a site admin opened this group early for (testing, early
+  /// groups); it lapses when the next season starts
+  openEarlySeason Int?
   /// Amazon affiliate links in this group: the site default for its kind, or forced on/off
-  affiliate      AffiliateMode        @default(DEFAULT)
-  affiliateTags  AffiliateTag[]
-  giftPages      GiftPage[]
+  affiliate       AffiliateMode        @default(DEFAULT)
+  affiliateTags   AffiliateTag[]
+  giftPages       GiftPage[]
 
   @@index([parentId])
   @@index([kind, status])
@@ -363,14 +367,17 @@ model AffiliateTrackingId {
 /// referring page Amazon sees is public (Associates rules). Shows no names.
 model GiftPage {
   /// the unguessable token in /gift/<id>
-  id        String   @id
+  id          String   @id
   /// null once the owner deletes their account: the page then says the list is gone
-  ownerId   String?
-  groupId   String
-  season    Int
-  createdAt DateTime @default(now())
-  owner     User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  ownerId     String?
+  /// the wishlist this page was made for (owner, 20 Oct): an old page never
+  /// opens the owner's later lists
+  wishlistUrl String?
+  groupId     String
+  season      Int
+  createdAt   DateTime @default(now())
+  owner       User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([ownerId, groupId, season])
   @@index([groupId])

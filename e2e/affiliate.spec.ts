@@ -84,6 +84,10 @@ test("set up: affiliate links on, and a friends group with its own tracking ID",
       await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: "raosantanopool-21" })
     ).status(),
   ).toBe(400);
+  // the default ID can't also be one group's own
+  expect(
+    (await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: "raosanta04-21" })).status(),
+  ).toBe(400);
   expect((await mutate(r, "admin.addTrackingIds", { tags: [TAG] })).status()).toBe(200);
   expect(
     (await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: TAG })).status(),
@@ -176,4 +180,26 @@ test("only site admins change affiliate settings; unknown gift pages 404", async
     (await mutate(page.request, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: null })).status(),
   ).toBe(403);
   expect((await page.goto("/gift/not-a-real-token"))?.status()).toBe(404);
+});
+
+test("leaving releases pick-ups, and an emptied group's gift pages live on", async ({
+  page,
+}, testInfo) => {
+  const p = testInfo.project.name;
+  await loginAs(page, { email: `aff-b-${p}@${E}` });
+  expect((await parcels(page.request)).length).toBeGreaterThan(0);
+  expect((await mutate(page.request, "groups.leave", { groupId })).status()).toBe(200);
+  expect(await parcels(page.request)).toEqual([]);
+
+  // the organiser leaves last: the group closes but isn't deleted
+  await loginAs(page, { email: `aff-a-${p}@${E}` });
+  const last = (await unwrap(await mutate(page.request, "groups.leave", { groupId }))) as {
+    deleted: boolean;
+  };
+  expect(last.deleted).toBe(true);
+  expect((await page.goto(giftPath))?.status()).toBe(200);
+  await expect(page.getByRole("link", { name: "Open the wishlist on Amazon" })).toHaveAttribute(
+    "href",
+    /ls\/E2EAFA0001/,
+  );
 });

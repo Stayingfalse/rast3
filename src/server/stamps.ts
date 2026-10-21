@@ -2,9 +2,9 @@
  * The stamp album: one stamp per Christmas season, collected by marking at
  * least one gift as Gifted or posting a thank-you (kudos) that season.
  *
- * There is no Season model yet (roadmap Week 3), so a season is derived from
- * dates: season Y runs from 1 August Y to 31 July Y+1, which keeps every
- * November-to-January season (and its late thank-yous) inside one year.
+ * A season Y runs from 1 August Y to 31 July Y+1, which keeps every
+ * November-to-January season (and its late thank-yous) inside one year. The
+ * Season table holds each season's gifting dates (see src/server/season.ts).
  */
 
 /** The first season the site ran; earlier years have no stamp. */

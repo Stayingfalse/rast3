@@ -9,7 +9,7 @@ import {
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { currentSeason, seasonWindow } from "~/server/season";
-import { seasonYearOf } from "~/server/stamps";
+import { seasonRange, seasonYearOf } from "~/server/stamps";
 
 const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
 const STATUSES = ["PENDING", "ACTIVE", "DISABLED"] as const;
@@ -106,17 +106,19 @@ export const adminRouter = createTRPCRouter({
           status: true,
           emailDomain: true,
           discordGuildId: true,
-          openEarly: true,
+          openEarlySeason: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
           _count: { select: { memberships: true, children: true } },
         },
       });
-      return rows.map(({ _count, discordGuildId, ...g }) => ({
+      const season = currentSeason();
+      return rows.map(({ _count, discordGuildId, openEarlySeason, ...g }) => ({
         ...g,
         members: _count.memberships,
         teams: _count.children,
         discord: !!discordGuildId,
+        openEarly: openEarlySeason === season,
       }));
     }),
 
@@ -269,6 +271,17 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // the default can't also be one group's own ID (earnings would mix)
+      const taken = await ctx.db.affiliateTag.findUnique({
+        where: { season_tag: { season: seasonYearOf(new Date()), tag: input.defaultTag } },
+        select: { group: { select: { name: true } } },
+      });
+      if (taken) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `${input.defaultTag} is ${taken.group.name}'s own ID this season. Pick another default.`,
+        });
+      }
       await ctx.db.affiliateSettings.upsert({
         where: { id: "site" },
         update: input,
@@ -306,6 +319,12 @@ export const adminRouter = createTRPCRouter({
       });
       const key = { groupId_season: { groupId: input.groupId, season } };
       if (input.tag) {
+        if (input.tag === (await getAffiliateSettings(ctx.db)).defaultTag) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "That's the default ID every other group uses. Give this group its own.",
+          });
+        }
         if (!(await ctx.db.affiliateTrackingId.findUnique({ where: { tag: input.tag } }))) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -379,7 +398,7 @@ export const adminRouter = createTRPCRouter({
       ctx.db.user.count({ where: { profileCompleted: true } }),
       ctx.db.seasonCheckIn.count({ where: { season: year } }),
       ctx.db.group.findMany({
-        where: { openEarly: true },
+        where: { openEarlySeason: year },
         orderBy: { name: "asc" },
         select: { id: true, name: true, kind: true },
       }),
@@ -395,6 +414,14 @@ export const adminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const year = currentSeason();
+      // both dates inside this season's year (1 Aug to 31 Jul)
+      const { gte, lt } = seasonRange(year);
+      if (input.opensAt < gte || input.closesAt >= lt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Christmas ${year} has to open and close between 1 August ${year} and 31 July ${year + 1}.`,
+        });
+      }
       await ctx.db.season.upsert({
         where: { year },
         update: input,
@@ -409,7 +436,7 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await ctx.db.group.update({
         where: { id: input.groupId },
-        data: { openEarly: input.open },
+        data: { openEarlySeason: input.open ? currentSeason() : null },
       });
       return { ok: true };
     }),

@@ -747,3 +747,34 @@ that don't touch the data model. Known items to include:
     mixing rules. Budgets move to Day 20, which already has organiser
     budget bands; mixing rules go to the backlog.
   - **Next: Day 19 (nightly), fair-share assignment.**
+- **Day 18 merged to prod (20 Oct, owner approved).**
+- **Two independent reviews (20 Oct, owner's request), then pre-season fixes.**
+  - Two separate read-only reviewers each checked the code against the
+    owner's decisions. Both confirmed the main rules hold:
+    - no draw;
+    - organisations only started explicitly, then approved;
+    - `/admin` access;
+    - the legacy model fully gone;
+    - where tagged links appear;
+    - season and check-in guards on every pick-up route.
+  - **Critical:** a wishlist could only ever be given to a person once, so
+    returning members' pick-ups would have failed from 15 Nov. Now it's once
+    per season (migration `pre_season_fixes`).
+  - **Also fixed:**
+    - buyers no longer receive owner IDs, which an organiser could map to
+      names;
+    - emptied groups close instead of being deleted, so gift pages survive;
+    - the default tracking ID can't be shared with a group;
+    - strangers' lists only come from open workplaces;
+    - leaving a group releases your pick-ups;
+    - wishlist links lose their query string, so nobody's own `?tag=`
+      rides along;
+    - `/api/health` no longer shows exact counts;
+    - "open early" lasts one season;
+    - removing someone from a workplace only removes them from that one;
+    - thank-yous can only be tied to a gift you received;
+    - season dates are validated.
+  - **Owner decisions:** gift pages keep the wishlist they were made for, and
+    members' emails stay hidden from organisers until a group is approved.
+  - **Not changed (noted):** a few legacy members may still hold two
+    workplace memberships; this needs a look at prod data.

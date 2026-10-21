@@ -36,6 +36,7 @@ const parcels = async (r: APIRequestContext) =>
   (await unwrap(await query(r, "wishlist.getMyAssignments", { groupId }))) as Parcel[];
 
 test("set up: an eight-person friends group, open early", async ({ page }, testInfo) => {
+  test.setTimeout(120_000); // eight sign-ins and profiles
   const p = testInfo.project.name;
   let code = "";
   for (const m of MEMBERS) {

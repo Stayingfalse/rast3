@@ -19,14 +19,21 @@ type ParcelLabelProps = {
   gifts: string | null;
   /** When posting opens or closes, e.g. { value: "Opens 15 November" } */
   posting: Omit<Row, "label">;
+  /** who it's addressed to (the stamp rack re-addresses it) */
+  to?: string;
+  /** the postmark's small line; changing it franks the label again */
+  mark?: string;
 };
 
 /**
  * The hero's held moment: a shipping label for a gift whose address nobody
  * ever learns, franked with the live count of gifts sent.
  */
-export function ParcelLabel({ gifts, posting }: ParcelLabelProps) {
-  const rows = [...ROWS, { label: "Posting", ...posting }];
+export function ParcelLabel({ gifts, posting, to, mark }: ParcelLabelProps) {
+  const rows = [
+    ...ROWS.map((r) => (r.label === "To" && to ? { ...r, value: to } : r)),
+    { label: "Posting", ...posting },
+  ];
   return (
     <div className="relative w-full max-w-md rotate-[1.25deg]">
       <figure className="label-stock overflow-hidden">
@@ -71,8 +78,9 @@ export function ParcelLabel({ gifts, posting }: ParcelLabelProps) {
         </figcaption>
       </figure>
       <Postmark
+        key={mark}
         centre={gifts ? "SENT" : "2026"}
-        sub={gifts ? "2026 SEASON" : "SEASON"}
+        sub={mark ?? (gifts ? "2026 SEASON" : "SEASON")}
         cancellation
         animate
         className="text-gold-ink pointer-events-none absolute -right-8 -bottom-8 w-44 sm:-right-12 sm:w-52"

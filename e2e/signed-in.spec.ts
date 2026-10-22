@@ -49,7 +49,7 @@ test.describe("signed-in user", () => {
     await expect(
       page.getByRole("heading", { name: "Complete Your Profile", exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: /Join Santa/ })).toHaveCount(0);
+    await expect(page.getByRole("radiogroup", { name: /Who's posting/ })).toHaveCount(0);
     await settle(page);
     await snap(page, testInfo, "signed-in-profile-setup");
     expect(errors).toEqual([]);

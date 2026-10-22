@@ -111,31 +111,62 @@ test("when gifting opens, members hear about it once (not the one who opted out)
   expect(mine(again.log, p)).toHaveLength(mine(r.log, p).length);
 });
 
-test("a gift on your list emails you, and the buyer learns nothing about you", async ({
-  page,
-}, testInfo) => {
-  const p = testInfo.project.name;
-  await loginAs(page, { email: who("santa", p) });
-  expect(
-    (await mutate(page.request, "wishlist.requestFromGroup", { groupId, count: 1 })).status(),
-  ).toBe(200);
-  const [parcel] = (await unwrap(
-    await page.request.get(
+const parcels = async (r: APIRequestContext) =>
+  (await unwrap(
+    await r.get(
       `/api/trpc/wishlist.getMyAssignments?input=${encodeURIComponent(JSON.stringify({ json: { groupId } }))}`,
     ),
   )) as { id: string }[];
-  const res = await mutate(page.request, "wishlist.markPurchase", { assignmentId: parcel!.id });
-  expect(res.status()).toBe(200);
-  const purchase = (await unwrap(res)) as Record<string, unknown>;
-  expect(purchase).not.toHaveProperty("wishlistAssignment");
+let giftedAt = 0;
 
-  await expect
-    .poll(async () =>
-      mine((await reminders(page.request, { run: false })).log, p)
-        .filter((l) => l.kind === "GIFT_RECEIVED")
-        .map((l) => [l.email, l.ref]),
-    )
-    .toEqual([[who("in", p), purchase.id]]);
+test("marking a gift sends nothing that day, and the buyer learns nothing about the owner", async ({
+  page,
+}, testInfo) => {
+  const p = testInfo.project.name;
+  // Santa gifts Ina's list; Ina gifts Santa's
+  await loginAs(page, { email: who("santa", p) });
+  expect((await mutate(page.request, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
+  const res = await mutate(page.request, "wishlist.markPurchase", { assignmentId: (await parcels(page.request))[0]!.id });
+  expect(res.status()).toBe(200);
+  expect((await unwrap(res)) as object).not.toHaveProperty("wishlistAssignment");
+  giftedAt = Date.now();
+
+  await loginAs(page, { email: who("in", p) });
+  expect((await mutate(page.request, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
+  const gifted = await mutate(page.request, "wishlist.markPurchase", {
+    assignmentId: (await parcels(page.request))[0]!.id,
+  });
+  const santaGift = (await unwrap(gifted)) as { id: string };
+
+  // Santa has already said thank you
+  await loginAs(page, { email: who("santa", p) });
+  expect(
+    (
+      await mutate(page.request, "kudos.createKudos", {
+        message: "Thank you, mystery Santa!",
+        purchaseId: santaGift.id,
+        images: [],
+      })
+    ).status(),
+  ).toBe(200);
+
+  // two days on: too soon for anything (it would spoil the surprise)
+  const r = await reminders(page.request, { now: new Date(giftedAt + 2 * DAY).toISOString() });
+  expect(mine(r.log, p).filter((l) => l.kind === "GIFT_CHECK_IN")).toEqual([]);
+});
+
+test("days later, a check-in goes only to someone sent a gift who hasn't said thanks", async ({
+  page,
+}, testInfo) => {
+  const p = testInfo.project.name;
+  const checkIns = async (days: number) =>
+    mine((await reminders(page.request, { now: new Date(giftedAt + days * DAY).toISOString() })).log, p)
+      .filter((l) => l.kind === "GIFT_CHECK_IN")
+      .map((l) => l.email);
+  // not Santa (thanked already), not Otto or Ofelia (nobody sent them anything)
+  expect(await checkIns(5)).toEqual([who("in", p)]);
+  // and only once
+  expect(await checkIns(6)).toEqual([who("in", p)]);
 });
 
 test("the stop link turns reminders off and back on", async ({ page }, testInfo) => {

@@ -148,8 +148,10 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>To send a few reminder emails</strong> each season: a
-              nudge to check in before gifting opens, one when it opens, and
-              one when a Santa sends you a gift (never saying who). Every one
+              nudge to check in before gifting opens, one when it opens, and,
+              a few days after a Santa has sent you something, a check-in if
+              you haven&apos;t posted a thank-you yet (never on the day, and
+              never saying who). Every one
               has a link to stop them, and sign-in links still arrive. Lawful
               basis: legitimate interests (Article 6(1)(f)), as part of the
               service you signed up for.

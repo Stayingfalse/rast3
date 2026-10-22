@@ -190,8 +190,8 @@ export function ProfileSetupModal({
               <FieldContent>
                 <FieldLabel htmlFor="emailReminders">Reminder emails</FieldLabel>
                 <FieldDescription>
-                  A few a season: when to check in, when gifting opens, and when
-                  a Santa sends you something.
+                  A few a season: when to check in, when gifting opens, and the
+                  odd check-in to see how your Christmas is going.
                 </FieldDescription>
               </FieldContent>
             </Field>

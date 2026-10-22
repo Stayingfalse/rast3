@@ -70,6 +70,8 @@ export const profileRouter = createTRPCRouter({
             (url) => url === null || amazonWishlistRegex.test(url),
             "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
           ),
+        /** reminder emails (22 Oct); left out = unchanged */
+        emailReminders: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -89,6 +91,7 @@ export const profileRouter = createTRPCRouter({
           firstName: input.firstName,
           lastName: input.lastName,
           amazonWishlistUrl: input.amazonWishlistUrl,
+          emailReminders: input.emailReminders,
           profileCompleted: true,
           profileCompletedAt: current?.profileCompletedAt ?? new Date(),
         },

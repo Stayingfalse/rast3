@@ -579,25 +579,15 @@ export const wishlistRouter = createTRPCRouter({
         });
       }
 
-      // Create the purchase record
-      const purchase = await ctx.db.purchase.create({
+      // Create the purchase record. The buyer gets the purchase only, never
+      // the owner's id (anonymity).
+      return ctx.db.purchase.create({
         data: {
           userId,
           wishlistAssignmentId: input.assignmentId,
           notes: input.notes,
         },
-        include: {
-          wishlistAssignment: {
-            include: {
-              wishlistOwner: {
-                select: { id: true },
-              },
-            },
-          },
-        },
       });
-
-      return purchase;
     }),
 
   // Report an issue with a wishlist

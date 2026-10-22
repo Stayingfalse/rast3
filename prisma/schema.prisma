@@ -78,6 +78,9 @@ model User {
   createdGroups        Group[]              @relation("GroupCreator")
   giftPages            GiftPage[]
   seasonCheckIns       SeasonCheckIn[]
+  /// reminder emails (check-in, season open, gift received); sign-in links always go
+  emailReminders       Boolean              @default(true)
+  emailLog             EmailLog[]
 }
 
 model VerificationToken {
@@ -335,6 +338,39 @@ model AffiliateSettings {
   communityDefault Boolean  @default(true)
   friendsDefault   Boolean  @default(true)
   updatedAt        DateTime @updatedAt
+}
+
+/// Reminder emails (22 Oct)
+enum EmailKind {
+  CHECK_IN_NUDGE
+  SEASON_OPEN
+  /// a few days after a gift was marked, if no thank-you yet (owner, 22 Oct:
+  /// never on the day, which would spoil the surprise)
+  GIFT_CHECK_IN
+}
+
+enum EmailStatus {
+  SENT
+  SKIPPED
+  FAILED
+}
+
+/// One row per reminder per person (and per gift): the row is claimed before
+/// sending, so a reminder is never sent twice, even by two servers at once
+model EmailLog {
+  id        String      @id @default(cuid())
+  userId    String
+  kind      EmailKind
+  season    Int
+  /// what it's about within the season (a purchase id), else empty
+  ref       String      @default("") @db.VarChar(64)
+  status    EmailStatus @default(SKIPPED)
+  note      String?     @db.VarChar(191)
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, season, ref])
+  @@index([createdAt])
 }
 
 enum AffiliateMode {

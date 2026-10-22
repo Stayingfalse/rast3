@@ -99,11 +99,11 @@
 | Day | Date | Focus |
 |---|---|---|
 | 19 | Mon 26 Oct | **Done (21 Oct; the nightly run was missed and run by hand in the evening).** Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 20 | Tue 27 Oct | **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
-| 21 | Wed 28 Oct | **Re-planned 20 Oct.** Avoid duplicate gifts without reading wishlists: "I'm buying from this list" claims on a picked-up list and a short note to the next Santa (no item data from Amazon) |
+| 20 | Tue 27 Oct | **Dropped by the owner (22 Oct): built, then rolled back before merging; replaced by reminder emails (from Day 24), done 22 Oct.** Was: **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
+| 21 | Wed 28 Oct | **Removed by the owner (22 Oct): not needed, as Santas buy from the wishlist itself and Amazon marks bought items.** Now a spare day |
 | 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
-| 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
-| 24 | Sat 31 Oct | Notifications: email + PWA push (new list to pick up, reminders, gift received) |
+| 23 | Fri 30 Oct | **Removed by the owner (22 Oct): anonymous questions aren't needed, for the same reason.** Now a spare day |
+| 24 | Sat 31 Oct | **Email part done early (22 Oct).** Still open: PWA push, and a "new lists to pick up" email digest |
 
 ### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
@@ -170,7 +170,9 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   so it fits the communities target well.
 - **Charity wishlists**: orgs add a shelter's or school's wishlist to the pool
   (good for workplace CSR and the paid tier).
-- **Budget bands** per group, with each wishlist item tagged by price.
+- **Budget bands / gift ideas**: built and dropped by the owner on 22 Oct
+  (Santas buy from the list itself). Kept instead: a tip to list-makers to
+  add things at a range of prices.
 - **Calendar (.ics) export** for season opening, last-order-for-Christmas and season close.
 - **"Shipped / arrived" tracking** with a nudge if nothing has arrived by a date.
 - **Streaks and badges** for Random Acts (gentle gamification, opt-in).
@@ -804,3 +806,65 @@ that don't touch the data model. Known items to include:
   - **Next: Day 20, gift ideas and budget bands** (re-planned 20 Oct).
     Members add a few gift ideas to their profile, shown anonymously on the
     gift page, and organisers set a suggested budget band per group.
+- **Day 19 and pre-season fixes merged to prod (21 Oct, owner approved).**
+  #49, then #50; the `pre_season_fixes` migration ran cleanly on prod.
+- **Day 20, gift ideas and budgets (22 Oct, nightly): built, then dropped.**
+  - PR #51 was closed unmerged. The owner's reasoning: Santas buy what's on
+    the wishlist, so neither is needed. What's kept is a tip, shown where
+    members add their list, to include things at a range of prices.
+  - **Dev repair:** reverting removed Day 20's migration file, but the dev
+    database had applied it. On startup, schema sync then reported
+    "foreign-history" and refused to migrate (the public health e2e caught
+    it). Dev now carries two dev-only migrations, the restored file and a
+    drop of its two columns, so its history is recognisable and its schema
+    matches main. They are never merged into main.
+  - **Lesson:** never revert an applied migration by deleting its file. Undo
+    it with a new migration on the same branch.
+- **Reminder emails (22 Oct, owner's choice to replace Day 20; pulled
+  forward from Day 24).**
+  - **Hourly job inside the app**, started from `src/instrumentation.ts`, so
+    there's no external scheduler and prod needs no new secret. It sends:
+    - from two weeks before gifting opens, a nudge to members who haven't
+      checked in for this Christmas (otherwise their list isn't handed out);
+    - in gifting's first week, "gifting is open" (worded for checked-in or
+      not);
+    - a gift check-in: 4 to 14 days after a Santa marked a gift to
+      someone's list, if they haven't posted a thank-you since, a gentle
+      "has anything turned up?" email. It's at most one a fortnight, and
+      never goes to people nobody has sent anything. (First built as an
+      email on the day of the gift; the owner changed it the same evening
+      because that spoils the surprise. Migration `gift_check_in` renames
+      the email kind.)
+  - **Safety:**
+    - every email is claimed in `EmailLog` before it's sent, so it goes once
+      even if the job overlaps itself;
+    - at most 100 per kind per run;
+    - test and `.test` addresses are never emailed;
+    - dev has no SMTP, so it only logs.
+  - **Opting out:**
+    - each email has a signed "Stop reminder emails" link (the page needs a
+      button press, so mail scanners can't unsubscribe anyone);
+    - one-click `List-Unsubscribe` for mail apps;
+    - a "Reminder emails" checkbox in the profile.
+
+    Sign-in links always go. The privacy policy now covers reminders.
+  - **Small:**
+    - `markPurchase` no longer returns the list owner's id to the buyer;
+    - the shadcn Checkbox was added (the shadcn CLI keeps adding a stray `cn`
+      package and import, so that's fixed by hand each time).
+  - **Migration** `email_reminders`, rehearsed on a scratch MariaDB.
+  - **Tests:** `e2e/email-reminders.spec.ts` drives the job at pretend dates
+    through a test-only endpoint. It checks:
+    - the nudge goes only to people who haven't checked in, once;
+    - "gifting is open" skips anyone who opted out;
+    - nothing goes on the day of a gift, nor to someone who already said
+      thanks, nor to anyone nobody has sent anything; the check-in goes
+      once, days later;
+    - the stop link and one-click work;
+    - the profile checkbox works.
+  - **Owner, 22 Oct: Days 21 (duplicate-gift claims) and 23 (anonymous
+    questions) are removed.** Santas buy from the wishlist itself. Both are
+    now spare days.
+  - **Next (nightly, 23 Oct): Day 25, public landing page refresh, pulled
+    forward.** After that: Day 24's remainder (PWA push, and a "new lists to
+    pick up" digest), then Day 26 onwards as planned.

@@ -146,6 +146,16 @@ export default function PrivacyPolicyPage() {
               <strong>To send sign-in links</strong> when you choose to sign in
               by email. Lawful basis: performance of our agreement with you.
             </li>
+            <li>
+              <strong>To send a few reminder emails</strong> each season: a
+              nudge to check in before gifting opens, one when it opens, and,
+              a few days after a Santa has sent you something, a check-in if
+              you haven&apos;t posted a thank-you yet (never on the day, and
+              never saying who). Every one
+              has a link to stop them, and sign-in links still arrive. Lawful
+              basis: legitimate interests (Article 6(1)(f)), as part of the
+              service you signed up for.
+            </li>
           </ul>
           <p>
             We do not sell your data, we do not use it for advertising, and we
@@ -204,7 +214,7 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>Email delivery</strong>: an email service sends sign-in
-              links to the address you give.
+              links and reminder emails to the address you give.
             </li>
           </ul>
           <p>

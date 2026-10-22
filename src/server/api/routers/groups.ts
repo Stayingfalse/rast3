@@ -15,6 +15,7 @@ import {
   isSnowflake,
   manageable,
 } from "~/server/discord";
+import { BUDGET_BANDS } from "~/lib/gift-ideas";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
@@ -141,6 +142,7 @@ export const groupsRouter = createTRPCRouter({
             status: true,
             joinCode: true,
             discordGuildId: true,
+            budget: true,
             _count: { select: { memberships: true } },
           },
         },
@@ -158,6 +160,7 @@ export const groupsRouter = createTRPCRouter({
         // only organisers can see and share the code
         joinCode: role === "ADMIN" ? group.joinCode : null,
         discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
+        budget: group.budget,
         /** wishlists here open from gift pages with affiliate links */
         affiliate: (await affiliateFor(ctx.db, group.id, undefined, settings)).enabled,
       })),
@@ -676,6 +679,7 @@ export const groupsRouter = createTRPCRouter({
         emailDomain: group.emailDomain,
         joinCode: group.joinCode,
         discordGuildId: group.discordGuildId,
+        budget: group.budget,
         createdAt: group.createdAt,
         stats: {
           members: members.length,
@@ -853,6 +857,18 @@ export const groupsRouter = createTRPCRouter({
       }
       const team = await createTeam(ctx.db, group, input.name);
       return { id: team.id, name: team.name };
+    }),
+
+  /** Day 20: organisers suggest how much to spend in their group (or none). */
+  setBudget: protectedProcedure
+    .input(z.object({ groupId: z.string(), budget: z.enum(BUDGET_BANDS).nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const group = await requireOrganiser(ctx.db, input.groupId, ctx.session.user.id);
+      return ctx.db.group.update({
+        where: { id: group.id },
+        data: { budget: input.budget },
+        select: { id: true, budget: true },
+      });
     }),
 
   /** Friends/community organisers: rename the group. */

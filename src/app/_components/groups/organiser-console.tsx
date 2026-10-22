@@ -34,6 +34,14 @@ import {
 import { Field, FieldDescription, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -42,6 +50,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { BUDGET_BANDS, BUDGET_LABEL, type BudgetBand } from "~/lib/gift-ideas";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { DiscordLinkEditor } from "./discord-link-editor";
 
@@ -415,10 +424,57 @@ function Settings({ g }: { g: Console }) {
     },
     onError: (e) => toast.error(e.message),
   });
+  const setBudget = api.groups.setBudget.useMutation({
+    onSuccess: async () => {
+      toast.success("Budget saved");
+      await refresh();
+    },
+    onError: (e) => toast.error(e.message),
+  });
   const isOrg = g.kind === "ORG";
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Suggested budget</CardTitle>
+          <CardDescription>
+            Shown to Santas on every wishlist picked up here
+            {isOrg ? ", including in your teams" : ""}. It&apos;s a guide, so
+            nobody overspends or feels they gave too little.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Field>
+            <FieldLabel htmlFor="group-budget">Budget per gift</FieldLabel>
+            <Select
+              value={g.budget ?? "none"}
+              disabled={setBudget.isPending}
+              onValueChange={(v) =>
+                setBudget.mutate({
+                  groupId: g.id,
+                  budget: v === "none" ? null : (v as BudgetBand),
+                })
+              }
+            >
+              <SelectTrigger id="group-budget" className="w-full sm:w-64">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="none">No suggestion</SelectItem>
+                  {BUDGET_BANDS.map((b) => (
+                    <SelectItem key={b} value={b}>
+                      {BUDGET_LABEL[b]}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+        </CardContent>
+      </Card>
+
       {!isOrg && (
         <Card>
           <CardHeader>

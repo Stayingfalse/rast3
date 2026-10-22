@@ -166,7 +166,7 @@ export function HomePitch({
     {
       topic: "who",
       q: "Who can join?",
-      a: "Anyone with an Amazon UK wishlist, through their workplace, a Discord community or a friends group. We check each new group before it opens for gifting.",
+      a: "Anyone with an Amazon wishlist, from any Amazon store, through their workplace, a Discord community or a friends group. We check each new group before it opens for gifting.",
     },
     {
       topic: "free",
@@ -178,7 +178,7 @@ export function HomePitch({
   return (
     <div className="flex w-full flex-col gap-24">
       <section className="grid w-full items-start gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
-        <div className="flex flex-col items-start gap-7">
+        <div className="flex flex-col items-start gap-7 lg:gap-6">
           <Wordmark asHeading />
           <p className="font-expanded text-frost max-w-xl text-2xl leading-tight font-bold text-balance sm:text-3xl">
             Anonymous Christmas gifts for your team, your server or your

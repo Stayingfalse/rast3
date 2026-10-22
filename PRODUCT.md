@@ -42,7 +42,7 @@ Addresses stay private because Amazon wishlists deliver without revealing them.
   the dates). Every member checks in once a season to confirm their wishlist;
   until then their list isn't handed out.
 - Flow: sign in (Google, Discord, Twitch, GitHub, Reddit or email link) →
-  profile (name, Amazon UK wishlist) → join a workplace, community or friends
+  profile (name, Amazon wishlist from any Amazon store) → join a workplace, community or friends
   group → pick up random wishlists (fewest gifts first; at most five un-gifted
   at a time) → buy from the wishlist on Amazon → mark "Gifted" → recipients
   post thank-you postcards (kudos) to a feed.
@@ -52,7 +52,8 @@ Addresses stay private because Amazon wishlists deliver without revealing them.
 
 ## Capabilities and Constraints
 
-- Amazon UK wishlists only today; other wishlist sites are planned.
+- Amazon wishlists from any Amazon store (owner, 22 Oct 2026); other wishlist
+  sites are planned. Affiliate tags only go on amazon.co.uk links.
 - Anonymous by design: gifters are never shown to recipients; kudos may be posted
   publicly by the recipient.
 - Built: groups (workplaces, communities, friends), the yearly season and

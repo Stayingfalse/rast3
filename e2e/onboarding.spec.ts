@@ -47,7 +47,7 @@ test("a new member fills in their profile, then joins their workplace", async ({
   await dialog.getByLabel("First name").fill("Olive");
   await dialog.getByLabel("Last name").fill("Onboard");
   await dialog
-    .getByLabel("Amazon UK wishlist link")
+    .getByLabel("Amazon wishlist link")
     .fill("https://www.amazon.co.uk/hz/wishlist/ls/E2EONB0001?ref_=x");
   await settle(page);
   await snap(page, testInfo, "onboarding-profile");
@@ -118,4 +118,25 @@ test("an unknown work domain offers to start an organisation", async ({
     page.getByRole("heading", { name: "Your organisation is waiting for approval" }),
   ).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("a wishlist from any Amazon store is accepted, and only Amazon", async ({ page }, testInfo) => {
+  await loginAs(page, { email: `abroad-${testInfo.project.name}@${E}` });
+  const save = (amazonWishlistUrl: string) =>
+    page.request.post("/api/trpc/profile.saveProfile", {
+      data: { json: { firstName: "Ana", lastName: "Abroad", amazonWishlistUrl } },
+    });
+  for (const ok of [
+    "https://www.amazon.com/hz/wishlist/ls/E2EABR0001",
+    "https://www.amazon.de/hz/wishlist/ls/E2EABR0002?ref_=x",
+    "https://www.amazon.co.jp/registry/wishlist/E2EABR0003",
+  ]) {
+    expect((await save(ok)).status(), ok).toBe(200);
+  }
+  for (const bad of [
+    "https://www.amazon.evil.com/hz/wishlist/ls/E2EABR0004",
+    "https://example.com/hz/wishlist/ls/E2EABR0005",
+  ]) {
+    expect((await save(bad)).status(), bad).toBe(400);
+  }
 });

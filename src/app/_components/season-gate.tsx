@@ -144,7 +144,7 @@ function CheckInCard({ status }: { status: Status }) {
           </label>
           {mode === "new" && (
             <Field data-invalid={!!error || undefined}>
-              <FieldLabel htmlFor="check-in-url">Amazon UK wishlist link</FieldLabel>
+              <FieldLabel htmlFor="check-in-url">Amazon wishlist link</FieldLabel>
               <Input
                 id="check-in-url"
                 type="url"

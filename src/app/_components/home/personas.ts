@@ -86,12 +86,12 @@ export const PITCH: Record<Persona, Pitch> = {
       },
       {
         q: "What do I need?",
-        a: "Your work email and an Amazon UK wishlist set to shared, with your gift address on it.",
+        a: "Your work email and an Amazon wishlist set to shared, with your gift address on it.",
       },
     ],
     steps: [
       { title: "Sign in", body: "Use Google, Discord or an email link, then add your work email to join your workplace." },
-      { title: "Add your wishlist", body: "Paste your Amazon UK wishlist link. A range of prices helps every Santa find something." },
+      { title: "Add your wishlist", body: "Paste your Amazon wishlist link, from any Amazon store. A range of prices helps every Santa find something." },
       { title: "Your team first", body: "Pick up to three lists from your own team, then gift across the organisation if you like." },
       { title: "Say thank you", body: "When a parcel lands, post a thank-you postcard to your organisation's feed." },
     ],
@@ -154,12 +154,12 @@ export const PITCH: Record<Persona, Pitch> = {
       },
       {
         q: "What do I need?",
-        a: "A Discord account that's in the server, plus an Amazon UK wishlist with your gift address on it.",
+        a: "A Discord account that's in the server, plus an Amazon wishlist with your gift address on it.",
       },
     ],
     steps: [
       { title: "Sign in with Discord", body: "We check you're in the server, then you join its group in one tap." },
-      { title: "Add your wishlist", body: "Paste your Amazon UK wishlist link, with your gift address set on Amazon." },
+      { title: "Add your wishlist", body: "Paste your Amazon wishlist link, from any Amazon store, with your gift address set on Amazon." },
       { title: "Pick some up", body: "Whenever you're ready, pick up a random list or a few. Fewest gifts come first." },
       { title: "Say thank you", body: "When a parcel lands, post a thank-you postcard to the group's feed." },
     ],
@@ -222,12 +222,12 @@ export const PITCH: Record<Persona, Pitch> = {
       },
       {
         q: "What do I need?",
-        a: "An Amazon UK wishlist set to shared, with your gift address on it. It takes about two minutes.",
+        a: "An Amazon wishlist from any Amazon store, set to shared, with your gift address on it. It takes about two minutes.",
       },
     ],
     steps: [
       { title: "Open your invite", body: "Follow the link you were sent and sign in with Google, Discord or an email link." },
-      { title: "Add your wishlist", body: "Paste your Amazon UK wishlist link. A range of prices helps every Santa find something." },
+      { title: "Add your wishlist", body: "Paste your Amazon wishlist link, from any Amazon store. A range of prices helps every Santa find something." },
       { title: "Pick some up", body: "Whenever you're ready, pick up a random list or a few. The ones with the fewest gifts come first." },
       { title: "Say thank you", body: "When a parcel lands, post a thank-you postcard. Your Santa sees it, but never who you are." },
     ],

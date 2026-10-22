@@ -91,7 +91,11 @@ export async function affiliateFor(
   return { enabled: true, tag: own?.tag ?? s.defaultTag };
 }
 
-/** The wishlist address with the tracking ID added (Amazon.co.uk only). */
+/**
+ * The wishlist address with the tracking ID added. Amazon.co.uk only: the
+ * account is a UK Associates account, so lists on other Amazon stores (any
+ * store is accepted since 22 Oct) are never tagged.
+ */
 export function taggedUrl(wishlistUrl: string, tag: string): string | null {
   try {
     const url = new URL(wishlistUrl);

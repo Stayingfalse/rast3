@@ -108,7 +108,7 @@
 ### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 25 | Sun 1 Nov | Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
+| 25 | Sun 1 Nov | **Done early (bonus day, 22 Oct).** Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
 | 26 | Mon 2 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
 | 27 | Tue 3 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | Accessibility + mobile pass |
@@ -865,6 +865,36 @@ that don't touch the data model. Known items to include:
   - **Owner, 22 Oct: Days 21 (duplicate-gift claims) and 23 (anonymous
     questions) are removed.** Santas buy from the wishlist itself. Both are
     now spare days.
-  - **Next (nightly, 23 Oct): Day 25, public landing page refresh, pulled
-    forward.** After that: Day 24's remainder (PWA push, and a "new lists to
-    pick up" digest), then Day 26 onwards as planned.
+  - Day 25 was then done the same evening as a bonus day (below).
+- **Day 25 early (22 Oct, bonus day, owner's request): landing page refresh.**
+  - **Owner's choices:** lead with everyone through three ways in, and show
+    the season dates on the parcel label.
+  - **Hero:**
+    - "Send someone a Christmas gift without ever knowing their address";
+      the body names workplace, community and friends.
+    - The label reads "To: Someone in your group" and gains a Posting row
+      ("Opens 15 November", then "Open until 6 January", then "Closed until
+      next November"), all read live from the season settings.
+    - Under the buttons: "Been before? Sign in and check in for Christmas
+      2026…", where "Sign in" opens sign-in.
+  - **Three ways in:** a new label-stock sheet for workplace, Discord
+    community and friends, each with its Group and Join with field rows, plus
+    "Organising one? … Start a group".
+  - **Route and small print brought up to date:**
+    - no departments; start with up to three from your team; hold up to
+      five at a time;
+    - thank-you postcards and the yearly stamp;
+    - new answers for "When does it run?" and "Is it free?" (affiliate
+      links, stated plainly);
+    - the closing line follows the season.
+  - **Phones:** the opening line is shorter and the paragraph is normal
+    size, so the label's airmail edge shows on the first screen.
+  - **Finish review** (impeccable's reviewer) made six fixes:
+    - no kicker above door titles;
+    - the proof line went back under the buttons, clear of the postmark;
+    - the inline Sign in works;
+    - pick-up and join-code copy matches the code;
+    - PRODUCT.md, DESIGN.md and the surface brief now record the owner's
+      22 Oct decisions.
+  - **Next (nightly, 23 Oct): Day 24's remainder,** PWA push notifications
+    and a "new lists to pick up" email. Then Day 26 onwards as planned.

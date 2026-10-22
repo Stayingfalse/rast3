@@ -19,11 +19,38 @@ test.describe("public pages", () => {
     });
   }
 
-  test("signed-out visitors see the Join Santa button", async ({ page }) => {
+  test("the stamp rack re-prints the pitch for each visitor", async ({ page }, testInfo) => {
+    const errors = trackPageErrors(page);
     await page.goto("/");
-    await expect(
-      page.getByRole("button", { name: /Join Santa/ }),
-    ).toBeVisible();
+    const rack = page.getByRole("radiogroup", { name: /Who's posting/ });
+    // invited members by default
+    await expect(rack.getByRole("radio", { name: /been invited/i })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Join your group" }).first()).toBeVisible();
+
+    // a Discord organiser presses their stamp: label, pitch and button follow
+    await rack.getByRole("radio", { name: /run a Discord/i }).click();
+    await expect(rack.getByRole("radio", { name: /run a Discord/i })).toBeChecked();
+    await expect(page).toHaveURL(/[?&]for=discord/);
+    await expect(page.getByText("A member you've only met in voice chat")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /A Christmas your server will talk about/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Link your Discord server" }).first()).toBeVisible();
+
+    // arrow keys move along the rack
+    await page.keyboard.press("ArrowRight");
+    await expect(rack.getByRole("radio", { name: /my friends/i })).toBeChecked();
+    await expect(rack.getByRole("radio", { name: /my friends/i })).toBeFocused();
+
+    // a shared link opens on its pitch
+    await page.goto("/?for=workplace");
+    await expect(rack.getByRole("radio", { name: /run a workplace/i })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Set up your workplace" }).first()).toBeVisible();
+    await settle(page);
+    await snap(page, testInfo, "home-workplace");
+
+    // the pitch's button opens sign-in
+    await page.getByRole("button", { name: "Set up your workplace" }).first().click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(errors).toEqual([]);
   });
 
   test("unknown pages show the branded not-found page", async ({ page }) => {

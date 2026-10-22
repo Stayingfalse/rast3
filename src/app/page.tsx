@@ -8,17 +8,23 @@ import { db } from "~/server/db";
 import { getPublicTotals } from "~/server/public-stats";
 import { currentSeason, publicSeason, ukDay } from "~/server/season";
 import { HydrateClient } from "~/trpc/server";
-import { HomeHero } from "./_components/home-hero";
+import { HomePitch } from "./_components/home/home-pitch";
+import { isPersona } from "./_components/home/personas";
 import HomeMarketingServer from "./_components/home-marketing-server";
 import KudosAreaClient from "./_components/kudos-area-client";
 import { GroupTotals } from "./_components/share/group-totals";
 import { StampAlbum } from "./_components/stamp-album";
 import { Wordmark } from "./_components/post/wordmark";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ for?: string }>;
+}) {
   const session = await auth();
 
   if (!session?.user) {
+    const { for: forWhom } = await searchParams;
     const [totals, s] = await Promise.all([getPublicTotals(), publicSeason(db)]);
     const season = {
       year: currentSeason(),
@@ -29,7 +35,11 @@ export default async function Home() {
     return (
       <HydrateClient>
         <div className="flex w-full flex-col gap-24">
-          <HomeHero totals={totals} season={season} />
+          <HomePitch
+            initial={isPersona(forWhom) ? forWhom : "invited"}
+            totals={totals}
+            season={season}
+          />
           <HomeMarketingServer season={season} />
           <KudosFeed />
         </div>

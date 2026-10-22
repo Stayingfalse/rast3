@@ -20,8 +20,6 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { IDEAS_HINT, ideaLines, ideasProblem, MAX_IDEAS } from "~/lib/gift-ideas";
 import { api } from "~/trpc/react";
 
 interface ProfileSetupModalProps {
@@ -32,7 +30,6 @@ interface ProfileSetupModalProps {
     firstName?: string | null;
     lastName?: string | null;
     amazonWishlistUrl?: string | null;
-    giftIdeas?: string | null;
     profileCompleted?: boolean;
   } | null;
 }
@@ -68,7 +65,6 @@ export function ProfileSetupModal({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [wishlist, setWishlist] = useState("");
-  const [ideas, setIdeas] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fill the form when the window opens, not on every profile refetch:
@@ -79,7 +75,6 @@ export function ProfileSetupModal({
       setFirstName(existingProfile?.firstName ?? "");
       setLastName(existingProfile?.lastName ?? "");
       setWishlist(existingProfile?.amazonWishlistUrl ?? "");
-      setIdeas(existingProfile?.giftIdeas ?? "");
       setErrors({});
     }
     wasOpen.current = isOpen;
@@ -103,12 +98,9 @@ export function ProfileSetupModal({
     if (url && !AMAZON_WISHLIST.test(url)) {
       next.wishlist = "That doesn't look like an Amazon UK wishlist link";
     }
-    const giftIdeas = ideaLines(ideas);
-    const ideasError = ideasProblem(giftIdeas);
-    if (ideasError) next.ideas = ideasError;
     setErrors(next);
     if (Object.keys(next).length) return;
-    save.mutate({ firstName, lastName, amazonWishlistUrl: url, giftIdeas });
+    save.mutate({ firstName, lastName, amazonWishlistUrl: url });
   };
 
   return (
@@ -130,8 +122,8 @@ export function ProfileSetupModal({
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Your name, your Amazon wishlist and a few gift ideas."
-              : "Your name and your Amazon wishlist. Next you'll join your workplace, a friends group or a community."}
+              ? "Your name and your Amazon wishlist."
+              : "Just your name and your Amazon wishlist. Next you'll join your workplace, a friends group or a community."}
           </DialogDescription>
         </DialogHeader>
 
@@ -182,24 +174,6 @@ export function ProfileSetupModal({
                   up anyone else&apos;s. Make the list public or shared so
                   Santas can open it.
                 </FieldDescription>
-              )}
-            </Field>
-            <Field data-invalid={!!errors.ideas || undefined}>
-              <FieldLabel htmlFor="giftIdeas">
-                Gift ideas <span className="text-muted-foreground font-normal">(optional)</span>
-              </FieldLabel>
-              <Textarea
-                id="giftIdeas"
-                rows={MAX_IDEAS}
-                value={ideas}
-                onChange={(e) => setIdeas(e.target.value)}
-                aria-invalid={!!errors.ideas}
-                placeholder={"Good coffee beans\nAnything for the garden\nT-shirts: size M"}
-              />
-              {errors.ideas ? (
-                <FieldError>{errors.ideas}</FieldError>
-              ) : (
-                <FieldDescription>{IDEAS_HINT}</FieldDescription>
               )}
             </Field>
           </FieldGroup>

@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 
-import { BUDGET_LABEL } from "~/lib/gift-ideas";
 import { api, type RouterOutputs } from "~/trpc/react";
-import { ParcelHints } from "../parcel-hints";
 import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
@@ -51,12 +49,6 @@ export function GroupHome({ group }: { group: Group }) {
         >
           {group.name}
         </h2>
-        {group.budget && (
-          <p className="text-frost-soft text-sm">
-            Suggested budget: {BUDGET_LABEL[group.budget]}. A guide from the
-            organisers, not a rule.
-          </p>
-        )}
         {group.affiliate && <AffiliateNote />}
       </div>
 
@@ -103,7 +95,6 @@ export function GroupHome({ group }: { group: Group }) {
                 <p className="text-ink font-semibold">
                   {done ? "Gifted. Thank you!" : "A wishlist from this group"}
                 </p>
-                {!done && <ParcelHints budget={a.budget} ideas={a.ideas} />}
                 <div className="flex flex-wrap gap-2">
                   {a.link && (
                     <a

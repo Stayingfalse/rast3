@@ -141,12 +141,3 @@ export async function leaveWorkplace(db: Db, userId: string) {
     where: { userId, group: { kind: { in: ["ORG", "TEAM"] } } },
   });
 }
-
-/** Day 20: the organiser's suggested budget for a group (teams follow their workplace). */
-export async function budgetFor(db: Pick<PrismaClient, "group">, groupId: string) {
-  const g = await db.group.findUnique({
-    where: { id: groupId },
-    select: { kind: true, budget: true, parent: { select: { budget: true } } },
-  });
-  return (g?.kind === "TEAM" ? g.parent?.budget : g?.budget) ?? null;
-}

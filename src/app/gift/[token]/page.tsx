@@ -9,10 +9,7 @@ import {
   taggedUrl,
   tagForHost,
 } from "~/server/affiliate";
-import { BUDGET_LABEL, ideaLines } from "~/lib/gift-ideas";
 import { db } from "~/server/db";
-import { budgetFor } from "~/server/groups";
-import { currentSeason } from "~/server/season";
 
 export const metadata: Metadata = {
   title: "A wishlist to gift · Random Acts of Santa",
@@ -41,7 +38,7 @@ export default async function GiftPage({ params }: Props) {
       groupId: true,
       ownerId: true,
       wishlistUrl: true,
-      owner: { select: { amazonWishlistUrl: true, giftIdeas: true } },
+      owner: { select: { amazonWishlistUrl: true } },
     },
   });
   if (!page) notFound();
@@ -53,11 +50,6 @@ export default async function GiftPage({ params }: Props) {
   // the owner deletes their account
   const wishlist = page.ownerId ? (page.wishlistUrl ?? page.owner?.amazonWishlistUrl ?? null) : null;
   const affiliate = await affiliateFor(db, page.groupId, page.season);
-  // Day 20: this season's ideas and suggested budget (the owner's words, no
-  // name); past seasons' pages keep just the list
-  const thisSeason = !!wishlist && page.season === currentSeason();
-  const ideas = thisSeason ? ideaLines(page.owner?.giftIdeas) : [];
-  const budget = thisSeason ? await budgetFor(db, page.groupId) : null;
   const h = await headers();
   const tagged =
     wishlist && affiliate.enabled
@@ -92,33 +84,6 @@ export default async function GiftPage({ params }: Props) {
                 Someone in your group shared this Amazon wishlist. You
                 don&apos;t know who, and they won&apos;t know it&apos;s you.
               </p>
-              {(ideas.length > 0 || budget) && (
-                <dl className="border-rule grid gap-3 border-y py-4 sm:grid-cols-[auto_1fr] sm:gap-x-6">
-                  {budget && (
-                    <>
-                      <dt className="label-caps text-ink-soft">Suggested budget</dt>
-                      <dd className="text-ink">
-                        {BUDGET_LABEL[budget]}{" "}
-                        <span className="text-ink-soft text-sm">
-                          (a guide from the group&apos;s organiser, not a rule)
-                        </span>
-                      </dd>
-                    </>
-                  )}
-                  {ideas.length > 0 && (
-                    <>
-                      <dt className="label-caps text-ink-soft">Their gift ideas</dt>
-                      <dd>
-                        <ul className="text-ink flex list-disc flex-col gap-1 pl-5">
-                          {ideas.map((idea, i) => (
-                            <li key={i}>{idea}</li>
-                          ))}
-                        </ul>
-                      </dd>
-                    </>
-                  )}
-                </dl>
-              )}
               <div className="flex flex-col gap-2">
                 {tagged && (
                   // UK ad rules: say it's an ad before the link, not after

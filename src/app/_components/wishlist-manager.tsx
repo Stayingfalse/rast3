@@ -7,7 +7,6 @@ import { api, type RouterOutputs } from "~/trpc/react";
 import { Postmark } from "./post/postmark";
 import { ShareSheet, type ShareRequest } from "./share/share-sheet";
 import { Preloader } from "./preloader";
-import { ParcelHints } from "./parcel-hints";
 import { ProfileSetupModal } from "./profile-setup-modal";
 
 type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
@@ -421,10 +420,6 @@ export function WishlistManager() {
                 </p>
               )}
             </div>
-          )}
-
-          {!archived && !hasPurchase && (
-            <ParcelHints budget={assignment.budget} ideas={assignment.ideas} />
           )}
 
           <div className="mt-auto flex flex-col gap-2">

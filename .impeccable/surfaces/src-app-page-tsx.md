@@ -35,7 +35,7 @@ STORY: The visitor reads the hook and presses the stamps that fit: which group (
 
 FIRST VIEWPORT: Hanging post; left: lockup, hook, the stamp rack; right: the parcel label re-addressed for the chosen visitor with the Posting row. The chosen visitor's button is in the first viewport.
 
-FORM: Christmas post; the dealt lead of three surface structures (the roll printed only a reproduction key, no seed reference). seed: none (unavailable)
+FORM: Christmas post; the dealt lead of three surface structures. seed: not recorded (the surface roll ran and dealt the three cards the owner chose from, but printed only a reproduction key, not a seed reference; disclosed to the owner 22 Oct).
 
 SIGNATURE: Pressing a stamp franks the label (the frank motion, rubber-stamp press); scrolling posts each section in like a letter through a slot, the route's line draws station by station. Reduced motion: everything at rest. ?for= in the address makes each pitch shareable.
 

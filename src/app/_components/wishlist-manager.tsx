@@ -989,10 +989,10 @@ export function WishlistManager() {
         >
           <div className="label-stock shadow-lift w-full max-w-md p-6">
             <h3 className="font-expanded text-ink mb-4 text-xl font-extrabold">
-              Add your Amazon UK wishlist
+              Add your Amazon wishlist
             </h3>
             <p className="text-ink-soft mb-3 text-sm">
-              You need to add your Amazon UK wishlist URL before you can receive
+              You need to add your Amazon wishlist URL before you can receive
               assignments. You can add it now or cancel to do this later.
             </p>
             <input

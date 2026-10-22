@@ -22,6 +22,7 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { amazonWishlistRegex } from "~/lib/wishlist";
 import { api } from "~/trpc/react";
 
 interface ProfileSetupModalProps {
@@ -36,9 +37,6 @@ interface ProfileSetupModalProps {
     profileCompleted?: boolean;
   } | null;
 }
-
-const AMAZON_WISHLIST =
-  /^https:\/\/www\.amazon\.co\.uk\/(?:hz\/)?wishlist\/(?:ls\/)?([A-Z0-9]{10,13})(?:\/.*)?(?:[?#].*)?$/i;
 
 /** Drops tracking query strings and fragments from a pasted wishlist link. */
 const cleanWishlistUrl = (url: string) => {
@@ -100,8 +98,8 @@ export function ProfileSetupModal({
     if (!firstName.trim()) next.firstName = "Add your first name";
     if (!lastName.trim()) next.lastName = "Add your last name";
     const url = cleanWishlistUrl(wishlist);
-    if (url && !AMAZON_WISHLIST.test(url)) {
-      next.wishlist = "That doesn't look like an Amazon UK wishlist link";
+    if (url && !amazonWishlistRegex.test(url)) {
+      next.wishlist = "That doesn't look like an Amazon wishlist link";
     }
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -160,7 +158,7 @@ export function ProfileSetupModal({
             </div>
             <Field data-invalid={!!errors.wishlist || undefined}>
               <FieldLabel htmlFor="amazonWishlist">
-                Amazon UK wishlist link
+                Amazon wishlist link
               </FieldLabel>
               <Input
                 id="amazonWishlist"

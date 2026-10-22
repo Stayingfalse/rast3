@@ -927,3 +927,12 @@ that don't touch the data model. Known items to include:
     - copy claims were checked against the code, which removed a Discord
       role-gating claim (role gating isn't built yet).
   - **Finish review:** two rounds, all fixes applied.
+- **Any Amazon store (22 Oct, owner):** wishlists from every Amazon store
+  are now accepted (.com, .de, .fr, .co.jp, .com.au and the rest), not just
+  amazon.co.uk. Copy says "Amazon wishlist" everywhere.
+  - Only amazon.co.uk links carry the affiliate tag (it's a UK Associates
+    account); other stores' lists open straight on Amazon, with no gift
+    page.
+  - Look-alike domains are refused.
+  - There was no earlier record of an international check: the code had
+    accepted amazon.co.uk only.

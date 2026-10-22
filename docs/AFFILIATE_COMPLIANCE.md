@@ -94,3 +94,11 @@ clear enough: say **"Ad"** up front, before people engage. So:
 - In Associates Central, list `raosanta.uk` only, not dev.
 - Make sure Cloudflare's bot protection doesn't block Amazon's crawler from
   `/gift/`.
+
+## Other Amazon stores (22 Oct 2026)
+
+Members can share a wishlist from any Amazon store (owner's decision). The
+account is an Amazon.co.uk Associate, so only amazon.co.uk links are ever
+tagged; lists on other stores open straight on Amazon with no tag, no gift
+page and no disclosure (nothing to disclose). Tagging them would need each
+country's own Associates account.

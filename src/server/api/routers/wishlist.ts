@@ -12,7 +12,7 @@ import {
   inOtherActiveOrg,
   requireGiverScope,
 } from "~/server/scope";
-import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
+import { affiliateFor, getAffiliateSettings, giftPageFor, taggedUrl, TEST_TAG } from "~/server/affiliate";
 import { cleanWishlistUrl } from "~/lib/wishlist";
 import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
 import { getWorkplace } from "~/server/groups";
@@ -89,6 +89,8 @@ export const wishlistRouter = createTRPCRouter({
         const url = raw ? cleanWishlistUrl(raw) : null;
         const contextId = a.groupId ?? org?.group.id;
         if (!url || !contextId || !settings.enabled) return url;
+        // other Amazon stores can't carry our amazon.co.uk tag: straight to Amazon
+        if (!taggedUrl(url, TEST_TAG)) return url;
         if (!affiliate.has(contextId)) {
           const on = await affiliateFor(ctx.db, contextId, undefined, settings);
           affiliate.set(contextId, on.enabled);

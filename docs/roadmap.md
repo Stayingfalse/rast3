@@ -828,8 +828,13 @@ that don't touch the data model. Known items to include:
       checked in for this Christmas (otherwise their list isn't handed out);
     - in gifting's first week, "gifting is open" (worded for checked-in or
       not);
-    - when a Santa marks a gift, an email to the list's owner that never
-      says who sent it.
+    - a gift check-in: 4 to 14 days after a Santa marked a gift to
+      someone's list, if they haven't posted a thank-you since, a gentle
+      "has anything turned up?" email. It's at most one a fortnight, and
+      never goes to people nobody has sent anything. (First built as an
+      email on the day of the gift; the owner changed it the same evening
+      because that spoils the surprise. Migration `gift_check_in` renames
+      the email kind.)
   - **Safety:**
     - every email is claimed in `EmailLog` before it's sent, so it goes once
       even if the job overlaps itself;
@@ -852,7 +857,9 @@ that don't touch the data model. Known items to include:
     through a test-only endpoint. It checks:
     - the nudge goes only to people who haven't checked in, once;
     - "gifting is open" skips anyone who opted out;
-    - marking a gift logs an email to the owner;
+    - nothing goes on the day of a gift, nor to someone who already said
+      thanks, nor to anyone nobody has sent anything; the check-in goes
+      once, days later;
     - the stop link and one-click work;
     - the profile checkbox works.
   - **Next (nightly): Day 21 if the owner confirms it's wanted, else Day 23,**

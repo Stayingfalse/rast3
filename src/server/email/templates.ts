@@ -114,16 +114,20 @@ export const seasonOpen = (
       : { label: "Check in", path: "/" },
   });
 
-/** Someone marked a gift to your list. */
-export const giftReceived = (userId: string) =>
+/**
+ * A few days after a Santa marked a gift to your list, if you haven't
+ * posted a thank-you. Worded as a check-in, never "you've been sent a gift",
+ * so the surprise is kept (owner, 22 Oct).
+ */
+export const giftCheckIn = (userId: string, season: number) =>
   render({
     userId,
-    subject: "A Santa sent you a gift",
-    kicker: "Special delivery",
-    heading: "Someone sent you a gift",
+    subject: "Checking in: has anything turned up?",
+    kicker: `Christmas ${season}`,
+    heading: "How's your Christmas shaping up?",
     paragraphs: [
-      "A Santa picked up your wishlist and has just sent you something from it. You won't know who, and that's the fun.",
-      "When it arrives, you can post a thank-you to your mystery Santa.",
+      "Just checking in. If a parcel from a mystery Santa has arrived, you can post them a thank-you postcard. It's the only way they'll know it got to you.",
+      "Nothing yet? There's nothing you need to do.",
     ],
-    button: { label: "Say thank you", path: "/" },
+    button: { label: "Post a thank-you", path: "/" },
   });

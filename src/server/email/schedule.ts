@@ -16,7 +16,7 @@ export function startReminderSchedule() {
   const tick = async () => {
     try {
       const run = await runReminders(db);
-      if (run.nudged || run.opened) log.info(run, "Reminder emails processed");
+      if (run.nudged || run.opened || run.giftCheckIns) log.info(run, "Reminder emails processed");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
     }

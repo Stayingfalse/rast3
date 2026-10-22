@@ -45,7 +45,8 @@ export default async function UnsubscribePage({ searchParams }: Props) {
             </h1>
             <p className="text-ink-soft max-w-md">
               We send a few a season: a nudge to check in before gifting opens,
-              one when it opens, and one when a Santa sends you a gift.
+              one when it opens, and the odd check-in to see how your
+              Christmas is going.
             </p>
             <form method="post" action={action(false)}>
               <input type="hidden" name="from" value="page" />

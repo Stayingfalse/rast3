@@ -344,7 +344,9 @@ model AffiliateSettings {
 enum EmailKind {
   CHECK_IN_NUDGE
   SEASON_OPEN
-  GIFT_RECEIVED
+  /// a few days after a gift was marked, if no thank-you yet (owner, 22 Oct:
+  /// never on the day, which would spoil the surprise)
+  GIFT_CHECK_IN
 }
 
 enum EmailStatus {

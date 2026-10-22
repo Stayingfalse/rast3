@@ -99,7 +99,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 19 | Mon 26 Oct | **Done (21 Oct; the nightly run was missed and run by hand in the evening).** Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
-| 20 | Tue 27 Oct | **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
+| 20 | Tue 27 Oct | **Done (22 Oct).** **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
 | 21 | Wed 28 Oct | **Re-planned 20 Oct.** Avoid duplicate gifts without reading wishlists: "I'm buying from this list" claims on a picked-up list and a short note to the next Santa (no item data from Amazon) |
 | 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
 | 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
@@ -170,7 +170,12 @@ Suggestions beyond the brief, to schedule when the owner agrees:
   so it fits the communities target well.
 - **Charity wishlists**: orgs add a shelter's or school's wishlist to the pool
   (good for workplace CSR and the paid tier).
-- **Budget bands** per group, with each wishlist item tagged by price.
+- **Budget bands** per group: built 22 Oct (Day 20). Item prices are out: Amazon
+  Associates rules forbid reading them from the list.
+- **Ideas at check-in** (idea, 22 Oct): returning members confirm or refresh
+  their gift ideas when they check in for the season, like their wishlist.
+- **Mixing rules** (from the original Day 18): e.g. whether a workplace's lists
+  may go to strangers. Not scheduled.
 - **Calendar (.ics) export** for season opening, last-order-for-Christmas and season close.
 - **"Shipped / arrived" tracking** with a nudge if nothing has arrived by a date.
 - **Streaks and badges** for Random Acts (gentle gamification, opt-in).
@@ -802,5 +807,22 @@ that don't touch the data model. Known items to include:
     gifted list waits behind the ones with no gifts; a sixth pick-up is
     refused; gifting frees a place.
   - **Next: Day 20, gift ideas and budget bands** (re-planned 20 Oct).
-    Members add a few gift ideas to their profile, shown anonymously on the
-    gift page, and organisers set a suggested budget band per group.
+- **Day 19 and pre-season fixes merged to prod (21 Oct, owner approved).**
+  #49 then #50; the `pre_season_fixes` migration ran cleanly on prod.
+- **Day 20 (22 Oct): gift ideas and suggested budgets.**
+  - **Gift ideas:** members add up to five short ideas to their profile, one
+    per line (sizes, hobbies, things they'd love). They're shown to Santas on
+    the picked-up wishlist and on this season's gift page, never with a name.
+    Links, emails and phone numbers are refused, so the public page can't
+    carry contact details or spam. Nothing is read from Amazon.
+  - **Suggested budget:** organisers (friends, community and workplace)
+    choose "No suggestion" or up to £10, £20, £30 or £50 in the console's
+    Settings. Teams follow their workplace. It shows on the group's page, on
+    each picked-up wishlist and on the gift page, worded as a guide.
+  - **Gift pages:** past seasons' pages keep just the list; the ideas and
+    budget only show for the current season.
+  - **Migration** `gift_ideas_budget`: two new nullable columns, rehearsed on
+    a scratch MariaDB with no drift.
+  - **Small:** added the shadcn Textarea, styled like our inputs.
+  - **Next: Day 21, avoiding duplicate gifts:** "I'm buying from this list"
+    claims on a picked-up list and a short note to the next Santa.

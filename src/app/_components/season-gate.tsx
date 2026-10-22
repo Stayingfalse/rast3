@@ -157,6 +157,7 @@ function CheckInCard({ status }: { status: Status }) {
               />
               <FieldDescription>
                 Make sure the list is public or shared, with your gift address set.
+                Add things at a range of prices, so every Santa finds something.
               </FieldDescription>
             </Field>
           )}

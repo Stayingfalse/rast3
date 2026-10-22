@@ -177,7 +177,7 @@ export function ProfileSetupModal({
                 <FieldDescription>
                   You can add it later, but you&apos;ll need it before you pick
                   up anyone else&apos;s. Make the list public or shared so
-                  Santas can open it.
+                  Santas can open it, and add things at a range of prices.
                 </FieldDescription>
               )}
             </Field>

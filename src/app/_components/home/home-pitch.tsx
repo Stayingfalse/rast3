@@ -90,7 +90,7 @@ function StampRow<T extends string>({
               text
             ) : (
               <>
-                <span className="text-[0.625rem] tracking-[0.06em] sm:text-[0.6875rem] sm:tracking-[0.08em]">
+                <span className="text-[0.6875rem] tracking-[0.05em] sm:tracking-[0.08em]">
                   {text[0]}
                 </span>
                 <span className="text-xs tracking-[0.01em] sm:text-sm sm:tracking-[0.04em]">{text[1]}</span>

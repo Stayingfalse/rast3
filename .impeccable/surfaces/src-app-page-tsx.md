@@ -11,7 +11,8 @@ Scope: the public home page (Persuade) for signed-out visitors, and the same
 route's signed-in view (Operate: wishlist assignments + thank-you feed), plus the
 shared chrome they sit in (ground, hanging-post sky, brand lockup, sign-in, cookie notice).
 
-Audience: workplaces first (colleagues, often remote), communities second.
+Audience (owner, 22 Oct 2026): everyone, through three ways in: workplaces,
+Discord communities, and friends or family.
 Job: understand Random Acts (no draw, gift whenever you like, address never
 shared) and join. Proof: live anonymised totals (gifts posted, thank-yous,
 members), hidden when small. Constraints: keep the name exactly, the 2026 year
@@ -28,7 +29,7 @@ THESIS: Random Acts as the Christmas post: every gift is a parcel sent to someon
 
 OWN-WORLD: Night-navy sky as ground, the hanging post above it (flat-print baubles, stamps and luggage tags on gold thread, pinned to the edges). Working surfaces are cream label stock with hairline ink rules, perforated stamp edges and a red/navy airmail band; postal red is the one action colour, gold is reserved for postmark rings. Archivo across widths: the brand lockup is the stamp mark beside the name in expanded 800 mixed case on two lines, expanded caps for headings and labels, regular for reading; tabular numerals for counts.
 
-STORY: A visitor sees a parcel label addressed "To: a colleague · From: Santa · Address: withheld", understands that's the whole idea, sees the franking counter proving people do it, and joins. Below, the route (share, pick up, post, thank) and the small print answer the two worries: address and money.
+STORY: A visitor sees a parcel label addressed "To: someone in your group · From: Santa · Address: withheld", with a Posting row giving the season's dates, understands that's the whole idea, sees the franking counter proving people do it, and joins. Below, "Three ways in" (a ruled label sheet: workplace, community, friends, each with Group and Join with field rows), then the route (share, pick up, post, thank), the small print (address, money, Secret Santa, dates, who, cost) and a closing line that follows the season.
 
 FIRST VIEWPORT: The hanging post hangs across the top, clear of the Sign in button. Left: the stamp-mark lockup (the 2026 year printed on the stamp), a one-line hook and "Join Santa" in postal red. Right (stacked below on phones): the parcel label at real label proportions, airmail band on its edge, the live franking counter postmarked across its corner.
 

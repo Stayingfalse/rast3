@@ -11,7 +11,7 @@ const DOORS = [
   {
     kind: "Workplace",
     title: "Your organisation",
-    body: "Colleagues join with their work email, and your own team's wishlists come up first. Anyone can start their organisation; organisers can also ask for a join code.",
+    body: "Colleagues join with their work email and start with wishlists from their own team, then the whole organisation. Anyone can start theirs; organisers can require a join code too.",
     via: "Your work email",
   },
   {
@@ -36,13 +36,13 @@ const STATIONS = [
   },
   {
     no: "02",
-    title: "Pick one up",
-    body: "Whenever you're ready, pick up a random wishlist from your group. Lists with the fewest gifts come first, so nobody is left out.",
+    title: "Pick some up",
+    body: "Whenever you're ready, pick up a random wishlist or a few. Lists with the fewest gifts come first, so nobody is left out, and you hold up to five at a time.",
   },
   {
     no: "03",
     title: "Post a gift",
-    body: "Buy whatever suits your budget from their list, sent to their Amazon gift address, and mark it Gifted. Then pick up another, or don't.",
+    body: "Buy whatever suits your budget from their list, sent to their Amazon gift address, and mark it Gifted. Gift one or several; giving is always optional.",
   },
   {
     no: "04",
@@ -116,12 +116,13 @@ export default function HomeMarketingServer({ season }: { season: HeroSeason }) 
           <ul className="grid gap-x-8 lg:grid-cols-3">
             {DOORS.map((d) => (
               <li key={d.kind} className="border-rule flex flex-col gap-3 border-t py-5">
-                <p className="label-caps text-ink-soft">{d.kind}</p>
                 <h3 className="font-expanded text-ink text-xl leading-tight font-bold">
                   {d.title}
                 </h3>
                 <p className="text-ink-soft leading-relaxed">{d.body}</p>
-                <dl className="border-rule mt-auto grid grid-cols-[auto_1fr] items-baseline gap-3 border-t border-dashed pt-3">
+                <dl className="border-rule mt-auto grid grid-cols-[6.5rem_1fr] items-baseline gap-x-3 gap-y-2 border-t border-dashed pt-3">
+                  <dt className="label-caps text-ink-soft">Group</dt>
+                  <dd className="text-ink font-semibold">{d.kind}</dd>
                   <dt className="label-caps text-ink-soft">Join with</dt>
                   <dd className="text-ink font-semibold">{d.via}</dd>
                 </dl>

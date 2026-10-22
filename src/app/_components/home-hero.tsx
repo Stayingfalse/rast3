@@ -38,14 +38,12 @@ export function HomeHero({ totals, season }: { totals: PublicTotals; season: Her
           </div>
           {season.phase !== "after" && (
             <p className="text-frost-soft text-sm">
-              Been before? Sign in and check in for Christmas {season.year},
-              so your list is handed out.
+              Been before? <JoinButton label="Sign in" variant="link" /> and
+              check in for Christmas {season.year} so your wishlist is handed
+              out.
             </p>
           )}
         </div>
-      </div>
-      <div className="flex flex-col items-center gap-8 lg:items-end">
-        <ParcelLabel gifts={totals.gifts} posting={posting} />
         {totals.members && (
           <p className="text-frost-soft text-sm">
             <span className="tabular text-frost font-semibold">{totals.members}</span>{" "}
@@ -60,6 +58,9 @@ export function HomeHero({ totals, season }: { totals: PublicTotals; season: Her
             )}
           </p>
         )}
+      </div>
+      <div className="flex justify-center lg:justify-end">
+        <ParcelLabel gifts={totals.gifts} posting={posting} />
       </div>
     </section>
   );

@@ -15,6 +15,8 @@ import {
 import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
 import { cleanWishlistUrl } from "~/lib/wishlist";
 import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
+import { sendOnce } from "~/server/email/mailer";
+import { giftReceived } from "~/server/email/templates";
 import { getWorkplace } from "~/server/groups";
 import {
   archivePastSeasons,
@@ -590,14 +592,31 @@ export const wishlistRouter = createTRPCRouter({
           wishlistAssignment: {
             include: {
               wishlistOwner: {
-                select: { id: true },
+                select: { id: true, email: true, emailReminders: true },
               },
             },
           },
         },
       });
 
-      return purchase;
+      // Tell the owner a gift is on its way (22 Oct). Never holds up marking
+      // it, and never says who sent it.
+      const owner = purchase.wishlistAssignment.wishlistOwner;
+      if (owner.email && owner.emailReminders) {
+        void sendOnce(
+          ctx.db,
+          { id: owner.id, email: owner.email },
+          "GIFT_RECEIVED",
+          currentSeason(),
+          () => giftReceived(owner.id),
+          purchase.id,
+        ).catch(() => undefined);
+      }
+
+      // the buyer gets the purchase only, never the owner's id (anonymity)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- dropped on purpose
+      const { wishlistAssignment: _assignment, ...rest } = purchase;
+      return rest;
     }),
 
   // Report an issue with a wishlist

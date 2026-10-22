@@ -898,3 +898,32 @@ that don't touch the data model. Known items to include:
       22 Oct decisions.
   - **Next (nightly, 23 Oct): Day 24's remainder,** PWA push notifications
     and a "new lists to pick up" email. Then Day 26 onwards as planned.
+- **Home page rethink (22 Oct, same evening, owner's request): the stamp rack.**
+  - **Owner's ask:** think past last year's copy; ask visitors what they're
+    there for and pitch to them; scroll animation; the sell matters most.
+  - **Concept:** chosen from three structures dealt by impeccable's concept
+    roll.
+  - **The rack:** "Who's posting?" with two rows of rubber stamps. First,
+    which group: workplace, Discord server, or friends and family. Second,
+    "I've been invited" or "I'm organising it". That gives six audiences
+    (owner: each kind of group has organisers and users).
+  - **What each combination re-prints:** the parcel label's To line (franked
+    again), the headline, four worries answered, four steps, the button,
+    and the small print (minus anything already answered).
+  - **Shareable:** `?for=<group>-<join|run>` opens on one pitch, so a Discord
+    admin can post the members' version. Older `?for=` values still work.
+  - **Motion:**
+    - stamps press;
+    - the pitch re-prints;
+    - sections are posted in as they scroll into view, and the route's line
+      draws station by station;
+    - reduced motion shows everything at rest.
+
+    DESIGN.md's motion rules are updated to match.
+  - **Phones:** a compact address strip under the rack carries the To line
+    and the frank, because the label is below the fold.
+  - **Also:**
+    - signed-out visitors no longer see an empty "No thank-yous yet" box;
+    - copy claims were checked against the code, which removed a Discord
+      role-gating claim (role gating isn't built yet).
+  - **Finish review:** two rounds, all fixes applied.

@@ -9,7 +9,7 @@ import { getPublicTotals } from "~/server/public-stats";
 import { currentSeason, publicSeason, ukDay } from "~/server/season";
 import { HydrateClient } from "~/trpc/server";
 import { HomePitch } from "./_components/home/home-pitch";
-import { isPersona } from "./_components/home/personas";
+import { parsePersona } from "./_components/home/personas";
 import HomeMarketingServer from "./_components/home-marketing-server";
 import KudosAreaClient from "./_components/kudos-area-client";
 import { GroupTotals } from "./_components/share/group-totals";
@@ -36,7 +36,7 @@ export default async function Home({
       <HydrateClient>
         <div className="flex w-full flex-col gap-24">
           <HomePitch
-            initial={isPersona(forWhom) ? forWhom : "invited"}
+            initial={parsePersona(forWhom) ?? "workplace-join"}
             totals={totals}
             season={season}
           />

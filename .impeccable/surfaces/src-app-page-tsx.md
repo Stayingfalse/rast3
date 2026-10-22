@@ -31,11 +31,11 @@ THESIS: The page asks who is posting and re-prints itself as that visitor's pitc
 
 OWN-WORLD: Unchanged Christmas Post world (DESIGN.md): night sky, hanging post, label stock, airmail band, Archivo across widths; postal red for actions, so the rack's rubber stamps print in postal red ink when chosen.
 
-STORY: The visitor reads the hook, presses the rubber stamp that fits (I run a workplace / I run a Discord / I've been invited / Me and my friends); the parcel label re-addresses itself and is franked; below, their own worries are answered, their four steps and their button follow. Shared proof, small print and the thank-you post close the page.
+STORY: The visitor reads the hook and presses the stamps that fit: which group (workplace / Discord server / friends and family) and whether they're organising it or invited (owner, 22 Oct: six audiences); the parcel label (on phones, a compact address strip under the rack) re-addresses itself and is franked; below, their own worries are answered, their four steps and their button follow. Shared proof, small print and the thank-you post close the page.
 
 FIRST VIEWPORT: Hanging post; left: lockup, hook, the stamp rack; right: the parcel label re-addressed for the chosen visitor with the Posting row. The chosen visitor's button is in the first viewport.
 
-FORM: Christmas post; position 1 of 7 on the surface list (dealt lead). seed: 6f3d37f9f3320ba0c5a46a473553d403.
+FORM: Christmas post; the dealt lead of three surface structures (the roll printed only a reproduction key, no seed reference). seed: none (unavailable)
 
 SIGNATURE: Pressing a stamp franks the label (the frank motion, rubber-stamp press); scrolling posts each section in like a letter through a slot, the route's line draws station by station. Reduced motion: everything at rest. ?for= in the address makes each pitch shareable.
 

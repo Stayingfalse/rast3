@@ -134,9 +134,9 @@ components:
 
 Every gift on Random Acts of Santa is a parcel sent to someone whose address you never learn, so the whole interface is built from the Christmas post: a night-navy winter sky as the ground, the hanging post above it (baubles, stamps and luggage tags on gold thread), and working surfaces cut from cream label stock with hairline ink rules, an airmail band on the edge, perforated stamps and gold date-stamp postmarks. It is festive without being religious or childish: the season comes from the post office and the night sky, not from snowmen and emoji.
 
-Density is calm. A screen holds one held moment (on the home page, the parcel label itself is the hero) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded weight for the wordmark, expanded caps for headings and label captions, regular width for reading.
+Density is calm. A screen holds one held moment (on the home page, the stamp rack and the parcel label it re-addresses) and everything else sits on a strict ruled grid: label rows, numbered stations on a line, cards in even columns. Live data is part of the material, not a widget: counts are franked onto labels and set in tabular figures. Type is one family, Archivo, used across its width axis: expanded weight for the wordmark, expanded caps for headings and label captions, regular width for reading.
 
-There is one authored motion, the frank: a postmark pressing onto a label once, on load or when a wishlist is marked Gifted. Everything else is still.
+Motion is postal and sparing. The frank (a postmark pressing onto a label) is the signature; on the home page, rubber stamps press, the pitch re-prints, and sections are posted in as they scroll into view (owner, 22 Oct 2026). Product screens stay still apart from the frank.
 
 **Key Characteristics:**
 - Two grounds only: night sky (dark) and label stock (cream). No third surface family.
@@ -144,7 +144,7 @@ There is one authored motion, the frank: a postmark pressing onto a label once, 
 - Archivo across widths: expanded for marks and captions, normal for reading.
 - Hairline rules and the airmail band do the structuring; no decorative chrome.
 - Counts in tabular figures; public totals rounded and shown as "N+".
-- One motion: the frank. Reduced motion shows the postmark at rest.
+- Postal motion only: the frank, the stamp press, posting in on scroll. Reduced motion shows everything at rest.
 
 ## Colors
 
@@ -284,8 +284,15 @@ The 2026 mark is a portrait perforated stamp: cream paper with punched edges, a 
 ### Sky (the hanging post)
 Two authored clusters (`public/brand/sky-left.svg`, `sky-right.svg`, 560×260 each) of flat-print ornaments on gold thread: red, ice-blue and gold baubles, small stamps, cream luggage tags with ruled lines, and four-point gold stars. They replace the 2025 raster bauble illustration (186 KB → about 11 KB). Same palette as the page; no gradients, no glow.
 
-### Motion: the Frank
-One authored animation: the postmark lands (520ms, cubic-bezier(0.16, 1, 0.3, 1)), scaling from 1.35 and -14deg with a slight blur to rest at -10deg. Used on the hero label's postmark and on a newly gifted parcel card. Under reduced motion every animation and transition collapses to an instant, so the postmark simply appears at rest.
+### Motion
+All motion uses one curve, cubic-bezier(0.16, 1, 0.3, 1), and starts from content that is already visible without JavaScript. Under reduced motion every animation and transition collapses to an instant, so everything appears at rest.
+- **The frank** (signature): the postmark lands (520ms), scaling from 1.35 and -14deg with a slight blur to rest at -10deg. Used on the hero label's postmark when it is re-addressed, the phone address strip, and a newly gifted parcel card.
+- **The press** (home page only): a chosen rubber stamp drops 6px and settles (340ms, scale 1.06 to 0.97 to 1, keeping its tilt).
+- **The reprint** (home page only): the visitor's pitch fades up 10px when they change stamps (420ms).
+- **Posted in** (home page only): a section below the fold rises 32px through a slot (clip-path from 18% inset) the first time it scrolls into view; the route's hairline draws left to right, then each station follows 140ms apart. Sections already on screen at load are never held back.
+
+### Stamp Rack (home page)
+The home page asks "Who's posting?" with two rows of rubber stamps (radio groups, arrow keys move along a row): which group (Our workplace / Our Discord server / Friends and family) and a smaller row, I've been invited / I'm organising it. A stamp is an expanded-caps impression in a 3px double rule, tilted about 1.5deg: frost on night when idle, postal red ink on label stock when pressed. The six combinations each have their own label To line, headline, worries (a ruled label sheet), four steps, button and small print (minus anything already answered); `?for=<group>-<join|run>` opens on one. On phones a compact address strip under the rack carries the To line and the frank, because the label sits below the fold.
 
 ### shadcn/ui (adopted 19 Oct 2026, Day 15)
 
@@ -327,7 +334,7 @@ stamps, postmarks, the wordmark and the sky.
 - **Do** set every number in tabular figures, and round public totals (hide under 10, floor to 10, to 50 above 1,000, show as "N+").
 - **Do** separate content with hairline rules and the airmail band rather than extra boxes.
 - **Do** keep touch targets at 44px and check every change at 1280x800 and Pixel 7 widths.
-- **Do** keep the frank as the only authored motion and honour reduced motion.
+- **Do** keep motion postal (the frank, the press, posting in), product screens still, and honour reduced motion.
 
 ### Don't:
 - **Don't** use emoji as icons; draw icons as SVG.

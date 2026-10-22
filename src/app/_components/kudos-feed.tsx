@@ -523,6 +523,12 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     );
   }
 
+  // Signed out, the feed is proof: show it only when there's something to
+  // show (an empty or failed feed on the home page undersells it)
+  if (!session && (error || (allKudos.length === 0 && newKudos.length === 0))) {
+    return null;
+  }
+
   if (error) {
     return (
       <section className={`label-stock w-full p-6 text-center ${className}`}>

@@ -21,7 +21,7 @@ type ParcelLabelProps = {
   posting: Omit<Row, "label">;
   /** who it's addressed to (the stamp rack re-addresses it) */
   to?: string;
-  /** the postmark's small line; changing it franks the label again */
+  /** the postmark's ring text; changing it franks the label again */
   mark?: string;
 };
 
@@ -80,7 +80,8 @@ export function ParcelLabel({ gifts, posting, to, mark }: ParcelLabelProps) {
       <Postmark
         key={mark}
         centre={gifts ? "SENT" : "2026"}
-        sub={mark ?? (gifts ? "2026 SEASON" : "SEASON")}
+        sub={gifts ? "2026 SEASON" : "SEASON"}
+        bottom={mark}
         cancellation
         animate
         className="text-gold-ink pointer-events-none absolute -right-8 -bottom-8 w-44 sm:-right-12 sm:w-52"

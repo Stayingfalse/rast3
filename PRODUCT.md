@@ -8,16 +8,16 @@ web
 
 ## Users
 
-- **Primary (this season): people at work.** Colleagues in an organisation,
-  often remote or hybrid, who don't know each other's home addresses and want to
-  share some Christmas goodwill across teams and departments. They join with a
-  verified work email and are grouped by department.
-- **Also served:** communities and friend groups whose members have unrelated
-  email addresses (e.g. large Discord servers). Support for these groups is
-  being built (Oct–Nov 2026); the public site leads with workplaces this season
-  and treats communities as the second audience.
-- **Admins:** site, domain and department admins who enable their organisation,
-  manage members and departments, and moderate kudos.
+Owner, 22 Oct 2026: the public site leads with **everyone**, through three
+kinds of group ("three ways in"):
+
+- **Workplaces.** Colleagues, often remote or hybrid, who don't know each
+  other's home addresses. They join with a verified work email and pick a team.
+- **Communities.** Groups whose members have unrelated email addresses, e.g.
+  large Discord servers, joined through a linked Discord server.
+- **Friends and family.** Small groups joined with an invite link or code.
+- **Organisers and admins:** group organisers manage members and invites;
+  site admins approve new groups, and moderate kudos.
 
 ## Product Purpose
 
@@ -38,11 +38,14 @@ Addresses stay private because Amazon wishlists deliver without revealing them.
 
 - Christmas only: one site-wide season a year, mid-November to early January.
   Outside the season the site is a countdown and a place to get ready.
+- Gifting opens on 15 November and closes on 6 January (site admins can change
+  the dates). Every member checks in once a season to confirm their wishlist;
+  until then their list isn't handed out.
 - Flow: sign in (Google, Discord, Twitch, GitHub, Reddit or email link) →
-  complete profile (name, work email, department, Amazon UK wishlist URL) →
-  "Get my 3 wishlist assignments" → buy from the wishlist on Amazon → mark
-  "Gifted" (optional note) → recipients and gifters post kudos (message + up to
-  5 photos) to a feed scoped to department / organisation / site.
+  profile (name, Amazon UK wishlist) → join a workplace, community or friends
+  group → pick up random wishlists (fewest gifts first; at most five un-gifted
+  at a time) → buy from the wishlist on Amazon → mark "Gifted" → recipients
+  post thank-you postcards (kudos) to a feed.
 - Members can request more wishlists, report a problem with a wishlist
   (private, empty, broken link), archive or unassign.
 - Used on phones as much as desktops; often opened from a work chat link.
@@ -52,8 +55,9 @@ Addresses stay private because Amazon wishlists deliver without revealing them.
 - Amazon UK wishlists only today; other wishlist sites are planned.
 - Anonymous by design: gifters are never shown to recipients; kudos may be posted
   publicly by the recipient.
-- Groups (orgs, communities, friend groups), the yearly season, notifications and
-  affiliate links are on the roadmap (`docs/roadmap.md`), not built yet.
+- Built: groups (workplaces, communities, friends), the yearly season and
+  check-in, reminder emails, Amazon affiliate links on public gift pages (per
+  group). Still to come: push notifications (see `docs/roadmap.md`).
 - Monetisation (affiliate and/or subscriptions) is planned for 2027; nothing is
   for sale in 2026.
 

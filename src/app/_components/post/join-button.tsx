@@ -6,7 +6,8 @@ import { SignInModal } from "../sign-in-modal";
 
 type JoinButtonProps = {
   label?: string;
-  variant?: "post" | "quiet";
+  /** post: red button; quiet: outline; link: inline text on navy */
+  variant?: "post" | "quiet" | "link";
   className?: string;
 };
 
@@ -22,7 +23,13 @@ export function JoinButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`${variant === "post" ? "btn-post" : "btn-quiet"} ${className}`}
+        className={`${
+          variant === "post"
+            ? "btn-post"
+            : variant === "quiet"
+              ? "btn-quiet"
+              : "text-frost font-semibold underline underline-offset-4"
+        } ${className}`}
       >
         {label}
       </button>

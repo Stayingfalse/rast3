@@ -100,9 +100,9 @@
 |---|---|---|
 | 19 | Mon 26 Oct | **Done (21 Oct; the nightly run was missed and run by hand in the evening).** Fair-share assignment: hand out the wishlists that have had the fewest gifts or views first, so nobody is left out; sensible limits on how many lists one person holds |
 | 20 | Tue 27 Oct | **Dropped by the owner (22 Oct): built, then rolled back before merging; replaced by reminder emails (from Day 24), done 22 Oct.** Was: **Re-planned 20 Oct (Amazon Associates rules: no scraping, prices only from Amazon, no cached images).** Wish ideas without scraping: members add a few gift ideas or interests to their profile (shown, anonymously, on the gift page), and organisers set a suggested budget band per group |
-| 21 | Wed 28 Oct | **To confirm with the owner (22 Oct): probably not needed. Santas buy from the wishlist itself, and Amazon marks purchased items on the list.** Was: **Re-planned 20 Oct.** Avoid duplicate gifts without reading wishlists: "I'm buying from this list" claims on a picked-up list and a short note to the next Santa (no item data from Amazon) |
+| 21 | Wed 28 Oct | **Removed by the owner (22 Oct): not needed, as Santas buy from the wishlist itself and Amazon marks bought items.** Now a spare day |
 | 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
-| 23 | Fri 30 Oct | Anonymous questions from Santa to giftee (e.g. "what size?") without revealing who's asking |
+| 23 | Fri 30 Oct | **Removed by the owner (22 Oct): anonymous questions aren't needed, for the same reason.** Now a spare day |
 | 24 | Sat 31 Oct | **Email part done early (22 Oct).** Still open: PWA push, and a "new lists to pick up" email digest |
 
 ### Week 4: engagement and launch prep (1–7 Nov)
@@ -862,5 +862,9 @@ that don't touch the data model. Known items to include:
       once, days later;
     - the stop link and one-click work;
     - the profile checkbox works.
-  - **Next (nightly): Day 21 if the owner confirms it's wanted, else Day 23,**
-    anonymous questions from a Santa to the list owner.
+  - **Owner, 22 Oct: Days 21 (duplicate-gift claims) and 23 (anonymous
+    questions) are removed.** Santas buy from the wishlist itself. Both are
+    now spare days.
+  - **Next (nightly, 23 Oct): Day 25, public landing page refresh, pulled
+    forward.** After that: Day 24's remainder (PWA push, and a "new lists to
+    pick up" digest), then Day 26 onwards as planned.

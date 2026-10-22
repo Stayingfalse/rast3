@@ -78,6 +78,9 @@ model User {
   createdGroups        Group[]              @relation("GroupCreator")
   giftPages            GiftPage[]
   seasonCheckIns       SeasonCheckIn[]
+  /// Day 20: a few gift ideas or interests, one per line, shown to Santas
+  /// without the owner's name (never links or contact details)
+  giftIdeas            String?              @db.Text
 }
 
 model VerificationToken {
@@ -285,6 +288,8 @@ model Group {
   affiliate       AffiliateMode        @default(DEFAULT)
   affiliateTags   AffiliateTag[]
   giftPages       GiftPage[]
+  /// Day 20: the organiser's suggested spend; teams follow their workplace
+  budget          BudgetBand?
 
   @@index([parentId])
   @@index([kind, status])
@@ -335,6 +340,14 @@ model AffiliateSettings {
   communityDefault Boolean  @default(true)
   friendsDefault   Boolean  @default(true)
   updatedAt        DateTime @updatedAt
+}
+
+/// Day 20: suggested budgets an organiser can choose from (pounds)
+enum BudgetBand {
+  UP_TO_10
+  UP_TO_20
+  UP_TO_30
+  UP_TO_50
 }
 
 enum AffiliateMode {

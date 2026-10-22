@@ -13,9 +13,10 @@ import {
   requireGiverScope,
 } from "~/server/scope";
 import { affiliateFor, getAffiliateSettings, giftPageFor } from "~/server/affiliate";
+import { ideaLines, type BudgetBand } from "~/lib/gift-ideas";
 import { cleanWishlistUrl } from "~/lib/wishlist";
 import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
-import { getWorkplace } from "~/server/groups";
+import { budgetFor, getWorkplace } from "~/server/groups";
 import {
   archivePastSeasons,
   checkedIn,
@@ -56,7 +57,7 @@ export const wishlistRouter = createTRPCRouter({
           // Never send the owner's name, or their id (an organiser could look
           // it up), to the person buying for them: gifts are anonymous both
           // ways (see /privacy).
-          wishlistOwner: { select: { amazonWishlistUrl: true } },
+          wishlistOwner: { select: { amazonWishlistUrl: true, giftIdeas: true } },
           purchases: true,
           reports: {
             where: {
@@ -97,6 +98,11 @@ export const wishlistRouter = createTRPCRouter({
         return `/gift/${await giftPageFor(ctx.db, a.wishlistOwnerId, contextId, url)}`;
       };
       const links = await Promise.all(assignments.map(linkFor));
+      // Day 20: the suggested budget where each list was picked up
+      const budgets = new Map<string, BudgetBand | null>();
+      for (const id of new Set(assignments.map((a) => a.groupId ?? org?.group.id))) {
+        if (id) budgets.set(id, await budgetFor(ctx.db, id));
+      }
 
       return assignments.map((a, i) => {
         const link = links[i] ?? null;
@@ -111,9 +117,14 @@ export const wishlistRouter = createTRPCRouter({
               ? "otherTeam"
               : "yourTeam";
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- dropped on purpose
-        const { wishlistOwnerId: _owner, ...rest } = a;
+        const { wishlistOwnerId: _owner, wishlistOwner, ...rest } = a;
+        const contextId = a.groupId ?? org?.group.id;
         return {
           ...rest,
+          wishlistOwner: { amazonWishlistUrl: wishlistOwner.amazonWishlistUrl },
+          /** Day 20: the owner's gift ideas (their words, no name) */
+          ideas: ideaLines(wishlistOwner.giftIdeas),
+          budget: contextId ? (budgets.get(contextId) ?? null) : null,
           from,
           fromTeam: from === "otherTeam" ? theirTeam!.name : null,
           /** Where "open wishlist" goes: our gift page (affiliate on) or Amazon */

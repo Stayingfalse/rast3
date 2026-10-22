@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getWorkplace } from "~/server/groups";
 import { checkIn } from "~/server/season";
 
+import { ideasProblem } from "~/lib/gift-ideas";
 import { amazonWishlistRegex, cleanWishlistUrl } from "~/lib/wishlist";
 
 // Helper function to normalize wishlist URL
@@ -70,6 +71,15 @@ export const profileRouter = createTRPCRouter({
             (url) => url === null || amazonWishlistRegex.test(url),
             "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
           ),
+        /** Day 20: optional; left out = unchanged */
+        giftIdeas: z
+          .array(z.string().trim())
+          .optional()
+          .transform((ideas) => ideas?.filter(Boolean))
+          .superRefine((ideas, ctx) => {
+            const problem = ideas && ideasProblem(ideas);
+            if (problem) ctx.addIssue({ code: "custom", message: problem });
+          }),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -89,6 +99,9 @@ export const profileRouter = createTRPCRouter({
           firstName: input.firstName,
           lastName: input.lastName,
           amazonWishlistUrl: input.amazonWishlistUrl,
+          ...(input.giftIdeas && {
+            giftIdeas: input.giftIdeas.length ? input.giftIdeas.join("\n") : null,
+          }),
           profileCompleted: true,
           profileCompletedAt: current?.profileCompletedAt ?? new Date(),
         },

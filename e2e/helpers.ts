@@ -17,7 +17,7 @@ export const hasTestLogin = TEST_LOGIN_SECRET.length > 0;
  */
 const NAMESPACE = process.env.E2E_NS ?? "local";
 export const E2E_DOMAIN = `${NAMESPACE}.e2e.raosanta.test`;
-const testHeaders = {
+export const testHeaders = {
   "x-test-login-secret": TEST_LOGIN_SECRET,
   "x-test-namespace": NAMESPACE,
 };

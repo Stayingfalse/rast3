@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldContent,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -30,6 +32,7 @@ interface ProfileSetupModalProps {
     firstName?: string | null;
     lastName?: string | null;
     amazonWishlistUrl?: string | null;
+    emailReminders?: boolean;
     profileCompleted?: boolean;
   } | null;
 }
@@ -65,6 +68,7 @@ export function ProfileSetupModal({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [wishlist, setWishlist] = useState("");
+  const [reminders, setReminders] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fill the form when the window opens, not on every profile refetch:
@@ -75,6 +79,7 @@ export function ProfileSetupModal({
       setFirstName(existingProfile?.firstName ?? "");
       setLastName(existingProfile?.lastName ?? "");
       setWishlist(existingProfile?.amazonWishlistUrl ?? "");
+      setReminders(existingProfile?.emailReminders ?? true);
       setErrors({});
     }
     wasOpen.current = isOpen;
@@ -100,7 +105,7 @@ export function ProfileSetupModal({
     }
     setErrors(next);
     if (Object.keys(next).length) return;
-    save.mutate({ firstName, lastName, amazonWishlistUrl: url });
+    save.mutate({ firstName, lastName, amazonWishlistUrl: url, emailReminders: reminders });
   };
 
   return (
@@ -175,6 +180,20 @@ export function ProfileSetupModal({
                   Santas can open it.
                 </FieldDescription>
               )}
+            </Field>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="emailReminders"
+                checked={reminders}
+                onCheckedChange={(v) => setReminders(v === true)}
+              />
+              <FieldContent>
+                <FieldLabel htmlFor="emailReminders">Reminder emails</FieldLabel>
+                <FieldDescription>
+                  A few a season: when to check in, when gifting opens, and when
+                  a Santa sends you something.
+                </FieldDescription>
+              </FieldContent>
             </Field>
           </FieldGroup>
 

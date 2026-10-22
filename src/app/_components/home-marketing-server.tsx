@@ -1,50 +1,144 @@
+import type { HeroSeason } from "./home-hero";
 import { JoinButton } from "./post/join-button";
+
+/**
+ * The three kinds of group (owner, 22 Oct: lead with everyone, three doors).
+ * Facts as built: workplaces join by work email (optional join code),
+ * communities through a linked Discord server (optional role), friends by
+ * invite; every new group is approved by a site admin.
+ */
+const DOORS = [
+  {
+    kind: "Workplace",
+    title: "Your organisation",
+    body: "Colleagues join with their work email, and your own team's wishlists come up first. Anyone can start their organisation; organisers can also ask for a join code.",
+    via: "Your work email",
+  },
+  {
+    kind: "Community",
+    title: "Your Discord server",
+    body: "For communities whose members don't share an email address. An organiser links the server, and members join through Discord, optionally only with a set role.",
+    via: "Discord",
+  },
+  {
+    kind: "Friends",
+    title: "Your friends or family",
+    body: "Start a group in a minute and share its invite link or code. Small and personal, with everyone's address still private.",
+    via: "An invite link",
+  },
+];
 
 const STATIONS = [
   {
     no: "01",
     title: "Share your wishlist",
-    body: "Sign in, pick your organisation and department, and add your Amazon UK wishlist. Amazon keeps your address; nobody here ever sees it.",
+    body: "Sign in, add your Amazon UK wishlist and join your workplace, community or friends. Amazon keeps your address; nobody here ever sees it.",
   },
   {
     no: "02",
-    title: "Pick up three",
-    body: "Whenever you're ready, collect three random wishlists from colleagues. The ones nobody has looked at yet come first, so no one is left out.",
+    title: "Pick one up",
+    body: "Whenever you're ready, pick up a random wishlist from your group. Lists with the fewest gifts come first, so nobody is left out.",
   },
   {
     no: "03",
     title: "Post a gift",
-    body: "Buy whatever suits your budget from their list and mark it Gifted. Gift one, all three, or ask for more. Giving is always optional.",
+    body: "Buy whatever suits your budget from their list, sent to their Amazon gift address, and mark it Gifted. Then pick up another, or don't.",
   },
   {
     no: "04",
     title: "Say thank you",
-    body: "When a parcel arrives, post a kudos note with a photo or two. Your Santa stays anonymous; the thank-you is shared with the team.",
+    body: "When a parcel arrives, post a thank-you postcard. Your Santa stays anonymous, and every act this season collects your Christmas stamp.",
   },
 ];
 
-const SMALL_PRINT = [
-  {
-    q: "Is my address private?",
-    a: "Yes. Gifters only see your Amazon wishlist, and Amazon delivers without sharing your address. We never ask for it.",
-  },
-  {
-    q: "Do I have to spend money?",
-    a: "No. You can share a wishlist and never gift anyone. Gifts are whatever you choose, with no minimum and no ranking.",
-  },
-  {
-    q: "Is this Secret Santa?",
-    a: "Not quite. There's no sign-up deadline, no draw and no fixed match. You pick up random wishlists when it suits you, so anyone can join late and nobody is stuck with one name.",
-  },
-  {
-    q: "Who can join?",
-    a: "Anyone with a verified email at a participating organisation. Support for communities and friend groups is on its way.",
-  },
-];
+export default function HomeMarketingServer({ season }: { season: HeroSeason }) {
+  const smallPrint = [
+    {
+      q: "Is my address private?",
+      a: "Yes. Santas only see your Amazon wishlist, and Amazon delivers to your gift address without showing it. We never ask for it.",
+    },
+    {
+      q: "Do I have to spend money?",
+      a: "No. You can share a wishlist and never gift anyone. Gifts are whatever you choose, with no minimum and no ranking.",
+    },
+    {
+      q: "Is this Secret Santa?",
+      a: "Not quite. There's no sign-up deadline, no draw and no fixed match. You pick up random wishlists when it suits you, so anyone can join late and nobody is stuck with one name.",
+    },
+    {
+      q: "When does it run?",
+      a: `Christmas only. Gifting opens on ${season.opens} and closes on ${season.closes}. Returning members check in each year to confirm their wishlist.`,
+    },
+    {
+      q: "Who can join?",
+      a: "Anyone with an Amazon UK wishlist, through their workplace, a Discord community or a friends group. We check each new group before it opens for gifting.",
+    },
+    {
+      q: "Is it free?",
+      a: "Yes. In some groups wishlists open through an Amazon affiliate link, which pays the site a small commission at no extra cost to you.",
+    },
+  ];
 
-export default function HomeMarketingServer() {
+  const closing =
+    season.phase === "before"
+      ? {
+          heading: `Gifting opens on ${season.opens}.`,
+          body: "Get your wishlist ready now and be first in the post.",
+        }
+      : season.phase === "open"
+        ? {
+            heading: `Gifting is open until ${season.closes}.`,
+            body: "Join, pick up a wishlist and send something this week.",
+          }
+        : {
+            heading: "Gifting has closed for this Christmas.",
+            body: "Join now and we'll email you when it opens next November.",
+          };
+
   return (
     <div id="home-marketing" className="flex w-full flex-col gap-24">
+      <section
+        id="ways-in"
+        aria-labelledby="ways-in-heading"
+        className="label-stock scroll-mt-24 overflow-hidden"
+      >
+        <div className="airmail h-2.5" aria-hidden />
+        <div className="flex flex-col gap-6 p-6 sm:p-10">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+            <h2
+              id="ways-in-heading"
+              className="font-expanded text-ink text-2xl leading-tight font-extrabold uppercase"
+            >
+              Three ways in
+            </h2>
+            <p className="text-ink-soft">Gift within a group you already belong to.</p>
+          </div>
+          <ul className="grid gap-x-8 lg:grid-cols-3">
+            {DOORS.map((d) => (
+              <li key={d.kind} className="border-rule flex flex-col gap-3 border-t py-5">
+                <p className="label-caps text-ink-soft">{d.kind}</p>
+                <h3 className="font-expanded text-ink text-xl leading-tight font-bold">
+                  {d.title}
+                </h3>
+                <p className="text-ink-soft leading-relaxed">{d.body}</p>
+                <dl className="border-rule mt-auto grid grid-cols-[auto_1fr] items-baseline gap-3 border-t border-dashed pt-3">
+                  <dt className="label-caps text-ink-soft">Join with</dt>
+                  <dd className="text-ink font-semibold">{d.via}</dd>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="border-rule flex flex-col items-start gap-4 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-ink-soft max-w-xl">
+              Organising one? Sign in, then start your group from{" "}
+              <span className="text-ink font-semibold">Your groups</span>. We
+              check each new group before gifting opens.
+            </p>
+            <JoinButton label="Start a group" variant="quiet" className="text-ink" />
+          </div>
+        </div>
+      </section>
+
       <section
         id="how-it-works"
         aria-labelledby="route-heading"
@@ -104,8 +198,8 @@ export default function HomeMarketingServer() {
               Short, because there isn&apos;t much of it.
             </p>
           </div>
-          <dl className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
-            {SMALL_PRINT.map((item) => (
+          <dl className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+            {smallPrint.map((item) => (
               <div key={item.q} className="border-rule border-t py-5">
                 <dt className="text-ink font-bold">{item.q}</dt>
                 <dd className="text-ink-soft mt-2 leading-relaxed">{item.a}</dd>
@@ -122,13 +216,11 @@ export default function HomeMarketingServer() {
         <div className="max-w-xl">
           <h2
             id="closing-heading"
-            className="font-expanded text-frost text-2xl leading-tight font-extrabold sm:text-3xl"
+            className="font-expanded text-frost text-2xl leading-tight font-extrabold text-balance sm:text-3xl"
           >
-            The 2026 season opens mid-November.
+            {closing.heading}
           </h2>
-          <p className="text-frost-soft mt-2">
-            Get your wishlist ready now and be first in the post.
-          </p>
+          <p className="text-frost-soft mt-2">{closing.body}</p>
         </div>
         <JoinButton label="Join Random Acts of Santa" />
       </section>

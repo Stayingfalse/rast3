@@ -4,7 +4,7 @@ import { StampMark } from "./stamp-mark";
 type Row = { label: string; value: string; hint?: string };
 
 const ROWS: Row[] = [
-  { label: "To", value: "A colleague in Finance" },
+  { label: "To", value: "Someone in your group" },
   { label: "From", value: "Santa" },
   {
     label: "Deliver to",
@@ -17,13 +17,16 @@ const ROWS: Row[] = [
 type ParcelLabelProps = {
   /** Rounded public total of gifts sent, or null when too small to show */
   gifts: string | null;
+  /** When posting opens or closes, e.g. { value: "Opens 15 November" } */
+  posting: Omit<Row, "label">;
 };
 
 /**
  * The hero's held moment: a shipping label for a gift whose address nobody
  * ever learns, franked with the live count of gifts sent.
  */
-export function ParcelLabel({ gifts }: ParcelLabelProps) {
+export function ParcelLabel({ gifts, posting }: ParcelLabelProps) {
+  const rows = [...ROWS, { label: "Posting", ...posting }];
   return (
     <div className="relative w-full max-w-md rotate-[1.25deg]">
       <figure className="label-stock overflow-hidden">
@@ -35,7 +38,7 @@ export function ParcelLabel({ gifts }: ParcelLabelProps) {
           <StampMark className="w-14 shrink-0 -rotate-3" />
         </div>
         <dl className="divide-rule divide-y px-5">
-          {ROWS.map((row) => (
+          {rows.map((row) => (
             <div
               key={row.label}
               className="grid grid-cols-[6.5rem_1fr] gap-3 py-3"

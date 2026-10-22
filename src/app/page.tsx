@@ -4,7 +4,9 @@ import { GiftingSwitcher } from "~/app/_components/groups/gifting-switcher";
 import { SeasonGate } from "~/app/_components/season-gate";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { auth } from "~/server/auth";
+import { db } from "~/server/db";
 import { getPublicTotals } from "~/server/public-stats";
+import { currentSeason, publicSeason, ukDay } from "~/server/season";
 import { HydrateClient } from "~/trpc/server";
 import { HomeHero } from "./_components/home-hero";
 import HomeMarketingServer from "./_components/home-marketing-server";
@@ -17,12 +19,18 @@ export default async function Home() {
   const session = await auth();
 
   if (!session?.user) {
-    const totals = await getPublicTotals();
+    const [totals, s] = await Promise.all([getPublicTotals(), publicSeason(db)]);
+    const season = {
+      year: currentSeason(),
+      phase: s.phase,
+      opens: ukDay(s.opensAt),
+      closes: ukDay(s.closesAt),
+    };
     return (
       <HydrateClient>
         <div className="flex w-full flex-col gap-24">
-          <HomeHero totals={totals} />
-          <HomeMarketingServer />
+          <HomeHero totals={totals} season={season} />
+          <HomeMarketingServer season={season} />
           <KudosFeed />
         </div>
       </HydrateClient>

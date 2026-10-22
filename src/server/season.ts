@@ -105,3 +105,16 @@ export async function requireCanPickUp(db: Db, userId: string, groupId: string |
   }
   await archivePastSeasons(db);
 }
+
+export type SeasonPhase = "before" | "open" | "after";
+
+/** For the public pages: where the season stands, and its dates. */
+export async function publicSeason(db: Db, now = new Date()) {
+  const w = await seasonWindow(db);
+  const phase: SeasonPhase = now < w.opensAt ? "before" : now <= w.closesAt ? "open" : "after";
+  return { phase, opensAt: w.opensAt, closesAt: w.closesAt };
+}
+
+/** "15 November", in UK time. */
+export const ukDay = (d: Date) =>
+  d.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" });

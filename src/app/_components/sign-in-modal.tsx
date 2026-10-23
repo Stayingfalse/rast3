@@ -14,8 +14,11 @@ interface SignInModalProps {
   onClose: () => void;
   /** show just this provider (e.g. "discord" on a community invite), with a link to the rest */
   only?: string;
-  /** prefill the email link form (a workplace invite's work email) */
-  initialEmail?: string;
+  /**
+   * A workplace invite's domain. Company mail often blocks our sign-in links
+   * (owner, 23 Oct), so a work address here gets a warning; it can still be sent.
+   */
+  workDomain?: string;
 }
 
 interface Provider {
@@ -96,7 +99,7 @@ function SafeIcon({
   );
 }
 
-export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModalProps) {
+export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalProps) {
   const [showAll, setShowAll] = useState(false);
   const [providers, setProviders] = useState<ProvidersState>(null);
   // only that provider, unless it isn't configured here (then everything)
@@ -106,10 +109,12 @@ export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModal
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  const domain = workDomain?.toLowerCase();
+  const typedDomain = email.trim().toLowerCase().split("@")[1] ?? "";
+  const isWorkEmail = !!domain && (typedDomain === domain || typedDomain.endsWith(`.${domain}`));
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
-      if (initialEmail) setEmail(initialEmail);
     } else {
       setShowAll(false);
       // Reset states when modal is closed
@@ -118,7 +123,7 @@ export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModal
       setEmail("");
       setIsLoading(null);
     }
-  }, [isOpen, initialEmail]);
+  }, [isOpen]);
   const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
@@ -398,13 +403,25 @@ export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModal
                                 >
                                   <input
                                     type="email"
-                                    placeholder="Enter your email address"
+                                    placeholder={domain ? "Your personal email address" : "Enter your email address"}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     aria-label="Email address"
+                                    aria-describedby={isWorkEmail ? "work-email-warning" : undefined}
                                     className="rounded-label border-rule text-ink placeholder:text-ink-soft w-full border bg-white px-4 py-3"
                                     required
                                   />
+                                  {isWorkEmail && (
+                                    <p
+                                      id="work-email-warning"
+                                      role="status"
+                                      className="rounded-label border-gold bg-gold-soft/40 text-ink border px-3 py-2 text-sm"
+                                    >
+                                      <strong>That&apos;s your work email.</strong> Most companies block
+                                      emails from us, so the sign-in link may never arrive. We
+                                      recommend your personal email, or one of the options below.
+                                    </p>
+                                  )}
                                   <div className="flex gap-2">
                                     {" "}
                                     <button
@@ -418,7 +435,9 @@ export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModal
                                       ) : null}
                                       {isLoading === "nodemailer"
                                         ? "Sending..."
-                                        : "Send Magic Link"}
+                                        : isWorkEmail
+                                          ? "Send to work email anyway"
+                                          : "Send Magic Link"}
                                     </button>{" "}
                                     <button
                                       type="button"

@@ -988,7 +988,10 @@ that don't touch the data model. Known items to include:
     the profile, without leaving the invite.
   - **Also:** organiser invite messages and the workplace poster use the new
     links.
-- **Open tracking PR #55** opened, awaiting approval.
+  - **Invite routes PR #56** opened (built on #55, so merge #55 first),
+    awaiting approval. Dev e2e passed 16/16 on desktop and mobile. The
+    Discord route needs one manual try on dev.
+- **Open tracking PR #55** opened, awaiting approval (checks green).
 - **Nightly run, 23 Oct 04:50:** spent on the owner's bonus work above (no
   roadmap item).
   - **Next (nightly, 24 Oct):** Day 24's remainder, PWA push notifications

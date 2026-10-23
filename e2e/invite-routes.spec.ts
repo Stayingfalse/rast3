@@ -60,6 +60,26 @@ test("a workplace's own link asks for the work email first", async ({ page }, te
   await expect(page.getByText(`Use your @${domain} email address`)).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "invite-workplace");
+
+  // sign-in: the work email isn't carried over, and typing it gets a warning
+  // (company mail often blocks our links), though it can still be sent
+  await page.getByLabel(`Your @${domain} email`).fill(`cole@${domain}`);
+  await page.getByLabel("Join code").fill("ABCDEFGH");
+  await page.getByRole("button", { name: "Continue" }).click();
+  const signIn = page.getByRole("dialog");
+  await signIn.getByRole("button", { name: "Continue with Email" }).click();
+  const box = signIn.getByLabel("Email address");
+  await expect(box).toHaveValue("");
+  await box.fill(`cole@${domain.toUpperCase()}`);
+  await expect(signIn.getByText("That's your work email.")).toBeVisible();
+  await expect(signIn.getByRole("button", { name: "Send to work email anyway" })).toBeEnabled();
+  await settle(page);
+  await snap(page, testInfo, "invite-work-email-warning");
+  await box.fill("cole@example.com");
+  await expect(signIn.getByText("That's your work email.")).toHaveCount(0);
+  await expect(signIn.getByRole("button", { name: "Send Magic Link" })).toBeVisible();
+  await signIn.getByRole("button", { name: "Close" }).click();
+
   // anything that isn't a workplace's domain is the usual 404
   expect((await page.goto("/not-a-workplace.example.test"))?.status()).toBe(404);
   expect(errors).toEqual([]);
@@ -90,6 +110,8 @@ test("a colleague joins from the link with its code, then fills in their profile
   await dialog.getByLabel("Last name").fill("League");
   await dialog.getByRole("button", { name: "Save and continue" }).click();
   await expect(page.getByText(`You're in ${domain}.`)).toBeVisible();
+  await settle(page);
+  await snap(page, testInfo, "invite-workplace-joined");
 
   const me = (await unwrap(await query(page.request, "profile.getCurrentProfile"))) as {
     workEmail: string | null;

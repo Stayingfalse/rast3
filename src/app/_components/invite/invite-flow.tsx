@@ -288,13 +288,16 @@ function WorkplaceStep({
       ) : (
         <div className="flex flex-col items-start gap-2" onClickCapture={remember}>
           {valid ? (
-            <JoinButton label="Continue" initialEmail={email.trim()} />
+            <JoinButton label="Continue" workDomain={domain} />
           ) : (
             <button type="submit" className="btn-post">
               Continue
             </button>
           )}
-          <p className="text-ink-soft text-sm">Next you sign in (or create your account), and you&apos;re added.</p>
+          <p className="text-ink-soft text-sm">
+            Next, sign in with your personal email or a social account (company mail often blocks
+            ours), and you&apos;re added.
+          </p>
         </div>
       )}
     </form>

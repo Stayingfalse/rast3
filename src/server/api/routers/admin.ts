@@ -5,11 +5,18 @@ import { createTRPCRouter, siteAdminProcedure } from "~/server/api/trpc";
 import {
   affiliateFor,
   getAffiliateSettings,
+  storeOfTag,
   TRACKING_ID,
+  TRACKING_ID_HINT,
+  type Store,
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
+
+const trackingId = z.string().trim().toLowerCase().regex(TRACKING_ID, TRACKING_ID_HINT);
+const ukTag = trackingId.refine((t) => t.endsWith("-21"), "Amazon.co.uk tracking IDs end in -21");
+const usTag = trackingId.refine((t) => t.endsWith("-20"), "Amazon.com tracking IDs end in -20");
 
 const KINDS = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
 const STATUSES = ["PENDING", "ACTIVE", "DISABLED"] as const;
@@ -221,7 +228,7 @@ export const adminRouter = createTRPCRouter({
         kind: true,
         status: true,
         affiliate: true,
-        affiliateTags: { where: { season }, select: { tag: true } },
+        affiliateTags: { where: { season }, select: { tag: true, store: true } },
         _count: { select: { memberships: true } },
       },
     });
@@ -236,11 +243,13 @@ export const adminRouter = createTRPCRouter({
       season,
       pool: pool.map(({ tag }) => ({
         tag,
+        store: storeOfTag(tag),
         usedBy: used.find((u) => u.tag === tag)?.group ?? null,
       })),
       settings: {
         enabled: settings.enabled,
         defaultTag: settings.defaultTag,
+        defaultTagUs: settings.defaultTagUs,
         orgDefault: settings.orgDefault,
         communityDefault: settings.communityDefault,
         friendsDefault: settings.friendsDefault,
@@ -251,9 +260,10 @@ export const adminRouter = createTRPCRouter({
           return {
             ...g,
             members: _count.memberships,
-            tag: affiliateTags[0]?.tag ?? null,
+            tag: affiliateTags.find((t) => t.store === "UK")?.tag ?? null,
+            tagUs: affiliateTags.find((t) => t.store === "US")?.tag ?? null,
             active: now.enabled,
-            activeTag: now.enabled ? now.tag : null,
+            activeTags: now.enabled ? now.tags : null,
           };
         }),
       ),
@@ -264,23 +274,26 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         enabled: z.boolean(),
-        defaultTag: z.string().trim().toLowerCase().regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21"),
+        defaultTag: ukTag,
+        defaultTagUs: usTag,
         orgDefault: z.boolean(),
         communityDefault: z.boolean(),
         friendsDefault: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // the default can't also be one group's own ID (earnings would mix)
-      const taken = await ctx.db.affiliateTag.findUnique({
-        where: { season_tag: { season: seasonYearOf(new Date()), tag: input.defaultTag } },
-        select: { group: { select: { name: true } } },
-      });
-      if (taken) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `${input.defaultTag} is ${taken.group.name}'s own ID this season. Pick another default.`,
+      // a default can't also be one group's own ID (earnings would mix)
+      for (const tag of [input.defaultTag, input.defaultTagUs]) {
+        const taken = await ctx.db.affiliateTag.findUnique({
+          where: { season_tag: { season: seasonYearOf(new Date()), tag } },
+          select: { group: { select: { name: true } } },
         });
+        if (taken) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `${tag} is ${taken.group.name}'s own ID this season. Pick another default.`,
+          });
+        }
       }
       await ctx.db.affiliateSettings.upsert({
         where: { id: "site" },
@@ -290,18 +303,18 @@ export const adminRouter = createTRPCRouter({
       return { ok: true };
     }),
 
-  /** One group's mode, and its tracking ID for this season (null = the default). */
+  /**
+   * One group's mode, and its tracking IDs for this season: `tag` for
+   * Amazon.co.uk, `tagUs` for Amazon.com (null = that store's default,
+   * left out = unchanged).
+   */
   setGroupAffiliate: siteAdminProcedure
     .input(
       z.object({
         groupId: z.string(),
         mode: z.enum(["DEFAULT", "ON", "OFF"]),
-        tag: z
-          .string()
-          .trim()
-          .toLowerCase()
-          .regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21")
-          .nullable(),
+        tag: ukTag.nullable(),
+        tagUs: usTag.nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -313,41 +326,50 @@ export const adminRouter = createTRPCRouter({
       if (!group || group.kind === "TEAM") {
         throw new TRPCError({ code: "NOT_FOUND", message: "No such group" });
       }
-      await ctx.db.group.update({
-        where: { id: input.groupId },
-        data: { affiliate: input.mode },
-      });
-      const key = { groupId_season: { groupId: input.groupId, season } };
-      if (input.tag) {
-        if (input.tag === (await getAffiliateSettings(ctx.db)).defaultTag) {
+      const settings = await getAffiliateSettings(ctx.db);
+      const wanted: [Store, string | null | undefined][] = [
+        ["uk", input.tag],
+        ["us", input.tagUs],
+      ];
+      // check everything before changing anything
+      for (const [store, tag] of wanted) {
+        if (!tag) continue;
+        if (tag === (store === "uk" ? settings.defaultTag : settings.defaultTagUs)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "That's the default ID every other group uses. Give this group its own.",
           });
         }
-        if (!(await ctx.db.affiliateTrackingId.findUnique({ where: { tag: input.tag } }))) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Add that tracking ID to the pool first.",
-          });
+        if (!(await ctx.db.affiliateTrackingId.findUnique({ where: { tag } }))) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Add that tracking ID to the pool first." });
         }
         const taken = await ctx.db.affiliateTag.findUnique({
-          where: { season_tag: { season, tag: input.tag } },
+          where: { season_tag: { season, tag } },
           select: { groupId: true, group: { select: { name: true } } },
         });
         if (taken && taken.groupId !== input.groupId) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: `${input.tag} is already used by ${taken.group.name} this season.`,
+            message: `${tag} is already used by ${taken.group.name} this season.`,
           });
         }
-        await ctx.db.affiliateTag.upsert({
-          where: key,
-          update: { tag: input.tag },
-          create: { groupId: input.groupId, season, tag: input.tag },
-        });
-      } else {
-        await ctx.db.affiliateTag.deleteMany({ where: { groupId: input.groupId, season } });
+      }
+      await ctx.db.group.update({
+        where: { id: input.groupId },
+        data: { affiliate: input.mode },
+      });
+      for (const [store, tag] of wanted) {
+        if (tag === undefined) continue;
+        const STORE = store === "uk" ? "UK" : "US";
+        if (tag) {
+          await ctx.db.affiliateTag.upsert({
+            where: { groupId_season_store: { groupId: input.groupId, season, store: STORE } },
+            update: { tag },
+            create: { groupId: input.groupId, season, store: STORE, tag },
+          });
+        } else {
+          await ctx.db.affiliateTag.deleteMany({ where: { groupId: input.groupId, season, store: STORE } });
+        }
       }
       return { ok: true };
     }),
@@ -358,7 +380,7 @@ export const adminRouter = createTRPCRouter({
       z.object({
         tags: z
           .array(
-            z.string().trim().toLowerCase().regex(TRACKING_ID, "Amazon.co.uk tracking IDs end in -21"),
+            z.string().trim().toLowerCase().regex(TRACKING_ID, TRACKING_ID_HINT),
           )
           .min(1)
           .max(100),

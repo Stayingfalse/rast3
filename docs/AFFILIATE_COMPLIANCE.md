@@ -95,10 +95,22 @@ clear enough: say **"Ad"** up front, before people engage. So:
 - Make sure Cloudflare's bot protection doesn't block Amazon's crawler from
   `/gift/`.
 
-## Other Amazon stores (22 Oct 2026)
+## Amazon stores (22 and 23 Oct 2026)
 
-Members can share a wishlist from any Amazon store (owner's decision). The
-account is an Amazon.co.uk Associate, so only amazon.co.uk links are ever
-tagged; lists on other stores open straight on Amazon with no tag, no gift
-page and no disclosure (nothing to disclose). Tagging them would need each
-country's own Associates account.
+Members can share a wishlist from any Amazon store (owner, 22 Oct). We hold
+two Associates accounts:
+
+- **Amazon.co.uk** (since 20 Oct): IDs end in **-21**; default `raosanta04-21`.
+- **Amazon.com** (since 23 Oct): IDs end in **-20**; default `raosanta-20`,
+  pool `raosanta01-20` to `raosanta09-20`. Same 180-day, three-sale review
+  as the UK account.
+
+A list is tagged with its own store's ID: a group can hold one UK and one US
+ID per season, otherwise the store's default. Lists on any other Amazon
+store open straight on Amazon with no tag, gift page or disclosure. The same
+rules apply to both accounts (public gift page, disclosure next to the link,
+no hidden referrer, no incentives), and dev only ever shows the dummy IDs
+`raosantatest-21` / `raosantatest-20`.
+
+**Owner, in Associates Central (US):** add raosanta.uk to the account's
+website list, as on the UK account.

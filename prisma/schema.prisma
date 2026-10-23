@@ -109,6 +109,7 @@ model WishlistAssignment {
   wishlistOwner     User             @relation("WishlistOwner", fields: [wishlistOwnerId], references: [id], onDelete: Cascade)
   group             Group?           @relation(fields: [groupId], references: [id], onDelete: SetNull)
   reports           WishlistReport[]
+  opens             WishlistOpen[]
 
   @@unique([assignedUserId, wishlistOwnerId, season])
   @@index([groupId])
@@ -461,4 +462,33 @@ model LegacyUserOrg {
   adminScope   String?
 
   @@map("_legacy_UserOrg")
+}
+
+/// A picked-up wishlist opened on Amazon (owner, 23 Oct 2026): counted on
+/// our own server when the link is clicked, with no cookies and no third
+/// parties. Shows which lists get opened, and which Amazon stores we'd earn
+/// on if we had an Associates account there.
+model WishlistOpen {
+  id           String              @id @default(cuid())
+  createdAt    DateTime            @default(now())
+  season       Int
+  /// the Amazon store's domain, e.g. "amazon.de" ("other" otherwise)
+  store        String              @db.VarChar(32)
+  /// the group had affiliate links on when it was opened
+  affiliateOn  Boolean
+  /// the link carried one of our tracking IDs
+  tagged       Boolean
+  /// opened from the public gift page, else straight from a parcel
+  viaGiftPage  Boolean
+  /// the pick-up it was opened from (parcels), or null
+  assignmentId String?
+  /// the gift page it was opened from, or null
+  giftPageId   String?             @db.VarChar(64)
+  groupId      String?
+  assignment   WishlistAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([season, store])
+  @@index([assignmentId])
+  @@index([giftPageId])
+  @@index([groupId])
 }

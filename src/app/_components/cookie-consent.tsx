@@ -39,7 +39,7 @@ export function CookieConsent({ className = "" }: { className?: string }) {
     >
       <p className="text-ink text-sm leading-snug">
         <strong>Cookies.</strong> We only use the cookies needed to keep you
-        signed in. No tracking, no adverts.{" "}
+        signed in. No tracking cookies, no adverts.{" "}
         <Link
           href="/privacy#cookies"
           className="text-post font-semibold underline underline-offset-4"

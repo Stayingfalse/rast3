@@ -947,3 +947,21 @@ that don't touch the data model. Known items to include:
     default and the owner's US IDs.
   - This is 23 Oct's one fundamental change, so the 04:50 nightly run does
     wrap-up only.
+- **US affiliate links merged to prod (23 Oct, owner approved),** as #54. The
+  `affiliate_us_store` migration ran cleanly.
+- **Wishlist opens and the store report (23 Oct, owner's request).**
+  - **What's counted:** clicking a link to Amazon (from a parcel, or the
+    gift page's button) sends a beacon to `/api/track/open`. It records the
+    Amazon store, whether the group had affiliate links on, whether the link
+    was tagged, and whether it came from a gift page.
+  - **Privacy and compliance:** no cookies and no third parties. Links are
+    untouched (no redirect, so the referrer stays visible, as the Associates
+    rules require). The same click within 30 seconds counts once.
+  - **Admin › Affiliate › Wishlist opens:** a table of stores (lists on
+    file, opens, tagged, missed) sorted by missed, so the top row is the next
+    Associates programme worth joining. Also the most-opened groups, and
+    opens versus pick-ups.
+  - **Privacy policy and cookie banner** now say this ("No tracking cookies").
+  - **Migration:** `wishlist_opens`.
+  - **Fundamental changes:** this is a second one on 23 Oct, at the owner's
+    request.

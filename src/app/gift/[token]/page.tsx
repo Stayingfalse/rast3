@@ -10,6 +10,7 @@ import {
   tagForHost,
 } from "~/server/affiliate";
 import { db } from "~/server/db";
+import { AmazonLink } from "./amazon-link";
 
 export const metadata: Metadata = {
   title: "A wishlist to gift · Random Acts of Santa",
@@ -93,17 +94,14 @@ export default async function GiftPage({ params }: Props) {
                     {AMAZON_DISCLOSURE} It costs you nothing extra.
                   </p>
                 )}
-                <a
+                <AmazonLink
                   href={tagged ?? wishlist}
-                  target="_blank"
-                  // Associates links must not hide the page they come from
-                  {...(tagged
-                    ? { rel: "sponsored noopener", referrerPolicy: "no-referrer-when-downgrade" as const }
-                    : { rel: "noopener noreferrer" })}
+                  token={token}
+                  tagged={!!tagged}
                   className="btn-post self-start"
                 >
                   Open the wishlist on Amazon
-                </a>
+                </AmazonLink>
               </div>
             </>
           )}

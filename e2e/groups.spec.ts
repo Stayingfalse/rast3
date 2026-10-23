@@ -59,14 +59,21 @@ test("a visitor sees the invite and is asked to sign in", async ({ page }) => {
 test("a friend joins with the link", async ({ page }, testInfo) => {
   const errors = trackPageErrors(page);
   await loginAs(page, { email: `friend-${testInfo.project.name}@${E}` });
-  // lower case and a dash still work
+  // lower case and a dash still work; signed in, the invite joins straight
+  // away, then asks for the profile without leaving the invite (23 Oct)
   await page.goto(`/join/${code.slice(0, 4).toLowerCase()}-${code.slice(4)}`);
   await expect(page.getByRole("heading", { name: groupName })).toBeVisible();
-  await expect(page.getByText("waiting for our approval")).toBeVisible();
+  await expect(page.getByText("waiting for our approval").first()).toBeVisible();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Complete Your Profile" })).toBeVisible();
+  await dialog.getByLabel("First name").fill("Fran");
+  await dialog.getByLabel("Last name").fill("Friend");
+  await dialog.getByRole("button", { name: "Save and continue" }).click();
+  await expect(page.getByText(`You're in ${groupName}.`)).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "join-invite");
 
-  await page.getByRole("button", { name: `Join ${groupName}` }).click();
+  await page.getByRole("link", { name: "Your groups" }).click();
   await expect(page).toHaveURL(/\/groups$/);
   const card = page.getByRole("listitem").filter({ hasText: groupName });
   await expect(card.getByText("2 members")).toBeVisible();

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { JoinGroupButton } from "~/app/_components/groups/join-group-button";
-import { JoinButton } from "~/app/_components/post/join-button";
+import { InviteFlow } from "~/app/_components/invite/invite-flow";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { findInvite, formatJoinCode } from "~/server/invites";
@@ -24,7 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** Invite landing page for friends and community groups. */
+/**
+ * Invite landing page for friends and community groups (owner, 23 Oct:
+ * each kind has its own way in). A community linked to a Discord server is
+ * joined through Discord only; friends groups (and unlinked communities)
+ * are joined straight from the code. The invite carries through sign-in
+ * and the profile.
+ */
 export default async function JoinPage({ params }: Props) {
   const invite = await findInvite((await params).code);
   if (!invite) notFound();
@@ -38,30 +42,34 @@ export default async function JoinPage({ params }: Props) {
         select: { id: true },
       }))
     : false;
+  const viaDiscord = !!invite.discordGuildId;
 
   return (
     <article className="label-stock text-ink flex w-full max-w-xl flex-col overflow-hidden">
       <div className="airmail h-2.5" aria-hidden />
       <div className="flex flex-col gap-5 p-6 sm:p-10">
-        <p className="label-caps text-ink-soft">
-          You&apos;re invited to a{" "}
-          {invite.kind === "FRIENDS" ? "friends group" : "community group"}
-        </p>
         <h1 className="font-expanded text-ink text-4xl leading-none font-extrabold">
           {invite.name}
         </h1>
         <p className="text-ink-soft">
-          {invite.members} {invite.members === 1 ? "member" : "members"} · code{" "}
-          <span className="font-expanded text-post font-bold tracking-widest">
-            {formatJoinCode(invite.joinCode)}
-          </span>
+          {viaDiscord ? "Discord community" : invite.kind === "FRIENDS" ? "Friends group" : "Community group"} ·{" "}
+          {invite.members} {invite.members === 1 ? "member" : "members"}
+          {!viaDiscord && (
+            <>
+              {" "}
+              · code{" "}
+              <span className="font-expanded text-post font-bold tracking-widest">
+                {formatJoinCode(invite.joinCode)}
+              </span>
+            </>
+          )}
         </p>
         <p className="text-lg leading-relaxed">
-          Random Acts of Santa is Christmas gifting without the draw: share your
-          Amazon wishlist, pick up a few of the group&apos;s whenever you&apos;re
-          ready, and gift what you like. Nobody ever sees an address.
+          {viaDiscord
+            ? "Your server is doing Christmas presents: share your Amazon wishlist, pick up other members' whenever you're ready, and send something anonymously. Nobody ever sees an address."
+            : "Random Acts of Santa is Christmas gifting without the draw: share your Amazon wishlist, pick up a few of the group's whenever you're ready, and gift what you like. Nobody ever sees an address."}
         </p>
-        {invite.status === "PENDING" && (
+        {invite.status === "PENDING" && !alreadyIn && (
           <p
             role="status"
             className="bg-gold-soft/40 border-gold rounded-label border px-3 py-2 text-sm"
@@ -70,25 +78,13 @@ export default async function JoinPage({ params }: Props) {
             gifting opens once it&apos;s approved.
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-3">
-          {alreadyIn ? (
-            <>
-              <p className="font-semibold">You&apos;re already in this group.</p>
-              <Link href="/groups" className="btn-post">
-                Your groups
-              </Link>
-            </>
-          ) : session?.user ? (
-            <JoinGroupButton code={invite.joinCode} name={invite.name} />
-          ) : (
-            <>
-              <JoinButton label="Sign in to join" />
-              <p className="text-ink-soft text-sm">
-                New here? Signing in creates your account.
-              </p>
-            </>
-          )}
-        </div>
+        <InviteFlow
+          kind={viaDiscord ? "discord" : "friends"}
+          group={{ id: invite.id, name: invite.name, status: invite.status, members: invite.members }}
+          code={invite.joinCode}
+          signedIn={!!session?.user}
+          alreadyIn={alreadyIn}
+        />
       </div>
     </article>
   );

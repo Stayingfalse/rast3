@@ -38,6 +38,10 @@ type Row = Data["groups"][number];
 type Pool = Data["pool"];
 const DEFAULT = "__default";
 
+type Defaults = { uk: string; us: string };
+const defaults = (s: Settings): Defaults => ({ uk: s.defaultTag, us: s.defaultTagUs });
+const isDefault = (tag: string, d: Defaults) => tag === d.uk || tag === d.us;
+
 const KIND = { ORG: "Workplace", COMMUNITY: "Community", FRIENDS: "Friends group", TEAM: "Team" } as const;
 
 function OnOff({
@@ -85,8 +89,8 @@ export default function AdminAffiliatePage() {
         </p>
       </div>
       <SiteSettings settings={data.settings} />
-      <GroupSettings groups={data.groups} pool={data.pool} defaultTag={data.settings.defaultTag} />
-      <TrackingIdPool pool={data.pool} defaultTag={data.settings.defaultTag} />
+      <GroupSettings groups={data.groups} pool={data.pool} defaults={defaults(data.settings)} />
+      <TrackingIdPool pool={data.pool} defaults={defaults(data.settings)} />
     </div>
   );
 }
@@ -126,14 +130,23 @@ function SiteSettings({ settings }: { settings: Settings }) {
               <FieldLabel htmlFor="aff-enabled">Affiliate links (master switch)</FieldLabel>
               <OnOff id="aff-enabled" value={form.enabled} onChange={(enabled) => set({ enabled })} />
             </Field>
-            <Field className="lg:col-span-2">
-              <FieldLabel htmlFor="aff-tag">Default tracking ID</FieldLabel>
+            <Field>
+              <FieldLabel htmlFor="aff-tag">Default ID, Amazon.co.uk</FieldLabel>
               <Input
                 id="aff-tag"
                 value={form.defaultTag}
                 onChange={(e) => set({ defaultTag: e.target.value })}
               />
-              <FieldDescription>Used by any group without its own ID this season.</FieldDescription>
+              <FieldDescription>For UK lists in groups without their own ID. Ends in -21.</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="aff-tag-us">Default ID, Amazon.com</FieldLabel>
+              <Input
+                id="aff-tag-us"
+                value={form.defaultTagUs}
+                onChange={(e) => set({ defaultTagUs: e.target.value })}
+              />
+              <FieldDescription>For US lists in groups without their own ID. Ends in -20.</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="aff-org">Workplaces by default</FieldLabel>
@@ -168,20 +181,21 @@ function SiteSettings({ settings }: { settings: Settings }) {
 function GroupSettings({
   groups,
   pool,
-  defaultTag,
+  defaults,
 }: {
   groups: Row[];
   pool: Pool;
-  defaultTag: string;
+  defaults: Defaults;
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Groups</CardTitle>
         <CardDescription>
-          Force a group on or off, and give it one of the pool&apos;s
-          tracking IDs for this season so its earnings show separately in
-          Associates Central.
+          Force a group on or off, and give it the pool&apos;s tracking IDs
+          for this season (one for Amazon.co.uk, one for Amazon.com) so its
+          earnings show separately in Associates Central. Lists on other
+          Amazon stores open untagged.
         </CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
@@ -190,7 +204,8 @@ function GroupSettings({
             <TableRow>
               <TableHead>Group</TableHead>
               <TableHead>Setting</TableHead>
-              <TableHead>Tracking ID this season</TableHead>
+              <TableHead>UK ID this season</TableHead>
+              <TableHead>US ID this season</TableHead>
               <TableHead>Now</TableHead>
               <TableHead className="w-24">
                 <span className="sr-only">Save</span>
@@ -199,7 +214,7 @@ function GroupSettings({
           </TableHeader>
           <TableBody>
             {groups.map((g) => (
-              <GroupRow key={g.id} group={g} pool={pool} defaultTag={defaultTag} />
+              <GroupRow key={g.id} group={g} pool={pool} defaults={defaults} />
             ))}
           </TableBody>
         </Table>
@@ -208,26 +223,62 @@ function GroupSettings({
   );
 }
 
+/** One store's tracking ID for a group: the default, or a free pool ID. */
+function TagSelect({
+  value,
+  onChange,
+  choices,
+  fallback,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  choices: Pool;
+  fallback: string;
+  label: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full" aria-label={label}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value={DEFAULT}>Default ({fallback})</SelectItem>
+          {choices.map((p) => (
+            <SelectItem key={p.tag} value={p.tag}>
+              {p.tag}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
 function GroupRow({
   group,
   pool,
-  defaultTag,
+  defaults,
 }: {
   group: Row;
   pool: Pool;
-  defaultTag: string;
+  defaults: Defaults;
 }) {
   const utils = api.useUtils();
   const [mode, setMode] = useState(group.affiliate);
   const [tag, setTag] = useState(group.tag ?? DEFAULT);
+  const [tagUs, setTagUs] = useState(group.tagUs ?? DEFAULT);
   useEffect(() => {
     setMode(group.affiliate);
     setTag(group.tag ?? DEFAULT);
-  }, [group.affiliate, group.tag]);
-  // free IDs, plus the one this group already has
-  const choices = pool.filter(
-    (p) => p.tag !== defaultTag && (!p.usedBy || p.usedBy.id === group.id),
-  );
+    setTagUs(group.tagUs ?? DEFAULT);
+  }, [group.affiliate, group.tag, group.tagUs]);
+  // free IDs for each store, plus the ones this group already has
+  const free = (store: "uk" | "us") =>
+    pool.filter(
+      (p) => p.store === store && !isDefault(p.tag, defaults) && (!p.usedBy || p.usedBy.id === group.id),
+    );
   const save = api.admin.setGroupAffiliate.useMutation({
     onSuccess: async () => {
       toast.success(`${group.name} saved`);
@@ -235,7 +286,8 @@ function GroupRow({
     },
     onError: (e) => toast.error(e.message),
   });
-  const changed = mode !== group.affiliate || tag !== (group.tag ?? DEFAULT);
+  const changed =
+    mode !== group.affiliate || tag !== (group.tag ?? DEFAULT) || tagUs !== (group.tagUs ?? DEFAULT);
 
   return (
     <TableRow>
@@ -259,26 +311,29 @@ function GroupRow({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell className="min-w-48">
-        <Select value={tag} onValueChange={setTag}>
-          <SelectTrigger className="w-full" aria-label={`Tracking ID for ${group.name}`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value={DEFAULT}>Default ({defaultTag})</SelectItem>
-              {choices.map((p) => (
-                <SelectItem key={p.tag} value={p.tag}>
-                  {p.tag}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+      <TableCell className="min-w-44">
+        <TagSelect
+          value={tag}
+          onChange={setTag}
+          choices={free("uk")}
+          fallback={defaults.uk}
+          label={`UK tracking ID for ${group.name}`}
+        />
+      </TableCell>
+      <TableCell className="min-w-44">
+        <TagSelect
+          value={tagUs}
+          onChange={setTagUs}
+          choices={free("us")}
+          fallback={defaults.us}
+          label={`US tracking ID for ${group.name}`}
+        />
       </TableCell>
       <TableCell>
         {group.active ? (
-          <Badge variant="secondary">On · {group.activeTag}</Badge>
+          <Badge variant="secondary">
+            On · {group.activeTags?.uk} · {group.activeTags?.us}
+          </Badge>
         ) : (
           <Badge variant="outline">Off</Badge>
         )}
@@ -288,7 +343,12 @@ function GroupRow({
           variant="outline"
           disabled={!changed || save.isPending}
           onClick={() =>
-            save.mutate({ groupId: group.id, mode, tag: tag === DEFAULT ? null : tag })
+            save.mutate({
+              groupId: group.id,
+              mode,
+              tag: tag === DEFAULT ? null : tag,
+              tagUs: tagUs === DEFAULT ? null : tagUs,
+            })
           }
         >
           Save
@@ -298,7 +358,7 @@ function GroupRow({
   );
 }
 
-function TrackingIdPool({ pool, defaultTag }: { pool: Pool; defaultTag: string }) {
+function TrackingIdPool({ pool, defaults }: { pool: Pool; defaults: Defaults }) {
   const utils = api.useUtils();
   const [text, setText] = useState("");
   const done = async (message: string) => {
@@ -322,8 +382,9 @@ function TrackingIdPool({ pool, defaultTag }: { pool: Pool; defaultTag: string }
       <CardHeader>
         <CardTitle>Tracking ID pool</CardTitle>
         <CardDescription>
-          Tracking IDs you&apos;ve created in Associates Central. Each one can
-          go to one group per season.
+          Tracking IDs you&apos;ve created in Associates Central: -21 for
+          Amazon.co.uk, -20 for Amazon.com. Each one can go to one group per
+          season.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -332,9 +393,10 @@ function TrackingIdPool({ pool, defaultTag }: { pool: Pool; defaultTag: string }
             <li key={p.tag} className="border-rule flex items-center gap-2 rounded-label border py-1 pr-1 pl-3 text-sm">
               <span className="text-ink font-semibold tabular-nums">{p.tag}</span>
               <span className="text-ink-soft">
-                {p.tag === defaultTag ? "Default" : p.usedBy ? p.usedBy.name : "Free"}
+                {p.store === "us" ? "US" : "UK"} ·{" "}
+                {isDefault(p.tag, defaults) ? "Default" : p.usedBy ? p.usedBy.name : "Free"}
               </span>
-              {!p.usedBy && p.tag !== defaultTag && (
+              {!p.usedBy && !isDefault(p.tag, defaults) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -363,7 +425,7 @@ function TrackingIdPool({ pool, defaultTag }: { pool: Pool; defaultTag: string }
               rows={3}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="raosanta13-21"
+              placeholder="raosanta13-21 or raosanta10-20"
               className="border-input rounded-label bg-background text-ink w-full border px-3 py-2"
             />
             <FieldDescription>One per line, or separated by commas.</FieldDescription>

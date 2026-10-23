@@ -51,12 +51,13 @@ export default async function GiftPage({ params }: Props) {
   const wishlist = page.ownerId ? (page.wishlistUrl ?? page.owner?.amazonWishlistUrl ?? null) : null;
   const affiliate = await affiliateFor(db, page.groupId, page.season);
   const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
   const tagged =
     wishlist && affiliate.enabled
-      ? taggedUrl(
-          wishlist,
-          tagForHost(affiliate.tag, h.get("x-forwarded-host") ?? h.get("host")),
-        )
+      ? taggedUrl(wishlist, {
+          uk: tagForHost(affiliate.tags.uk, host),
+          us: tagForHost(affiliate.tags.us, host),
+        })
       : null;
 
   return (

@@ -24,15 +24,42 @@ export const AMAZON_DISCLOSURE =
  * unregistered site (compliance pass, 20 Oct).
  */
 export const LIVE_HOSTS = ["raosanta.uk", "www.raosanta.uk"];
-export const TEST_TAG = "raosantatest-21";
 
-export function tagForHost(tag: string, host: string | null | undefined) {
-  const name = (host ?? "").split(",")[0]!.trim().toLowerCase().replace(/:\d+$/, "");
-  return LIVE_HOSTS.includes(name) ? tag : TEST_TAG;
+/**
+ * The Amazon stores we hold Associates accounts for (UK 20 Oct, US 23 Oct
+ * 2026). A tracking ID belongs to one store, told by its ending. Lists on
+ * any other store open untagged.
+ */
+export const STORES = {
+  uk: { domain: "amazon.co.uk", suffix: "-21", test: "raosantatest-21", name: "Amazon.co.uk" },
+  us: { domain: "amazon.com", suffix: "-20", test: "raosantatest-20", name: "Amazon.com" },
+} as const;
+export type Store = keyof typeof STORES;
+export const STORE_KEYS = Object.keys(STORES) as Store[];
+export type StoreTags = Record<Store, string>;
+
+/** UK IDs end in -21, US IDs in -20. */
+export const TRACKING_ID = /^[a-z0-9][a-z0-9-]{1,38}-2[01]$/;
+export const TRACKING_ID_HINT = "Tracking IDs end in -21 (Amazon.co.uk) or -20 (Amazon.com)";
+
+export const storeOfTag = (tag: string): Store | null =>
+  STORE_KEYS.find((k) => tag.endsWith(STORES[k].suffix)) ?? null;
+
+/** The store a wishlist is on, if we can tag it. */
+export function storeOfUrl(url: string): Store | null {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return STORE_KEYS.find((k) => STORES[k].domain === host) ?? null;
+  } catch {
+    return null;
+  }
 }
 
-/** Amazon.co.uk tracking IDs end in -21. */
-export const TRACKING_ID = /^[a-z0-9][a-z0-9-]{1,38}-21$/;
+/** The real ID on raosanta.uk; anywhere else that store's dummy ID. */
+export function tagForHost(tag: string, host: string | null | undefined) {
+  const name = (host ?? "").split(",")[0]!.trim().toLowerCase().replace(/:\d+$/, "");
+  return LIVE_HOSTS.includes(name) ? tag : STORES[storeOfTag(tag) ?? "uk"].test;
+}
 
 type Db = Pick<PrismaClient, "affiliateSettings" | "affiliateTag" | "group" | "giftPage">;
 
@@ -40,6 +67,7 @@ const DEFAULTS: Omit<AffiliateSettings, "updatedAt"> = {
   id: "site",
   enabled: false,
   defaultTag: "raosanta04-21",
+  defaultTagUs: "raosanta-20",
   orgDefault: false,
   communityDefault: true,
   friendsDefault: true,
@@ -49,7 +77,7 @@ export async function getAffiliateSettings(db: Db) {
   return (await db.affiliateSettings.findUnique({ where: { id: "site" } })) ?? DEFAULTS;
 }
 
-export type Affiliate = { enabled: false } | { enabled: true; tag: string };
+export type Affiliate = { enabled: false } | { enabled: true; tags: StoreTags };
 
 /**
  * Whether wishlists picked up in this group use affiliate links this season,
@@ -84,27 +112,28 @@ export async function affiliateFor(
   const on = group.affiliate === "DEFAULT" ? byKind : group.affiliate === "ON";
   if (!on) return { enabled: false };
 
-  const own = await db.affiliateTag.findUnique({
-    where: { groupId_season: { groupId: group.id, season } },
-    select: { tag: true },
+  const own = await db.affiliateTag.findMany({
+    where: { groupId: group.id, season },
+    select: { tag: true, store: true },
   });
-  return { enabled: true, tag: own?.tag ?? s.defaultTag };
+  const ownTag = (store: Store) => own.find((t) => t.store === store.toUpperCase())?.tag;
+  return {
+    enabled: true,
+    tags: { uk: ownTag("uk") ?? s.defaultTag, us: ownTag("us") ?? s.defaultTagUs },
+  };
 }
 
 /**
- * The wishlist address with the tracking ID added. Amazon.co.uk only: the
- * account is a UK Associates account, so lists on other Amazon stores (any
- * store is accepted since 22 Oct) are never tagged.
+ * The wishlist address with this group's tracking ID for its store added,
+ * or null for a store we have no Associates account for (any store is
+ * accepted since 22 Oct; UK and US are tagged).
  */
-export function taggedUrl(wishlistUrl: string, tag: string): string | null {
-  try {
-    const url = new URL(wishlistUrl);
-    if (url.hostname !== "www.amazon.co.uk") return null;
-    url.searchParams.set("tag", tag);
-    return url.toString();
-  } catch {
-    return null;
-  }
+export function taggedUrl(wishlistUrl: string, tags: StoreTags): string | null {
+  const store = storeOfUrl(wishlistUrl);
+  if (!store) return null;
+  const url = new URL(wishlistUrl);
+  url.searchParams.set("tag", tags[store]);
+  return url.toString();
 }
 
 /**

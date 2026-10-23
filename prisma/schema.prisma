@@ -333,6 +333,8 @@ model AffiliateSettings {
   enabled          Boolean  @default(false)
   /// the account's default tracking ID, used when a group has none this season
   defaultTag       String   @default("raosanta04-21")
+  /// Amazon.com (US) default, for lists on amazon.com (23 Oct)
+  defaultTagUs     String   @default("raosanta-20")
   /// defaults for groups left on DEFAULT, by kind (teams follow their workplace)
   orgDefault       Boolean  @default(false)
   communityDefault Boolean  @default(true)
@@ -373,6 +375,12 @@ model EmailLog {
   @@index([createdAt])
 }
 
+/// Amazon stores with an Associates account (UK 20 Oct, US 23 Oct 2026)
+enum AffiliateStore {
+  UK
+  US
+}
+
 enum AffiliateMode {
   DEFAULT
   ON
@@ -381,13 +389,16 @@ enum AffiliateMode {
 
 /// A group's own Amazon tracking ID for one season (created in Associates Central)
 model AffiliateTag {
-  id      String @id @default(cuid())
+  id      String         @id @default(cuid())
   groupId String
   season  Int
+  /// the Amazon store this ID is for (its ending: -21 UK, -20 US)
+  store   AffiliateStore @default(UK)
   tag     String
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group   Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([groupId, season])
+  /// one ID per group per store per season
+  @@unique([groupId, season, store])
   /// one group per tracking ID per season, so earnings are attributable
   @@unique([season, tag])
 }

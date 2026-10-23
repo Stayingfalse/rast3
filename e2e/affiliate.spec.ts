@@ -72,6 +72,7 @@ test("set up: affiliate links on, and a friends group with its own tracking ID",
       await mutate(r, "admin.setAffiliateSettings", {
         enabled: true,
         defaultTag: "raosanta04-21",
+        defaultTagUs: "raosanta-20",
         orgDefault: false,
         communityDefault: true,
         friendsDefault: true,
@@ -140,11 +141,64 @@ test("a picked-up wishlist opens from a public gift page", async ({ page, browse
   expect(errors).toEqual([]);
 });
 
+test("a list on Amazon.com opens with the group's US tracking ID", async ({ page, browser }, testInfo) => {
+  const p = testInfo.project.name;
+  const TAG_US = `raosantae2e-${p}-20`;
+  await loginAs(page, { email: site(p), adminLevel: "SITE" });
+  const r = page.request;
+  expect((await mutate(r, "admin.addTrackingIds", { tags: [TAG_US] })).status()).toBe(200);
+  // each store's IDs go in their own slot
+  expect(
+    (await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: TAG, tagUs: TAG })).status(),
+  ).toBe(400);
+  expect(
+    (await mutate(r, "admin.setGroupAffiliate", { groupId, mode: "ON", tag: TAG, tagUs: TAG_US })).status(),
+  ).toBe(200);
+  const admin = (await unwrap(await query(r, "admin.affiliate"))) as {
+    groups: { id: string; tag: string | null; tagUs: string | null }[];
+  };
+  expect(admin.groups.find((g) => g.id === groupId)).toMatchObject({ tag: TAG, tagUs: TAG_US });
+
+  // Alma moves to an amazon.com list: this season's gift page follows her
+  await loginAs(page, { email: `aff-a-${p}@${E}` });
+  expect(
+    (
+      await mutate(page.request, "profile.saveProfile", {
+        firstName: "Alma",
+        lastName: "Shopper",
+        amazonWishlistUrl: "https://www.amazon.com/hz/wishlist/ls/E2EAFUS001",
+      })
+    ).status(),
+  ).toBe(200);
+  await loginAs(page, { email: `aff-b-${p}@${E}` });
+  const [parcel] = await parcels(page.request);
+  expect(parcel?.link).toBe(giftPath);
+  const visitor = await browser.newContext();
+  const pub = await visitor.newPage();
+  expect((await pub.goto(giftPath))?.status()).toBe(200);
+  // dev gets the US dummy ID; raosanta.uk would use TAG_US
+  await expect(pub.getByRole("link", { name: "Open the wishlist on Amazon" })).toHaveAttribute(
+    "href",
+    /^https:\/\/www\.amazon\.com\/hz\/wishlist\/ls\/E2EAFUS001\?tag=raosantatest-20$/,
+  );
+  await expect(pub.getByText("Ad · Affiliate link", { exact: true })).toBeVisible();
+  await visitor.close();
+
+  // and back to her UK list for the tests below; a gift page follows its
+  // owner's list when the list is next opened through it
+  await loginAs(page, { email: `aff-a-${p}@${E}` });
+  expect((await profile(page.request, "Alma", "E2EAFA0001")).status()).toBe(200);
+  await loginAs(page, { email: `aff-b-${p}@${E}` });
+  expect((await parcels(page.request))[0]?.link).toBe(giftPath);
+});
+
 test("switching the group off opens wishlists straight on Amazon", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   await loginAs(page, { email: site(p), adminLevel: "SITE" });
   expect(
-    (await mutate(page.request, "admin.setGroupAffiliate", { groupId, mode: "OFF", tag: null })).status(),
+    (
+      await mutate(page.request, "admin.setGroupAffiliate", { groupId, mode: "OFF", tag: null, tagUs: null })
+    ).status(),
   ).toBe(200);
   await page.goto("/admin/affiliate");
   const row = page.getByRole("row").filter({ hasText: groupName });

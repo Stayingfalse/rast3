@@ -10,6 +10,8 @@ import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, settle, snap, track
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
+// page.route (below) can't see requests the service worker answers
+test.use({ serviceWorkers: "block" });
 
 const E = E2E_DOMAIN;
 const unwrap = async (res: { json: () => Promise<unknown> }) =>
@@ -32,7 +34,8 @@ test.afterAll(async ({ playwright }, testInfo) => {
 
 test("set up: an approved workplace that asks for a join code", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
-  domain = `inv-${p}.${E}`;
+  // a fresh domain each run: test workplaces are only cleared by the seed
+  domain = `inv-${p}-${Date.now().toString(36)}.${E}`;
   await loginAs(page, { email: `inv-boss-${p}@${E}` });
   expect(
     (await mutate(page.request, "groups.startOrganisation", { workEmail: `boss@${domain}` })).status(),
@@ -62,7 +65,14 @@ test("a workplace's own link asks for the work email first", async ({ page }, te
   await snap(page, testInfo, "invite-workplace");
 
   // sign-in: the work email isn't carried over, and typing it gets a warning
-  // (company mail often blocks our links), though it can still be sent
+  // (company mail often blocks our links), though it can still be sent. Dev
+  // has no email sign-in configured, so the browser is shown it; nothing is sent.
+  await page.route("**/api/auth/providers", async (route) => {
+    const res = await route.fetch();
+    const providers = (await res.json()) as Record<string, unknown>;
+    providers.nodemailer ??= { id: "nodemailer", name: "Email", type: "email", signinUrl: "", callbackUrl: "" };
+    await route.fulfill({ response: res, json: providers });
+  });
   await page.getByLabel(`Your @${domain} email`).fill(`cole@${domain}`);
   await page.getByLabel("Join code").fill("ABCDEFGH");
   await page.getByRole("button", { name: "Continue" }).click();

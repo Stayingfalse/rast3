@@ -90,6 +90,8 @@ test("a colleague joins from the link with its code, then fills in their profile
   await dialog.getByLabel("Last name").fill("League");
   await dialog.getByRole("button", { name: "Save and continue" }).click();
   await expect(page.getByText(`You're in ${domain}.`)).toBeVisible();
+  await settle(page);
+  await snap(page, testInfo, "invite-workplace-joined");
 
   const me = (await unwrap(await query(page.request, "profile.getCurrentProfile"))) as {
     workEmail: string | null;

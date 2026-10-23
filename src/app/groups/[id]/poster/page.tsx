@@ -45,7 +45,7 @@ export default async function PosterPage({
   const proto = h.get("x-forwarded-proto") ?? "https";
   const isOrg = group.kind === "ORG";
   const url = isOrg
-    ? `${proto}://${host}/groups`
+    ? `${proto}://${host}/${group.emailDomain ?? ""}`
     : `${proto}://${host}/join/${group.joinCode ?? ""}`;
   const qr = await QRCode.toString(url, {
     type: "svg",

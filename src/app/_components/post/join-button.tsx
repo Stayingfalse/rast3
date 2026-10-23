@@ -9,6 +9,9 @@ type JoinButtonProps = {
   /** post: red button; quiet: outline; link: inline text on navy */
   variant?: "post" | "quiet" | "link";
   className?: string;
+  /** passed to the sign-in modal */
+  only?: string;
+  initialEmail?: string;
 };
 
 /** Opens the sign-in modal. Sign-up and sign-in are the same flow. */
@@ -16,6 +19,8 @@ export function JoinButton({
   label = "Join Santa",
   variant = "post",
   className = "",
+  only,
+  initialEmail,
 }: JoinButtonProps) {
   const [open, setOpen] = useState(false);
   return (
@@ -33,7 +38,7 @@ export function JoinButton({
       >
         {label}
       </button>
-      <SignInModal isOpen={open} onClose={() => setOpen(false)} />
+      <SignInModal isOpen={open} onClose={() => setOpen(false)} only={only} initialEmail={initialEmail} />
     </>
   );
 }

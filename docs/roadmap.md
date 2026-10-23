@@ -965,3 +965,31 @@ that don't touch the data model. Known items to include:
   - **Migration:** `wishlist_opens`.
   - **Fundamental changes:** this is a second one on 23 Oct, at the owner's
     request.
+- **Invite routes (23 Oct, owner's request; bonus).** Each kind of group has
+  its own way in, and the invite is carried through sign-in and the profile.
+  - **Workplace:** a memorable link, `raosanta.uk/<domain>` (e.g.
+    raosanta.uk/acme.co.uk). The work email is the first and biggest
+    question, plus the join code if the organisation requires one (the
+    `?code=` in a link pre-fills it).
+    - Then sign-in (the email-link option is pre-filled with the work
+      email), then auto-join, then the profile, then "You're in", with a
+      nudge to other groups.
+    - Owner: no emailed verification code, because company mail filters
+      often block it. Unknown domains are the usual 404.
+  - **Discord community** (`/join/CODE` of a server-linked group):
+    - "Continue with Discord" only, with "Sign in another way" for existing
+      accounts;
+    - joined automatically if you're in the server; otherwise told to join
+      the server and retry;
+    - then other communities on your servers are suggested.
+    - Joining such a group by code alone is now refused, because the code
+      skipped the server check.
+  - **Friends:** joined automatically from the code, with no button; then
+    the profile, without leaving the invite.
+  - **Also:** organiser invite messages and the workplace poster use the new
+    links.
+- **Open tracking PR #55** opened, awaiting approval.
+- **Nightly run, 23 Oct 04:50:** spent on the owner's bonus work above (no
+  roadmap item).
+  - **Next (nightly, 24 Oct):** Day 24's remainder, PWA push notifications
+    and a "new lists to pick up" email.

@@ -936,3 +936,14 @@ that don't touch the data model. Known items to include:
   - Look-alike domains are refused.
   - There was no earlier record of an international check: the code had
     accepted amazon.co.uk only.
+- **Amazon.com affiliate links (23 Oct, owner's request).**
+  - The owner opened a US Associates account (default `raosanta-20`, plus
+    `raosanta01-20` to `09-20`).
+  - Lists on amazon.com now open from gift pages tagged with the group's
+    US ID, or the US default.
+  - Admins set a UK and a US ID per group per season, and both defaults.
+  - The pool holds both stores, told apart by the -21 or -20 ending.
+  - Migration `affiliate_us_store` adds the store to group IDs, the US
+    default and the owner's US IDs.
+  - This is 23 Oct's one fundamental change, so the 04:50 nightly run does
+    wrap-up only.

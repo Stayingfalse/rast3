@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 
+import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { AffiliateNote } from "./affiliate-note";
 
@@ -101,7 +102,11 @@ export function GroupHome({ group }: { group: Group }) {
                       href={a.link}
                       {...(a.viaGiftPage
                         ? {}
-                        : { target: "_blank", rel: "noopener noreferrer" })}
+                        : {
+                            target: "_blank",
+                            rel: "noopener noreferrer",
+                            onClick: () => trackOpen({ assignmentId: a.id }),
+                          })}
                       className="btn-quiet text-ink"
                     >
                       Open wishlist

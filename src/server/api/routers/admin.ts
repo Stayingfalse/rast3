@@ -6,11 +6,14 @@ import {
   affiliateFor,
   getAffiliateSettings,
   storeOfTag,
+  STORE_KEYS,
+  STORES,
   TRACKING_ID,
   TRACKING_ID_HINT,
   type Store,
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
+import { storeDomain } from "~/server/opens";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
 
@@ -411,6 +414,70 @@ export const adminRouter = createTRPCRouter({
       await ctx.db.affiliateTrackingId.deleteMany({ where: { tag: input.tag } });
       return { ok: true };
     }),
+
+  /**
+   * Wishlist opens this season (owner, 23 Oct): by Amazon store, with the
+   * opens we couldn't tag although the group had affiliate links on (the
+   * stores worth an Associates account next), and by group.
+   */
+  opens: siteAdminProcedure.query(async ({ ctx }) => {
+    const season = currentSeason();
+    const where = { season };
+    const [all, tagged, missed, viaGiftPage, byGroup, pickedUp, lists] = await Promise.all([
+      ctx.db.wishlistOpen.groupBy({ by: ["store"], where, _count: { _all: true } }),
+      ctx.db.wishlistOpen.groupBy({ by: ["store"], where: { ...where, tagged: true }, _count: { _all: true } }),
+      ctx.db.wishlistOpen.groupBy({
+        by: ["store"],
+        where: { ...where, affiliateOn: true, tagged: false },
+        _count: { _all: true },
+      }),
+      ctx.db.wishlistOpen.count({ where: { ...where, viaGiftPage: true } }),
+      ctx.db.wishlistOpen.groupBy({
+        by: ["groupId"],
+        where: { ...where, groupId: { not: null } },
+        _count: { _all: true },
+        orderBy: { _count: { groupId: "desc" } },
+        take: 30,
+      }),
+      ctx.db.wishlistAssignment.count({ where: { season } }),
+      ctx.db.user.findMany({ where: { amazonWishlistUrl: { not: null } }, select: { amazonWishlistUrl: true } }),
+    ]);
+    const count = (rows: { store: string; _count: { _all: number } }[], store: string) =>
+      rows.find((r) => r.store === store)?._count._all ?? 0;
+    const onFile = new Map<string, number>();
+    for (const { amazonWishlistUrl } of lists) {
+      const d = storeDomain(amazonWishlistUrl);
+      onFile.set(d, (onFile.get(d) ?? 0) + 1);
+    }
+    const stores = [...new Set([...onFile.keys(), ...all.map((r) => r.store)])]
+      .map((store) => ({
+        store,
+        lists: onFile.get(store) ?? 0,
+        opens: count(all, store),
+        tagged: count(tagged, store),
+        missed: count(missed, store),
+        account: STORE_KEYS.some((k) => STORES[k].domain === store),
+      }))
+      .sort((a, b) => b.missed - a.missed || b.opens - a.opens || b.lists - a.lists);
+    const names = await ctx.db.group.findMany({
+      where: { id: { in: byGroup.map((g) => g.groupId!) } },
+      select: { id: true, name: true, kind: true },
+    });
+    return {
+      season,
+      pickedUp,
+      opens: all.reduce((n, r) => n + r._count._all, 0),
+      viaGiftPage,
+      stores,
+      // groups since deleted drop out of the list (their opens still count above)
+      groups: byGroup
+        .flatMap((g) => {
+          const group = names.find((n) => n.id === g.groupId);
+          return group ? [{ ...group, opens: g._count._all }] : [];
+        })
+        .slice(0, 15),
+    };
+  }),
 
   /** Day 18: this season's dates, check-ins and the groups opened early. */
   season: siteAdminProcedure.query(async ({ ctx }) => {

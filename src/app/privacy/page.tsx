@@ -138,6 +138,15 @@ export default function PrivacyPolicyPage() {
               (Article 6(1)(f)).
             </li>
             <li>
+              <strong>To count wishlist opens</strong>: when you open a
+              picked-up wishlist on Amazon, our own server notes that the
+              list was opened, which Amazon store it&apos;s on and whether the
+              link carried our affiliate tag. No cookies are used and nothing
+              is shared with anyone else. Site admins see totals, to know
+              which lists get opened and which Amazon stores to join next.
+              Lawful basis: legitimate interests (Article 6(1)(f)).
+            </li>
+            <li>
               <strong>To show public totals</strong> such as &ldquo;120+ gifts
               sent&rdquo;. These are counts only, rounded, and never shown when
               under 10, so they do not identify anyone.
@@ -264,7 +273,8 @@ export default function PrivacyPolicyPage() {
           <p>
             We use only cookies that are strictly necessary for the site to
             work, so we do not ask for consent to them. We do not use analytics,
-            advertising or tracking cookies.
+            advertising or tracking cookies. (Wishlist opens are counted on our
+            own server without any cookie; see how we use your information.)
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>

@@ -88,10 +88,88 @@ export default function AdminAffiliatePage() {
           on Amazon with no tag. Season {data.season}.
         </p>
       </div>
+      <OpensReport />
       <SiteSettings settings={data.settings} />
       <GroupSettings groups={data.groups} pool={data.pool} defaults={defaults(data.settings)} />
       <TrackingIdPool pool={data.pool} defaults={defaults(data.settings)} />
     </div>
+  );
+}
+
+/**
+ * Wishlist opens this season by Amazon store (owner, 23 Oct): "missed" are
+ * opens in groups with affiliate links on, on a store we hold no Associates
+ * account for, so the top row is the next account worth opening.
+ */
+function OpensReport() {
+  const { data } = api.admin.opens.useQuery();
+  if (!data) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Wishlist opens</CardTitle>
+        <CardDescription>
+          Season {data.season}: <span className="tabular-nums">{data.opens}</span> opens (
+          <span className="tabular-nums">{data.viaGiftPage}</span> from gift pages) across{" "}
+          <span className="tabular-nums">{data.pickedUp}</span> pick-ups. &ldquo;Missed&rdquo;
+          counts opens in groups with affiliate links on, on a store we have no
+          Associates account for: the top row is the next one worth joining.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-6 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Amazon store</TableHead>
+              <TableHead className="text-right">Lists on file</TableHead>
+              <TableHead className="text-right">Opens</TableHead>
+              <TableHead className="text-right">Tagged</TableHead>
+              <TableHead className="text-right">Missed</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.stores.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-ink-soft">
+                  No wishlists yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.stores.map((s) => (
+                <TableRow key={s.store}>
+                  <TableCell>
+                    <span className="text-ink font-semibold">{s.store === "other" ? "Not Amazon" : s.store}</span>{" "}
+                    {s.account && <Badge variant="secondary">Our account</Badge>}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{s.lists}</TableCell>
+                  <TableCell className="text-right tabular-nums">{s.opens}</TableCell>
+                  <TableCell className="text-right tabular-nums">{s.tagged}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">{s.missed}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        {data.groups.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Most-opened groups</TableHead>
+                <TableHead className="text-right">Opens</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.groups.map((g) => (
+                <TableRow key={g.id}>
+                  <TableCell className="text-ink font-semibold">{g.name}</TableCell>
+                  <TableCell className="text-right tabular-nums">{g.opens}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

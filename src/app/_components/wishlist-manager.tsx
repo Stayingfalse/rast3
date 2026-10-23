@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Postmark } from "./post/postmark";
 import { ShareSheet, type ShareRequest } from "./share/share-sheet";
@@ -427,7 +428,11 @@ export function WishlistManager() {
               href={assignment.link ?? "#"}
               {...(assignment.viaGiftPage
                 ? {}
-                : { target: "_blank", rel: "noopener noreferrer" })}
+                : {
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    onClick: () => trackOpen({ assignmentId: assignment.id }),
+                  })}
               className={
                 hasPurchase || archived ? "btn-quiet text-ink" : "btn-post"
               }

@@ -184,9 +184,12 @@ test("a list on Amazon.com opens with the group's US tracking ID", async ({ page
   await expect(pub.getByText("Ad · Affiliate link", { exact: true })).toBeVisible();
   await visitor.close();
 
-  // and back to her UK list for the tests below
+  // and back to her UK list for the tests below; a gift page follows its
+  // owner's list when the list is next opened through it
   await loginAs(page, { email: `aff-a-${p}@${E}` });
   expect((await profile(page.request, "Alma", "E2EAFA0001")).status()).toBe(200);
+  await loginAs(page, { email: `aff-b-${p}@${E}` });
+  expect((await parcels(page.request))[0]?.link).toBe(giftPath);
 });
 
 test("switching the group off opens wishlists straight on Amazon", async ({ page }, testInfo) => {

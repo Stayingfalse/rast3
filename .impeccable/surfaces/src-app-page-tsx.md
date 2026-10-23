@@ -11,7 +11,8 @@ Scope: the public home page (Persuade) for signed-out visitors, and the same
 route's signed-in view (Operate: wishlist assignments + thank-you feed), plus the
 shared chrome they sit in (ground, hanging-post sky, brand lockup, sign-in, cookie notice).
 
-Audience: workplaces first (colleagues, often remote), communities second.
+Audience (owner, 22 Oct 2026): everyone, through three ways in: workplaces,
+Discord communities, and friends or family.
 Job: understand Random Acts (no draw, gift whenever you like, address never
 shared) and join. Proof: live anonymised totals (gifts posted, thank-yous,
 members), hidden when small. Constraints: keep the name exactly, the 2026 year
@@ -24,16 +25,18 @@ direction 3), pending the owner's pick among the alternatives shown in the PR.
 
 ## Direction contract
 
-THESIS: Random Acts as the Christmas post: every gift is a parcel sent to someone whose address you never learn. Refuses the category default of a snowy hero over three emoji benefit cards.
+Owner, 22 Oct 2026: "be more outside the box … a flow that almost asks what they are there for and gives them the pitch"; scroll animation wanted, the sell matters most. Concept chosen: the stamp rack.
 
-OWN-WORLD: Night-navy sky as ground, the hanging post above it (flat-print baubles, stamps and luggage tags on gold thread, pinned to the edges). Working surfaces are cream label stock with hairline ink rules, perforated stamp edges and a red/navy airmail band; postal red is the one action colour, gold is reserved for postmark rings. Archivo across widths: the brand lockup is the stamp mark beside the name in expanded 800 mixed case on two lines, expanded caps for headings and labels, regular for reading; tabular numerals for counts.
+THESIS: The page asks who is posting and re-prints itself as that visitor's pitch. Refuses one generic hero for four audiences with different goals.
 
-STORY: A visitor sees a parcel label addressed "To: a colleague · From: Santa · Address: withheld", understands that's the whole idea, sees the franking counter proving people do it, and joins. Below, the route (share, pick up, post, thank) and the small print answer the two worries: address and money.
+OWN-WORLD: Unchanged Christmas Post world (DESIGN.md): night sky, hanging post, label stock, airmail band, Archivo across widths; postal red for actions, so the rack's rubber stamps print in postal red ink when chosen.
 
-FIRST VIEWPORT: The hanging post hangs across the top, clear of the Sign in button. Left: the stamp-mark lockup (the 2026 year printed on the stamp), a one-line hook and "Join Santa" in postal red. Right (stacked below on phones): the parcel label at real label proportions, airmail band on its edge, the live franking counter postmarked across its corner.
+STORY: The visitor reads the hook and presses the stamps that fit: which group (workplace / Discord server / friends and family) and whether they're organising it or invited (owner, 22 Oct: six audiences); the parcel label (on phones, a compact address strip under the rack) re-addresses itself and is franked; below, their own worries are answered, their four steps and their button follow. Shared proof, small print and the thank-you post close the page.
 
-FORM: Christmas post and parcel ephemera, position 5 of 7 on the grounded list. seed:b747120341933ce1. Raises kept from declined challengers: one held moment (the label is the whole hero, painted hoarding); strict ruled grid for labels and cards (Hoffmann showroom); live data as material, set in exact tabular figures (datamatics); states named beyond colour (silk canopy); the route as fixed stations in order (darkroom).
+FIRST VIEWPORT: Hanging post; left: lockup, hook, the stamp rack; right: the parcel label re-addressed for the chosen visitor with the Posting row. The chosen visitor's button is in the first viewport.
 
-SIGNATURE: the postmark lands on the label once on load (a quick ink-stamp press, reduced-motion shows it at rest); marking a wishlist "Gifted" franks its label the same way.
+FORM: Christmas post; the dealt lead of three surface structures. seed: not recorded (the surface roll ran and dealt the three cards the owner chose from, but printed only a reproduction key, not a seed reference; disclosed to the owner 22 Oct).
 
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+SIGNATURE: Pressing a stamp franks the label (the frank motion, rubber-stamp press); scrolling posts each section in like a letter through a slot, the route's line draws station by station. Reduced motion: everything at rest. ?for= in the address makes each pitch shareable.
+
+FINISH: finish review, verdict, DESIGN.md motion entry updated.

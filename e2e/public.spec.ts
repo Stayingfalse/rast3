@@ -19,11 +19,46 @@ test.describe("public pages", () => {
     });
   }
 
-  test("signed-out visitors see the Join Santa button", async ({ page }) => {
+  test("the stamp rack re-prints the pitch for each visitor", async ({ page }, testInfo) => {
+    const errors = trackPageErrors(page);
     await page.goto("/");
-    await expect(
-      page.getByRole("button", { name: /Join Santa/ }),
-    ).toBeVisible();
+    const group = page.getByRole("radiogroup", { name: "Which group" });
+    const role = page.getByRole("radiogroup", { name: "Organising or invited" });
+    // a colleague who's been invited, by default
+    await expect(group.getByRole("radio", { name: "Our workplace" })).toBeChecked();
+    await expect(role.getByRole("radio", { name: "I've been invited" })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Join your workplace" }).first()).toBeVisible();
+
+    // a Discord organiser presses their stamps: label, pitch and button follow
+    await group.getByRole("radio", { name: "Our Discord server" }).click();
+    await role.getByRole("radio", { name: "I'm organising it" }).click();
+    await expect(page).toHaveURL(/[?&]for=discord-run/);
+    await expect(page.getByText("A member you've only met in voice chat").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /A Christmas your server will talk about/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Link your Discord server" }).first()).toBeVisible();
+    // the small print skips what the pitch already answered
+    await expect(page.getByText("Is my address private?")).toHaveCount(0);
+    await expect(page.getByText("When does it run?")).toBeVisible();
+
+    // arrow keys move along a row
+    await group.getByRole("radio", { name: "Our Discord server" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(group.getByRole("radio", { name: "Friends & family" })).toBeChecked();
+    await expect(group.getByRole("radio", { name: "Friends & family" })).toBeFocused();
+    await expect(page).toHaveURL(/[?&]for=friends-run/);
+
+    // a shared link opens on its pitch (old links still work)
+    await page.goto("/?for=discord-join");
+    await expect(page.getByRole("button", { name: "Join with Discord" }).first()).toBeVisible();
+    await page.goto("/?for=invited");
+    await expect(page.getByRole("button", { name: "Join your group" }).first()).toBeVisible();
+    await settle(page);
+    await snap(page, testInfo, "home-friends-join");
+
+    // the pitch's button opens sign-in
+    await page.getByRole("button", { name: "Join your group" }).first().click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(errors).toEqual([]);
   });
 
   test("unknown pages show the branded not-found page", async ({ page }) => {

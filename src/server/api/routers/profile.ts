@@ -3,7 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getWorkplace } from "~/server/groups";
 import { checkIn } from "~/server/season";
 
-import { amazonWishlistRegex, cleanWishlistUrl } from "~/lib/wishlist";
+import { amazonWishlistRegex, cleanWishlistUrl, WISHLIST_HINT } from "~/lib/wishlist";
 
 // Helper function to normalize wishlist URL
 const normalizeWishlistUrl = (url: string | undefined): string | null => {
@@ -68,7 +68,7 @@ export const profileRouter = createTRPCRouter({
           .transform((val) => normalizeWishlistUrl(val))
           .refine(
             (url) => url === null || amazonWishlistRegex.test(url),
-            "Must be a valid Amazon UK wishlist URL (e.g., https://www.amazon.co.uk/hz/wishlist/ls/XXXXXXXXXX)",
+            WISHLIST_HINT,
           ),
         /** reminder emails (22 Oct); left out = unchanged */
         emailReminders: z.boolean().optional(),

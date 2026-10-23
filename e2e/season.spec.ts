@@ -65,14 +65,14 @@ test("a returning member checks in before gifting", async ({ page }, testInfo) =
   await settle(page);
   await snap(page, testInfo, "season-check-in");
 
-  // a different list has to be an Amazon UK wishlist
+  // a different list has to be an Amazon wishlist
   await card.getByRole("radio", { name: "Use a different wishlist" }).click();
-  await card.getByLabel("Amazon UK wishlist link").fill("https://example.com/my-list");
+  await card.getByLabel("Amazon wishlist link").fill("https://example.com/my-list");
   await card.getByRole("button", { name: `Check in for ${before.season}` }).click();
-  await expect(card.getByText("That isn't an Amazon UK wishlist link.", { exact: false })).toBeVisible();
+  await expect(card.getByText("That isn't an Amazon wishlist link.", { exact: false })).toBeVisible();
 
   // anyone's own ?tag= is stripped when the link is saved
-  await card.getByLabel("Amazon UK wishlist link").fill(
+  await card.getByLabel("Amazon wishlist link").fill(
     "https://www.amazon.co.uk/hz/wishlist/ls/E2ERET0002?tag=someone-21&ref_=x",
   );
   await card.getByRole("button", { name: `Check in for ${before.season}` }).click();

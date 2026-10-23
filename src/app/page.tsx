@@ -4,25 +4,43 @@ import { GiftingSwitcher } from "~/app/_components/groups/gifting-switcher";
 import { SeasonGate } from "~/app/_components/season-gate";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
 import { auth } from "~/server/auth";
+import { db } from "~/server/db";
 import { getPublicTotals } from "~/server/public-stats";
+import { currentSeason, publicSeason, ukDay } from "~/server/season";
 import { HydrateClient } from "~/trpc/server";
-import { HomeHero } from "./_components/home-hero";
+import { HomePitch } from "./_components/home/home-pitch";
+import { parsePersona } from "./_components/home/personas";
 import HomeMarketingServer from "./_components/home-marketing-server";
 import KudosAreaClient from "./_components/kudos-area-client";
 import { GroupTotals } from "./_components/share/group-totals";
 import { StampAlbum } from "./_components/stamp-album";
 import { Wordmark } from "./_components/post/wordmark";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ for?: string }>;
+}) {
   const session = await auth();
 
   if (!session?.user) {
-    const totals = await getPublicTotals();
+    const { for: forWhom } = await searchParams;
+    const [totals, s] = await Promise.all([getPublicTotals(), publicSeason(db)]);
+    const season = {
+      year: currentSeason(),
+      phase: s.phase,
+      opens: ukDay(s.opensAt),
+      closes: ukDay(s.closesAt),
+    };
     return (
       <HydrateClient>
         <div className="flex w-full flex-col gap-24">
-          <HomeHero totals={totals} />
-          <HomeMarketingServer />
+          <HomePitch
+            initial={parsePersona(forWhom) ?? "workplace-join"}
+            totals={totals}
+            season={season}
+          />
+          <HomeMarketingServer season={season} />
           <KudosFeed />
         </div>
       </HydrateClient>

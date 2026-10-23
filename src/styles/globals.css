@@ -366,3 +366,71 @@ body {
     cursor: pointer;
   }
 }
+
+/* ------------------------------------------- home: scroll and the stamp rack */
+
+/* Posted in: a section rises through a slot the first time it's seen */
+.reveal {
+  transition:
+    opacity 480ms ease-out,
+    transform 760ms cubic-bezier(0.16, 1, 0.3, 1),
+    clip-path 760ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal[data-reveal="armed"] {
+  opacity: 0;
+  transform: translateY(32px);
+  clip-path: inset(0 0 18% 0);
+}
+.reveal[data-reveal="shown"] {
+  clip-path: inset(0 0 0 0);
+}
+
+/* The route's line draws across, then each station's dot lands in turn */
+.route-line {
+  transform-origin: left;
+  transition: transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 120ms;
+}
+.reveal[data-reveal="armed"] .route-line {
+  transform: scaleX(0);
+}
+.route-station {
+  transition:
+    opacity 420ms ease-out,
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 140ms + 260ms);
+}
+.reveal[data-reveal="armed"] .route-station {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+/* A rubber stamp pressed onto the page */
+@keyframes press {
+  0% {
+    transform: translateY(-6px) scale(1.06) rotate(var(--tilt, 0deg));
+  }
+  55% {
+    transform: translateY(1px) scale(0.97) rotate(var(--tilt, 0deg));
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(var(--tilt, 0deg));
+  }
+}
+.animate-press {
+  animation: press 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The pitch re-printing for a new visitor */
+@keyframes reprint {
+  0% {
+    opacity: 0.35;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-reprint {
+  animation: reprint 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}

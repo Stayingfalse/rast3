@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -272,9 +273,9 @@ export function WishlistManager() {
               : "Wishlists are shared inside groups: your workplace, a group of friends, or a community such as a Discord server. Join one with your work email or an invite code, or start your own."}
           </p>
           <div>
-            <a href="/groups" className="btn-post">
+            <Link href="/groups" className="btn-post">
               {orgStatus === "PENDING" ? "Your groups" : "Join or start a group"}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

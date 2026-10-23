@@ -289,14 +289,15 @@ function Invite({ g }: { g: Console }) {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   const isOrg = g.kind === "ORG";
+  // workplaces have their own memorable link: raosanta.uk/<domain> (23 Oct)
   const link = isOrg
-    ? `${origin}/groups`
+    ? `${origin}/${g.emailDomain}`
     : g.joinCode
       ? `${origin}/join/${g.joinCode}`
       : origin;
   const message = isOrg
-    ? `Christmas is coming! I've set us up on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here: ${link} and choose "Join your workplace" with your @${g.emailDomain} email${g.joinCode ? ` (code ${formatCode(g.joinCode)})` : ""}.`
-    : `Christmas is coming! Join ${g.name} on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up someone's whenever you're ready. Join here: ${link}${g.joinCode ? ` (or use code ${formatCode(g.joinCode)} on Your groups)` : ""}`;
+    ? `Christmas is coming! I've set us up on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here with your @${g.emailDomain} email: ${link}${g.joinCode ? ` (join code ${formatCode(g.joinCode)})` : ""}`
+    : `Christmas is coming! Join ${g.name} on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up someone's whenever you're ready. Join here: ${link}`;
 
   const copy = async (text: string, what: string) => {
     await navigator.clipboard.writeText(text);

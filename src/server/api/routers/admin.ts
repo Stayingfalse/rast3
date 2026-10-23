@@ -437,7 +437,7 @@ export const adminRouter = createTRPCRouter({
         where: { ...where, groupId: { not: null } },
         _count: { _all: true },
         orderBy: { _count: { groupId: "desc" } },
-        take: 15,
+        take: 30,
       }),
       ctx.db.wishlistAssignment.count({ where: { season } }),
       ctx.db.user.findMany({ where: { amazonWishlistUrl: { not: null } }, select: { amazonWishlistUrl: true } }),
@@ -469,10 +469,13 @@ export const adminRouter = createTRPCRouter({
       opens: all.reduce((n, r) => n + r._count._all, 0),
       viaGiftPage,
       stores,
-      groups: byGroup.map((g) => ({
-        ...(names.find((n) => n.id === g.groupId) ?? { id: g.groupId!, name: "(deleted group)", kind: null }),
-        opens: g._count._all,
-      })),
+      // groups since deleted drop out of the list (their opens still count above)
+      groups: byGroup
+        .flatMap((g) => {
+          const group = names.find((n) => n.id === g.groupId);
+          return group ? [{ ...group, opens: g._count._all }] : [];
+        })
+        .slice(0, 15),
     };
   }),
 

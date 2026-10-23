@@ -12,6 +12,10 @@ const logger = clientLogger;
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** show just this provider (e.g. "discord" on a community invite), with a link to the rest */
+  only?: string;
+  /** prefill the email link form (a workplace invite's work email) */
+  initialEmail?: string;
 }
 
 interface Provider {
@@ -92,8 +96,11 @@ function SafeIcon({
   );
 }
 
-export function SignInModal({ isOpen, onClose }: SignInModalProps) {
+export function SignInModal({ isOpen, onClose, only, initialEmail }: SignInModalProps) {
+  const [showAll, setShowAll] = useState(false);
   const [providers, setProviders] = useState<ProvidersState>(null);
+  // only that provider, unless it isn't configured here (then everything)
+  const restricted = !!only && !showAll && ((providers === null || !!providers[only]));
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -102,14 +109,16 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
+      if (initialEmail) setEmail(initialEmail);
     } else {
+      setShowAll(false);
       // Reset states when modal is closed
       setEmailSent(false);
       setShowEmailForm(false);
       setEmail("");
       setIsLoading(null);
     }
-  }, [isOpen]);
+  }, [isOpen, initialEmail]);
   const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
     try {
@@ -350,11 +359,11 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                     (() => {
                       // Separate nodemailer provider from OAuth providers
                       const allProviders = Object.values(providers);
-                      const emailProvider = allProviders.find(
-                        (p) => p.id === "nodemailer",
-                      );
+                      const emailProvider = restricted
+                        ? undefined
+                        : allProviders.find((p) => p.id === "nodemailer");
                       const oauthProviders = allProviders.filter(
-                        (p) => p.id !== "nodemailer",
+                        (p) => p.id !== "nodemailer" && (!restricted || p.id === only),
                       );
 
                       // Keep OAuth providers in a consistent order (alphabetical by name)
@@ -469,6 +478,15 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                               </button>
                             );
                           })}
+                          {restricted && (
+                            <button
+                              type="button"
+                              onClick={() => setShowAll(true)}
+                              className="text-ink-soft w-full text-center text-sm underline underline-offset-4"
+                            >
+                              Already have an account? Sign in another way
+                            </button>
+                          )}
                         </>
                       );
                     })()

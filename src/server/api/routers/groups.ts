@@ -204,6 +204,14 @@ export const groupsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const invite = await findInvite(input.code);
       if (!invite) throw notFound();
+      // a community linked to a Discord server only takes its members
+      // (joinViaDiscord checks), so its code alone isn't enough
+      if (invite.discordGuildId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This group joins through Discord. Continue with Discord on its invite page.",
+        });
+      }
       await ctx.db.membership.upsert({
         where: {
           groupId_userId: { groupId: invite.id, userId: ctx.session.user.id },

@@ -29,6 +29,8 @@ interface ProfileSetupModalProps {
   isOpen: boolean;
   onComplete: () => void;
   onClose?: () => void;
+  /** where a first profile goes next; null stays put (an invite carries on) */
+  next?: string | null;
   existingProfile?: {
     firstName?: string | null;
     lastName?: string | null;
@@ -59,6 +61,7 @@ export function ProfileSetupModal({
   isOpen,
   onComplete,
   onClose,
+  next = "/groups?welcome=1",
   existingProfile,
 }: ProfileSetupModalProps) {
   const router = useRouter();
@@ -87,7 +90,7 @@ export function ProfileSetupModal({
     onSuccess: () => {
       onComplete();
       // First time: on to joining or starting a group
-      if (!isEditing) router.push("/groups?welcome=1");
+      if (!isEditing && next) router.push(next);
     },
     onError: (error) => setErrors({ submit: error.message }),
   });
@@ -124,7 +127,7 @@ export function ProfileSetupModal({
             {isEditing ? "Edit your profile" : "Complete Your Profile"}
           </DialogTitle>
           <DialogDescription>
-            {isEditing
+            {isEditing || next === null
               ? "Your name and your Amazon wishlist."
               : "Just your name and your Amazon wishlist. Next you'll join your workplace, a friends group or a community."}
           </DialogDescription>
@@ -212,7 +215,9 @@ export function ProfileSetupModal({
                 ? "Saving…"
                 : isEditing
                   ? "Save profile"
-                  : "Save and choose a group"}
+                  : next === null
+                    ? "Save and continue"
+                    : "Save and choose a group"}
             </Button>
           </DialogFooter>
         </form>

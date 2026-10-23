@@ -33,6 +33,7 @@ export async function findInvite(rawCode: string) {
       name: true,
       kind: true,
       status: true,
+      discordGuildId: true,
       _count: { select: { memberships: true } },
     },
   });
@@ -50,5 +51,7 @@ export async function findInvite(rawCode: string) {
     status: group.status,
     members: group._count.memberships,
     joinCode,
+    /** set when a community is linked to a Discord server: join through Discord */
+    discordGuildId: group.discordGuildId,
   };
 }

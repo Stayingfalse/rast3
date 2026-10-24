@@ -152,9 +152,11 @@ export const newLists = (
     kicker: `Christmas ${season}`,
     heading: count === 1 ? "Someone new is waiting for a Santa" : `${count} new lists are waiting for a Santa`,
     paragraphs: [
-      `Since we last wrote, ${count === 1 ? "someone has" : `${count} people have`} joined in ${and(
-        groups.slice(0, 3),
-      )}${groups.length > 3 ? " and more" : ""}, and ${count === 1 ? "their wishlist hasn't" : "their wishlists haven't"} had a gift yet.`,
+      `Since we last wrote, ${count === 1 ? "someone" : `${count} people`} in ${and(groups.slice(0, 3))}${
+        groups.length > 3 ? " and more" : ""
+      } ${count === 1 ? "has" : "have"} joined in this Christmas, and ${
+        count === 1 ? "their wishlist hasn't" : "their wishlists haven't"
+      } had a gift yet.`,
       "Pick one up whenever you're ready. There's no draw, and nobody keeps score.",
       `Gifting closes on ${day(closesAt)}.`,
     ],

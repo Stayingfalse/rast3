@@ -103,7 +103,7 @@
 | 21 | Wed 28 Oct | **Removed by the owner (22 Oct): not needed, as Santas buy from the wishlist itself and Amazon marks bought items.** Now a spare day |
 | 22 | Thu 29 Oct | **Done early (bonus day, 20 Oct): affiliate links.** Freed day: confirm the gift-page approach with Amazon Associates support, then the season's tracking IDs per group |
 | 23 | Fri 30 Oct | **Removed by the owner (22 Oct): anonymous questions aren't needed, for the same reason.** Now a spare day |
-| 24 | Sat 31 Oct | **Email part done early (22 Oct).** Still open: PWA push, and a "new lists to pick up" email digest |
+| 24 | Sat 31 Oct | **Email part done early (22 Oct); the "new lists to pick up" email done 24 Oct.** Still open: PWA push (needs VAPID keys set on dev and prod by the owner) |
 
 ### Week 4: engagement and launch prep (1–7 Nov)
 | Day | Date | Focus |
@@ -996,3 +996,25 @@ that don't touch the data model. Known items to include:
   roadmap item).
   - **Next (nightly, 24 Oct):** Day 24's remainder, PWA push notifications
     and a "new lists to pick up" email.
+- **Merged and live on prod (23 Oct, owner approved):** #55 open tracking,
+  #56 invite routes, and #57, a warning when someone signs in to a workplace
+  invite with their work email ("most companies block emails from us").
+  The sign-in box is no longer prefilled with the work email.
+- **Nightly run, 24 Oct: Day 24's "new lists to pick up" email.**
+  - While gifting is open, people who have picked up a list this season hear
+    about new members' wishlists that haven't had a gift yet.
+    - A list counts as new if its owner joined or checked in since the last
+      email; it doesn't count if they already hold it.
+    - At most one a week, and never within a week of "gifting is open".
+    - Never to people who only receive: giving stays optional and nobody is
+      chased.
+  - Runs with the hourly reminders. Migration `20261024040000_new_lists_email`
+    adds the `NEW_LISTS` email kind. Profile and privacy copy mention it.
+  - **PR #58** opened, awaiting approval. Dev e2e passed on desktop and
+    mobile; the new spec and the reminders spec passed 20/20 against dev.
+  - PWA push left for later: it needs VAPID keys in dev's and prod's
+    environment (an owner action), so it isn't scheduled until those exist.
+  - **Next (nightly, 25 Oct): Day 26,** gift-received confirmation and a
+    per-group thank-you feed. This includes a one-tap "Something arrived"
+    from the gift check-in email, which tells the Santa their gift landed
+    without asking for a written thank-you.

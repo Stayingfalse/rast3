@@ -160,7 +160,9 @@ export default function PrivacyPolicyPage() {
               nudge to check in before gifting opens, one when it opens, and,
               a few days after a Santa has sent you something, a check-in if
               you haven&apos;t posted a thank-you yet (never on the day, and
-              never saying who). Every one
+              never saying who). Once you&apos;ve picked up a list, at most
+              one a week when new members&apos; wishlists are waiting for a
+              first gift. Every one
               has a link to stop them, and sign-in links still arrive. Lawful
               basis: legitimate interests (Article 6(1)(f)), as part of the
               service you signed up for.

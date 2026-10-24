@@ -131,3 +131,32 @@ export const giftCheckIn = (userId: string, season: number) =>
     ],
     button: { label: "Post a thank-you", path: "/" },
   });
+
+const and = (names: string[]) =>
+  names.length < 2 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+
+/**
+ * Day 24: new members' wishlists that haven't had a gift yet, for people
+ * who are already gifting this season. At most weekly.
+ */
+export const newLists = (
+  userId: string,
+  season: number,
+  count: number,
+  groups: string[],
+  closesAt: Date,
+) =>
+  render({
+    userId,
+    subject: count === 1 ? "A new wishlist to pick up" : `${count} new wishlists to pick up`,
+    kicker: `Christmas ${season}`,
+    heading: count === 1 ? "Someone new is waiting for a Santa" : `${count} new lists are waiting for a Santa`,
+    paragraphs: [
+      `Since we last wrote, ${count === 1 ? "someone has" : `${count} people have`} joined in ${and(
+        groups.slice(0, 3),
+      )}${groups.length > 3 ? " and more" : ""}, and ${count === 1 ? "their wishlist hasn't" : "their wishlists haven't"} had a gift yet.`,
+      "Pick one up whenever you're ready. There's no draw, and nobody keeps score.",
+      `Gifting closes on ${day(closesAt)}.`,
+    ],
+    button: { label: "Pick up a wishlist", path: "/" },
+  });

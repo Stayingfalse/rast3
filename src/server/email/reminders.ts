@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { seasonWindow } from "~/server/season";
 import { sendOnce } from "./mailer";
-import { checkInNudge, giftCheckIn, seasonOpen } from "./templates";
+import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
 /**
  * Reminder emails (22 Oct), run hourly (src/instrumentation.ts):
@@ -12,6 +12,10 @@ import { checkInNudge, giftCheckIn, seasonOpen } from "./templates";
  * - 4 to 14 days after a Santa marked a gift to someone's list, if they
  *   haven't posted a thank-you since, a gentle check-in (never on the day,
  *   which would spoil the surprise; at most one a fortnight).
+ * - while gifting is open, people who have picked up a list this season hear
+ *   about new members' wishlists that haven't had a gift yet (Day 24). At
+ *   most one a week, and never within a week of the "gifting is open" email.
+ *   Only to people already gifting: nobody who just receives is chased.
  * The first two go once per person per season; anyone can opt out.
  */
 export const NUDGE_DAYS = 14;
@@ -19,11 +23,19 @@ const OPEN_DAYS = 7;
 /** a gift check-in waits this long after the gift, and stops after GIFT_LATEST */
 const GIFT_AFTER_DAYS = 4;
 const GIFT_LATEST_DAYS = 14;
+/** new-lists emails: at most one per person this often */
+const NEW_LISTS_EVERY_DAYS = 7;
 /** per kind per run, to stay well inside SMTP sending limits */
 const BATCH = 100;
 const DAY = 24 * 3600_000;
 
-export type ReminderRun = { season: number; nudged: number; opened: number; giftCheckIns: number };
+export type ReminderRun = {
+  season: number;
+  nudged: number;
+  opened: number;
+  giftCheckIns: number;
+  newLists: number;
+};
 
 export async function runReminders(
   db: PrismaClient,
@@ -37,7 +49,7 @@ export async function runReminders(
     profileCompleted: true,
     ...(only && { AND: [only] }),
   };
-  const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0 };
+  const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({
@@ -122,5 +134,76 @@ export async function runReminders(
     );
     if (r !== "DUPLICATE") run.giftCheckIns++;
   }
+
+  run.newLists = await sendNewLists(db, base, season, w, now);
   return run;
+}
+
+/** The weekly "new wishlists to pick up" email; returns how many went. */
+async function sendNewLists(
+  db: PrismaClient,
+  base: Prisma.UserWhereInput,
+  season: number,
+  w: { opensAt: Date; closesAt: Date },
+  now: Date,
+) {
+  if (now > w.closesAt) return 0;
+  const inWindow = now >= w.opensAt;
+  // groups people can pick up in right now (before the season: opened early)
+  const open: Prisma.GroupWhereInput = inWindow
+    ? { status: "ACTIVE" }
+    : { status: "ACTIVE", OR: [{ openEarlySeason: season }, { parent: { openEarlySeason: season } }] };
+  const lastWeek = new Date(now.getTime() - NEW_LISTS_EVERY_DAYS * DAY);
+  const santas = await db.user.findMany({
+    where: {
+      ...base,
+      assignedLinks: { some: { season } },
+      memberships: { some: { group: open } },
+      emailLog: { none: { kind: { in: ["NEW_LISTS", "SEASON_OPEN"] }, createdAt: { gte: lastWeek } } },
+    },
+    select: {
+      id: true,
+      email: true,
+      emailLog: { where: { kind: "NEW_LISTS" }, orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
+    },
+    orderBy: { id: "asc" },
+    take: BATCH,
+  });
+  let sent = 0;
+  for (const u of santas) {
+    const last = u.emailLog[0]?.createdAt;
+    const since = last && last > lastWeek ? last : lastWeek;
+    const fresh = await db.membership.findMany({
+      where: {
+        group: { ...open, memberships: { some: { userId: u.id } } },
+        userId: { not: u.id },
+        user: {
+          amazonWishlistUrl: { not: null },
+          seasonCheckIns: { some: { season } },
+          // still waiting for a first gift, and not already picked up by them
+          AND: [
+            { ownedWishlist: { none: { season, purchases: { isNot: null } } } },
+            { ownedWishlist: { none: { season, assignedUserId: u.id } } },
+          ],
+        },
+        // joined, or checked in for this Christmas, since the last email
+        OR: [{ joinedAt: { gt: since } }, { user: { seasonCheckIns: { some: { season, createdAt: { gt: since } } } } }],
+      },
+      select: { userId: true, group: { select: { name: true, kind: true, parent: { select: { name: true } } } } },
+    });
+    const people = new Set(fresh.map((m) => m.userId));
+    if (people.size === 0) continue;
+    // a team's lists are its workplace's
+    const groups = [...new Set(fresh.map((m) => (m.group.kind === "TEAM" ? m.group.parent?.name : null) ?? m.group.name))];
+    const r = await sendOnce(
+      db,
+      { id: u.id, email: u.email! },
+      "NEW_LISTS",
+      season,
+      () => newLists(u.id, season, people.size, groups, w.closesAt),
+      now.toISOString().slice(0, 10),
+    );
+    if (r !== "DUPLICATE") sent++;
+  }
+  return sent;
 }

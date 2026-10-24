@@ -177,24 +177,28 @@ async function sendNewLists(
       where: {
         group: { ...open, memberships: { some: { userId: u.id } } },
         userId: { not: u.id },
-        user: {
-          amazonWishlistUrl: { not: null },
-          seasonCheckIns: { some: { season } },
-          // still waiting for a first gift, and not already picked up by them
-          AND: [
-            { ownedWishlist: { none: { season, purchases: { isNot: null } } } },
-            { ownedWishlist: { none: { season, assignedUserId: u.id } } },
-          ],
-        },
+        user: { amazonWishlistUrl: { not: null }, seasonCheckIns: { some: { season } } },
         // joined, or checked in for this Christmas, since the last email
         OR: [{ joinedAt: { gt: since } }, { user: { seasonCheckIns: { some: { season, createdAt: { gt: since } } } } }],
       },
       select: { userId: true, group: { select: { name: true, kind: true, parent: { select: { name: true } } } } },
     });
-    const people = new Set(fresh.map((m) => m.userId));
+    // only lists still waiting for a first gift, and not already theirs to gift
+    const owners = [...new Set(fresh.map((m) => m.userId))];
+    const taken = await db.wishlistAssignment.findMany({
+      where: {
+        season,
+        wishlistOwnerId: { in: owners },
+        OR: [{ assignedUserId: u.id }, { purchases: { isNot: null } }],
+      },
+      select: { wishlistOwnerId: true },
+    });
+    const skip = new Set(taken.map((a) => a.wishlistOwnerId));
+    const waiting = fresh.filter((m) => !skip.has(m.userId));
+    const people = new Set(waiting.map((m) => m.userId));
     if (people.size === 0) continue;
     // a team's lists are its workplace's
-    const groups = [...new Set(fresh.map((m) => (m.group.kind === "TEAM" ? m.group.parent?.name : null) ?? m.group.name))];
+    const groups = [...new Set(waiting.map((m) => (m.group.kind === "TEAM" ? m.group.parent?.name : null) ?? m.group.name))];
     const r = await sendOnce(
       db,
       { id: u.id, email: u.email! },

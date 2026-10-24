@@ -37,11 +37,12 @@ const newListsEmails = async (r: APIRequestContext, p: string, now?: number) => 
 };
 
 const join = async (r: APIRequestContext, name: string, p: string) => {
-  await mutate(r, "profile.saveProfile", {
+  const saved = await mutate(r, "profile.saveProfile", {
     firstName: name,
     lastName: "Newlist",
-    amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/E2ENL${name.toUpperCase()}${p.length}`,
+    amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/${`E2ENL${name.toUpperCase()}${p.length}`.padEnd(13, "0")}`,
   });
+  expect(saved.status(), await saved.text()).toBe(200);
   expect((await mutate(r, "groups.join", { code })).status()).toBe(200);
 };
 const pickUpAndGift = async (r: APIRequestContext, gift: boolean) => {

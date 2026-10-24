@@ -45,15 +45,16 @@ const join = async (r: APIRequestContext, name: string, p: string) => {
   expect(saved.status(), await saved.text()).toBe(200);
   expect((await mutate(r, "groups.join", { code })).status()).toBe(200);
 };
-const pickUpAndGift = async (r: APIRequestContext, gift: boolean) => {
+/** picks up one list; then, if named, marks a gift to that person's list */
+const pickUpAndGift = async (r: APIRequestContext, giftTo?: string) => {
   expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
-  if (!gift) return;
+  if (!giftTo) return;
   const held = (await unwrap(
     await r.get(
       `/api/trpc/wishlist.getMyAssignments?input=${encodeURIComponent(JSON.stringify({ json: { groupId } }))}`,
     ),
-  )) as { id: string; purchases: unknown }[];
-  const fresh = held.find((a) => !a.purchases)!;
+  )) as { id: string; link: string | null }[];
+  const fresh = held.find((a) => a.link?.includes(`E2ENL${giftTo.toUpperCase()}`))!;
   expect((await mutate(r, "wishlist.markPurchase", { assignmentId: fresh.id })).status()).toBe(200);
 };
 
@@ -90,7 +91,7 @@ test("set up: Santa runs a friends group, open for gifting, and picks up Fern's 
   await loginAs(page, { email: who("fern", p) });
   await join(page.request, "Fern", p);
   await loginAs(page, { email: who("santa", p) });
-  await pickUpAndGift(page.request, false);
+  await pickUpAndGift(page.request);
 
   // Fern's is the only new list, and Santa holds it; Fern isn't gifting
   expect(await newListsEmails(page.request, p)).toEqual([]);
@@ -102,12 +103,12 @@ test("lists already gifted or held don't count; a new member's list does", async
   await loginAs(page, { email: who("gus", p) });
   await join(page.request, "Gus", p);
   await loginAs(page, { email: who("santa", p) });
-  await pickUpAndGift(page.request, true);
+  await pickUpAndGift(page.request, "Gus");
   expect(await newListsEmails(page.request, p)).toEqual([]);
 
   // Fern starts gifting: she's handed Santa's list (Gus's has had a gift)
   await loginAs(page, { email: who("fern", p) });
-  await pickUpAndGift(page.request, false);
+  await pickUpAndGift(page.request);
   expect(await newListsEmails(page.request, p)).toEqual([]);
 
   // Nova joins: both Santas hear about her list, once

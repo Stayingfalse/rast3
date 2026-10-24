@@ -191,8 +191,10 @@ export function ProfileSetupModal({
               <FieldContent>
                 <FieldLabel htmlFor="emailReminders">Reminder emails</FieldLabel>
                 <FieldDescription>
-                  A few a season: when to check in, when gifting opens, and the
-                  odd check-in to see how your Christmas is going.
+                  A few a season: when to check in, when gifting opens, new
+                  wishlists to pick up once you&apos;re gifting (at most
+                  weekly), and the odd check-in to see how your Christmas is
+                  going.
                 </FieldDescription>
               </FieldContent>
             </Field>

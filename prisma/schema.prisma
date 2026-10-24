@@ -78,7 +78,7 @@ model User {
   createdGroups        Group[]              @relation("GroupCreator")
   giftPages            GiftPage[]
   seasonCheckIns       SeasonCheckIn[]
-  /// reminder emails (check-in, season open, gift received); sign-in links always go
+  /// reminder emails (check-in, season open, gift check-in, new lists); sign-in links always go
   emailReminders       Boolean              @default(true)
   emailLog             EmailLog[]
 }
@@ -350,6 +350,9 @@ enum EmailKind {
   /// a few days after a gift was marked, if no thank-you yet (owner, 22 Oct:
   /// never on the day, which would spoil the surprise)
   GIFT_CHECK_IN
+  /// Day 24: at most weekly, to people who have picked up a list this season,
+  /// when new members' wishlists are waiting for a first gift
+  NEW_LISTS
 }
 
 enum EmailStatus {

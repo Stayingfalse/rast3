@@ -1040,6 +1040,9 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 26 Oct): Day 26's remainder,** a thank-you feed for
     each friends and Discord group, then Day 27 (analytics for the
     monetisation case).
+  - **Backlog idea:** "landed" as the headline number. Gifts that arrived,
+    not just gifts marked, for the homepage counter, organisers' share cards
+    ("38 parcels landed at Acme") and the 2027 monetisation pitch.
   - **Backlog idea:** a "last order date" nudge before each Amazon store's
     Christmas delivery cut-off, for lists still waiting, sent only to
     people who are gifting.

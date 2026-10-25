@@ -16,6 +16,7 @@ import { affiliateFor, getAffiliateSettings, giftPageFor, storeOfUrl } from "~/s
 import { cleanWishlistUrl } from "~/lib/wishlist";
 import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
 import { getWorkplace } from "~/server/groups";
+import { markArrived, showableBefore } from "~/server/gifts";
 import {
   archivePastSeasons,
   checkedIn,
@@ -590,6 +591,40 @@ export const wishlistRouter = createTRPCRouter({
           notes: input.notes,
         },
       });
+    }),
+
+  /**
+   * Day 26: gifts Santas marked to your list this season, once they're a
+   * few days old (never on the day: it would spoil the surprise). Dates and
+   * whether it arrived or was thanked only: never the Santa, never their notes.
+   */
+  giftsToMe: protectedProcedure.query(async ({ ctx }) => {
+    const gifts = await ctx.db.purchase.findMany({
+      where: {
+        purchasedAt: { lte: showableBefore() },
+        wishlistAssignment: { wishlistOwnerId: ctx.session.user.id, season: currentSeason() },
+      },
+      orderBy: { purchasedAt: "asc" },
+      select: { id: true, purchasedAt: true, receivedAt: true, _count: { select: { kudos: true } } },
+    });
+    return gifts.map(({ _count, ...g }) => ({ ...g, thanked: _count.kudos > 0 }));
+  }),
+
+  /** Day 26: "it arrived", for a gift to your own list. */
+  confirmArrived: protectedProcedure
+    .input(z.object({ purchaseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const gift = await ctx.db.purchase.findFirst({
+        where: {
+          id: input.purchaseId,
+          purchasedAt: { lte: showableBefore() },
+          wishlistAssignment: { wishlistOwnerId: ctx.session.user.id },
+        },
+        select: { id: true },
+      });
+      if (!gift) throw new TRPCError({ code: "NOT_FOUND", message: "That isn't a gift to you." });
+      await markArrived(ctx.db, gift.id);
+      return { ok: true };
     }),
 
   // Report an issue with a wishlist

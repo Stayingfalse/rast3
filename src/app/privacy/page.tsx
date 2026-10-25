@@ -95,8 +95,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             <strong>Taking part.</strong> Which wishlists you have picked up,
-            which you have marked as gifted (with any note you add), problems
-            you report with a wishlist, and how many times your wishlist has
+            which you have marked as gifted (with any note you add), when you
+            say a gift to you has arrived, problems you report with a wishlist, and how many times your wishlist has
             been handed out. We never ask for, and never see, your home address:
             Amazon handles delivery.
           </p>
@@ -186,7 +186,9 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>Recipients never see who gifted them.</strong> Your gifts
-              stay anonymous.
+              stay anonymous. A few days after you mark a gift, the person it
+              was for sees that a gift was marked and when, never by whom or
+              your note, and can tell you it arrived.
             </li>
             <li>
               <strong>Thank-yous you post</strong>, with their photos, are shown

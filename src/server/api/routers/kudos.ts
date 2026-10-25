@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import sharp from "sharp";
 import { z } from "zod";
 import { db } from "~/server/db";
+import { markArrived } from "~/server/gifts";
 import { getMemberships, inGroup } from "~/server/scope";
 import {
   checkAdminPermissions,
@@ -59,6 +60,8 @@ export const kudosRouter = createTRPCRouter({
           images: JSON.stringify(imageUrls),
         },
       });
+      // a thank-you for a gift says it arrived (Day 26)
+      if (input.purchaseId) await markArrived(db, input.purchaseId);
       return kudos;
     }),
   getFeed: publicProcedure

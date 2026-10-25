@@ -375,7 +375,7 @@ export function WishlistManager() {
           </div>
           {hasPurchase ? (
             <span className="label-caps bg-pine-tint text-pine rounded-sm px-2 py-1">
-              Gift sent
+              {assignment.purchases?.receivedAt ? "Arrived" : "Gift sent"}
             </span>
           ) : hasReport ? (
             <span className="label-caps bg-post-tint text-post-deep rounded-sm px-2 py-1">
@@ -404,6 +404,16 @@ export function WishlistManager() {
                   ).toLocaleDateString("en-GB")}
                 </span>
               </p>
+              {assignment.purchases.receivedAt && (
+                <p className="text-pine font-semibold">
+                  It arrived: they told us on{" "}
+                  <span className="tabular">
+                    {new Date(
+                      assignment.purchases.receivedAt,
+                    ).toLocaleDateString("en-GB")}
+                  </span>
+                </p>
+              )}
               {assignment.purchases.notes && (
                 <p className="text-ink mt-1 italic">
                   &quot;{assignment.purchases.notes}&quot;

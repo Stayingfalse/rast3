@@ -94,7 +94,11 @@ export function GroupHome({ group }: { group: Group }) {
               <li key={a.id} className="label-stock flex flex-col gap-3 p-5">
                 <p className="label-caps text-ink-soft">Parcel {i + 1}</p>
                 <p className="text-ink font-semibold">
-                  {done ? "Gifted. Thank you!" : "A wishlist from this group"}
+                  {a.purchases?.receivedAt
+                    ? "It arrived. Thank you, Santa!"
+                    : done
+                      ? "Gifted. Thank you!"
+                      : "A wishlist from this group"}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {a.link && (

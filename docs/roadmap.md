@@ -1010,6 +1010,8 @@ that don't touch the data model. Known items to include:
       chased.
   - Runs with the hourly reminders. Migration `20261024040000_new_lists_email`
     adds the `NEW_LISTS` email kind. Profile and privacy copy mention it.
+  - **PR #58** opened, awaiting approval. Dev e2e passed on desktop and
+    mobile; the new spec and the reminders spec passed 20/20 against dev.
   - PWA push left for later: it needs VAPID keys in dev's and prod's
     environment (an owner action), so it isn't scheduled until those exist.
   - **Next (nightly, 25 Oct): Day 26,** gift-received confirmation and a

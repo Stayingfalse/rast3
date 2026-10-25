@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { seasonWindow } from "~/server/season";
 import { sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
@@ -21,7 +22,7 @@ import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 export const NUDGE_DAYS = 14;
 const OPEN_DAYS = 7;
 /** a gift check-in waits this long after the gift, and stops after GIFT_LATEST */
-const GIFT_AFTER_DAYS = 4;
+const GIFT_AFTER_DAYS = ARRIVAL_AFTER_DAYS;
 const GIFT_LATEST_DAYS = 14;
 /** new-lists emails: at most one per person this often */
 const NEW_LISTS_EVERY_DAYS = 7;
@@ -98,6 +99,8 @@ export async function runReminders(
         gte: new Date(now.getTime() - GIFT_LATEST_DAYS * DAY),
         lte: new Date(now.getTime() - GIFT_AFTER_DAYS * DAY),
       },
+      // already said it arrived: nothing to check in about
+      receivedAt: null,
       wishlistAssignment: { season, wishlistOwner: base },
     },
     orderBy: { purchasedAt: "asc" },
@@ -129,7 +132,7 @@ export async function runReminders(
       { id: owner.id, email: owner.email! },
       "GIFT_CHECK_IN",
       season,
-      () => giftCheckIn(owner.id, season),
+      () => giftCheckIn(owner.id, season, gift.id),
       gift.id,
     );
     if (r !== "DUPLICATE") run.giftCheckIns++;

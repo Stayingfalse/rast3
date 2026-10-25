@@ -123,6 +123,8 @@ model Purchase {
   userId               String
   wishlistAssignmentId String             @unique
   purchasedAt          DateTime           @default(now())
+  /// Day 26: when the person it was for said it arrived (or thanked for it)
+  receivedAt           DateTime?
   notes                String?
   kudos                Kudos[]
   shareCard            ShareCard?

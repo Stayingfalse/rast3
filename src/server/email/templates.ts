@@ -1,3 +1,4 @@
+import { arrivalPath } from "~/server/gifts";
 import { siteUrl, unsubscribeUrl } from "./unsubscribe";
 import type { Message } from "./mailer";
 
@@ -117,19 +118,20 @@ export const seasonOpen = (
 /**
  * A few days after a Santa marked a gift to your list, if you haven't
  * posted a thank-you. Worded as a check-in, never "you've been sent a gift",
- * so the surprise is kept (owner, 22 Oct).
+ * so the surprise is kept (owner, 22 Oct). The button says it arrived in
+ * one tap (Day 26), from a signed link for the gift this email is about.
  */
-export const giftCheckIn = (userId: string, season: number) =>
+export const giftCheckIn = (userId: string, season: number, purchaseId: string) =>
   render({
     userId,
     subject: "Checking in: has anything turned up?",
     kicker: `Christmas ${season}`,
     heading: "How's your Christmas shaping up?",
     paragraphs: [
-      "Just checking in. If a parcel from a mystery Santa has arrived, you can post them a thank-you postcard. It's the only way they'll know it got to you.",
+      "Just checking in. If a parcel from a mystery Santa has arrived, tap below to let them know it got to you. You can post them a thank-you postcard too, if you like.",
       "Nothing yet? There's nothing you need to do.",
     ],
-    button: { label: "Post a thank-you", path: "/" },
+    button: { label: "Something's arrived", path: arrivalPath(purchaseId) },
   });
 
 const and = (names: string[]) =>

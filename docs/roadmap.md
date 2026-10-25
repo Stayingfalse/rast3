@@ -109,7 +109,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 25 | Sun 1 Nov | **Done early (bonus day, 22 Oct).** Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
-| 26 | Mon 2 Nov | Gift-received confirmation + per-group thank-you/kudos feed |
+| 26 | Mon 2 Nov | **Gift-received confirmation done early (25 Oct).** Still open: a per-group thank-you feed (friends and Discord groups have none; feeds are team, workplace and site only) |
 | 27 | Tue 3 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | Accessibility + mobile pass |
 | 29 | Thu 5 Nov | Performance pass |
@@ -1018,3 +1018,28 @@ that don't touch the data model. Known items to include:
     per-group thank-you feed. This includes a one-tap "Something arrived"
     from the gift check-in email, which tells the Santa their gift landed
     without asking for a written thank-you.
+- **Merged and live on prod (24 Oct, owner approved):** #58, the weekly
+  "new wishlists to pick up" email (migration applied on prod 25 Oct).
+- **Nightly run, 25 Oct: Day 26's gift-received confirmation.**
+  - A few days after a Santa marks a gift (never on the day), the person it
+    was for sees "A Santa sent you something" on their home page. Each gift
+    has "It's arrived" and "Say thank you". The card shows dates and status
+    only, never the Santa or their note.
+  - The Santa's parcel then says "It arrived. Thank you, Santa!" (group
+    view) or "Arrived" (workplace view).
+  - A thank-you for a gift also marks it arrived. The thank-you form is now
+    linked to the gift (before, it never passed one).
+  - The gift check-in email's button is now "Something's arrived". It's a
+    signed link to /arrived, where a button confirms without signing in
+    (opening the link changes nothing). There's no check-in for a gift
+    already confirmed.
+  - Migration `20261025050000_gift_received` adds `Purchase.receivedAt`.
+    The privacy policy is updated.
+  - New e2e spec `gift-arrived.spec.ts`. Dev CI is green (91 passed on
+    desktop).
+  - **Next (nightly, 26 Oct): Day 26's remainder,** a thank-you feed for
+    each friends and Discord group, then Day 27 (analytics for the
+    monetisation case).
+  - **Backlog idea:** a "last order date" nudge before each Amazon store's
+    Christmas delivery cut-off, for lists still waiting, sent only to
+    people who are gifting.

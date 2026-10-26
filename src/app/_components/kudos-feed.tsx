@@ -570,17 +570,7 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
                 )}
               </p>
               <p className="text-ink-soft text-xs">
-                {kudos.purchase && (
-                  <>
-                    Thanking{" "}
-                    {
-                      getChristmasIdentity(
-                        kudos.purchase.wishlistAssignment.wishlistOwner.id,
-                      ).name
-                    }{" "}
-                    for a gift ·{" "}
-                  </>
-                )}
+                {kudos.forGift && <>Thanking their Santa for a gift · </>}
                 <time dateTime={new Date(kudos.createdAt).toISOString()}>
                   {formatDistanceToNow(new Date(kudos.createdAt), {
                     addSuffix: true,

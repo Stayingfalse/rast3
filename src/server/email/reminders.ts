@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { seasonWindow } from "~/server/season";
-import { sendOnce } from "./mailer";
+import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
 /**
@@ -28,7 +28,11 @@ const GIFT_LATEST_DAYS = 14;
 const NEW_LISTS_EVERY_DAYS = 7;
 /** per kind per run, to stay well inside SMTP sending limits */
 const BATCH = 100;
+/** failed sends in a row that stop a run (SMTP down or misconfigured); the next run retries */
+const MAX_FAILURES = 3;
 const DAY = 24 * 3600_000;
+
+type Send = typeof sendOnce;
 
 export type ReminderRun = {
   season: number;
@@ -51,6 +55,17 @@ export async function runReminders(
     ...(only && { AND: [only] }),
   };
   const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
+  let failures = 0;
+  const send: Send = async (...args) => {
+    const r = await sendOnce(...args);
+    failures = r === "FAILED" ? failures + 1 : 0;
+    if (failures >= MAX_FAILURES) {
+      throw new Error(`Reminder emails stopped after ${MAX_FAILURES} failed sends in a row: ${lastError}`);
+    }
+    return r;
+  };
+  /** sent, or logged as a test address */
+  const went = (r: Awaited<ReturnType<Send>>) => r === "SENT" || r === "SKIPPED";
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({
@@ -64,10 +79,10 @@ export async function runReminders(
       take: BATCH,
     });
     for (const u of users) {
-      const r = await sendOnce(db, { id: u.id, email: u.email! }, "CHECK_IN_NUDGE", season, () =>
+      const r = await send(db, { id: u.id, email: u.email! }, "CHECK_IN_NUDGE", season, () =>
         checkInNudge(u.id, season, w.opensAt),
       );
-      if (r !== "DUPLICATE") run.nudged++;
+      if (went(r)) run.nudged++;
     }
   }
 
@@ -85,10 +100,10 @@ export async function runReminders(
       take: BATCH,
     });
     for (const u of users) {
-      const r = await sendOnce(db, { id: u.id, email: u.email! }, "SEASON_OPEN", season, () =>
+      const r = await send(db, { id: u.id, email: u.email! }, "SEASON_OPEN", season, () =>
         seasonOpen(u.id, season, w.closesAt, u.seasonCheckIns.length > 0),
       );
-      if (r !== "DUPLICATE") run.opened++;
+      if (went(r)) run.opened++;
     }
   }
   // Gift check-ins: owners of lists gifted 4 to 14 days ago, earliest gift
@@ -127,7 +142,7 @@ export async function runReminders(
       }),
     ]);
     if (thanked || recent) continue;
-    const r = await sendOnce(
+    const r = await send(
       db,
       { id: owner.id, email: owner.email! },
       "GIFT_CHECK_IN",
@@ -135,10 +150,10 @@ export async function runReminders(
       () => giftCheckIn(owner.id, season, gift.id),
       gift.id,
     );
-    if (r !== "DUPLICATE") run.giftCheckIns++;
+    if (went(r)) run.giftCheckIns++;
   }
 
-  run.newLists = await sendNewLists(db, base, season, w, now);
+  run.newLists = await sendNewLists(db, base, season, w, now, send, went);
   return run;
 }
 
@@ -149,6 +164,8 @@ async function sendNewLists(
   season: number,
   w: { opensAt: Date; closesAt: Date },
   now: Date,
+  send: Send,
+  went: (r: Awaited<ReturnType<Send>>) => boolean,
 ) {
   if (now > w.closesAt) return 0;
   const inWindow = now >= w.opensAt;
@@ -202,7 +219,7 @@ async function sendNewLists(
     if (people.size === 0) continue;
     // a team's lists are its workplace's
     const groups = [...new Set(waiting.map((m) => (m.group.kind === "TEAM" ? m.group.parent?.name : null) ?? m.group.name))];
-    const r = await sendOnce(
+    const r = await send(
       db,
       { id: u.id, email: u.email! },
       "NEW_LISTS",
@@ -210,7 +227,7 @@ async function sendNewLists(
       () => newLists(u.id, season, people.size, groups, w.closesAt),
       now.toISOString().slice(0, 10),
     );
-    if (r !== "DUPLICATE") sent++;
+    if (went(r)) sent++;
   }
   return sent;
 }

@@ -162,6 +162,8 @@ function Members({ g }: { g: Console }) {
     onError: (e) => toast.error(e.message),
   });
   const canChangeRoles = g.kind !== "ORG";
+  // friends groups have no email column (owner, 26 Oct); site admins still see them
+  const showEmail = g.kind !== "FRIENDS" || g.members.some((m) => m.email);
 
   return (
     <Card>
@@ -170,7 +172,9 @@ function Members({ g }: { g: Console }) {
         <CardDescription>
           Newest first. Joining is on trust, so check the newcomers; removing
           someone keeps their account.
-          {g.status !== "ACTIVE" && " Emails show once we've approved the group."}
+          {g.kind === "FRIENDS"
+            ? " Members' emails stay private in friends groups."
+            : g.status !== "ACTIVE" && " Emails show once we've approved the group."}
         </CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
@@ -178,7 +182,7 @@ function Members({ g }: { g: Console }) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
+              {showEmail && <TableHead>Email</TableHead>}
               <TableHead>Joined</TableHead>
               <TableHead>Wishlist</TableHead>
               <TableHead>Role</TableHead>
@@ -199,9 +203,11 @@ function Members({ g }: { g: Console }) {
                       {recent && <Badge variant="secondary">New</Badge>}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground max-w-56 truncate">
-                    {m.email ?? "—"}
-                  </TableCell>
+                  {showEmail && (
+                    <TableCell className="text-muted-foreground max-w-56 truncate">
+                      {m.email ?? "—"}
+                    </TableCell>
+                  )}
                   <TableCell className="whitespace-nowrap">
                     {day(m.joinedAt)}
                   </TableCell>

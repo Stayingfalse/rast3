@@ -637,7 +637,10 @@ export const groupsRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
         select: { adminLevel: true },
       });
-      const showEmails = group.status === "ACTIVE" || viewer?.adminLevel === "SITE";
+      // Friends groups never show emails (owner, 26 Oct): anyone can start
+      // one and share its link, so it mustn't be a way to collect addresses
+      const site = viewer?.adminLevel === "SITE";
+      const showEmails = site || (group.status === "ACTIVE" && group.kind !== "FRIENDS");
       const members = await ctx.db.membership.findMany({
         where: { groupId: group.id },
         orderBy: { joinedAt: "desc" },

@@ -1060,9 +1060,12 @@ that don't touch the data model. Known items to include:
       without SMTP, a failed send is retried next hour, and three failures
       in a row stop the run until the next hour. The server log warns at
       start-up when SMTP isn't set.
-    - **The five-list limit could be dodged by archiving.** Archived lists
-      stopped counting while still held. Now they count; lists you reported
-      as broken (which can't be handed back) don't.
+    - **The five-list limit is gone (owner, 26 Oct).** The review found it
+      could be dodged by archiving; the owner then asked where it came from.
+      It wasn't theirs: "sensible limits on how many lists one person
+      holds" was written into the Day 19 plan on 15 Oct. People can now pick
+      up and gift as many lists as they like; lists with the fewest gifts
+      still go first. Home page and PRODUCT.md copy updated.
     - **The public thank-you feed linked a thank-you to its gift.** It sent
       each post's gift id, so a Santa could match it to their own gift and
       learn the recipient's account id (the 20 Oct review hid that id from
@@ -1072,23 +1075,26 @@ that don't touch the data model. Known items to include:
     - Thank-you photos are capped at about 2 MB each on the server (the
       form already shrinks them to 0.5 MB), so oversized uploads can't tie
       the server up.
-  - **For the owner to decide:**
-    - **Friends invites join on arrival, and organisers see members'
-      emails.** Since 23 Oct a signed-in person who opens a friends invite
-      link is joined with no button. Once the group is approved, its
-      organiser sees every member's sign-in email. So anyone who gets a
-      friends group approved and posts its link widely collects the email
-      of everyone who clicks. Options: a one-tap "Join" for people already
-      signed in, or no emails for friends and community organisers (names
-      only).
+    - **Friends invites (owner, 26 Oct).** Since 23 Oct, opening a friends
+      invite link while signed in joined you with no button, and organisers
+      of approved groups saw every member's sign-in email. Now a signed-in
+      visitor taps "Join <group>", and friends groups never show members'
+      emails to organisers (site admins still see them). Discord invites
+      still join on arrival, because the server check decides.
+    - **Reminder emails only to this season's members (owner, 26 Oct).**
+      Last year's members never agreed to today's data handling, so no
+      reminder goes to anyone until they have checked in for this Christmas
+      or signed up during it. The check-in nudge now only reaches people who
+      signed up this season without adding a wishlist. Privacy policy
+      updated.
+  - **For the owner:**
     - **Prod email settings.** Reminders send through `EMAIL_SERVER_HOST`
       and `EMAIL_FROM` in prod's environment, not the sign-in email set up
       in the admin pages. Check both are set on ras/raosanta-uk before the
       check-in nudges start on 1 Nov.
   - **Noted, not fixed (low risk):**
-    - Two pick-up requests at the same moment can each pass the five-list
-      check (one person, two tabs). Workplace pick-ups can also fail with an
-      error if both pick the same list.
+    - Two workplace pick-up requests at the same moment (one person, two
+      tabs) can fail with an error if both pick the same list.
     - `raosanta.uk/<domain>` shows whether a company is on the site and how
       many colleagues have joined, including organisations still waiting for
       approval.
@@ -1099,3 +1105,9 @@ that don't touch the data model. Known items to include:
       performance pass.
     - Undo purchase works on any past gift, including ones that arrived and
       were thanked.
+  - **For Day 30 (privacy):** last year's members who don't come back now
+    get no emails at all. Their accounts still hold their data; the planned
+    24-month inactive deletion covers them, and the Day 30 run should say
+    so in the policy.
+  - **Next (nightly, 27 Oct):** Day 26's remainder, a thank-you feed for
+    each friends and Discord group.

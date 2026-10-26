@@ -5,7 +5,7 @@
  * pitches. Every claim here is true of the product as built: groups are
  * approved by a site admin, workplaces can require a join code and have a
  * printable poster, Discord groups only admit members of the linked server
- * (no role gating yet), pick-ups go fewest gifts first with at most five held.
+ * (no role gating yet), and pick-ups go fewest gifts first.
  */
 export const KINDS = ["workplace", "discord", "friends"] as const;
 export const ROLES = ["join", "run"] as const;
@@ -115,7 +115,7 @@ export const PITCH: Record<Persona, Pitch> = {
       },
       {
         q: "Someone always gets left out.",
-        a: "Lists with the fewest gifts are handed out first, and nobody can sit on more than five at once.",
+        a: "Lists that haven't had a gift yet are handed out first, so nobody gets left out.",
       },
       {
         q: "It'll turn into a part-time job.",
@@ -183,7 +183,7 @@ export const PITCH: Record<Persona, Pitch> = {
       },
       {
         q: "Gift swaps always leave people out.",
-        a: "Lists with the fewest gifts go first, and nobody can hoard: five un-gifted lists at a time.",
+        a: "Lists that haven't had a gift yet go first, so nobody gets left out.",
       },
       {
         q: "I don't have time to organise it.",

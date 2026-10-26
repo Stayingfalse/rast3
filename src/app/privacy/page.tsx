@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "20 October 2026";
+const LAST_UPDATED = "26 October 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -162,8 +162,11 @@ export default function PrivacyPolicyPage() {
               you haven&apos;t posted a thank-you yet (never on the day, and
               never saying who). Once you&apos;ve picked up a list, at most
               one a week when new members&apos; wishlists are waiting for a
-              first gift. Every one
-              has a link to stop them, and sign-in links still arrive. Lawful
+              first gift. They only go to people who have checked in or
+              signed up this Christmas: if you were with us in an earlier year,
+              you won&apos;t hear from us until you come back and check in.
+              Every one has a link to stop them, and sign-in links still
+              arrive. Lawful
               basis: legitimate interests (Article 6(1)(f)), as part of the
               service you signed up for.
             </li>

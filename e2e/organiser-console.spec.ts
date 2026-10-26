@@ -44,6 +44,9 @@ test("set up: a group with an organiser and a friend", async ({ page }, testInfo
   await loginAs(page, { email: `guest-${p}@${E}` });
   await mutate(page.request, "profile.saveProfile", { firstName: "Gus", lastName: "Guest" });
   expect((await mutate(page.request, "groups.join", { code })).status()).toBe(200);
+  // approved, so the only thing hiding emails is that it's a friends group
+  await loginAs(page, { email: `console-site-${p}@${E}`, adminLevel: "SITE" });
+  expect((await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status()).toBe(200);
 });
 
 test("the organiser manages members", async ({ page }, testInfo) => {
@@ -59,6 +62,9 @@ test("the organiser manages members", async ({ page }, testInfo) => {
 
   const guest = page.getByRole("row").filter({ hasText: "Gus Guest" });
   await expect(guest.getByText("New")).toBeVisible();
+  // friends groups never show members' emails (owner, 26 Oct)
+  await expect(page.getByRole("columnheader", { name: "Email" })).toHaveCount(0);
+  await expect(page.getByText(`guest-${testInfo.project.name}@`)).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "console-members");
 

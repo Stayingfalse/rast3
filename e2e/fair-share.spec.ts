@@ -95,19 +95,17 @@ test("a list that has had a gift waits until the others have", async ({ page }, 
   expect(mine).not.toContain(gifted);
 });
 
-test("nobody holds more than five un-gifted lists", async ({ page }, testInfo) => {
+test("there's no cap: pick up as many lists as you like (owner, 26 Oct)", async ({ page }, testInfo) => {
   await loginAs(page, { email: who("d", testInfo.project.name) });
   const r = page.request;
+  // seven other members: three, three, then the last one
   expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 3 })).status()).toBe(200);
-  // asked for three more: only two fit under the limit
   expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 3 })).status()).toBe(200);
-  expect(await parcels(r)).toHaveLength(5);
-  const full = await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 });
-  expect(full.status()).toBe(412);
-  expect(await errorMessage(full)).toMatch(/holding 5 wishlists/);
-
-  // gifting one makes room again
-  const [one] = await parcels(r);
-  expect((await mutate(r, "wishlist.markPurchase", { assignmentId: one!.id })).status()).toBe(200);
-  expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
+  expect(await parcels(r)).toHaveLength(6);
+  expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 3 })).status()).toBe(200);
+  expect(await parcels(r)).toHaveLength(7);
+  // only running out of lists stops you
+  const none = await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 });
+  expect(none.status()).toBe(404);
+  expect(await errorMessage(none)).toMatch(/No more wishlists/);
 });

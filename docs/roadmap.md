@@ -1046,3 +1046,68 @@ that don't touch the data model. Known items to include:
   - **Backlog idea:** a "last order date" nudge before each Amazon store's
     Christmas delivery cut-off, for lists still waiting, sent only to
     people who are gifting.
+- **Pre-launch review (26 Oct evening, owner's request; nightly routine moved
+  into the owner's chat).** A careful read of everything shipped since the
+  20 Oct review (#49 to #59): fair-share, reminder and new-lists emails,
+  "It's arrived" links, invite routes, UK/US affiliate links and open
+  tracking. No draw, group isolation and the affiliate rules still hold.
+  - **Fixed (PR into main):**
+    - **Reminder emails could be lost for the whole season.** A reminder was
+      logged as handled even when it wasn't sent: with no SMTP server set
+      (logged "skipped") or when sending failed. The check-in nudge and
+      "gifting is open" go once a season, so a missing or broken mail
+      setting on 1 Nov would have used them up. Now nothing is logged
+      without SMTP, a failed send is retried next hour, and three failures
+      in a row stop the run until the next hour. The server log warns at
+      start-up when SMTP isn't set.
+    - **The five-list limit is gone (owner, 26 Oct).** The review found it
+      could be dodged by archiving; the owner then asked where it came from.
+      It wasn't theirs: "sensible limits on how many lists one person
+      holds" was written into the Day 19 plan on 15 Oct. People can now pick
+      up and gift as many lists as they like; lists with the fewest gifts
+      still go first. Home page and PRODUCT.md copy updated.
+    - **The public thank-you feed linked a thank-you to its gift.** It sent
+      each post's gift id, so a Santa could match it to their own gift and
+      learn the recipient's account id (the 20 Oct review hid that id from
+      Santas). The gift id and the moderator's id now only go to people who
+      can moderate the post. The line under a thank-you now says "Thanking
+      their Santa for a gift" (it named the poster themselves before).
+    - Thank-you photos are capped at about 2 MB each on the server (the
+      form already shrinks them to 0.5 MB), so oversized uploads can't tie
+      the server up.
+    - **Friends invites (owner, 26 Oct).** Since 23 Oct, opening a friends
+      invite link while signed in joined you with no button, and organisers
+      of approved groups saw every member's sign-in email. Now a signed-in
+      visitor taps "Join <group>", and friends groups never show members'
+      emails to organisers (site admins still see them). Discord invites
+      still join on arrival, because the server check decides.
+    - **Reminder emails only to this season's members (owner, 26 Oct).**
+      Last year's members never agreed to today's data handling, so no
+      reminder goes to anyone until they have checked in for this Christmas
+      or signed up during it. The check-in nudge now only reaches people who
+      signed up this season without adding a wishlist. Privacy policy
+      updated.
+  - **For the owner:**
+    - **Prod email settings.** Reminders send through `EMAIL_SERVER_HOST`
+      and `EMAIL_FROM` in prod's environment, not the sign-in email set up
+      in the admin pages. Check both are set on ras/raosanta-uk before the
+      check-in nudges start on 1 Nov.
+  - **Noted, not fixed (low risk):**
+    - Two workplace pick-up requests at the same moment (one person, two
+      tabs) can fail with an error if both pick the same list.
+    - `raosanta.uk/<domain>` shows whether a company is on the site and how
+      many colleagues have joined, including organisations still waiting for
+      approval.
+    - Anyone can open a gift page's Amazon link repeatedly to inflate the
+      open counts (one per page every 30 seconds).
+    - Picking up strangers' lists loads every member of every other
+      organisation into memory: fine now, worth a look in the Day 29
+      performance pass.
+    - Undo purchase works on any past gift, including ones that arrived and
+      were thanked.
+  - **For Day 30 (privacy):** last year's members who don't come back now
+    get no emails at all. Their accounts still hold their data; the planned
+    24-month inactive deletion covers them, and the Day 30 run should say
+    so in the policy.
+  - **Next (nightly, 27 Oct):** Day 26's remainder, a thank-you feed for
+    each friends and Discord group.

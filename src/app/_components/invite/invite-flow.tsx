@@ -65,14 +65,15 @@ export function InviteFlow(props: Props) {
     },
   });
 
-  // signed in on a Discord or friends invite: join straight away
+  // signed in on a Discord invite: join straight away (the server check
+  // decides). Friends invites wait for a tap (owner, 26 Oct): opening a link
+  // shouldn't put you in a group.
   const started = useRef(false);
   useEffect(() => {
-    if (!signedIn || props.alreadyIn || started.current || props.kind === "workplace") return;
+    if (!signedIn || props.alreadyIn || started.current || props.kind !== "discord") return;
     started.current = true;
     setStep("joining");
-    if (props.kind === "discord") joinViaDiscord.mutate({ groupId: group.id });
-    else joinByCode.mutate({ code: props.code });
+    joinViaDiscord.mutate({ groupId: group.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, [signedIn]);
 
@@ -154,6 +155,24 @@ export function InviteFlow(props: Props) {
         {error ?? "Something went wrong joining this group."}
       </p>
     );
+  } else if (signedIn && props.kind === "friends") {
+    body = (
+      <div className="flex flex-col items-start gap-3">
+        <button
+          type="button"
+          className="btn-post"
+          onClick={() => {
+            setStep("joining");
+            joinByCode.mutate({ code: props.code });
+          }}
+        >
+          Join {group.name}
+        </button>
+        <p className="text-ink-soft text-sm">
+          The organiser sees your name. Your email stays private.
+        </p>
+      </div>
+    );
   } else {
     // signed out on a Discord or friends invite
     body = (
@@ -169,7 +188,7 @@ export function InviteFlow(props: Props) {
         ) : (
           <>
             <JoinButton label="Sign in to join" />
-            <p className="text-ink-soft text-sm">New here? Signing in creates your account, and you&apos;re added to {group.name}.</p>
+            <p className="text-ink-soft text-sm">New here? Signing in creates your account. You join {group.name} on the next step.</p>
           </>
         )}
       </div>

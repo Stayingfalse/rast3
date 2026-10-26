@@ -31,7 +31,10 @@ type Reminders = {
   log: Log[];
   tokens: Record<string, { u: string; t: string }>;
 };
-const reminders = async (r: APIRequestContext, data: { now?: string; run?: boolean }) => {
+const reminders = async (
+  r: APIRequestContext,
+  data: { now?: string; run?: boolean; backdate?: string[] },
+) => {
   const res = await r.post("/api/test-auth/reminders", { headers: testHeaders, data });
   expect(res.status()).toBe(200);
   return (await res.json()) as Reminders;
@@ -64,6 +67,10 @@ test("set up: checked in, not checked in, and opted out", async ({ page }, testI
   await loginAs(page, { email: who("out", p) });
   await mutate(page.request, "profile.saveProfile", { firstName: "Otto", lastName: "Out" });
 
+  // a member from last year who hasn't come back yet (owner, 26 Oct: never emailed)
+  await loginAs(page, { email: who("old", p) });
+  await mutate(page.request, "profile.saveProfile", { firstName: "Olga", lastName: "Old" });
+
   await loginAs(page, { email: who("off", p) });
   await mutate(page.request, "profile.saveProfile", { firstName: "Ofelia", lastName: "Off", emailReminders: false });
 
@@ -79,10 +86,12 @@ test("set up: checked in, not checked in, and opted out", async ({ page }, testI
     (await mutate(page.request, "admin.setGroupAffiliate", { groupId, mode: "OFF", tag: null })).status(),
   ).toBe(200);
 
-  opensAt = Date.parse((await reminders(page.request, { run: false })).window.opensAt);
+  opensAt = Date.parse(
+    (await reminders(page.request, { run: false, backdate: [who("old", p)] })).window.opensAt,
+  );
 });
 
-test("two weeks before gifting opens, members who haven't checked in are nudged once", async ({
+test("two weeks before gifting opens, this season's members who haven't checked in are nudged once", async ({
   page,
 }, testInfo) => {
   const p = testInfo.project.name;
@@ -99,7 +108,7 @@ test("two weeks before gifting opens, members who haven't checked in are nudged 
   expect(mine(r.log, p)).toHaveLength(1);
 });
 
-test("when gifting opens, members hear about it once (not the one who opted out)", async ({
+test("when gifting opens, members hear about it once (not the one who opted out, nor last year's)", async ({
   page,
 }, testInfo) => {
   const p = testInfo.project.name;

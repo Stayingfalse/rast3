@@ -26,7 +26,8 @@ export const kudosRouter = createTRPCRouter({
       z.object({
         message: z.string().min(1).max(500),
         purchaseId: z.string().optional(),
-        images: z.array(z.string()).max(5), // base64 strings
+        // base64 strings; the form compresses each photo to about 0.5 MB
+        images: z.array(z.string().max(3_000_000)).max(5),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -149,15 +150,6 @@ export const kudosRouter = createTRPCRouter({
               memberships: { select: { groupId: true } },
             },
           },
-          purchase: {
-            select: {
-              wishlistAssignment: {
-                select: {
-                  wishlistOwner: { select: { id: true } },
-                },
-              },
-            },
-          },
         },
         orderBy: {
           createdAt: "desc",
@@ -175,19 +167,37 @@ export const kudosRouter = createTRPCRouter({
         userPermissions?.adminLevel === "SITE" ||
         memberships.some((m) => moderates.has(m.groupId));
 
+      // Pre-launch review (26 Oct): the gift a thank-you is for, and who
+      // moderated it, stay with those who see identities too. A Santa could
+      // otherwise match the gift to their own and learn whose list it was.
       const results = page.map(
-        ({ user: { memberships, ...user }, ...item }) => ({
-          ...item,
-          user: seesIdentity(memberships)
-            ? user
-            : {
-                id: user.id,
-                name: null,
-                image: null,
-                firstName: null,
-                lastName: null,
-              },
-        }),
+        ({
+          user: { memberships, ...user },
+          purchaseId,
+          moderatedBy,
+          moderatedAt,
+          userId: _userId,
+          ...item
+        }) => {
+          const sees = seesIdentity(memberships);
+          return {
+            ...item,
+            /** a thank-you for a gift (not which one) */
+            forGift: !!purchaseId,
+            purchaseId: sees ? purchaseId : null,
+            moderatedBy: sees ? moderatedBy : null,
+            moderatedAt: sees ? moderatedAt : null,
+            user: sees
+              ? user
+              : {
+                  id: user.id,
+                  name: null,
+                  image: null,
+                  firstName: null,
+                  lastName: null,
+                },
+          };
+        },
       );
       const nextCursor = hasNextPage
         ? results[results.length - 1]?.createdAt.toISOString()

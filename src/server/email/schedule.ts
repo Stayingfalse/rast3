@@ -13,10 +13,13 @@ export function startReminderSchedule() {
   const g = globalThis as { __reminders?: boolean };
   if (g.__reminders) return;
   g.__reminders = true;
+  if (!process.env.EMAIL_SERVER_HOST) {
+    log.warn("EMAIL_SERVER_HOST isn't set: reminder emails wait until SMTP is configured");
+  }
   const tick = async () => {
     try {
       const run = await runReminders(db);
-      if (run.nudged || run.opened || run.giftCheckIns) log.info(run, "Reminder emails processed");
+      if (run.nudged || run.opened || run.giftCheckIns || run.newLists) log.info(run, "Reminder emails processed");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
     }

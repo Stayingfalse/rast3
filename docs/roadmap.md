@@ -1046,3 +1046,56 @@ that don't touch the data model. Known items to include:
   - **Backlog idea:** a "last order date" nudge before each Amazon store's
     Christmas delivery cut-off, for lists still waiting, sent only to
     people who are gifting.
+- **Pre-launch review (26 Oct evening, owner's request; nightly routine moved
+  into the owner's chat).** A careful read of everything shipped since the
+  20 Oct review (#49 to #59): fair-share, reminder and new-lists emails,
+  "It's arrived" links, invite routes, UK/US affiliate links and open
+  tracking. No draw, group isolation and the affiliate rules still hold.
+  - **Fixed (PR into main):**
+    - **Reminder emails could be lost for the whole season.** A reminder was
+      logged as handled even when it wasn't sent: with no SMTP server set
+      (logged "skipped") or when sending failed. The check-in nudge and
+      "gifting is open" go once a season, so a missing or broken mail
+      setting on 1 Nov would have used them up. Now nothing is logged
+      without SMTP, a failed send is retried next hour, and three failures
+      in a row stop the run until the next hour. The server log warns at
+      start-up when SMTP isn't set.
+    - **The five-list limit could be dodged by archiving.** Archived lists
+      stopped counting while still held. Now they count; lists you reported
+      as broken (which can't be handed back) don't.
+    - **The public thank-you feed linked a thank-you to its gift.** It sent
+      each post's gift id, so a Santa could match it to their own gift and
+      learn the recipient's account id (the 20 Oct review hid that id from
+      Santas). The gift id and the moderator's id now only go to people who
+      can moderate the post. The line under a thank-you now says "Thanking
+      their Santa for a gift" (it named the poster themselves before).
+    - Thank-you photos are capped at about 2 MB each on the server (the
+      form already shrinks them to 0.5 MB), so oversized uploads can't tie
+      the server up.
+  - **For the owner to decide:**
+    - **Friends invites join on arrival, and organisers see members'
+      emails.** Since 23 Oct a signed-in person who opens a friends invite
+      link is joined with no button. Once the group is approved, its
+      organiser sees every member's sign-in email. So anyone who gets a
+      friends group approved and posts its link widely collects the email
+      of everyone who clicks. Options: a one-tap "Join" for people already
+      signed in, or no emails for friends and community organisers (names
+      only).
+    - **Prod email settings.** Reminders send through `EMAIL_SERVER_HOST`
+      and `EMAIL_FROM` in prod's environment, not the sign-in email set up
+      in the admin pages. Check both are set on ras/raosanta-uk before the
+      check-in nudges start on 1 Nov.
+  - **Noted, not fixed (low risk):**
+    - Two pick-up requests at the same moment can each pass the five-list
+      check (one person, two tabs). Workplace pick-ups can also fail with an
+      error if both pick the same list.
+    - `raosanta.uk/<domain>` shows whether a company is on the site and how
+      many colleagues have joined, including organisations still waiting for
+      approval.
+    - Anyone can open a gift page's Amazon link repeatedly to inflate the
+      open counts (one per page every 30 seconds).
+    - Picking up strangers' lists loads every member of every other
+      organisation into memory: fine now, worth a look in the Day 29
+      performance pass.
+    - Undo purchase works on any past gift, including ones that arrived and
+      were thanked.

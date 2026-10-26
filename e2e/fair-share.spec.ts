@@ -110,4 +110,11 @@ test("nobody holds more than five un-gifted lists", async ({ page }, testInfo) =
   const [one] = await parcels(r);
   expect((await mutate(r, "wishlist.markPurchase", { assignmentId: one!.id })).status()).toBe(200);
   expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
+
+  // archiving a list doesn't hand it back, so it still counts
+  const held = (await parcels(r)).filter((x) => x.id !== one!.id);
+  expect(
+    (await mutate(r, "wishlist.archiveAssignment", { assignmentId: held[0]!.id, archive: true })).status(),
+  ).toBe(200);
+  expect((await mutate(r, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(412);
 });

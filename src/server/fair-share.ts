@@ -42,10 +42,15 @@ export function pickFairly<T extends Candidate>(candidates: T[], n: number): T[]
     .map((x) => x.c);
 }
 
-/** Un-gifted lists this person holds right now, across all groups. */
+/**
+ * Un-gifted lists this person holds right now, across all groups. Archiving a
+ * list doesn't hand it back (pre-launch review, 26 Oct: it was a way round
+ * the limit); a list they reported as broken doesn't count, as it can't be
+ * handed back until the report is cleared.
+ */
 export async function holding(db: Pick<PrismaClient, "wishlistAssignment">, userId: string) {
   return db.wishlistAssignment.count({
-    where: { assignedUserId: userId, isActive: true, archived: false, purchases: null },
+    where: { assignedUserId: userId, isActive: true, purchases: null, reports: { none: { resolved: false } } },
   });
 }
 

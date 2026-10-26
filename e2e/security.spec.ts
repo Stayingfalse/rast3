@@ -29,10 +29,7 @@ test.describe("public surface", () => {
       result: {
         data: {
           json: {
-            items: Array<{
-              user: Record<string, unknown>;
-              purchase: Record<string, unknown> | null;
-            }>;
+            items: Array<Record<string, unknown> & { user: Record<string, unknown> }>;
           };
         };
       };
@@ -44,10 +41,11 @@ test.describe("public surface", () => {
         lastName: null,
         image: null,
       });
-      // Only the wishlist owner's id is sent, for the festive "to" name
-      expect(JSON.stringify(item.purchase ?? {})).not.toMatch(
-        /notes|name|email/i,
-      );
+      // nor which gift it thanks, or who moderated it: a Santa could match
+      // the gift to their own and learn whose list it was
+      expect(item).toMatchObject({ purchaseId: null, moderatedBy: null });
+      expect(item).not.toHaveProperty("userId");
+      expect(item).not.toHaveProperty("purchase");
     }
   });
 

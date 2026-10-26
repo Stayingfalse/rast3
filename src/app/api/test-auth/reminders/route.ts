@@ -6,7 +6,8 @@ import { db } from "~/server/db";
 import { runReminders } from "~/server/email/reminders";
 import { unsubscribeToken } from "~/server/email/unsubscribe";
 import { arrivalPath } from "~/server/gifts";
-import { seasonWindow } from "~/server/season";
+import { currentSeason, seasonWindow } from "~/server/season";
+import { seasonRange } from "~/server/stamps";
 import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
 
 /**
@@ -17,12 +18,16 @@ import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
  * ageGifts: first make this run's gifts that many days old (gifts only show
  * to the person they were for after a few days).
  *
- * POST { now?: ISO date, run?: boolean, ageGifts?: days } -> { window, run, log, tokens }
+ * backdate: these test users' profiles become last year's (a returning
+ * member who hasn't checked in yet).
+ *
+ * POST { now?: ISO date, run?: boolean, ageGifts?: days, backdate?: emails } -> { window, run, log, tokens }
  */
 const body = z.object({
   now: z.string().datetime().optional(),
   run: z.boolean().default(true),
   ageGifts: z.number().int().min(0).max(60).optional(),
+  backdate: z.array(z.string()).max(20).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -34,6 +39,14 @@ export async function POST(req: NextRequest) {
     await db.purchase.updateMany({
       where: { user: only },
       data: { purchasedAt: new Date(Date.now() - input.data.ageGifts * 24 * 3600_000) },
+    });
+  }
+
+  if (input.data.backdate?.length) {
+    const lastYear = seasonRange(currentSeason() - 1).gte;
+    await db.user.updateMany({
+      where: { AND: [only, { email: { in: input.data.backdate } }] },
+      data: { profileCompletedAt: lastYear },
     });
   }
 

@@ -14,7 +14,7 @@ import {
 } from "~/server/scope";
 import { affiliateFor, getAffiliateSettings, giftPageFor, storeOfUrl } from "~/server/affiliate";
 import { cleanWishlistUrl } from "~/lib/wishlist";
-import { fairShareFields, pickFairly, roomToPickUp } from "~/server/fair-share";
+import { fairShareFields, pickFairly } from "~/server/fair-share";
 import { getWorkplace } from "~/server/groups";
 import { markArrived, showableBefore } from "~/server/gifts";
 import {
@@ -217,12 +217,8 @@ export const wishlistRouter = createTRPCRouter({
       });
 
 
-      // Up to 3, fairest first (Day 19), within what they may still hold
-      const neededAssignments = 3 - assignedUserIds.length;
-      const selectedUsers = pickFairly(
-        eligibleUsers,
-        await roomToPickUp(ctx.db, userId, neededAssignments),
-      );
+      // Up to 3, fairest first (Day 19)
+      const selectedUsers = pickFairly(eligibleUsers, 3 - assignedUserIds.length);
       if (selectedUsers.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -294,10 +290,7 @@ export const wishlistRouter = createTRPCRouter({
       });
 
 
-      const selectedUsers = pickFairly(
-        eligibleUsers,
-        await roomToPickUp(ctx.db, userId, input.count),
-      );
+      const selectedUsers = pickFairly(eligibleUsers, input.count);
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -359,10 +352,7 @@ export const wishlistRouter = createTRPCRouter({
       });
 
 
-      const selectedUsers = pickFairly(
-        eligibleUsers,
-        await roomToPickUp(ctx.db, userId, input.count),
-      );
+      const selectedUsers = pickFairly(eligibleUsers, input.count);
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -426,10 +416,7 @@ export const wishlistRouter = createTRPCRouter({
         select: fairShareFields(),
       });
 
-      const selectedUsers = pickFairly(
-        eligibleUsers,
-        await roomToPickUp(ctx.db, userId, input.count),
-      );
+      const selectedUsers = pickFairly(eligibleUsers, input.count);
 
       if (selectedUsers.length === 0) {
         throw new TRPCError({
@@ -522,8 +509,8 @@ export const wishlistRouter = createTRPCRouter({
             "No more wishlists in this group right now. Invite a few more people!",
         });
       }
-      // fairest first (Day 19), within what they may still hold
-      const picks = pickFairly(eligible, await roomToPickUp(ctx.db, userId, input.count));
+      // fairest first (Day 19)
+      const picks = pickFairly(eligible, input.count);
       const created = await ctx.db.wishlistAssignment.createMany({
         data: picks.map((p) => ({
           assignedUserId: userId,

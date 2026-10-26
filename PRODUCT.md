@@ -43,8 +43,8 @@ Addresses stay private because Amazon wishlists deliver without revealing them.
   until then their list isn't handed out.
 - Flow: sign in (Google, Discord, Twitch, GitHub, Reddit or email link) →
   profile (name, Amazon wishlist from any Amazon store) → join a workplace, community or friends
-  group → pick up random wishlists (fewest gifts first; at most five un-gifted
-  at a time) → buy from the wishlist on Amazon → mark "Gifted" → recipients
+  group → pick up random wishlists (fewest gifts first; as many as you
+  like) → buy from the wishlist on Amazon → mark "Gifted" → recipients
   post thank-you postcards (kudos) to a feed.
 - Members can request more wishlists, report a problem with a wishlist
   (private, empty, broken link), archive or unassign.

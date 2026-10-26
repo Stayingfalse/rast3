@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { seasonWindow } from "~/server/season";
+import { seasonRange } from "~/server/stamps";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
@@ -17,7 +18,8 @@ import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
  *   about new members' wishlists that haven't had a gift yet (Day 24). At
  *   most one a week, and never within a week of the "gifting is open" email.
  *   Only to people already gifting: nobody who just receives is chased.
- * The first two go once per person per season; anyone can opt out.
+ * The first two go once per person per season; anyone can opt out. None go
+ * to last year's members until they check in again (see engagedThisSeason).
  */
 export const NUDGE_DAYS = 14;
 const OPEN_DAYS = 7;
@@ -42,6 +44,19 @@ export type ReminderRun = {
   newLists: number;
 };
 
+/**
+ * Only people who have joined in this Christmas get reminders (owner, 26 Oct):
+ * they checked in for this season, or signed up during it. Last year's
+ * members never agreed to how we handle data now, so they hear nothing
+ * until they come back and check in.
+ */
+export const engagedThisSeason = (season: number): Prisma.UserWhereInput => ({
+  OR: [
+    { seasonCheckIns: { some: { season } } },
+    { profileCompletedAt: { gte: seasonRange(season).gte } },
+  ],
+});
+
 export async function runReminders(
   db: PrismaClient,
   { now = new Date(), only }: { now?: Date; only?: Prisma.UserWhereInput } = {},
@@ -52,7 +67,7 @@ export async function runReminders(
     emailReminders: true,
     email: { not: null },
     profileCompleted: true,
-    ...(only && { AND: [only] }),
+    AND: [engagedThisSeason(season), ...(only ? [only] : [])],
   };
   const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
   let failures = 0;

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { getProxyImageUrl, handleImageError } from "~/utils/image-utils";
 import type { RouterOutputs } from "~/trpc/react";
 import { AdminActionsDropdown } from "./admin-actions-dropdown";
+import { GIFTING_IN_EVENT, GIFTING_IN_KEY } from "./groups/gifting-switcher";
 import { ShareSheet, type ShareRequest } from "./share/share-sheet";
 
 interface KudosFeedProps {
@@ -97,7 +98,10 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
   );
 };
 
-type ScopeType = "team" | "workplace" | "site";
+/** Where thank-yous come from; "group:<id>" is a friends or community group (Day 26) */
+type ScopeType = "team" | "workplace" | "site" | `group:${string}`;
+const groupOf = (scope: ScopeType) =>
+  scope.startsWith("group:") ? scope.slice("group:".length) : undefined;
 
 // Christmas-themed names for anonymization
 const CHRISTMAS_NAMES = [
@@ -327,8 +331,6 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
   const feedRef = useRef<HTMLDivElement>(null);
   const [isFeedInView, setIsFeedInView] = useState(false);
   const [newKudos, setNewKudos] = useState<Kudos[]>([]);
-  const [actualDisplayScope, setActualDisplayScope] =
-    useState<ScopeType | null>(null);
 
   // Get recommended scope
   const { data: recommendedScope } = api.kudos.getRecommendedScope.useQuery();
@@ -345,46 +347,84 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     },
   );
 
+  // The tabs you have (Day 26): your team and organisation if you're in
+  // one, each approved friends or community group, then the whole site
+  const { data: profile } = api.profile.getCurrentProfile.useQuery(undefined, {
+    enabled: !!session,
+  });
+  const { data: groups } = api.groups.mine.useQuery(undefined, {
+    enabled: !!session,
+  });
+  const scopes = useMemo(() => {
+    const list: { scope: ScopeType; label: string; description: string }[] = [];
+    if (profile?.workplace?.team) {
+      list.push({ scope: "team", label: "Team", description: "See kudos from your team" });
+    }
+    if (profile?.workplace) {
+      list.push({
+        scope: "workplace",
+        label: "Organisation",
+        description: "See kudos from your organisation",
+      });
+    }
+    for (const g of groups ?? []) {
+      if (g.status !== "ACTIVE") continue;
+      list.push({
+        scope: `group:${g.id}`,
+        label: g.name,
+        description: `See thank-yous for gifts in ${g.name}`,
+      });
+    }
+    list.push({ scope: "site", label: "Site", description: "See all kudos from the entire site" });
+    return list;
+  }, [profile, groups]);
+
+  // The feed follows where you're gifting: pick a group in the gifting tabs
+  // and its thank-yous show here (the workplace tab goes back to the default)
+  useEffect(() => {
+    const follow = (id: string | null | undefined) =>
+      setSelectedScope(id && id !== "workplace" ? `group:${id}` : null);
+    try {
+      follow(window.localStorage.getItem(GIFTING_IN_KEY));
+    } catch {
+      // storage unavailable: keep the default
+    }
+    const onChange = (e: Event) => follow((e as CustomEvent<string>).detail);
+    window.addEventListener(GIFTING_IN_EVENT, onChange);
+    return () => window.removeEventListener(GIFTING_IN_EVENT, onChange);
+  }, []);
+
   // Determine current scope with fallback logic
-  const currentScope = useMemo(() => {
-    const requestedScope = selectedScope ?? recommendedScope ?? "site";
-
-    // If the requested scope has content, use it
-    if (requestedScope === "team" && teamHasContent) {
-      setActualDisplayScope("team");
-      return "team";
+  const { currentScope, requestedScope } = useMemo(() => {
+    // a group you've left, or one that isn't approved, isn't on offer
+    const selectable =
+      selectedScope &&
+      (!groupOf(selectedScope) ||
+        groups === undefined ||
+        scopes.some((s) => s.scope === selectedScope))
+        ? selectedScope
+        : null;
+    const requested: ScopeType = selectable ?? recommendedScope ?? "site";
+    let current = requested;
+    // Fallback logic: an empty team or organisation feed shows the next one up
+    if (requested === "team" && !teamHasContent) {
+      current = workplaceHasContent ? "workplace" : "site";
+    } else if (requested === "workplace" && !workplaceHasContent) {
+      current = "site";
     }
-    if (requestedScope === "workplace" && workplaceHasContent) {
-      setActualDisplayScope("workplace");
-      return "workplace";
-    }
+    return { currentScope: current, requestedScope: requested };
+  }, [selectedScope, recommendedScope, teamHasContent, workplaceHasContent, groups, scopes]);
+  const currentGroup = groupOf(currentScope);
 
-    // Fallback logic: try next available scope
-    if (requestedScope === "team" && !teamHasContent) {
-      if (workplaceHasContent) {
-        setActualDisplayScope("workplace");
-        return "workplace";
-      } else {
-        setActualDisplayScope("site");
-        return "site";
-      }
-    }
-
-    if (requestedScope === "workplace" && !workplaceHasContent) {
-      setActualDisplayScope("site");
-      return "site";
-    }
-
-    setActualDisplayScope(requestedScope);
-    return requestedScope;
-  }, [selectedScope, recommendedScope, teamHasContent, workplaceHasContent]);
+  const getScopeDisplayName = (scope: ScopeType) =>
+    scopes.find((s) => s.scope === scope)?.label ??
+    (scope === "team" ? "Team" : scope === "workplace" ? "Organisation" : "Site");
 
   // Generate fallback message
   const getFallbackMessage = () => {
-    const requestedScope = selectedScope ?? recommendedScope ?? "site";
-    if (actualDisplayScope !== requestedScope) {
+    if (currentScope !== requestedScope) {
       const requestedName = getScopeDisplayName(requestedScope);
-      const actualName = getScopeDisplayName(actualDisplayScope!);
+      const actualName = getScopeDisplayName(currentScope);
       return `No kudos in ${requestedName} yet, showing ${actualName} kudos instead.`;
     }
     return null;
@@ -400,12 +440,14 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     error,
   } = api.kudos.getFeed.useInfiniteQuery(
     {
-      scope: currentScope,
+      scope: currentGroup ? "group" : (currentScope as "team" | "workplace" | "site"),
+      groupId: currentGroup,
       limit: 10,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      enabled: !!currentScope,
+      // a group's feed waits until we know you're in it
+      enabled: !currentGroup || groups !== undefined,
     },
   );
 
@@ -474,31 +516,6 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
     return () => clearTimeout(timeout);
   }, [newKudos]);
 
-  const getScopeDisplayName = (scope: ScopeType) => {
-    switch (scope) {
-      case "team":
-        return "Team";
-      case "workplace":
-        return "Organisation";
-      case "site":
-        return "Site";
-      default:
-        return scope;
-    }
-  };
-
-  const getScopeDescription = (scope: ScopeType) => {
-    switch (scope) {
-      case "team":
-        return "See kudos from your team";
-      case "workplace":
-        return "See kudos from your organisation";
-      case "site":
-        return "See all kudos from the entire site";
-      default:
-        return "";
-    }
-  };
   if (isLoading) {
     return (
       <section ref={feedRef} aria-busy="true" className={`w-full ${className}`}>
@@ -631,22 +648,22 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
           <div
             role="tablist"
             aria-label="Kudos from"
-            className="rounded-label border-frost/25 flex border p-1"
+            className="rounded-label border-frost/25 flex max-w-full overflow-x-auto border p-1 sm:max-w-[60%]"
           >
-            {(["team", "workplace", "site"] as ScopeType[]).map((scope) => (
+            {scopes.map(({ scope, label, description }) => (
               <button
                 key={scope}
                 role="tab"
                 aria-selected={currentScope === scope}
                 onClick={() => setSelectedScope(scope)}
-                className={`min-h-9 flex-1 rounded-sm px-3 text-sm font-semibold transition-colors ${
+                className={`min-h-11 max-w-56 shrink-0 grow truncate rounded-sm px-3 text-sm font-semibold whitespace-nowrap transition-colors ${
                   currentScope === scope
                     ? "bg-label text-ink"
                     : "text-frost-soft hover:text-frost"
                 }`}
-                title={getScopeDescription(scope)}
+                title={description}
               >
-                {getScopeDisplayName(scope)}
+                {label}
               </button>
             ))}
           </div>
@@ -660,11 +677,14 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
         {allKudos.length === 0 && newKudos.length === 0 ? (
           <div className="rounded-label border-frost/30 border border-dashed p-10 text-center">
             <p className="font-expanded text-frost text-xl font-bold">
-              No thank-yous yet
+              {currentGroup
+                ? `No thank-yous in ${getScopeDisplayName(currentScope)} yet`
+                : "No thank-yous yet"}
             </p>
             <p className="text-frost-soft mt-2">
-              When someone&apos;s gift arrives, their kudos note will be posted
-              here.
+              {currentGroup
+                ? "When a gift given in this group arrives, its thank-you postcard lands here."
+                : "When someone\u2019s gift arrives, their kudos note will be posted here."}
             </p>
           </div>
         ) : (

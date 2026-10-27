@@ -82,7 +82,8 @@ export function InviteFlow(props: Props) {
       <p className="font-expanded text-ink text-2xl leading-tight font-extrabold">
         You&apos;re in {group.name}.
       </p>
-      {group.status === "PENDING" && (
+      {/* the invite page already says so above, unless you were in before */}
+      {group.status === "PENDING" && props.alreadyIn && (
         <p className="bg-gold-soft/40 border-gold rounded-label border px-3 py-2 text-sm">
           The group is new and waiting for our approval. Gifting opens once it&apos;s approved.
         </p>

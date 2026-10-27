@@ -152,7 +152,8 @@ test("the check-in email's button says it arrived, without signing in", async ({
   await mail.getByRole("button", { name: "Yes, something's arrived" }).click();
   await expect(mail.getByRole("heading", { name: "Lovely. Your Santa will know it arrived." })).toBeVisible();
   // a tampered link does nothing
-  await mail.goto(link.replace(/t=./, "t=x"));
+  // (the whole token: swapping one character could swap it for itself)
+  await mail.goto(link.replace(/t=[^&]+/, "t=tampered"));
   await expect(mail.getByRole("heading", { name: "This link doesn't work" })).toBeVisible();
   await ctx.close();
 

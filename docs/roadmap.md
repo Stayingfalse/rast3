@@ -1130,6 +1130,9 @@ that don't touch the data model. Known items to include:
   - Also fixed: after joining a group still waiting for approval, the
     "waiting for approval" note no longer shows twice.
   - New e2e spec `group-thanks.spec.ts`.
+  - Also fixed a flaky test: `gift-arrived` built its "tampered" link by
+    swapping the token's first character for an x, which left it valid
+    whenever the token already started with x (about 1 run in 64).
   - **Open question for the owner (from 26 Oct):** should Discord
     community organisers stop seeing members' emails too, like friends
     groups?

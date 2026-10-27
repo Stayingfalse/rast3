@@ -29,7 +29,7 @@ const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
   r.post(`/api/trpc/${path}`, { data: { json: input ?? null } });
 
 const who = (name: string, p: string) => `gthx-${name}-${p}@${E}`;
-const list = (n: string) => `https://www.amazon.co.uk/hz/wishlist/ls/E2EGTHX0${n}`;
+const list = (n: string) => `https://www.amazon.co.uk/hz/wishlist/ls/E2EGTHX00${n}`;
 const groups = { supper: { id: "", code: "", name: "" }, books: { id: "", code: "", name: "" } };
 const msg = (what: string, p: string) => `E2E ${what} thank-you ${p}`;
 
@@ -51,8 +51,17 @@ test.afterAll(async ({ playwright }, testInfo) => {
 test("set up: two friends groups, a gift and a thank-you in each", async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   const p = testInfo.project.name;
-  const profile = (first: string, n: string) =>
-    mutate(page.request, "profile.saveProfile", { firstName: first, lastName: "Thanks", amazonWishlistUrl: list(n) });
+  // a first profile with a wishlist is the season's check-in
+  const profile = async (first: string, n: string) =>
+    expect(
+      (
+        await mutate(page.request, "profile.saveProfile", {
+          firstName: first,
+          lastName: "Thanks",
+          amazonWishlistUrl: list(n),
+        })
+      ).status(),
+    ).toBe(200);
 
   // Ann starts the supper club, Bea the book club
   for (const [key, owner, n, name] of [

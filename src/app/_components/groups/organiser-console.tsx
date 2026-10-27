@@ -162,8 +162,9 @@ function Members({ g }: { g: Console }) {
     onError: (e) => toast.error(e.message),
   });
   const canChangeRoles = g.kind !== "ORG";
-  // friends groups have no email column (owner, 26 Oct); site admins still see them
-  const showEmail = g.kind !== "FRIENDS" || g.members.some((m) => m.email);
+  // only workplaces have an email column (owner, 26 and 27 Oct); site admins
+  // still see emails everywhere
+  const showEmail = g.kind === "ORG" || g.members.some((m) => m.email);
 
   return (
     <Card>
@@ -172,8 +173,8 @@ function Members({ g }: { g: Console }) {
         <CardDescription>
           Newest first. Joining is on trust, so check the newcomers; removing
           someone keeps their account.
-          {g.kind === "FRIENDS"
-            ? " Members' emails stay private in friends groups."
+          {g.kind !== "ORG"
+            ? ` Members' emails stay private in ${g.kind === "FRIENDS" ? "friends groups" : "communities"}.`
             : g.status !== "ACTIVE" && " Emails show once we've approved the group."}
         </CardDescription>
       </CardHeader>

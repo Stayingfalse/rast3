@@ -19,6 +19,39 @@ import {
 
 const logger = createChildLogger('kudos');
 
+/**
+ * Day 26: a friends or community group's own thank-you feed. Thank-yous for
+ * gifts given in the group, plus members' thank-yous not tied to a gift.
+ * Thank-yous for gifts from their other groups stay out.
+ */
+const groupFeed = (groupId: string) => ({
+  OR: [
+    { purchase: { wishlistAssignment: { groupId } } },
+    { purchaseId: null, user: inGroup(groupId) },
+  ],
+});
+
+/** Members of the group (and site admins) only; returns the group id. */
+async function requireGroupFeed(userId: string | undefined, groupId: string | undefined) {
+  if (!userId || !groupId) throw new TRPCError({ code: "NOT_FOUND" });
+  const [membership, me] = await Promise.all([
+    db.membership.findUnique({
+      where: { groupId_userId: { groupId, userId } },
+      select: { group: { select: { kind: true } } },
+    }),
+    db.user.findUnique({ where: { id: userId }, select: { adminLevel: true } }),
+  ]);
+  const group =
+    membership?.group ??
+    (me?.adminLevel === "SITE"
+      ? await db.group.findUnique({ where: { id: groupId }, select: { kind: true } })
+      : null);
+  if (group?.kind !== "FRIENDS" && group?.kind !== "COMMUNITY") {
+    throw new TRPCError({ code: "NOT_FOUND" });
+  }
+  return groupId;
+}
+
 export const kudosRouter = createTRPCRouter({
   createKudos: protectedProcedure
     .use(rateLimit("kudos.create", 20, 60 * 60_000))
@@ -68,7 +101,9 @@ export const kudosRouter = createTRPCRouter({
   getFeed: publicProcedure
     .input(
       z.object({
-        scope: z.enum(["team", "workplace", "site"]),
+        scope: z.enum(["team", "workplace", "site", "group"]),
+        /** scope "group": a friends or community group you're in */
+        groupId: z.string().optional(),
         limit: z.number().min(1).max(50).default(20),
         cursor: z.string().optional(),
       }),
@@ -98,6 +133,9 @@ export const kudosRouter = createTRPCRouter({
         scopeFilter = { user: inGroup(mine.team.id) };
       } else if (input.scope === "workplace" && mine?.org) {
         scopeFilter = { user: inGroup(mine.org.id) };
+      } else if (input.scope === "group") {
+        const groupId = await requireGroupFeed(ctx.session?.user?.id, input.groupId);
+        scopeFilter = groupFeed(groupId);
       }
       // For "site" scope or unauthenticated users, no scope filter needed
 

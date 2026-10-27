@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { GroupHome } from "./group-home";
 
-const KEY = "raos-gifting-in";
+/** Where you're gifting (a group id, or "workplace"), remembered per browser */
+export const GIFTING_IN_KEY = "raos-gifting-in";
+/** Fired when it changes, so the thank-you feed can follow (Day 26) */
+export const GIFTING_IN_EVENT = "raos-gifting-in";
+const KEY = GIFTING_IN_KEY;
 const WORKPLACE = "workplace";
 
 /**
@@ -41,6 +45,7 @@ export function GiftingSwitcher({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
+    window.dispatchEvent(new CustomEvent(GIFTING_IN_EVENT, { detail: id }));
   };
   const group = groups.find((g) => g.id === current);
 

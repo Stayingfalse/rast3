@@ -109,7 +109,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 25 | Sun 1 Nov | **Done early (bonus day, 22 Oct).** Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
-| 26 | Mon 2 Nov | **Gift-received confirmation done early (25 Oct).** Still open: a per-group thank-you feed (friends and Discord groups have none; feeds are team, workplace and site only) |
+| 26 | Mon 2 Nov | **Done early (25 and 27 Oct).** Gift-received confirmation (25 Oct) and a thank-you feed for each friends and Discord group (27 Oct) |
 | 27 | Tue 3 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | Accessibility + mobile pass |
 | 29 | Thu 5 Nov | Performance pass |
@@ -1111,3 +1111,31 @@ that don't touch the data model. Known items to include:
     so in the policy.
   - **Next (nightly, 27 Oct):** Day 26's remainder, a thank-you feed for
     each friends and Discord group.
+- **Merged and live on prod (26 Oct evening, owner merged #60):** the
+  pre-launch review fixes and the owner's three decisions.
+- **Nightly run, 27 Oct: Day 26's remainder, a thank-you feed for each
+  friends and Discord group.**
+  - The thank-you feed on the home page now has a tab for each approved
+    friends or community group you're in, next to Team, Organisation (now
+    only shown if you have a workplace) and Site.
+  - A group's tab shows thank-yous for gifts given in that group, plus
+    thank-yous its members posted without naming a gift. A thank-you for a
+    gift from someone's other group stays out of it.
+  - Only the group's members (and site admins) can read a group's feed;
+    anyone else gets a 404.
+  - The feed follows the gifting tabs: pick a group to gift in and the
+    feed switches to that group's thank-yous.
+  - Feed tabs are 44px tall now (touch target rule) and scroll sideways
+    when there are many groups.
+  - Also fixed: after joining a group still waiting for approval, the
+    "waiting for approval" note no longer shows twice.
+  - New e2e spec `group-thanks.spec.ts`.
+  - **Open question for the owner (from 26 Oct):** should Discord
+    community organisers stop seeing members' emails too, like friends
+    groups?
+  - **Backlog idea:** let friends and community organisers hide thank-yous
+    in their own group's feed. Today only workplace organisers and site
+    admins can moderate.
+  - **Next (nightly, 28 Oct): Day 27,** privacy-friendly analytics for the
+    monetisation case: affiliate clicks, the sign-up funnel and group
+    growth, with no cookies or third parties.

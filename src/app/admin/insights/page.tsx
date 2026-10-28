@@ -37,32 +37,53 @@ const WEEKLY = [
   ["taggedOpens", "Tagged opens"],
 ] as const;
 
-const n = (x: number) => x.toLocaleString("en-GB");
-const pct = (x: number, of: number) => (of > 0 ? `${Math.round((x / of) * 100)}%` : "–");
-const ratio = (x: number, of: number) => (of > 0 ? (x / of).toFixed(2) : "–");
+/** "—" for a count that wasn't recorded that season (shown as null) */
+const NOT_RECORDED = "—";
+const n = (x: number | null) => (x === null ? NOT_RECORDED : x.toLocaleString("en-GB"));
+const pct = (x: number | null, of: number | null) =>
+  x === null || of === null ? NOT_RECORDED : of > 0 ? `${Math.round((x / of) * 100)}%` : "–";
+const ratio = (x: number | null, of: number | null) =>
+  x === null || of === null ? NOT_RECORDED : of > 0 ? (x / of).toFixed(2) : "–";
+const sum = (xs: (number | null)[]) => (xs.some((x) => x === null) ? null : xs.reduce<number>((a, x) => a + x!, 0));
+
+/** The count of the nearest recorded step before this one on the same side, if any. */
+function stepBefore(d: Insights, i: number) {
+  for (let j = i - 1; j >= 0; j--) {
+    const prev = d.funnel[j]!;
+    if (prev.side !== d.funnel[i]!.side) return undefined;
+    if (prev.count !== null) return prev.count;
+  }
+  return undefined;
+}
 const day = (d: Date | string) =>
   new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
 /** One CSV for the January decision: funnel, kinds of group, weeks, affiliate. */
 function toCsv(d: Insights) {
+  const csv = (x: number | null | undefined) => (x === null ? "not recorded" : (x ?? 0));
   const rows: (string | number)[][] = [
     [`Random Acts of Santa insights, Christmas ${d.year}`],
     [],
     ["Funnel", "People", "Of the step before"],
-    ...d.funnel.map((f, i) => [
-      f.step,
-      f.count,
-      i && d.funnel[i - 1]!.side === f.side ? pct(f.count, d.funnel[i - 1]!.count) : "",
-    ]),
+    ...d.funnel.map((f, i) => {
+      const before = stepBefore(d, i);
+      return [f.step, csv(f.count), before === undefined || f.count === null ? "" : pct(f.count, before)];
+    }),
     [],
     ["Kind of group", "Groups live", "Started this season", "Took off", "Members", "Santas", "Pick-ups", "Gifts", "Arrived", "Opens", "Tagged opens"],
-    ...d.byKind.map((k) => [KIND[k.kind], k.groupsLive, k.groupsStarted, k.tookOff, k.members, k.santas, k.pickUps, k.gifts, k.arrived, k.opens, k.taggedOpens]),
+    ...d.byKind.map((k) => [KIND[k.kind], k.groupsLive, k.groupsStarted, k.tookOff, k.members, k.santas, k.pickUps, k.gifts, csv(k.arrived), csv(k.opens), csv(k.taggedOpens)]),
     [],
     ["Week of", ...WEEKLY.map(([, label]) => label)],
-    ...d.weeks.map((w) => [w.week, ...WEEKLY.map(([key]) => w.counts[key] ?? 0)]),
+    ...d.weeks.map((w) => [
+      w.week,
+      ...WEEKLY.map(([key]) => (d.notRecorded.includes(key) ? "not recorded" : (w.counts[key] ?? 0))),
+    ]),
     [],
     ["Affiliate", "Opens", "Tagged", "From gift pages", "Missed (store without an account)"],
-    ["", d.affiliate.opens, d.affiliate.tagged, d.affiliate.viaGiftPage, d.affiliate.missed],
+    d.affiliate
+      ? ["", d.affiliate.opens, d.affiliate.tagged, d.affiliate.viaGiftPage, d.affiliate.missed]
+      : ["", "not recorded"],
+    ...(d.caveats.length ? [[], ["Notes"], ...d.caveats.map((c) => [c])] : []),
   ];
   return rows.map((r) => r.map((c) => (/[",\n]/.test(String(c)) ? `"${String(c).replace(/"/g, '""')}"` : c)).join(",")).join("\n");
 }
@@ -87,7 +108,7 @@ export default function AdminInsightsPage() {
   if (error) return <p className="text-frost">{error.message}</p>;
   if (isLoading || !data) return <p className="text-frost-soft">Loading…</p>;
 
-  const checkedIn = data.funnel[1]?.count ?? 0;
+  const checkedIn = data.funnel[1]?.count ?? null;
   const gifts = data.byKind.reduce((s, k) => s + k.gifts, 0);
 
   return (
@@ -102,6 +123,16 @@ export default function AdminInsightsPage() {
           nothing extra tracked about anyone. Gifting {day(data.opensAt)} to{" "}
           {day(data.closesAt)}.
         </p>
+        {data.caveats.length > 0 && (
+          <div role="note" className="rounded-label border-gold/50 text-gold-soft max-w-2xl border px-4 py-3 text-sm">
+            <p className="font-semibold">Reading {data.year}: some counts weren&apos;t recorded yet ({NOT_RECORDED}).</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {data.caveats.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2 pt-2">
           {data.seasons.map((y) => (
             <Button
@@ -123,12 +154,14 @@ export default function AdminInsightsPage() {
         {[
           ["Checked in", checkedIn],
           ["Gifts", gifts],
-          ["Arrived", data.byKind.reduce((s, k) => s + k.arrived, 0)],
-          ["Tagged opens", data.affiliate.tagged],
+          ["Arrived", sum(data.byKind.map((k) => k.arrived))],
+          ["Tagged opens", data.affiliate?.tagged ?? null],
         ].map(([label, value]) => (
           <div key={label} className="flex flex-col gap-1 py-4">
             <dt className="label-caps text-frost-soft">{label}</dt>
-            <dd className="font-expanded text-3xl font-extrabold tabular-nums">{n(Number(value))}</dd>
+            <dd className="font-expanded text-3xl font-extrabold tabular-nums">
+              {n(value as number | null)}
+            </dd>
           </div>
         ))}
       </dl>
@@ -137,10 +170,9 @@ export default function AdminInsightsPage() {
         <CardHeader>
           <CardTitle>The season&apos;s funnel</CardTitle>
           <CardDescription>
-            Each step counts only people from the step before. Giving runs from
-            members to gifted; receiving from a gift to a thank-you. &ldquo;In a
-            group&rdquo; is today&apos;s memberships, so for past seasons
-            it&apos;s a rough guide.
+            Each step counts only people from the step before (a step not
+            recorded that season, {NOT_RECORDED}, is skipped). Giving runs from
+            members to gifted; receiving from a gift to a thank-you.
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -150,7 +182,7 @@ export default function AdminInsightsPage() {
                 <TableHead>Step</TableHead>
                 <TableHead className="text-right">People</TableHead>
                 <TableHead className="text-right">Of the step before</TableHead>
-                <TableHead className="text-right">Of checked in</TableHead>
+                <TableHead className="text-right">Of {checkedIn === null ? "members" : "checked in"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -165,10 +197,13 @@ export default function AdminInsightsPage() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{n(f.count)}</TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {i === 0 || data.funnel[i - 1]!.side !== f.side ? "" : pct(f.count, data.funnel[i - 1]!.count)}
+                    {(() => {
+                      const before = stepBefore(data, i);
+                      return before === undefined ? "" : pct(f.count, before);
+                    })()}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {i < 2 ? "" : pct(f.count, checkedIn)}
+                    {i < 2 ? "" : pct(f.count, checkedIn ?? data.funnel[0]!.count)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -248,7 +283,7 @@ export default function AdminInsightsPage() {
                   <TableCell className="text-ink font-semibold whitespace-nowrap">{day(w.week)}</TableCell>
                   {WEEKLY.map(([key]) => (
                     <TableCell key={key} className="text-right tabular-nums">
-                      {n(w.counts[key] ?? 0)}
+                      {data.notRecorded.includes(key) ? NOT_RECORDED : n(w.counts[key] ?? 0)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -269,26 +304,30 @@ export default function AdminInsightsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-right">Opens</TableHead>
-                <TableHead className="text-right">Tagged</TableHead>
-                <TableHead className="text-right">From gift pages</TableHead>
-                <TableHead className="text-right">Missed</TableHead>
-                <TableHead className="text-right">Tagged opens per gift</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="text-right tabular-nums">{n(data.affiliate.opens)}</TableCell>
-                <TableCell className="text-right tabular-nums">{n(data.affiliate.tagged)}</TableCell>
-                <TableCell className="text-right tabular-nums">{n(data.affiliate.viaGiftPage)}</TableCell>
-                <TableCell className="text-right tabular-nums">{n(data.affiliate.missed)}</TableCell>
-                <TableCell className="text-right tabular-nums">{ratio(data.affiliate.tagged, gifts)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          {!data.affiliate ? (
+            <p className="text-ink-soft">Not recorded in {data.year}: opens are counted from October 2026.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">Opens</TableHead>
+                  <TableHead className="text-right">Tagged</TableHead>
+                  <TableHead className="text-right">From gift pages</TableHead>
+                  <TableHead className="text-right">Missed</TableHead>
+                  <TableHead className="text-right">Tagged opens per gift</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="text-right tabular-nums">{n(data.affiliate.opens)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(data.affiliate.tagged)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(data.affiliate.viaGiftPage)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{n(data.affiliate.missed)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{ratio(data.affiliate.tagged, gifts)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

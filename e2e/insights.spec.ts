@@ -26,10 +26,12 @@ type Insights = {
   year: number;
   current: number;
   seasons: number[];
-  funnel: { step: string; count: number }[];
-  byKind: { kind: string; gifts: number; members: number }[];
+  funnel: { step: string; count: number | null }[];
+  byKind: { kind: string; gifts: number; members: number; arrived: number | null; opens: number | null }[];
   weeks: { week: string; counts: Record<string, number> }[];
-  affiliate: { opens: number; tagged: number };
+  affiliate: { opens: number; tagged: number } | null;
+  notRecorded: string[];
+  caveats: string[];
 };
 const body = async (res: { json: () => Promise<unknown> }) =>
   ((await res.json()) as { result: { data: { json: Insights } } }).result.data.json;
@@ -71,10 +73,26 @@ test("site admins get the season's funnel, kinds of group and weeks", async ({ p
   // counts only: nothing about any one person
   expect(JSON.stringify(d)).not.toMatch(/@|userId|email|name"/);
 
-  // last season too (the seed has a 2025 pick-up)
+  // this season records everything
+  expect(d.notRecorded).toEqual([]);
+  expect(d.caveats).toEqual([]);
+  expect(d.affiliate).not.toBeNull();
+
+  // last season too (the seed has a 2025 pick-up): counts that didn't exist
+  // yet are "not recorded" (null), never 0, and the funnel carries on past them
   expect(d.seasons).toContain(d.current - 1);
   const last = await body(await insights(page.request, d.current - 1));
   expect(last.year).toBe(d.current - 1);
+  const step = (name: string) => last.funnel.find((f) => f.step === name)!.count;
+  expect(step("Checked in")).toBeNull();
+  expect(step("In a group")).toBeNull();
+  expect(step("Said it arrived")).toBeNull();
+  expect(typeof step("Picked up a list")).toBe("number");
+  expect(last.byKind[0]!.arrived).toBeNull();
+  expect(last.byKind[0]!.opens).toBeNull();
+  expect(last.affiliate).toBeNull();
+  expect(last.notRecorded).toEqual(["checkIns", "arrived", "opens", "taggedOpens"]);
+  expect(last.caveats.length).toBeGreaterThan(0);
 });
 
 test("nobody else can read them", async ({ page, request }, testInfo) => {
@@ -93,6 +111,15 @@ test("the page shows the tables and downloads a CSV", async ({ page }, testInfo)
   await expect(page.getByRole("cell", { name: "Friends groups" })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "admin-insights");
+
+  // last season: a note says what wasn't recorded yet
+  const lastYear = String(new Date().getUTCMonth() >= 7 ? new Date().getUTCFullYear() - 1 : new Date().getUTCFullYear() - 2);
+  await page.getByRole("button", { name: lastYear, exact: true }).click();
+  await expect(page.getByRole("heading", { name: `Insights, Christmas ${lastYear}` })).toBeVisible();
+  await expect(page.getByRole("note")).toContainText("weren't recorded yet");
+  await expect(page.getByText(/Not recorded in \d{4}/)).toBeVisible();
+  await settle(page);
+  await snap(page, testInfo, "admin-insights-last-season");
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),

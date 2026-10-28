@@ -489,7 +489,7 @@ export const adminRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const current = currentSeason();
       const [data, seasons] = await Promise.all([
-        seasonInsights(ctx.db, input.season ?? current),
+        seasonInsights(ctx.db, input.season ?? current, { current }),
         insightSeasons(ctx.db, current),
       ]);
       return { ...data, seasons, current };

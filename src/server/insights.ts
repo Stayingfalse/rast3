@@ -17,6 +17,17 @@ const KINDS: Kind[] = ["ORG", "COMMUNITY", "FRIENDS"];
 const kindOf = (k: GroupKind | null | undefined): Kind =>
   k === "COMMUNITY" || k === "FRIENDS" ? k : "ORG";
 
+/**
+ * The first season each count was recorded in (28 Oct). Earlier seasons show
+ * them as not recorded (null), never as 0: check-ins arrived on 20 Oct 2026,
+ * wishlist opens on 23 Oct and "it arrived" on 25 Oct.
+ */
+const RECORDED_FROM = { checkIns: 2026, arrived: 2026, opens: 2026 } as const;
+type Recorded = keyof typeof RECORDED_FROM;
+
+/** Group joins before groups existed (18 Oct 2026) were dated from each person's first activity. */
+const JOINS_ESTIMATED_BEFORE = 2026;
+
 /** Groups count as "taking off" with this many members in their first 48 hours. */
 export const TAKE_OFF = 5;
 
@@ -28,8 +39,17 @@ const weekOf = (d: Date) => {
 
 const distinct = <T>(xs: T[]) => new Set(xs).size;
 
-export async function seasonInsights(db: PrismaClient, year: number, now = new Date()) {
+export async function seasonInsights(
+  db: PrismaClient,
+  year: number,
+  { now = new Date(), current = year }: { now?: Date; current?: number } = {},
+) {
   const range = seasonRange(year);
+  const recorded = (what: Recorded) => year >= RECORDED_FROM[what];
+  /** a count, or null for a season before it was recorded */
+  const ifRecorded = <T>(what: Recorded, value: T) => (recorded(what) ? value : null);
+  // today's memberships say little about a past season
+  const pastSeason = year < current;
   const window = await seasonWindow(db, year);
   const inSeason = { gte: range.gte, lt: range.lt };
 
@@ -87,25 +107,34 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
 
   // 1. The season's funnel. Each step only counts people from the step
   // before, so it never goes over 100%. Giving and receiving are two runs.
+  // A step that wasn't recorded that season is skipped: the chain carries on
+  // from the step before it.
   const within = (ids: string[], of: Set<string>) => new Set(ids.filter((id) => of.has(id)));
   const memberIds = new Set(members.map((m) => m.id));
-  const checked = within(checkIns.map((c) => c.userId), memberIds);
-  const grouped = within(inGroup.map((m) => m.userId), checked);
-  const picked = within(assignments.map((a) => a.assignedUserId), grouped);
+  const checked = recorded("checkIns") ? within(checkIns.map((c) => c.userId), memberIds) : null;
+  const grouped = pastSeason ? null : within(inGroup.map((m) => m.userId), checked ?? memberIds);
+  const picked = within(assignments.map((a) => a.assignedUserId), grouped ?? checked ?? memberIds);
   const gave = within(gifts.map((g) => g.userId), picked);
   const received = new Set(gifts.map((g) => g.a.wishlistOwnerId));
-  const arrived = within(gifts.filter((g) => g.receivedAt).map((g) => g.a.wishlistOwnerId), received);
-  const thanked = within(kudos.map((k) => k.userId), received);
-  const funnel = [
+  const arrived = recorded("arrived")
+    ? within(gifts.filter((g) => g.receivedAt).map((g) => g.a.wishlistOwnerId), received)
+    : null;
+  const thanked = within(kudos.map((k) => k.userId), arrived ?? received);
+  const funnel: { side: "giving" | "receiving"; step: string; count: number | null; note: string }[] = [
     { side: "giving", step: "Members", count: memberIds.size, note: "a finished profile by the season's end" },
-    { side: "giving", step: "Checked in", count: checked.size, note: "confirmed their wishlist for this Christmas" },
-    { side: "giving", step: "In a group", count: grouped.size, note: "in a workplace, community or friends group now" },
+    { side: "giving", step: "Checked in", count: checked?.size ?? null, note: "confirmed their wishlist for this Christmas" },
+    {
+      side: "giving",
+      step: "In a group",
+      count: grouped?.size ?? null,
+      note: pastSeason ? "not kept for past seasons" : "in a workplace, community or friends group now",
+    },
     { side: "giving", step: "Picked up a list", count: picked.size, note: "" },
     { side: "giving", step: "Gifted", count: gave.size, note: "marked at least one gift" },
     { side: "receiving", step: "Received a gift", count: received.size, note: "" },
-    { side: "receiving", step: "Said it arrived", count: arrived.size, note: "" },
+    { side: "receiving", step: "Said it arrived", count: arrived?.size ?? null, note: "" },
     { side: "receiving", step: "Posted a thank-you", count: thanked.size, note: "of those who received" },
-  ] as const;
+  ];
 
   // 2. By kind of group: where the giving happens (workplace pick-ups have no group)
   const groupKind = new Map(groups.map((g) => [g.id, kindOf(g.kind)]));
@@ -128,9 +157,9 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
       santas: distinct(given.map((g) => g.userId)),
       pickUps: picks.length,
       gifts: given.length,
-      arrived: given.filter((g) => g.receivedAt).length,
-      opens: opened.length,
-      taggedOpens: opened.filter((o) => o.tagged).length,
+      arrived: ifRecorded("arrived", given.filter((g) => g.receivedAt).length),
+      opens: ifRecorded("opens", opened.length),
+      taggedOpens: ifRecorded("opens", opened.filter((o) => o.tagged).length),
     };
   });
 
@@ -160,13 +189,32 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
   for (const o of opens) if (o.tagged) add("taggedOpens", o.createdAt);
 
   // 4. Affiliate links: opens of lists on Amazon this season
-  const affiliate = {
+  const affiliate = ifRecorded("opens", {
     opens: opens.length,
     tagged: opens.filter((o) => o.tagged).length,
     viaGiftPage: opens.filter((o) => o.viaGiftPage).length,
     // links were on for the group, but the list's store has no Associates account
     missed: opens.filter((o) => o.affiliateOn && !o.tagged).length,
-  };
+  });
+
+  // weekly columns with nothing recorded that season
+  const notRecorded = [
+    ...(recorded("checkIns") ? [] : ["checkIns"]),
+    ...(recorded("arrived") ? [] : ["arrived"]),
+    ...(recorded("opens") ? [] : ["opens", "taggedOpens"]),
+  ];
+  // what to bear in mind when reading this season
+  const caveats = [
+    ...(recorded("checkIns") ? [] : ["Check-ins started in 2026, so this season's funnel goes from members straight to pick-ups."]),
+    ...(recorded("arrived") ? [] : ["\u201cIt arrived\u201d started on 25 Oct 2026."]),
+    ...(recorded("opens") ? [] : ["Wishlist opens and affiliate links started in October 2026."]),
+    ...(year < JOINS_ESTIMATED_BEFORE
+      ? [
+          "Group joins are estimated: when groups replaced domains (Oct 2026), each member was dated from their first pick-up, gift or thank-you, or 1 Nov 2025 if they had none. \u201cTook off\u201d uses the same dates.",
+        ]
+      : []),
+    ...(pastSeason ? ["Groups live and members are today's figures."] : []),
+  ];
 
   return {
     year,
@@ -176,6 +224,8 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
     byKind,
     weeks,
     affiliate,
+    notRecorded,
+    caveats,
   };
 }
 

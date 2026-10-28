@@ -1222,4 +1222,11 @@ that don't touch the data model. Known items to include:
   - Dev CI was slow on the first run (10 minutes, 2 retries) after the
     Easypanel server restarted at about 02:57 UTC; a re-run of the same
     commit took the usual 4 to 6 minutes.
+  - **Past seasons (owner, 28 Oct):** 2025 can be read too. Counts that
+    didn't exist yet show as "not recorded" (—), never 0: check-ins (from
+    2026), "it arrived" (25 Oct 2026) and wishlist opens (23 Oct 2026).
+    The funnel skips those steps, and "In a group" isn't used for past
+    seasons (today's memberships). A note on the page says what's missing
+    and that 2025 group joins are estimated (dated from each person's first
+    activity, or 1 Nov 2025, when groups replaced domains).
   - **Next (nightly, 29 Oct): Day 28,** accessibility and mobile pass.

@@ -637,10 +637,11 @@ export const groupsRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
         select: { adminLevel: true },
       });
-      // Friends groups never show emails (owner, 26 Oct): anyone can start
-      // one and share its link, so it mustn't be a way to collect addresses
+      // Only workplaces show emails (owner: friends groups 26 Oct, Discord
+      // communities 27 Oct). Anyone can start a friends or community group
+      // and share its link, so it mustn't be a way to collect addresses.
       const site = viewer?.adminLevel === "SITE";
-      const showEmails = site || (group.status === "ACTIVE" && group.kind !== "FRIENDS");
+      const showEmails = site || (group.status === "ACTIVE" && group.kind === "ORG");
       const members = await ctx.db.membership.findMany({
         where: { groupId: group.id },
         orderBy: { joinedAt: "desc" },

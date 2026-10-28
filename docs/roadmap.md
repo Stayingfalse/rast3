@@ -121,7 +121,7 @@
 | 31 | Sat 7 Nov | Full regression on dev + launch checklist |
 | 32 | Sun 8 Nov | Fixes from regression |
 | 33 | Mon 9 Nov | Release candidate → prod (with the owner's approval) |
-| 34 | Tue 10 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
+| 34 | Tue 10 Nov | **Wall of Kindness (owner, 27 Oct).** A group's thank-yous turned into a shareable page and image, under festive names only (no real names, no gifts' details), for organisers to post on Discord, Slack or LinkedIn. Works for every kind of group, any time in the season ("so far") and as the end-of-season recap. Builds on the share cards and the per-group thank-you feed. Organisers only; small groups (under 3 thank-yous) can't make one |
 | 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 36 | Thu 12 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 37 | Fri 13 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
@@ -179,8 +179,7 @@ Suggestions beyond the brief, to schedule when the owner agrees:
 - **Slack/Teams app** for the workplace tier.
 - **Stale-wishlist detection**: private, empty or broken lists, plus a nudge to the owner.
 - **Year-in-review recap** each January: gifts given per group, kudos highlights, an "opens again in November" reminder (good for return visits and next year's sign-ups).
-- **Shareable "Wall of Kindness"**: at season end, turn a group's kudos into an
-  anonymised image or page they can post on Discord or LinkedIn (free marketing).
+- **Shareable "Wall of Kindness"**: scheduled as Day 34 (owner, 27 Oct).
 - **Mobile header**: the floating "Join Santa" button covers headings on phones;
   the cookie banner fills half the screen (Day 4).
 - **Copy refresh**: done on the 2026 design day (17 Oct).
@@ -1142,3 +1141,11 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 28 Oct): Day 27,** privacy-friendly analytics for the
     monetisation case: affiliate clicks, the sign-up funnel and group
     growth, with no cookies or third parties.
+- **Merged and live on prod (27 Oct, owner approved #61):** the thank-you
+  feed for each friends and Discord group.
+- **Owner decisions (27 Oct evening):**
+  - **Discord community organisers no longer see members' emails**, like
+    friends groups. Only workplace organisers do (once approved), and site
+    admins everywhere. Small change, PR into main.
+  - **Wall of Kindness** goes on the plan as Day 34 (Tue 10 Nov), so it's
+    ready when gifting opens on 15 Nov.

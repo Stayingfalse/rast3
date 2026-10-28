@@ -103,3 +103,24 @@ test("non-organisers can't open the console or poster", async ({ page }, testInf
   );
   expect(res.status()).toBe(403);
 });
+
+test("community organisers don't see members' emails either (owner, 27 Oct)", async ({ page }, testInfo) => {
+  const p = testInfo.project.name;
+  await loginAs(page, { email: `host-${p}@${E}` });
+  const g = (await unwrap(
+    await mutate(page.request, "groups.create", { name: `E2E Community ${p}`, kind: "COMMUNITY" }),
+  )) as { id: string; joinCode: string };
+  await loginAs(page, { email: `guest-${p}@${E}` });
+  expect((await mutate(page.request, "groups.join", { code: g.joinCode })).status()).toBe(200);
+  await loginAs(page, { email: `console-site-${p}@${E}`, adminLevel: "SITE" });
+  expect((await mutate(page.request, "groups.setStatus", { groupId: g.id, status: "ACTIVE" })).status()).toBe(200);
+
+  await loginAs(page, { email: `host-${p}@${E}` });
+  const res = await page.request.get(
+    `/api/trpc/groups.manage?input=${encodeURIComponent(JSON.stringify({ json: { groupId: g.id } }))}`,
+  );
+  expect(res.status()).toBe(200);
+  const { members } = (await unwrap(res)) as { members: { email: string | null }[] };
+  expect(members).toHaveLength(2);
+  expect(members.every((m) => m.email === null)).toBe(true);
+});

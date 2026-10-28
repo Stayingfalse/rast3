@@ -13,6 +13,7 @@ import {
   type Store,
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
+import { insightSeasons, seasonInsights } from "~/server/insights";
 import { storeDomain } from "~/server/opens";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
@@ -478,6 +479,21 @@ export const adminRouter = createTRPCRouter({
         .slice(0, 15),
     };
   }),
+
+  /**
+   * Day 27: the season's funnel, giving by kind of group, week by week and
+   * affiliate opens, for the 2027 monetisation case. Counts only.
+   */
+  insights: siteAdminProcedure
+    .input(z.object({ season: z.number().int().min(2020).max(2100).optional() }))
+    .query(async ({ ctx, input }) => {
+      const current = currentSeason();
+      const [data, seasons] = await Promise.all([
+        seasonInsights(ctx.db, input.season ?? current),
+        insightSeasons(ctx.db, current),
+      ]);
+      return { ...data, seasons, current };
+    }),
 
   /** Day 18: this season's dates, check-ins and the groups opened early. */
   season: siteAdminProcedure.query(async ({ ctx }) => {

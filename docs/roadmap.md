@@ -110,7 +110,7 @@
 |---|---|---|
 | 25 | Sun 1 Nov | **Done early (bonus day, 22 Oct).** Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
 | 26 | Mon 2 Nov | **Done early (25 and 27 Oct).** Gift-received confirmation (25 Oct) and a thank-you feed for each friends and Discord group (27 Oct) |
-| 27 | Tue 3 Nov | Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
+| 27 | Tue 3 Nov | **Done early (28 Oct).** Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | Accessibility + mobile pass |
 | 29 | Thu 5 Nov | Performance pass |
 | 30 | Fri 6 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
@@ -1191,3 +1191,28 @@ that don't touch the data model. Known items to include:
     expiring token. Works with the existing Basic SMTP option.
   - **Noted:** if an email account is ever set up on dev, dev would send
     real reminder emails to dev's users. Dev has none today.
+- **Nightly run, 28 Oct: Day 27, Admin › Insights.**
+  - A site-admin page for the 2027 monetisation case, counted from what
+    the site already records. Nothing new is tracked: no cookies, no
+    third parties, no events, counts only.
+  - **The season's funnel:** members, checked in, in a group, picked up,
+    gifted, received, said it arrived, thanked; each person once per step,
+    with the share of the step before and of those checked in.
+  - **By kind of group** (workplaces, communities, friends): groups live
+    and started, groups that "took off" (5+ members in their first 48
+    hours), members, Santas, gifts, gifts per member, arrived, tagged
+    opens. This is the evidence for the Workplace and Community plans.
+  - **Week by week** from a few weeks before gifting opens: new members,
+    group joins, new groups, check-ins, pick-ups, gifts, arrivals,
+    thank-yous, wishlist opens, tagged opens.
+  - **Affiliate opens:** total, tagged, from gift pages, missed. Purchases
+    and earnings stay in Amazon's Associates Central.
+  - **Past seasons** can be picked (2025 has pick-ups); "Download CSV"
+    exports it all for the January decision.
+  - Privacy policy: a line on these totals.
+  - New e2e spec `insights.spec.ts`.
+  - **Not done (on purpose):** no visitor or page-view counts. That would
+    need new tracking; the sign-up funnel starts at a finished profile.
+    If page views are wanted later, a cookieless self-hosted counter
+    (e.g. Plausible or Umami, self-hosted on Easypanel) is the option.
+  - **Next (nightly, 29 Oct): Day 28,** accessibility and mobile pass.

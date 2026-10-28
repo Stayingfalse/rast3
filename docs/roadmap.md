@@ -1149,3 +1149,45 @@ that don't touch the data model. Known items to include:
     admins everywhere. Small change, PR into main.
   - **Wall of Kindness** goes on the plan as Day 34 (Tue 10 Nov), so it's
     ready when gifting opens on 15 Nov.
+- **Merged and live on prod (28 Oct, owner approved #62):** community
+  organisers no longer see members' emails.
+- **Email fixes (28 Oct, owner's request).**
+  - **Reminder emails now use the same email account as sign-in links.**
+    Sign-in links send with the email sign-in set up in Admin › Settings
+    (Gmail OAuth2 on prod); reminders only read the `EMAIL_SERVER_*`
+    environment variables, which prod doesn't have, so they would never
+    have sent. Both now share `src/server/email/smtp.ts`: the environment
+    variables if set, otherwise the Admin › Settings account. Changes there
+    are picked up within 5 minutes.
+  - **Daily cap on reminders:** at most 300 in any 24 hours
+    (`REMINDER_DAILY_LIMIT`), so they never use up the mailbox's sending
+    allowance (a free Gmail account sends about 500 a day) and block
+    sign-in links. The rest wait for the next hourly run.
+  - **Gmail authorisation in Admin › Settings was broken twice over.**
+    - It asked Google to return to `/admin/settings`, which isn't a
+      registered redirect URI, so Google refused ("redirect URI is wrong").
+      It now always uses `/oauth2/callback` (the page built for this) and
+      shows the address to register.
+    - Coming back from Google, the page only finished if a flag set before
+      the trip was still on, which a page load always clears, so the new
+      login was dropped. It now finishes on return and saves the token
+      straight onto the email sign-in.
+  - **Owner action:** in Google Cloud › APIs & Services › Credentials,
+    open the OAuth client (the one sign-in uses, ending `…ddshn6bt`) and
+    add `https://raosanta.uk/oauth2/callback` and
+    `https://dev.raosanta.uk/oauth2/callback` under Authorised redirect
+    URIs. Checked 28 Oct: only `/api/auth/callback/google` is registered.
+  - **The Google OAuth app is in "Testing" (owner, 28 Oct).** While it is,
+    only listed test users can use "Sign in with Google" on prod, and the
+    Gmail token expires 7 days after it's issued. Owner action: publish it
+    (Google Auth Platform › Audience › Publish app), then re-authorise Gmail
+    once in Admin › Settings, clicking through Google's "unverified app"
+    warning for the restricted Gmail permission (only the owner sees it).
+    Sign in with Google needs no review.
+  - **Suggested before 15 Nov (owner to decide):** send email from a
+    raosanta.uk address through a transactional email service (Resend,
+    Postmark or SES; SPF and DKIM in DNS), or at least a Gmail App
+    Password, instead of Gmail OAuth: higher limits, better delivery, no
+    expiring token. Works with the existing Basic SMTP option.
+  - **Noted:** if an email account is ever set up on dev, dev would send
+    real reminder emails to dev's users. Dev has none today.

@@ -32,9 +32,16 @@ const NEW_LISTS_EVERY_DAYS = 7;
 const BATCH = 100;
 /** failed sends in a row that stop a run (SMTP down or misconfigured); the next run retries */
 const MAX_FAILURES = 3;
+/**
+ * Reminders sent in any 24 hours, at most (27 Oct). They share a mailbox with
+ * sign-in links (a free Gmail account sends about 500 a day), so they must
+ * never use up its allowance; the rest wait for the next run.
+ */
+const DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
 const DAY = 24 * 3600_000;
 
-type Send = typeof sendOnce;
+/** sendOnce, or "HELD" when today's limit is reached (tried again next run) */
+type Send = (...args: Parameters<typeof sendOnce>) => Promise<Awaited<ReturnType<typeof sendOnce>> | "HELD">;
 
 export type ReminderRun = {
   season: number;
@@ -71,8 +78,13 @@ export async function runReminders(
   };
   const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
   let failures = 0;
+  let sentToday = await db.emailLog.count({
+    where: { status: "SENT", createdAt: { gte: new Date(now.getTime() - DAY) } },
+  });
   const send: Send = async (...args) => {
+    if (sentToday >= DAILY_LIMIT) return "HELD";
     const r = await sendOnce(...args);
+    if (r === "SENT") sentToday++;
     failures = r === "FAILED" ? failures + 1 : 0;
     if (failures >= MAX_FAILURES) {
       throw new Error(`Reminder emails stopped after ${MAX_FAILURES} failed sends in a row: ${lastError}`);

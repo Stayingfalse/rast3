@@ -359,12 +359,38 @@ export const authProviderRouter = createTRPCRouter({
           scope: string;
         };
 
+        // Save it straight onto the Gmail (OAuth2) email sign-in, if there is
+        // one (27 Oct): coming back from Google reloads the settings page, so
+        // the form it would otherwise sit in is closed.
+        let saved = false;
+        const email = await ctx.db.authProvider.findUnique({
+          where: { name: "nodemailer" },
+          select: { id: true, emailConfig: true },
+        });
+        const config = email?.emailConfig as Record<string, unknown> | null | undefined;
+        if (email && config?.authType === "oauth2" && tokens.refresh_token) {
+          await ctx.db.authProvider.update({
+            where: { id: email.id },
+            data: {
+              emailConfig: {
+                ...config,
+                clientId: process.env.AUTH_GOOGLE_ID,
+                clientSecret: process.env.AUTH_GOOGLE_SECRET,
+                refreshToken: tokens.refresh_token,
+                accessToken: tokens.access_token,
+              },
+            },
+          });
+          saved = true;
+        }
+
         return {
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
           expiresIn: tokens.expires_in,
           tokenType: tokens.token_type,
           scope: tokens.scope,
+          saved,
         };      } catch (error) {
         logger.error({
           error: error instanceof Error ? error.message : String(error),

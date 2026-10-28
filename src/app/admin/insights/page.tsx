@@ -49,7 +49,11 @@ function toCsv(d: Insights) {
     [`Random Acts of Santa insights, Christmas ${d.year}`],
     [],
     ["Funnel", "People", "Of the step before"],
-    ...d.funnel.map((f, i) => [f.step, f.count, i ? pct(f.count, d.funnel[i - 1]!.count) : ""]),
+    ...d.funnel.map((f, i) => [
+      f.step,
+      f.count,
+      i && d.funnel[i - 1]!.side === f.side ? pct(f.count, d.funnel[i - 1]!.count) : "",
+    ]),
     [],
     ["Kind of group", "Groups live", "Started this season", "Took off", "Members", "Santas", "Pick-ups", "Gifts", "Arrived", "Opens", "Tagged opens"],
     ...d.byKind.map((k) => [KIND[k.kind], k.groupsLive, k.groupsStarted, k.tookOff, k.members, k.santas, k.pickUps, k.gifts, k.arrived, k.opens, k.taggedOpens]),
@@ -102,7 +106,7 @@ export default function AdminInsightsPage() {
           {data.seasons.map((y) => (
             <Button
               key={y}
-              variant={y === data.year ? "default" : "outline"}
+              variant={y === data.year ? "default" : "secondary"}
               aria-pressed={y === data.year}
               onClick={() => setSeason(y === data.current ? undefined : y)}
             >
@@ -133,8 +137,10 @@ export default function AdminInsightsPage() {
         <CardHeader>
           <CardTitle>The season&apos;s funnel</CardTitle>
           <CardDescription>
-            Each person counted once per step. &ldquo;In a group&rdquo; is
-            today&apos;s memberships, so for past seasons it&apos;s a rough guide.
+            Each step counts only people from the step before. Giving runs from
+            members to gifted; receiving from a gift to a thank-you. &ldquo;In a
+            group&rdquo; is today&apos;s memberships, so for past seasons
+            it&apos;s a rough guide.
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -149,14 +155,17 @@ export default function AdminInsightsPage() {
             </TableHeader>
             <TableBody>
               {data.funnel.map((f, i) => (
-                <TableRow key={f.step}>
+                <TableRow
+                  key={f.step}
+                  className={f.side === "receiving" && data.funnel[i - 1]?.side === "giving" ? "border-t-2 border-t-ink/40" : undefined}
+                >
                   <TableCell>
                     <span className="text-ink font-semibold">{f.step}</span>
                     {f.note && <span className="text-ink-soft block text-xs">{f.note}</span>}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{n(f.count)}</TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {i === 0 ? "" : pct(f.count, data.funnel[i - 1]!.count)}
+                    {i === 0 || data.funnel[i - 1]!.side !== f.side ? "" : pct(f.count, data.funnel[i - 1]!.count)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {i < 2 ? "" : pct(f.count, checkedIn)}

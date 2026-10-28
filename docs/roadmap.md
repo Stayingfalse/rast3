@@ -1215,4 +1215,11 @@ that don't touch the data model. Known items to include:
     need new tracking; the sign-up funnel starts at a finished profile.
     If page views are wanted later, a cookieless self-hosted counter
     (e.g. Plausible or Umami, self-hosted on Easypanel) is the option.
+  - Also fixed a flaky test: the dev server's own hourly reminder run
+    (3 minutes after each deploy) could land mid-test and send a gift
+    check-in the test said shouldn't go. Scheduled runs now leave e2e test
+    users to the test-only route.
+  - Dev CI was slow on the first run (10 minutes, 2 retries) after the
+    Easypanel server restarted at about 02:57 UTC; a re-run of the same
+    commit took the usual 4 to 6 minutes.
   - **Next (nightly, 29 Oct): Day 28,** accessibility and mobile pass.

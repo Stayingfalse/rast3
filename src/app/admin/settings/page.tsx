@@ -1,12 +1,20 @@
 "use client";
 
 import type { JsonValue } from "@prisma/client/runtime/library";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { api } from "~/trpc/react";
 import { clientLogger } from "~/utils/client-logger";
 
 const logger = clientLogger;
+
+/**
+ * Where Google sends the browser back to after Gmail authorisation: one fixed
+ * address per site, so it can be registered with Google (27 Oct). It used to
+ * be this page itself, which Google rejected as unregistered.
+ */
+const gmailRedirectUri = () =>
+  typeof window === "undefined" ? "/oauth2/callback" : `${window.location.origin}/oauth2/callback`;
 
 // Email configuration interface to match the server-side interface
 interface EmailConfig {
@@ -132,7 +140,12 @@ export default function SettingsPage() {
           refreshToken: data.refreshToken,
         });
         setIsOAuthInProgress(false);
-        toast.success("Successfully retrieved Gmail OAuth2 tokens!");
+        toast.success(
+          data.saved
+            ? "Gmail connected: sign-in links and reminder emails send with it."
+            : "Got the Gmail tokens. Open the email provider and save them.",
+        );
+        if (data.saved) void refetchProviders();
       },
       onError: (error) => {
         setIsOAuthInProgress(false);
@@ -140,7 +153,10 @@ export default function SettingsPage() {
       },
     });
 
-  // Handle OAuth2 callback from URL parameters
+  // Handle OAuth2 callback from URL parameters. Google sends the browser to
+  // /oauth2/callback, which forwards here; the page has reloaded by then, so
+  // this can't depend on state from before the trip (27 Oct fix).
+  const exchanged = useRef(false);
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
@@ -154,18 +170,16 @@ export default function SettingsPage() {
       return;
     }
 
-    if (code && state === "admin_email_setup" && isOAuthInProgress) {
-      // Exchange the code for tokens
-      const redirectUri = `${window.location.origin}${window.location.pathname}`;
-      exchangeGmailOAuth2Code.mutate({
-        code,
-        redirectUri,
-      });
+    if (code && state === "admin_email_setup" && !exchanged.current) {
+      exchanged.current = true;
+      setIsOAuthInProgress(true);
+      // Exchange the code for tokens (same redirect address as the request)
+      exchangeGmailOAuth2Code.mutate({ code, redirectUri: gmailRedirectUri() });
 
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [exchangeGmailOAuth2Code, isOAuthInProgress]);
+  }, [exchangeGmailOAuth2Code]);
   const toggleProvider = api.authProvider.toggleEnabled.useMutation({
     onSuccess: () => {
       toast.success("Provider status updated");
@@ -185,10 +199,8 @@ export default function SettingsPage() {
 
       try {
       setIsOAuthInProgress(true);
-      const redirectUri = `${window.location.origin}${window.location.pathname}`;
-
       // Generate Gmail OAuth2 URL and redirect to Google
-      generateGmailOAuth2Url.mutate({ redirectUri });
+      generateGmailOAuth2Url.mutate({ redirectUri: gmailRedirectUri() });
     } catch (error) {
       setIsOAuthInProgress(false);      logger.error("OAuth2 flow error", "OAuth2 flow error", {
         error: error instanceof Error ? error.message : String(error)
@@ -819,6 +831,14 @@ export default function SettingsPage() {
                             )}
                           </button>
                         </div>
+                        <p className="text-center text-xs text-white/60">
+                          Google must allow this redirect URI (Google Cloud ›
+                          APIs &amp; Services › Credentials › the OAuth client ›
+                          Authorised redirect URIs):{" "}
+                          <code className="break-all text-white/80 select-all">
+                            {gmailRedirectUri()}
+                          </code>
+                        </p>
                         {!(envStatus as Record<string, boolean>).google && (
                           <p className="mt-2 text-center text-xs text-orange-400">
                             Please configure AUTH_GOOGLE_ID and

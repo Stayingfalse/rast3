@@ -1177,7 +1177,17 @@ that don't touch the data model. Known items to include:
     add `https://raosanta.uk/oauth2/callback` and
     `https://dev.raosanta.uk/oauth2/callback` under Authorised redirect
     URIs. Checked 28 Oct: only `/api/auth/callback/google` is registered.
-    Also check the OAuth consent screen is "In production": in "Testing",
-    Google expires the Gmail token after 7 days and sign-in emails stop.
+  - **The Google OAuth app is in "Testing" (owner, 28 Oct).** While it is,
+    only listed test users can use "Sign in with Google" on prod, and the
+    Gmail token expires 7 days after it's issued. Owner action: publish it
+    (Google Auth Platform › Audience › Publish app), then re-authorise Gmail
+    once in Admin › Settings, clicking through Google's "unverified app"
+    warning for the restricted Gmail permission (only the owner sees it).
+    Sign in with Google needs no review.
+  - **Suggested before 15 Nov (owner to decide):** send email from a
+    raosanta.uk address through a transactional email service (Resend,
+    Postmark or SES; SPF and DKIM in DNS), or at least a Gmail App
+    Password, instead of Gmail OAuth: higher limits, better delivery, no
+    expiring token. Works with the existing Basic SMTP option.
   - **Noted:** if an email account is ever set up on dev, dev would send
     real reminder emails to dev's users. Dev has none today.

@@ -3,6 +3,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { seasonWindow } from "~/server/season";
 import { seasonRange } from "~/server/stamps";
+import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
@@ -74,7 +75,12 @@ export async function runReminders(
     emailReminders: true,
     email: { not: null },
     profileCompleted: true,
-    AND: [engagedThisSeason(season), ...(only ? [only] : [])],
+    AND: [
+      engagedThisSeason(season),
+      // the scheduled runs leave e2e test users to the test route (28 Oct):
+      // an hourly run in the middle of a test would race it
+      only ?? { NOT: { email: { endsWith: TEST_EMAIL_DOMAIN } } },
+    ],
   };
   const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
   let failures = 0;

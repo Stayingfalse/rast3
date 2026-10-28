@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { createTransport, type Transporter } from "nodemailer";
 
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
+import { emailSettings } from "./smtp";
 import { oneClickUrl, siteUrl } from "./unsubscribe";
 
 /**
@@ -12,27 +13,32 @@ import { oneClickUrl, siteUrl } from "./unsubscribe";
  * are logged as skipped and never sent.
  *
  * Pre-launch review (26 Oct): most of these go once a season, so a claim is
- * only kept for an email that actually went. Without SMTP nothing is claimed
- * (so they all go once SMTP is set up), and a failed send gives its claim
+ * only kept for an email that actually went. Without an email server nothing is
+ * claimed (so they all go once one is set up), and a failed send gives its claim
  * back, so the next hourly run tries again.
  */
 type Db = Pick<PrismaClient, "emailLog">;
 
-let transport: Transporter | null | undefined;
-function getTransport() {
-  if (transport !== undefined) return transport;
-  transport = process.env.EMAIL_SERVER_HOST
-    ? createTransport({
-        host: process.env.EMAIL_SERVER_HOST,
-        port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      })
-    : null;
-  return transport;
+/**
+ * The same email server as sign-in links (see ./smtp): the environment's, or
+ * the one set up in Admin › Settings. Re-read every few minutes, so a change
+ * there (e.g. a new Gmail authorisation) is picked up without a restart.
+ */
+const SETTINGS_TTL = 5 * 60_000;
+let cached: { at: number; value: { transport: Transporter; from: string | undefined } | null } | null =
+  null;
+async function getTransport() {
+  if (cached && Date.now() - cached.at < SETTINGS_TTL) return cached.value;
+  const settings = await emailSettings();
+  cached = {
+    at: Date.now(),
+    value: settings && { transport: createTransport(settings.server), from: settings.from },
+  };
+  return cached.value;
 }
+
+/** Is there an email server to send reminders with? */
+export const emailConfigured = async () => !!(await getTransport());
 
 /** Test and example addresses never get real email. */
 export const isTestAddress = (email: string) =>
@@ -43,6 +49,7 @@ export type Message = { subject: string; html: string; text: string };
 
 /** The last send error, for the run's log line. */
 export let lastError: string | null = null;
+
 export async function sendOnce(
   db: Db,
   to: { id: string; email: string },
@@ -52,7 +59,7 @@ export async function sendOnce(
   ref = "",
 ): Promise<"SENT" | "SKIPPED" | "FAILED" | "DUPLICATE" | "NO_SMTP"> {
   const test = isTestAddress(to.email);
-  const smtp = getTransport();
+  const smtp = test ? null : await getTransport();
   if (!test && !smtp) return "NO_SMTP";
   let logId: string;
   try {
@@ -71,9 +78,9 @@ export async function sendOnce(
   const message = build();
   const unsubscribe = oneClickUrl(to.id);
   try {
-    await smtp.sendMail({
+    await smtp.transport.sendMail({
       to: to.email,
-      from: process.env.EMAIL_FROM,
+      from: smtp.from,
       subject: message.subject,
       html: message.html,
       text: message.text,

@@ -1,5 +1,6 @@
 // Dynamic authentication provider configuration
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
+import { serverFromEmailConfig, type EmailConfig } from "~/server/email/smtp";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import type { Provider } from "next-auth/providers";
@@ -22,20 +23,6 @@ import { createChildLogger } from "~/utils/logger";
 const logger = createChildLogger('server');
 
 // Email configuration interface
-interface EmailConfig {
-  host?: string;
-  port?: number;
-  from?: string;
-  authType: "basic" | "oauth2";
-  // Basic auth fields
-  user?: string;
-  password?: string;
-  // OAuth2 fields
-  clientId?: string;
-  clientSecret?: string;
-  refreshToken?: string;
-  accessToken?: string;
-}
 
 // Cache for database providers to avoid repeated DB calls
 let dbProvidersCache: Awaited<ReturnType<typeof getDbAuthProviders>> | null =
@@ -292,32 +279,10 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
     );
     if (dbProvider?.emailConfig) {
       const emailConfig = dbProvider.emailConfig as unknown as EmailConfig;
-      let authConfig;
-      if (emailConfig.authType === "oauth2") {
-        // OAuth2 configuration (for Google Apps, etc.)
-        authConfig = {
-          type: "OAuth2" as const,
-          user: emailConfig.user,
-          clientId: emailConfig.clientId,
-          clientSecret: emailConfig.clientSecret,
-          refreshToken: emailConfig.refreshToken,
-          accessToken: emailConfig.accessToken,
-        };
-      } else {
-        // Basic username/password authentication
-        authConfig = {
-          user: emailConfig.user,
-          pass: emailConfig.password,
-        };
-      }
 
       providers.push(
         Nodemailer({
-          server: {
-            host: emailConfig.host,
-            port: emailConfig.port,
-            auth: authConfig,
-          },
+          server: serverFromEmailConfig(emailConfig),
           from: emailConfig.from,
           sendVerificationRequest: async ({ identifier: email, url, provider }) => {
             const { host } = new URL(url);

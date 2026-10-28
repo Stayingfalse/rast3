@@ -1,5 +1,6 @@
 import { db } from "~/server/db";
 import { createChildLogger } from "~/utils/logger";
+import { emailConfigured } from "./mailer";
 import { runReminders } from "./reminders";
 
 const log = createChildLogger("reminders");
@@ -13,11 +14,13 @@ export function startReminderSchedule() {
   const g = globalThis as { __reminders?: boolean };
   if (g.__reminders) return;
   g.__reminders = true;
-  if (!process.env.EMAIL_SERVER_HOST) {
-    log.warn("EMAIL_SERVER_HOST isn't set: reminder emails wait until SMTP is configured");
-  }
+  let warned = false;
   const tick = async () => {
     try {
+      if (!warned && !(await emailConfigured())) {
+        warned = true;
+        log.warn("No email server (EMAIL_SERVER_* or Admin › Settings): reminder emails wait until one is set up");
+      }
       const run = await runReminders(db);
       if (run.nudged || run.opened || run.giftCheckIns || run.newLists) log.info(run, "Reminder emails processed");
     } catch (error) {

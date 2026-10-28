@@ -424,6 +424,9 @@ export const adminRouter = createTRPCRouter({
   opens: siteAdminProcedure.query(async ({ ctx }) => {
     const season = currentSeason();
     const where = { season };
+    // only groups that still exist compete for the top places (opens keep
+    // the id of a deleted group, and dev deletes its test groups)
+    const live = (await ctx.db.group.findMany({ select: { id: true } })).map((g) => g.id);
     const [all, tagged, missed, viaGiftPage, byGroup, pickedUp, lists] = await Promise.all([
       ctx.db.wishlistOpen.groupBy({ by: ["store"], where, _count: { _all: true } }),
       ctx.db.wishlistOpen.groupBy({ by: ["store"], where: { ...where, tagged: true }, _count: { _all: true } }),
@@ -435,7 +438,7 @@ export const adminRouter = createTRPCRouter({
       ctx.db.wishlistOpen.count({ where: { ...where, viaGiftPage: true } }),
       ctx.db.wishlistOpen.groupBy({
         by: ["groupId"],
-        where: { ...where, groupId: { not: null } },
+        where: { ...where, groupId: { in: live } },
         _count: { _all: true },
         orderBy: { _count: { groupId: "desc" } },
         take: 30,
@@ -470,7 +473,7 @@ export const adminRouter = createTRPCRouter({
       opens: all.reduce((n, r) => n + r._count._all, 0),
       viaGiftPage,
       stores,
-      // groups since deleted drop out of the list (their opens still count above)
+      // groups since deleted aren't listed (their opens still count above)
       groups: byGroup
         .flatMap((g) => {
           const group = names.find((n) => n.id === g.groupId);

@@ -1230,3 +1230,18 @@ that don't touch the data model. Known items to include:
     and that 2025 group joins are estimated (dated from each person's first
     activity, or 1 Nov 2025, when groups replaced domains).
   - **Next (nightly, 29 Oct): Day 28,** accessibility and mobile pass.
+- **Merged and live on prod (28 Oct, owner approved #64):** Admin ›
+  Insights, including past seasons.
+  - Dev CI for its last commit failed on page-load timeouts across
+    unrelated tests (16 to 21 minutes instead of 4). A re-run of the same
+    commit passed (99/99 mobile, 98/99 desktop), so the code was fine. The
+    shared Easypanel server stalls requests now and then (one plain GET to
+    dev took 60 s, one to prod 6.5 s) while its CPU is idle. Suspects for
+    the owner to check: the `cloudflare-tunnel` container (reconnects), and
+    traffic to the `websites/cezz` WordPress site and its database (about
+    300 MB each in a few hours, possibly a crawler).
+- **Fix (28 Oct): the wishlist-opens report skips deleted groups before
+  ranking.** Opens keep a deleted group's id, so its top-30 list could fill
+  with deleted groups (dev deletes its test groups) and drop live ones;
+  this made `opens.spec.ts` flaky. Prod never deletes groups, so its report
+  was right, but now the top places only go to groups that exist.

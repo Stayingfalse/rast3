@@ -35,13 +35,14 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
 
   const [members, checkIns, inGroup, assignments, kudos, groups, opens, profiles, memberships] =
     await Promise.all([
-      db.user.count({
+      db.user.findMany({
         where: {
           profileCompleted: true,
           OR: [{ profileCompletedAt: null }, { profileCompletedAt: { lt: range.lt } }],
         },
+        select: { id: true },
       }),
-      db.seasonCheckIn.findMany({ where: { season: year }, select: { createdAt: true } }),
+      db.seasonCheckIn.findMany({ where: { season: year }, select: { userId: true, createdAt: true } }),
       db.membership.findMany({
         where: { group: { kind: { not: "TEAM" } } },
         distinct: ["userId"],
@@ -84,21 +85,27 @@ export async function seasonInsights(db: PrismaClient, year: number, now = new D
 
   const gifts = assignments.flatMap((a) => (a.purchases ? [{ ...a.purchases, a }] : []));
 
-  // 1. The season's funnel, one person counted once per step
+  // 1. The season's funnel. Each step only counts people from the step
+  // before, so it never goes over 100%. Giving and receiving are two runs.
+  const within = (ids: string[], of: Set<string>) => new Set(ids.filter((id) => of.has(id)));
+  const memberIds = new Set(members.map((m) => m.id));
+  const checked = within(checkIns.map((c) => c.userId), memberIds);
+  const grouped = within(inGroup.map((m) => m.userId), checked);
+  const picked = within(assignments.map((a) => a.assignedUserId), grouped);
+  const gave = within(gifts.map((g) => g.userId), picked);
+  const received = new Set(gifts.map((g) => g.a.wishlistOwnerId));
+  const arrived = within(gifts.filter((g) => g.receivedAt).map((g) => g.a.wishlistOwnerId), received);
+  const thanked = within(kudos.map((k) => k.userId), received);
   const funnel = [
-    { step: "Members", count: members, note: "a finished profile by the season's end" },
-    { step: "Checked in", count: checkIns.length, note: "confirmed their wishlist for this Christmas" },
-    { step: "In a group", count: inGroup.length, note: "in a workplace, community or friends group now" },
-    { step: "Picked up a list", count: distinct(assignments.map((a) => a.assignedUserId)), note: "" },
-    { step: "Gifted", count: distinct(gifts.map((g) => g.userId)), note: "marked at least one gift" },
-    { step: "Received a gift", count: distinct(gifts.map((g) => g.a.wishlistOwnerId)), note: "" },
-    {
-      step: "Said it arrived",
-      count: distinct(gifts.filter((g) => g.receivedAt).map((g) => g.a.wishlistOwnerId)),
-      note: "",
-    },
-    { step: "Posted a thank-you", count: distinct(kudos.map((k) => k.userId)), note: "" },
-  ];
+    { side: "giving", step: "Members", count: memberIds.size, note: "a finished profile by the season's end" },
+    { side: "giving", step: "Checked in", count: checked.size, note: "confirmed their wishlist for this Christmas" },
+    { side: "giving", step: "In a group", count: grouped.size, note: "in a workplace, community or friends group now" },
+    { side: "giving", step: "Picked up a list", count: picked.size, note: "" },
+    { side: "giving", step: "Gifted", count: gave.size, note: "marked at least one gift" },
+    { side: "receiving", step: "Received a gift", count: received.size, note: "" },
+    { side: "receiving", step: "Said it arrived", count: arrived.size, note: "" },
+    { side: "receiving", step: "Posted a thank-you", count: thanked.size, note: "of those who received" },
+  ] as const;
 
   // 2. By kind of group: where the giving happens (workplace pick-ups have no group)
   const groupKind = new Map(groups.map((g) => [g.id, kindOf(g.kind)]));

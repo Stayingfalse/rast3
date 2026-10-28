@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "26 October 2026";
+const LAST_UPDATED = "28 October 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -144,6 +144,14 @@ export default function PrivacyPolicyPage() {
               link carried our affiliate tag. No cookies are used and nothing
               is shared with anyone else. Site admins see totals, to know
               which lists get opened and which Amazon stores to join next.
+              Lawful basis: legitimate interests (Article 6(1)(f)).
+            </li>
+            <li>
+              <strong>To understand how the site is used</strong>: site
+              admins see season totals worked out from what the site already
+              holds (how many people checked in, picked up, gifted and said
+              thank you, by kind of group and by week). Counts only, never
+              about any one person, and nothing extra is collected for it.
               Lawful basis: legitimate interests (Article 6(1)(f)).
             </li>
             <li>

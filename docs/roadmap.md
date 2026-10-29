@@ -111,7 +111,7 @@
 | 25 | Sun 1 Nov | **Done early (bonus day, 22 Oct).** Public landing page refresh (mobile-first); onboarding itself moved to Day 12 |
 | 26 | Mon 2 Nov | **Done early (25 and 27 Oct).** Gift-received confirmation (25 Oct) and a thank-you feed for each friends and Discord group (27 Oct) |
 | 27 | Tue 3 Nov | **Done early (28 Oct).** Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
-| 28 | Wed 4 Nov | Accessibility + mobile pass |
+| 28 | Wed 4 Nov | **Done early (29 Oct).** Accessibility + mobile pass |
 | 29 | Thu 5 Nov | Performance pass |
 | 30 | Fri 6 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 
@@ -1245,3 +1245,33 @@ that don't touch the data model. Known items to include:
   with deleted groups (dev deletes its test groups) and drop live ones;
   this made `opens.spec.ts` flaky. Prod never deletes groups, so its report
   was right, but now the top places only go to groups that exist.
+- **Merged and live on prod (28 Oct, owner merged #65):** the opens
+  report only ranks groups that still exist.
+- **Nightly run, 29 Oct: Day 28, accessibility and mobile pass.**
+  - **New e2e spec `a11y.spec.ts`:** axe (WCAG 2.2 A/AA, which includes
+    24px touch targets) on every main page at desktop and Pixel 7. That
+    covers the home page (three of the six pitches), privacy, invites
+    (friends and workplace), 404, a member's home and groups, the profile
+    window, the organiser console (all tabs) and poster, and all ten admin
+    pages. It also checks that no page scrolls sideways on a phone. Serious
+    or critical problems fail CI from now on, and every finding is written
+    to `test-results/a11y/<project>.json` in the CI artifact.
+  - **Found and fixed (all were serious or critical):**
+    - Organiser console: the "Live" badge was near-white on cream.
+    - Tabs everywhere (shared component): inactive tabs were ink at 60%;
+      now the muted ink, 5.7:1.
+    - Admin › Approvals: the selected tab pointed at a panel that didn't
+      exist; the list now sits in the active tab's panel.
+    - Admin › Wishlists: the workplace filter was white text on white.
+    - Admin › Kudos: Hide buttons were white on yellow-600 (2.9:1); now
+      yellow-700 (4.9:1).
+    - Tables (shared component): wide tables that scroll sideways (Insights
+      and Affiliate on phones) couldn't be scrolled from the keyboard; a
+      table now takes focus while it overflows.
+  - **Checked by hand:** the palette's contrast. Everything used for text
+    passes; gold ink (3.5:1 on label) is only used for postmark graphics.
+    Keyboard on the public home page: every control can be reached in
+    order with a visible focus ring, each stamp row is one stop with arrow
+    keys, and nothing traps focus.
+  - Public pages already passed every rule, including best practices.
+  - **Next (nightly, 30 Oct): Day 29,** performance pass.

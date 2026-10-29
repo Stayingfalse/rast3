@@ -4,9 +4,24 @@ import * as React from "react"
 import { cn } from "~/lib/utils"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
+  // A table wider than its box scrolls sideways; keyboard users can only
+  // scroll it if it can take focus, so it does while it overflows (Day 28)
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [scrolls, setScrolls] = React.useState(false)
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1)
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   return (
     <div
+      ref={ref}
       data-slot="table-container"
+      tabIndex={scrolls ? 0 : undefined}
       className="relative w-full overflow-x-auto"
     >
       <table

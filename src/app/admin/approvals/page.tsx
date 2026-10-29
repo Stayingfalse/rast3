@@ -25,7 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
 
 type Status = "PENDING" | "ACTIVE" | "DISABLED";
@@ -84,103 +84,105 @@ export default function ApprovalsPage() {
             </TabsTrigger>
           ))}
         </TabsList>
-      </Tabs>
-
-      {error ? (
-        <p className="text-frost">{error.message}</p>
-      ) : isLoading ? (
-        <p className="text-frost-soft">Loading…</p>
-      ) : !data?.length ? (
-        <p className="text-frost-soft">
-          {status === "PENDING" ? "Nothing waiting for approval." : "None."}
-        </p>
-      ) : (
-        <ul className="grid gap-4 lg:grid-cols-2">
-          {data.map((g) => (
-            <li key={g.id}>
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <CardTitle className="break-all">{g.name}</CardTitle>
-                    <Badge variant="outline">{KIND[g.kind]}</Badge>
-                  </div>
-                  <CardDescription>
-                    Created{" "}
-                    {new Date(g.createdAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <dl className="grid grid-cols-[7rem_1fr] text-sm">
-                    {g.emailDomain && (
-                      <>
-                        <dt className="text-ink-soft py-1">Email domain</dt>
-                        <dd className="text-ink py-1 break-all">{g.emailDomain}</dd>
-                      </>
-                    )}
-                    <dt className="text-ink-soft py-1">Started by</dt>
-                    <dd className="text-ink py-1 break-all">
-                      {g.createdBy
-                        ? `${g.createdBy.name ?? "Unnamed"} (${g.createdBy.email ?? "no email"})`
-                        : "Unknown (from before groups)"}
-                    </dd>
-                    <dt className="text-ink-soft py-1">Members</dt>
-                    <dd className="text-ink py-1 tabular-nums">{g.members}</dd>
-                  </dl>
-                </CardContent>
-                <CardFooter className="flex flex-wrap gap-2">
-                  {g.status !== "ACTIVE" && (
-                    <Button
-                      disabled={setGroupStatus.isPending}
-                      onClick={() =>
-                        setGroupStatus.mutate({ groupId: g.id, status: "ACTIVE" })
-                      }
-                    >
-                      {g.status === "PENDING" ? "Approve" : "Re-open"}
-                    </Button>
-                  )}
-                  {g.status !== "DISABLED" && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" disabled={setGroupStatus.isPending}>
-                          Close
+        {/* one list, filtered by the tabs: it sits in the active tab's panel */}
+        <TabsContent value={status} className="flex flex-col gap-4 pt-2">
+          {error ? (
+            <p className="text-frost">{error.message}</p>
+          ) : isLoading ? (
+            <p className="text-frost-soft">Loading…</p>
+          ) : !data?.length ? (
+            <p className="text-frost-soft">
+              {status === "PENDING" ? "Nothing waiting for approval." : "None."}
+            </p>
+          ) : (
+            <ul className="grid gap-4 lg:grid-cols-2">
+              {data.map((g) => (
+                <li key={g.id}>
+                  <Card className="h-full">
+                    <CardHeader>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle className="break-all">{g.name}</CardTitle>
+                        <Badge variant="outline">{KIND[g.kind]}</Badge>
+                      </div>
+                      <CardDescription>
+                        Created{" "}
+                        {new Date(g.createdAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <dl className="grid grid-cols-[7rem_1fr] text-sm">
+                        {g.emailDomain && (
+                          <>
+                            <dt className="text-ink-soft py-1">Email domain</dt>
+                            <dd className="text-ink py-1 break-all">{g.emailDomain}</dd>
+                          </>
+                        )}
+                        <dt className="text-ink-soft py-1">Started by</dt>
+                        <dd className="text-ink py-1 break-all">
+                          {g.createdBy
+                            ? `${g.createdBy.name ?? "Unnamed"} (${g.createdBy.email ?? "no email"})`
+                            : "Unknown (from before groups)"}
+                        </dd>
+                        <dt className="text-ink-soft py-1">Members</dt>
+                        <dd className="text-ink py-1 tabular-nums">{g.members}</dd>
+                      </dl>
+                    </CardContent>
+                    <CardFooter className="flex flex-wrap gap-2">
+                      {g.status !== "ACTIVE" && (
+                        <Button
+                          disabled={setGroupStatus.isPending}
+                          onClick={() =>
+                            setGroupStatus.mutate({ groupId: g.id, status: "ACTIVE" })
+                          }
+                        >
+                          {g.status === "PENDING" ? "Approve" : "Re-open"}
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Close {g.name}?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Members won&apos;t be able to pick up wishlists in
-                            it. You can re-open it later.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Keep it open</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() =>
-                              setGroupStatus.mutate({ groupId: g.id, status: "DISABLED" })
-                            }
-                          >
-                            Close group
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                  {g.kind !== "TEAM" && (
-                    <Button asChild variant="link">
-                      <Link href={`/groups/${g.id}/manage`}>Open console</Link>
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+                      )}
+                      {g.status !== "DISABLED" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" disabled={setGroupStatus.isPending}>
+                              Close
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Close {g.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Members won&apos;t be able to pick up wishlists in
+                                it. You can re-open it later.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep it open</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() =>
+                                  setGroupStatus.mutate({ groupId: g.id, status: "DISABLED" })
+                                }
+                              >
+                                Close group
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      {g.kind !== "TEAM" && (
+                        <Button asChild variant="link">
+                          <Link href={`/groups/${g.id}/manage`}>Open console</Link>
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

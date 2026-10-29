@@ -208,7 +208,7 @@ function KudosRow({ kudos, refetch }: { kudos: AdminKudosItem; refetch: () => vo
       </td>
       <td className="px-3 py-2 flex gap-2">
         <button
-          className="rounded bg-yellow-600 px-2 py-1 text-xs text-white hover:bg-yellow-700 disabled:opacity-60"
+          className="rounded bg-yellow-700 px-2 py-1 text-xs text-white hover:bg-yellow-800 disabled:opacity-60"
           onClick={handleHide}
           disabled={isHiding || isDeleting}
         >

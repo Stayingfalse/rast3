@@ -311,7 +311,7 @@ export default function AdminLinksPage() {
               id="domain-filter"
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="text-ink rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="all">All workplaces</option>
               {workplaces.map((name) => (

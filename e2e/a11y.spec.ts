@@ -7,8 +7,9 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from "
 import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle } from "./helpers";
 
 /**
- * Day 28: accessibility. Every main page, signed out and in, at desktop and
- * Pixel 7 widths, checked with axe against WCAG 2.2 A/AA. Serious and
+ * Day 28: accessibility and mobile. Every main page, signed out and in, at
+ * desktop and Pixel 7 widths, checked with axe against WCAG 2.2 A/AA (which
+ * includes 24px touch targets), and for sideways scrolling. Serious and
  * critical problems fail the run; everything found is written to
  * test-results/a11y/<project>.json for the record.
  */
@@ -38,6 +39,12 @@ async function audit(page: Page, name: string) {
     help: v.help,
     nodes: v.nodes.slice(0, 5).map((n) => n.target.join(" ")),
   }));
+  // mobile pass: the page itself never scrolls sideways (wide tables scroll
+  // inside their own box)
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  if (overflow > 1) {
+    found.push({ page: name, id: "page-scrolls-sideways", impact: "serious", help: `${overflow}px wider than the screen`, nodes: [] });
+  }
   findings.push(...found);
   const blocking = found.filter((f) => f.impact === "serious" || f.impact === "critical");
   expect

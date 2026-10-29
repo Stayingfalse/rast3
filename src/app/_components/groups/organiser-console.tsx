@@ -92,7 +92,8 @@ export function OrganiserConsole({ groupId }: { groupId: string }) {
           </span>
           <Badge
             variant={g.status === "ACTIVE" ? "secondary" : "outline"}
-            className="text-frost"
+            // frost text only on the outline badge, which sits on the night sky
+            className={g.status === "ACTIVE" ? undefined : "text-frost"}
           >
             {STATUS[g.status]}
           </Badge>

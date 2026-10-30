@@ -12,7 +12,7 @@ import { type Session } from "next-auth";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import { auth } from "~/server/auth";
+import { getSession } from "~/server/auth";
 import { db } from "~/server/db";
 import { hitRateLimit } from "~/server/rate-limit";
 import { createChildLogger } from "~/utils/logger";
@@ -58,7 +58,7 @@ export const createTRPCContext = async (_opts: { headers: Headers }) => {
   // Get the session using NextAuth v5's auth() function
   let session: Session | null = null;
   try {
-    session = await auth();
+    session = await getSession();
   } catch (error) {
     logger.error({
       error: error instanceof Error ? error.message : String(error)

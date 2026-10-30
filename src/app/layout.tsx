@@ -5,13 +5,13 @@ import { Archivo } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 
 import { SessionProvider } from "next-auth/react";
+import { getSession } from "~/server/auth";
 import { TRPCReactProvider } from "~/trpc/react";
 import { AddToHomeScreen } from "./_components/add-to-home-screen";
 import { SiteFooter } from "./_components/site-footer";
 import AdminButton from "./_components/admin-button";
 import { Sky } from "./_components/post/sky";
 import AuthButton from "./_components/auth-button";
-import { AuthProvider } from "./_components/auth-provider";
 import { CookieConsent } from "./_components/cookie-consent";
 import { ServiceWorkerRegistration } from "./_components/service-worker-registration";
 import WishlistReportsAlert from "./_components/wishlist-reports-alert";
@@ -86,11 +86,14 @@ export const viewport: Viewport = {
   themeColor: "#13264d",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // the session goes to the browser with the page, so nothing waits to ask
+  // for it again (and there's one provider, not two)
+  const session = await getSession();
   return (
     <html lang="en" className={`${archivo.variable}`} suppressHydrationWarning>
       <head>
@@ -120,7 +123,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <SessionProvider>
+      <SessionProvider session={session}>
         <body>
           {" "}
           <main className="bg-night relative z-10 flex min-h-screen flex-col items-center overflow-x-clip bg-[url('/plaid.png')] bg-fixed bg-top bg-repeat">
@@ -132,9 +135,7 @@ export default function RootLayout({
             <Sky />{" "}
             <div className="relative flex w-full max-w-6xl flex-col items-center gap-16 px-4 pt-[164px] pb-24 sm:px-6 sm:pt-[236px]">
               <WishlistReportsAlert />
-              <AuthProvider>
-                <TRPCReactProvider>{children}</TRPCReactProvider>
-              </AuthProvider>{" "}
+              <TRPCReactProvider>{children}</TRPCReactProvider>{" "}
             </div>{" "}
             <SiteFooter />
             {/* Cookie Consent Banner */}

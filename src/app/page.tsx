@@ -4,11 +4,11 @@ import { GiftingSwitcher } from "~/app/_components/groups/gifting-switcher";
 import { GiftsToYou } from "~/app/_components/gifts-to-you";
 import { SeasonGate } from "~/app/_components/season-gate";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
-import { auth } from "~/server/auth";
+import { getSession } from "~/server/auth";
 import { db } from "~/server/db";
 import { getPublicTotals } from "~/server/public-stats";
 import { currentSeason, publicSeason, ukDay } from "~/server/season";
-import { HydrateClient } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 import { HomePitch } from "./_components/home/home-pitch";
 import { parsePersona } from "./_components/home/personas";
 import HomeMarketingServer from "./_components/home-marketing-server";
@@ -22,7 +22,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ for?: string }>;
 }) {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session?.user) {
     const { for: forWhom } = await searchParams;
@@ -47,6 +47,18 @@ export default async function Home({
       </HydrateClient>
     );
   }
+
+  // Start what the page needs on the server (29 Oct): it streams to the
+  // browser with the page, instead of each part asking in turn after it loads
+  void api.season.status.prefetch();
+  void api.profile.getCurrentProfile.prefetch();
+  void api.groups.mine.prefetch();
+  void api.wishlist.getMyAssignments.prefetch();
+  void api.wishlist.getAssignmentStats.prefetch();
+  void api.wishlist.giftsToMe.prefetch();
+  void api.stamps.getMyAlbum.prefetch();
+  void api.share.myGroups.prefetch();
+  void api.kudos.getRecommendedScope.prefetch();
 
   return (
     <HydrateClient>

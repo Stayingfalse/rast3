@@ -130,26 +130,6 @@ const config = withBundleAnalyzer({
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
-
-  // Webpack optimizations for production builds only
-  // Turbopack handles development mode automatically
-  ...(process.env.NODE_ENV === "production" && {
-    webpack: (config, { isServer }) => {
-      if (!isServer) {
-        config.optimization.splitChunks = {
-          chunks: "all",
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: "vendors",
-              chunks: "all",
-            },
-          },
-        };
-      }
-      return config;
-    },
-  }),
 });
 
 export default config;

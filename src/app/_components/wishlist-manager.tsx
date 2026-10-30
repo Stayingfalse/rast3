@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
@@ -15,6 +15,9 @@ type WishlistAssignment = RouterOutputs["wishlist"]["getMyAssignments"][number];
 
 export function WishlistManager() {
   const { data: sessionData } = useSession();
+  // the page is rendered on the server too, where there's no window
+  const [origin, setOrigin] = useState("https://raosanta.uk");
+  useEffect(() => setOrigin(window.location.origin), []);
   const [selectedAssignment, setSelectedAssignment] = useState<string | null>(
     null,
   );
@@ -401,7 +404,7 @@ export function WishlistManager() {
                 <span className="tabular">
                   {new Date(
                     assignment.purchases.purchasedAt,
-                  ).toLocaleDateString("en-GB")}
+                  ).toLocaleDateString("en-GB", { timeZone: "Europe/London" })}
                 </span>
               </p>
               {assignment.purchases.receivedAt && (
@@ -410,7 +413,7 @@ export function WishlistManager() {
                   <span className="tabular">
                     {new Date(
                       assignment.purchases.receivedAt,
-                    ).toLocaleDateString("en-GB")}
+                    ).toLocaleDateString("en-GB", { timeZone: "Europe/London" })}
                   </span>
                 </p>
               )}
@@ -612,7 +615,7 @@ export function WishlistManager() {
             </p>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <a
-                href={`mailto:?subject=Join%20Random%20Acts%20of%20Santa&body=Share%20your%20wishlist%20and%20send%20a%20colleague%20a%20gift%3A%20${encodeURIComponent(window.location.origin)}`}
+                href={`mailto:?subject=Join%20Random%20Acts%20of%20Santa&body=Share%20your%20wishlist%20and%20send%20a%20colleague%20a%20gift%3A%20${encodeURIComponent(origin)}`}
                 className="btn-post"
                 target="_blank"
                 rel="noopener noreferrer"

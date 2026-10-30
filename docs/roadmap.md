@@ -1306,10 +1306,10 @@ that don't touch the data model. Known items to include:
     The server now waits for them (fast local reads). The wishlist panel
     read `window` while rendering, and showed dates in the browser's time
     zone; both fixed.
-  - **Not changed (and why):** the database. The busiest tables are small
-    (hundreds to low thousands of rows), queries take milliseconds, and
-    picking up strangers' lists loading every candidate into memory is
-    fine at this size; worth revisiting past about 20,000 members. Pages
+  - **Not changed (and why):** the database. Every page and API call
+    answers in about the network's round trip, so queries aren't the
+    bottleneck today. Picking up strangers' lists still loads every
+    candidate into memory; worth a look if the site grows a lot. Pages
     that were static (privacy, sign-in screens) now render per request,
     because the layout reads the session; they're cheap.
   - **Tests:** dev CI 105/105 on desktop and on mobile (run 41008803145).

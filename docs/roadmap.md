@@ -112,7 +112,7 @@
 | 26 | Mon 2 Nov | **Done early (25 and 27 Oct).** Gift-received confirmation (25 Oct) and a thank-you feed for each friends and Discord group (27 Oct) |
 | 27 | Tue 3 Nov | **Done early (28 Oct).** Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | **Done early (29 Oct).** Accessibility + mobile pass |
-| 29 | Thu 5 Nov | Performance pass |
+| 29 | Thu 5 Nov | **Done early (30 Oct).** Performance pass |
 | 30 | Fri 6 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 
 ### Week 5: launch (8–15 Nov)
@@ -1275,3 +1275,46 @@ that don't touch the data model. Known items to include:
     keys, and nothing traps focus.
   - Public pages already passed every rule, including best practices.
   - **Next (nightly, 30 Oct): Day 29,** performance pass.
+- **Nightly run, 30 Oct: Day 29, performance pass.**
+  - **Measured first** (prod, public home page, empty cache): 418 KB of
+    script (one 360 KB "vendors" file holding every library, admin-only
+    ones included), six `/api/auth/session` calls, and thank-you photos
+    fetched at 828px wide for 350px cards. Server time is small: about
+    250 ms from the test machine for any page or API call, nearly all of
+    it the network. Signed in, the home page loaded its data as a chain
+    of round trips after the page arrived: the session, then the season,
+    then the groups, then the lists.
+  - **Changed:**
+    - Removed the custom webpack setting that forced every library into
+      that one file; Next splits scripts per page again. Public home
+      page: 418 KB to 310 KB of script (-26%); admin-only code no longer
+      loads for visitors.
+    - One SessionProvider (there were two, nested), given the server's
+      session: no session calls on load (was six).
+    - `getSession()`: one session lookup per page render, shared by the
+      layout, the page and server-side tRPC calls (was up to three).
+    - The signed-in home page fetches what it shows on the server (season,
+      profile, groups, lists, stats, gifts to you, stamps, totals), so it
+      arrives with the page. The browser's query client now uses the
+      shared setup (superjson, 30 s before data counts as stale), which is
+      what lets it pick that data up.
+    - Thank-you photos ask for the size they're shown at (384px on
+      desktop rather than 828px, about a quarter of the bytes).
+  - **Found on the way:** the first try streamed the prefetches still
+    pending, so the server rendered "loading" and the browser the page:
+    React hydration errors on every signed-in page (e2e caught all 10).
+    The server now waits for them (fast local reads). The wishlist panel
+    read `window` while rendering, and showed dates in the browser's time
+    zone; both fixed.
+  - **Not changed (and why):** the database. The busiest tables are small
+    (hundreds to low thousands of rows), queries take milliseconds, and
+    picking up strangers' lists loading every candidate into memory is
+    fine at this size; worth revisiting past about 20,000 members. Pages
+    that were static (privacy, sign-in screens) now render per request,
+    because the layout reads the session; they're cheap.
+  - **Tests:** dev CI 105/105 on desktop and on mobile (run 41008803145).
+    The first deploy failed with a network error downloading npm packages
+    on the server; one re-run built fine.
+  - **Next (nightly, 31 Oct): Day 30,** privacy and legal: data export and
+    delete, terms, affiliate disclosure, cookies, 24-month inactive
+    deletion, 16+ confirmation.

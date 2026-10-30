@@ -48,17 +48,20 @@ export default async function Home({
     );
   }
 
-  // Start what the page needs on the server (29 Oct): it streams to the
-  // browser with the page, instead of each part asking in turn after it loads
-  void api.season.status.prefetch();
-  void api.profile.getCurrentProfile.prefetch();
-  void api.groups.mine.prefetch();
-  void api.wishlist.getMyAssignments.prefetch();
-  void api.wishlist.getAssignmentStats.prefetch();
-  void api.wishlist.giftsToMe.prefetch();
-  void api.stamps.getMyAlbum.prefetch();
-  void api.share.myGroups.prefetch();
-  void api.kudos.getRecommendedScope.prefetch();
+  // Fetch what the page shows on the server (29 Oct), so it arrives with the
+  // page instead of each part asking in turn after it loads. Awaited, so the
+  // server and the browser render the same thing (no hydration mismatch).
+  await Promise.all([
+    api.season.status.prefetch(),
+    api.profile.getCurrentProfile.prefetch(),
+    api.groups.mine.prefetch(),
+    api.wishlist.getMyAssignments.prefetch(),
+    api.wishlist.getAssignmentStats.prefetch(),
+    api.wishlist.giftsToMe.prefetch(),
+    api.stamps.getMyAlbum.prefetch(),
+    api.share.myGroups.prefetch(),
+    api.kudos.getRecommendedScope.prefetch(),
+  ]);
 
   return (
     <HydrateClient>

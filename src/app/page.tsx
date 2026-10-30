@@ -4,11 +4,11 @@ import { GiftingSwitcher } from "~/app/_components/groups/gifting-switcher";
 import { GiftsToYou } from "~/app/_components/gifts-to-you";
 import { SeasonGate } from "~/app/_components/season-gate";
 import { WishlistManager } from "~/app/_components/wishlist-manager";
-import { auth } from "~/server/auth";
+import { getSession } from "~/server/auth";
 import { db } from "~/server/db";
 import { getPublicTotals } from "~/server/public-stats";
 import { currentSeason, publicSeason, ukDay } from "~/server/season";
-import { HydrateClient } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 import { HomePitch } from "./_components/home/home-pitch";
 import { parsePersona } from "./_components/home/personas";
 import HomeMarketingServer from "./_components/home-marketing-server";
@@ -22,7 +22,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ for?: string }>;
 }) {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session?.user) {
     const { for: forWhom } = await searchParams;
@@ -47,6 +47,21 @@ export default async function Home({
       </HydrateClient>
     );
   }
+
+  // Fetch what the page shows on the server (29 Oct), so it arrives with the
+  // page instead of each part asking in turn after it loads. Awaited, so the
+  // server and the browser render the same thing (no hydration mismatch).
+  await Promise.all([
+    api.season.status.prefetch(),
+    api.profile.getCurrentProfile.prefetch(),
+    api.groups.mine.prefetch(),
+    api.wishlist.getMyAssignments.prefetch(),
+    api.wishlist.getAssignmentStats.prefetch(),
+    api.wishlist.giftsToMe.prefetch(),
+    api.stamps.getMyAlbum.prefetch(),
+    api.share.myGroups.prefetch(),
+    api.kudos.getRecommendedScope.prefetch(),
+  ]);
 
   return (
     <HydrateClient>

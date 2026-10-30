@@ -1,6 +1,7 @@
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type DefaultSession } from "next-auth";
+import { cache } from "react";
 import Discord from "next-auth/providers/discord";
 import Facebook from "next-auth/providers/facebook";
 import GitHub from "next-auth/providers/github";
@@ -245,3 +246,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   debug: process.env.NODE_ENV === "development",
 });
+
+/**
+ * The signed-in session, looked up once per page render (29 Oct): the layout,
+ * the page and the tRPC calls it makes on the server all share it.
+ */
+export const getSession = cache(() => auth());

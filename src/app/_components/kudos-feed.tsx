@@ -202,7 +202,7 @@ const ImageCarousel: React.FC<
             className="max-h-[400px] cursor-pointer rounded-lg object-contain shadow-sm transition-shadow hover:shadow-md"
             onClick={handleImageClick}
             onError={handleImageError}
-            sizes="(max-width: 768px) 100vw, 800px"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
           />
         </div>
       </div>
@@ -220,7 +220,7 @@ const ImageCarousel: React.FC<
           className="max-h-[400px] cursor-pointer rounded-lg object-contain shadow-sm transition-shadow hover:shadow-md"
           onClick={handleImageClick}
           onError={handleImageError}
-          sizes="(max-width: 768px) 50vw, 33vw"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
         />
         {/* Navigation dots */}
         <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 transform space-x-2">

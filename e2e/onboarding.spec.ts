@@ -53,6 +53,7 @@ test("a new member fills in their profile, then joins their workplace", async ({
   await dialog.getByRole("button", { name: "Save and choose a group" }).click();
   await expect(dialog.getByText("Random Acts of Santa is for people aged 16 and over")).toBeVisible();
   await dialog.getByLabel("I'm 16 or over").check();
+  await expect(dialog.getByText("Random Acts of Santa is for people aged 16 and over")).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "onboarding-profile");
   await dialog.getByRole("button", { name: "Save and choose a group" }).click();

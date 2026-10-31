@@ -217,7 +217,10 @@ export function ProfileSetupModal({
                 <Checkbox
                   id="over16"
                   checked={over16}
-                  onCheckedChange={(v) => setOver16(v === true)}
+                  onCheckedChange={(v) => {
+                    setOver16(v === true);
+                    if (v === true) setErrors(({ over16: _, ...rest }) => rest);
+                  }}
                   aria-invalid={!!errors.over16}
                 />
                 <FieldContent>

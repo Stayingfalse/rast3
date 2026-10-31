@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { deleteAccount } from "~/server/account";
 import { createTRPCRouter, siteAdminProcedure } from "~/server/api/trpc";
 import {
   affiliateFor,
@@ -214,7 +215,7 @@ export const adminRouter = createTRPCRouter({
       if (input.userId === ctx.admin.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "You can't delete your own account here" });
       }
-      await ctx.db.user.delete({ where: { id: input.userId } });
+      await deleteAccount(ctx.db, input.userId);
       return { ok: true };
     }),
 

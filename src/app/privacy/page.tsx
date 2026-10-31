@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "28 October 2026";
+const LAST_UPDATED = "31 October 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -108,6 +108,12 @@ export default function PrivacyPolicyPage() {
             <strong>Share cards.</strong> If you choose to share a card, we
             store a random link code, what the card is for and how many times
             its page has been viewed.
+          </p>
+          <p>
+            <strong>Your account&apos;s dates.</strong> When you last used the
+            site while signed in (updated at most once a day), so we can delete
+            accounts nobody uses, and when you confirmed you&apos;re 16 or
+            over.
           </p>
           <p>
             <strong>Technical data.</strong> Our servers keep short-lived logs
@@ -263,10 +269,22 @@ export default function PrivacyPolicyPage() {
         <Section id="retention" title="How long we keep it">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <strong>Your account and profile</strong>: until you ask us to
-              delete them. Membership carries over from one Christmas to the
-              next so your stamp album keeps working. Accounts that have not
-              been signed into for 24 months are deleted.
+              <strong>Your account and profile</strong>: until you delete
+              them, which you can do yourself on{" "}
+              <Link
+                href="/account"
+                className="text-post font-semibold underline underline-offset-4"
+              >
+                Your data
+              </Link>
+              . Membership carries over from one Christmas to the next so your
+              stamp album keeps working. Accounts nobody has used while signed
+              in for 24 months are deleted automatically, with everything in
+              them. For members from before October 2026, we count from their
+              last recorded activity (a pick-up, gift, thank-you, check-in or
+              sign-in), or from 1 November 2025 if that&apos;s later. If you
+              took part last year and don&apos;t come back, we don&apos;t email
+              you, and your account goes 24 months after you were last here.
             </li>
             <li>
               <strong>
@@ -340,8 +358,16 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
           <p>
-            You can update your profile on the site at any time. For anything
-            else, email <Mail />. We will respond within one month. To have a
+            You can update your profile on the site at any time, and on{" "}
+            <Link
+              href="/account"
+              className="text-post font-semibold underline underline-offset-4"
+            >
+              Your data
+            </Link>{" "}
+            you can download everything we hold about you (as a JSON file) or
+            delete your account straight away. For anything else, email{" "}
+            <Mail />. We will respond within one month. To have a
             thank-you removed, ask your organiser or email us.
           </p>
           <p>
@@ -362,7 +388,8 @@ export default function PrivacyPolicyPage() {
 
         <Section id="age" title="Age">
           <p>
-            Random Acts of Santa is for people aged 16 and over. If you are
+            Random Acts of Santa is for people aged 16 and over, and new
+            members confirm this when they set up their profile. If you are
             under 16, please don&apos;t use it. If we learn that someone under
             16 has an account, we will delete it.
           </p>

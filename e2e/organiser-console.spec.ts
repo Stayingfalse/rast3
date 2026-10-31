@@ -35,14 +35,14 @@ test("set up: a group with an organiser and a friend", async ({ page }, testInfo
   const p = testInfo.project.name;
   name = `E2E Supper Club ${p}`;
   await loginAs(page, { email: `host-${p}@${E}` });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Hana", lastName: "Host" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Hana", lastName: "Host" });
   const g = (await unwrap(
     await mutate(page.request, "groups.create", { name, kind: "FRIENDS" }),
   )) as { id: string; joinCode: string };
   groupId = g.id;
   code = g.joinCode;
   await loginAs(page, { email: `guest-${p}@${E}` });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Gus", lastName: "Guest" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Gus", lastName: "Guest" });
   expect((await mutate(page.request, "groups.join", { code })).status()).toBe(200);
   // approved, so the only thing hiding emails is that it's a friends group
   await loginAs(page, { email: `console-site-${p}@${E}`, adminLevel: "SITE" });

@@ -71,6 +71,7 @@ test("a friend joins with the link", async ({ page }, testInfo) => {
   await expect(dialog.getByRole("heading", { name: "Complete Your Profile" })).toBeVisible();
   await dialog.getByLabel("First name").fill("Fran");
   await dialog.getByLabel("Last name").fill("Friend");
+  await dialog.getByLabel("I'm 16 or over").check();
   await dialog.getByRole("button", { name: "Save and continue" }).click();
   await expect(page.getByText(`You're in ${groupName}.`)).toBeVisible();
   await settle(page);

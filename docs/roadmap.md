@@ -113,7 +113,7 @@
 | 27 | Tue 3 Nov | **Done early (28 Oct).** Privacy-friendly analytics for the monetisation case: affiliate clicks, funnel, group growth |
 | 28 | Wed 4 Nov | **Done early (29 Oct).** Accessibility + mobile pass |
 | 29 | Thu 5 Nov | **Done early (30 Oct).** Performance pass |
-| 30 | Fri 6 Nov | Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
+| 30 | Fri 6 Nov | **Done early (31 Oct).** Privacy and legal: data export/delete, terms, affiliate disclosure, cookies. Privacy policy commitments (18 Oct): automatic deletion of accounts not signed into for 24 months, self-service data export and delete, and a 16+ confirmation at sign-up. |
 
 ### Week 5: launch (8–15 Nov)
 | Day | Date | Focus |
@@ -1318,3 +1318,51 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 31 Oct): Day 30,** privacy and legal: data export and
     delete, terms, affiliate disclosure, cookies, 24-month inactive
     deletion, 16+ confirmation.
+- **Nightly run, 31 Oct: Day 30, privacy and legal.**
+  - **Your data (`/account`, linked from the footer and the privacy
+    policy):** download everything held about you as one JSON file
+    (profile, sign-in methods, groups, check-ins, pick-ups and gifts, gifts
+    sent to you, thank-yous and photos, share cards, reminder emails).
+    Nobody else is named in it and no sign-in tokens are included. Delete
+    your account by typing "delete": it goes straight away with everything
+    in it, including thank-you photos in storage and the wishlist link on
+    old gift pages. Groups you started stay for their members. Site admins
+    must hand over admin access first. The admin console's delete now does
+    the same clean-up (it used to leave photos in storage).
+  - **16+ confirmation:** a first profile needs "I'm 16 or over" (stored as
+    `ageConfirmedAt`). Existing members aren't forced; they can confirm it
+    when they edit their profile.
+  - **24-month inactive deletion:** new `lastSeenAt`, refreshed at most once
+    a day when a signed-in session is used. Existing members are backfilled
+    from their latest activity (session, profile, pick-up, gift, thank-you,
+    check-in), no earlier than 1 Nov 2025, so the first deletions can't
+    happen before Nov 2027. The hourly schedule deletes up to 50 at a time;
+    site admins and test users are never touched by it.
+  - **Terms (`/terms`):** a plain-English draft: who it's for, how gifting
+    works, being kind, groups, affiliate links, liability (with the
+    consumer-law carve-outs), leaving, England and Wales law. **Owner:
+    please read before it goes to prod.**
+  - **Privacy policy (31 Oct):** rights now point to self-service export
+    and delete; retention explains the 24-month rule and how existing
+    members are counted (and that last year's members who don't return get
+    no emails); the age section says new members confirm it; "what we
+    collect" lists the two new dates.
+  - **Already in place, checked:** the Amazon Associates disclosure is in
+    the footer, on gift pages and in the policy; cookies are essential-only
+    and listed.
+  - **Migration:** `20261031050000_privacy` (two nullable columns, a
+    backfill, an index). Applied on dev ("migrated").
+  - **Found on the way:** the first dev run had profile saves failing
+    (500) on a new member's first request: the unawaited last-seen update
+    raced the save on the same row. Signing in now sets `lastSeenAt` and
+    the daily refresh is awaited. The 16+ error also stayed visible after
+    ticking the box; fixed.
+  - **Tests:** new `account.spec.ts` (16+ rule, export, self-delete, admins
+    can't, 24-month clean-up deletes only the stale account); a11y now
+    covers `/terms` and `/account`. Dev CI 110/110 on desktop and on
+    mobile (run 41173630507). Screenshots in `e2e-screenshots/privacy/`.
+  - **Backlog idea:** email people a month before the 24-month deletion
+    ("still want your account?"), once the first deletions are close
+    (2027).
+  - **Next (nightly, 1 Nov): Day 31,** full regression on dev and the
+    launch checklist.

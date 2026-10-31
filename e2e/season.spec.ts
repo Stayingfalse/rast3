@@ -114,6 +114,7 @@ test("pick-ups wait for the season unless a group is opened early", async ({ pag
   const name = `E2E Early Birds ${p}`;
   await loginAs(page, { email: `early-a-${p}@${E}` });
   await mutate(page.request, "profile.saveProfile", {
+    over16: true,
     firstName: "Ena",
     lastName: "Early",
     amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2EEAR0001",
@@ -124,6 +125,7 @@ test("pick-ups wait for the season unless a group is opened early", async ({ pag
   await loginAs(page, { email: `early-b-${p}@${E}` });
   // a new member's first profile is their check-in
   await mutate(page.request, "profile.saveProfile", {
+    over16: true,
     firstName: "Eli",
     lastName: "Early",
     amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2EEAR0002",

@@ -37,6 +37,7 @@ interface ProfileSetupModalProps {
     amazonWishlistUrl?: string | null;
     emailReminders?: boolean;
     profileCompleted?: boolean;
+    ageConfirmedAt?: Date | string | null;
   } | null;
 }
 
@@ -70,6 +71,9 @@ export function ProfileSetupModal({
   const [lastName, setLastName] = useState("");
   const [wishlist, setWishlist] = useState("");
   const [reminders, setReminders] = useState(true);
+  // Day 30: "I'm 16 or over", asked until someone has confirmed it once
+  const askAge = !existingProfile?.ageConfirmedAt;
+  const [over16, setOver16] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fill the form when the window opens, not on every profile refetch:
@@ -81,6 +85,7 @@ export function ProfileSetupModal({
       setLastName(existingProfile?.lastName ?? "");
       setWishlist(existingProfile?.amazonWishlistUrl ?? "");
       setReminders(existingProfile?.emailReminders ?? true);
+      setOver16(false);
       setErrors({});
     }
     wasOpen.current = isOpen;
@@ -104,9 +109,18 @@ export function ProfileSetupModal({
     if (url && !amazonWishlistRegex.test(url)) {
       next.wishlist = "That doesn't look like an Amazon wishlist link";
     }
+    if (askAge && !isEditing && !over16) {
+      next.over16 = "Random Acts of Santa is for people aged 16 and over";
+    }
     setErrors(next);
     if (Object.keys(next).length) return;
-    save.mutate({ firstName, lastName, amazonWishlistUrl: url, emailReminders: reminders });
+    save.mutate({
+      firstName,
+      lastName,
+      amazonWishlistUrl: url,
+      emailReminders: reminders,
+      ...(askAge && over16 ? { over16: true } : {}),
+    });
   };
 
   return (
@@ -198,6 +212,37 @@ export function ProfileSetupModal({
                 </FieldDescription>
               </FieldContent>
             </Field>
+            {askAge && (
+              <Field orientation="horizontal" data-invalid={!!errors.over16 || undefined}>
+                <Checkbox
+                  id="over16"
+                  checked={over16}
+                  onCheckedChange={(v) => {
+                    setOver16(v === true);
+                    if (v === true) setErrors(({ over16: _, ...rest }) => rest);
+                  }}
+                  aria-invalid={!!errors.over16}
+                />
+                <FieldContent>
+                  <FieldLabel htmlFor="over16">I&apos;m 16 or over</FieldLabel>
+                  {errors.over16 ? (
+                    <FieldError>{errors.over16}</FieldError>
+                  ) : (
+                    <FieldDescription>
+                      Random Acts of Santa is for people aged 16 and over. See the{" "}
+                      <a href="/terms" target="_blank" className="underline underline-offset-4">
+                        terms
+                      </a>{" "}
+                      and{" "}
+                      <a href="/privacy" target="_blank" className="underline underline-offset-4">
+                        privacy policy
+                      </a>
+                      .
+                    </FieldDescription>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
           </FieldGroup>
 
           {errors.submit && (

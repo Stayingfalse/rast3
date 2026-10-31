@@ -56,6 +56,7 @@ test("set up: two friends groups, a gift and a thank-you in each", async ({ page
     expect(
       (
         await mutate(page.request, "profile.saveProfile", {
+    over16: true,
           firstName: first,
           lastName: "Thanks",
           amazonWishlistUrl: list(n),

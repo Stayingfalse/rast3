@@ -45,7 +45,7 @@ test("set up: lists on amazon.de and amazon.co.uk in a group with affiliate link
   const p = testInfo.project.name;
   groupName = `E2E Opens ${p}`;
   const save = (first: string, url: string) =>
-    mutate(page.request, "profile.saveProfile", { firstName: first, lastName: "Opens", amazonWishlistUrl: url });
+    mutate(page.request, "profile.saveProfile", { over16: true, firstName: first, lastName: "Opens", amazonWishlistUrl: url });
 
   await loginAs(page, { email: who("de", p) });
   expect((await save("Dieter", "https://www.amazon.de/hz/wishlist/ls/E2EOPENDE1")).status()).toBe(200);

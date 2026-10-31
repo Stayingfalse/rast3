@@ -118,6 +118,7 @@ test("a colleague joins from the link with its code, then fills in their profile
   await expect(dialog.getByRole("heading", { name: "Complete Your Profile" })).toBeVisible();
   await dialog.getByLabel("First name").fill("Cole");
   await dialog.getByLabel("Last name").fill("League");
+  await dialog.getByLabel("I'm 16 or over").check();
   await dialog.getByRole("button", { name: "Save and continue" }).click();
   await expect(page.getByText(`You're in ${domain}.`)).toBeVisible();
   await settle(page);

@@ -21,6 +21,7 @@ const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
   r.post(`/api/trpc/${path}`, { data: { json: input ?? null } });
 const profile = (r: APIRequestContext, first: string, list: string) =>
   mutate(r, "profile.saveProfile", {
+    over16: true,
     firstName: first,
     lastName: "Friend",
     amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/${list}`,

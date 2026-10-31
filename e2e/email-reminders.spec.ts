@@ -58,24 +58,24 @@ test("set up: checked in, not checked in, and opted out", async ({ page }, testI
   const list = (n: string) => `https://www.amazon.co.uk/hz/wishlist/ls/E2EREM000${n}`;
   // a first profile with a wishlist is that season's check-in
   await loginAs(page, { email: who("in", p) });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Ina", lastName: "In", amazonWishlistUrl: list("1") });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Ina", lastName: "In", amazonWishlistUrl: list("1") });
   const g = (await unwrap(
     await mutate(page.request, "groups.create", { name: `E2E Reminders ${p}`, kind: "FRIENDS" }),
   )) as { id: string; joinCode: string };
   groupId = g.id;
 
   await loginAs(page, { email: who("out", p) });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Otto", lastName: "Out" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Otto", lastName: "Out" });
 
   // a member from last year who hasn't come back yet (owner, 26 Oct: never emailed)
   await loginAs(page, { email: who("old", p) });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Olga", lastName: "Old" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Olga", lastName: "Old" });
 
   await loginAs(page, { email: who("off", p) });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Ofelia", lastName: "Off", emailReminders: false });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Ofelia", lastName: "Off", emailReminders: false });
 
   await loginAs(page, { email: who("santa", p) });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Sam", lastName: "Santa", amazonWishlistUrl: list("2") });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Sam", lastName: "Santa", amazonWishlistUrl: list("2") });
   expect((await mutate(page.request, "groups.join", { code: g.joinCode })).status()).toBe(200);
 
   await loginAs(page, { email: `rem-site-${p}@${E}`, adminLevel: "SITE" });

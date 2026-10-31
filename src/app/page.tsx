@@ -20,12 +20,12 @@ import { Wordmark } from "./_components/post/wordmark";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ for?: string }>;
+  searchParams: Promise<{ for?: string; deleted?: string }>;
 }) {
   const session = await getSession();
 
   if (!session?.user) {
-    const { for: forWhom } = await searchParams;
+    const { for: forWhom, deleted } = await searchParams;
     const [totals, s] = await Promise.all([getPublicTotals(), publicSeason(db)]);
     const season = {
       year: currentSeason(),
@@ -36,6 +36,12 @@ export default async function Home({
     return (
       <HydrateClient>
         <div className="flex w-full flex-col gap-24">
+          {deleted === "1" && (
+            <p role="status" className="label-stock text-ink p-4 text-center font-semibold">
+              Your account and everything in it has been deleted. Thank you
+              for every act of kindness.
+            </p>
+          )}
           <HomePitch
             initial={parsePersona(forWhom) ?? "workplace-join"}
             totals={totals}

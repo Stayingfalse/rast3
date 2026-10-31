@@ -38,6 +38,7 @@ const newListsEmails = async (r: APIRequestContext, p: string, now?: number) => 
 
 const join = async (r: APIRequestContext, name: string, p: string) => {
   const saved = await mutate(r, "profile.saveProfile", {
+    over16: true,
     firstName: name,
     lastName: "Newlist",
     amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/${`E2ENL${name.toUpperCase()}${p.length}`.padEnd(13, "0")}`,
@@ -71,6 +72,7 @@ test("set up: Santa runs a friends group, open for gifting, and picks up Fern's 
   const p = testInfo.project.name;
   await loginAs(page, { email: who("santa", p) });
   await mutate(page.request, "profile.saveProfile", {
+    over16: true,
     firstName: "Santa",
     lastName: "Newlist",
     amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/E2ENLSANTA${p.length}`,

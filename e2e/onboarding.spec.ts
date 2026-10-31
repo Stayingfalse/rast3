@@ -49,6 +49,11 @@ test("a new member fills in their profile, then joins their workplace", async ({
   await dialog
     .getByLabel("Amazon wishlist link")
     .fill("https://www.amazon.co.uk/hz/wishlist/ls/E2EONB0001?ref_=x");
+  // Day 30: you confirm you're 16 or over before your profile saves
+  await dialog.getByRole("button", { name: "Save and choose a group" }).click();
+  await expect(dialog.getByText("Random Acts of Santa is for people aged 16 and over")).toBeVisible();
+  await dialog.getByLabel("I'm 16 or over").check();
+  await expect(dialog.getByText("Random Acts of Santa is for people aged 16 and over", { exact: true })).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "onboarding-profile");
   await dialog.getByRole("button", { name: "Save and choose a group" }).click();
@@ -94,6 +99,7 @@ test("an unknown work domain offers to start an organisation", async ({
   const saved = await page.request.post("/api/trpc/profile.saveProfile", {
     data: {
       json: {
+        over16: true,
         firstName: "Sam",
         lastName: "Starter",
         amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2ESTA0001",
@@ -124,7 +130,7 @@ test("a wishlist from any Amazon store is accepted, and only Amazon", async ({ p
   await loginAs(page, { email: `abroad-${testInfo.project.name}@${E}` });
   const save = (amazonWishlistUrl: string) =>
     page.request.post("/api/trpc/profile.saveProfile", {
-      data: { json: { firstName: "Ana", lastName: "Abroad", amazonWishlistUrl } },
+      data: { json: { over16: true, firstName: "Ana", lastName: "Abroad", amazonWishlistUrl } },
     });
   for (const ok of [
     "https://www.amazon.com/hz/wishlist/ls/E2EABR0001",

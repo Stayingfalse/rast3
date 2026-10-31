@@ -45,6 +45,7 @@ test("set up: an eight-person friends group, open early", async ({ page }, testI
     expect(
       (
         await mutate(page.request, "profile.saveProfile", {
+    over16: true,
           firstName: `Fair ${m.toUpperCase()}`,
           lastName: "Share",
           amazonWishlistUrl: list(m),

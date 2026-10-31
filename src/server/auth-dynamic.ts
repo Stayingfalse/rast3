@@ -14,6 +14,7 @@ import Reddit from "next-auth/providers/reddit";
 import TikTok from "next-auth/providers/tiktok";
 import Twitch from "next-auth/providers/twitch";
 import { createTransport } from "nodemailer";
+import { touchLastSeen } from "~/server/account";
 import { toClientSession } from "~/server/auth-session";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
@@ -351,11 +352,20 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
       },
     },
     callbacks: {
-      session: ({ session, user }) => toClientSession({ session, user }),
+      session: async ({ session, user }) => {
+        // last seen, for the 24-month inactive deletion (at most daily). Awaited,
+        // so it never races the request's own writes to the same row.
+        await touchLastSeen(db, user.id, (user as { lastSeenAt?: Date | null }).lastSeenAt);
+        return toClientSession({ session, user });
+      },
     },
     events: {
       // keep Discord tokens (and scopes) fresh on every Discord sign-in
-      signIn: ({ account }) => saveDiscordTokens(account),
+      signIn: async ({ user, account }) => {
+        // signing in counts as being here (and new accounts start with a date)
+        if (user.id) await touchLastSeen(db, user.id, null);
+        await saveDiscordTokens(account);
+      },
     },
     debug: process.env.NODE_ENV === "development",
   };

@@ -76,6 +76,7 @@ test("set up: an approved friends group", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   await loginAs(page, { email: `a11y-host-${p}@${E}` });
   await mutate(page.request, "profile.saveProfile", {
+    over16: true,
     firstName: "Ada",
     lastName: "Host",
     amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2EA11Y0001",
@@ -90,7 +91,7 @@ test("set up: an approved friends group", async ({ page }, testInfo) => {
 });
 
 test("public pages", async ({ page }) => {
-  for (const url of ["/", "/?for=discord-run", "/?for=friends-join", "/privacy", `/join/${joinCode}`, `/${domain}`, "/no-such-page"]) {
+  for (const url of ["/", "/?for=discord-run", "/?for=friends-join", "/privacy", "/terms", "/account", `/join/${joinCode}`, `/${domain}`, "/no-such-page"]) {
     await visit(page, url);
   }
 });
@@ -99,6 +100,7 @@ test("a member's pages", async ({ page }) => {
   await loginAs(page, { email: `giver@${E}` });
   await visit(page, "/", "home (member)");
   await visit(page, "/groups");
+  await visit(page, "/account", "your data (member)");
 });
 
 test("a new member's profile window", async ({ page }, testInfo) => {

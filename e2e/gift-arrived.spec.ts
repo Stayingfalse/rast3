@@ -55,6 +55,7 @@ test("set up: Santa gifts Ina's and Gus's lists", async ({ page }, testInfo) => 
   groupName = `E2E Arrived ${p}`;
   const profile = (name: string) =>
     mutate(page.request, "profile.saveProfile", {
+    over16: true,
       firstName: name,
       lastName: "Arrived",
       amazonWishlistUrl: list(name, p),

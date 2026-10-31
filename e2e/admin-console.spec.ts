@@ -44,12 +44,12 @@ test("set up: a friends group with two people", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   name = `E2E Admin Check ${p}`;
   await loginAs(page, { email: `ac-host-${p}@${E}` });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Ada", lastName: "Host" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Ada", lastName: "Host" });
   const g = (await unwrap(
     await mutate(page.request, "groups.create", { name, kind: "FRIENDS" }),
   )) as { joinCode: string };
   await loginAs(page, { email: `ac-guest-${p}@${E}` });
-  await mutate(page.request, "profile.saveProfile", { firstName: "Gil", lastName: "Guest" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Gil", lastName: "Guest" });
   expect((await mutate(page.request, "groups.join", { code: g.joinCode })).status()).toBe(200);
 });
 

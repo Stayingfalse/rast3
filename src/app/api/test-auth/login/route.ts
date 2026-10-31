@@ -58,9 +58,11 @@ export async function POST(req: NextRequest) {
   // Keep an existing user's name (e.g. seeded members) unless one is given.
   const user = await db.user.upsert({
     where: { email },
-    update: { adminLevel, ...(parsed.data.name ? { name: parsed.data.name } : {}) },
+    // signing in counts as being here (Day 30's lastSeenAt)
+    update: { adminLevel, lastSeenAt: new Date(), ...(parsed.data.name ? { name: parsed.data.name } : {}) },
     create: {
       email,
+      lastSeenAt: new Date(),
       name: parsed.data.name ?? email.split("@")[0],
       adminLevel,
       emailVerified: new Date(),

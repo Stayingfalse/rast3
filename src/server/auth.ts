@@ -2,6 +2,7 @@ import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth, { type DefaultSession } from "next-auth";
 import { cache } from "react";
+import { touchLastSeen } from "~/server/account";
 import Discord from "next-auth/providers/discord";
 import Facebook from "next-auth/providers/facebook";
 import GitHub from "next-auth/providers/github";
@@ -238,7 +239,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    session: ({ session, user }) => toClientSession({ session, user }),
+    session: ({ session, user }) => {
+      // last seen, for the 24-month inactive deletion (at most daily)
+      void touchLastSeen(db, user.id, (user as { lastSeenAt?: Date | null }).lastSeenAt);
+      return toClientSession({ session, user });
+    },
   },
   events: {
     // keep Discord tokens (and scopes) fresh on every Discord sign-in

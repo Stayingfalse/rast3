@@ -1,5 +1,7 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { cantDelete, deleteAccount } from "~/server/account";
 import { getWorkplace } from "~/server/groups";
 import { checkIn } from "~/server/season";
 
@@ -72,13 +74,21 @@ export const profileRouter = createTRPCRouter({
           ),
         /** reminder emails (22 Oct); left out = unchanged */
         emailReminders: z.boolean().optional(),
+        /** "I'm 16 or over" (Day 30): needed for a first profile */
+        over16: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const current = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { profileCompleted: true, profileCompletedAt: true },
+        select: { profileCompleted: true, profileCompletedAt: true, ageConfirmedAt: true },
       });
+      if (!current?.profileCompleted && !current?.ageConfirmedAt && !input.over16) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Please confirm you're 16 or over: Random Acts of Santa is for adults.",
+        });
+      }
       // A new member's first profile, with their wishlist, is their check-in
       // for this season (Day 18); returning members check in separately
       // (season.checkIn), and so does anyone who adds their wishlist later
@@ -94,9 +104,26 @@ export const profileRouter = createTRPCRouter({
           emailReminders: input.emailReminders,
           profileCompleted: true,
           profileCompletedAt: current?.profileCompletedAt ?? new Date(),
+          ageConfirmedAt: current?.ageConfirmedAt ?? (input.over16 ? new Date() : undefined),
         },
         select: { id: true, profileCompleted: true },
       });
+    }),
+
+  /**
+   * Day 30: delete your own account and everything that's yours. You type
+   * "delete" to confirm. Site admins hand over their admin access first.
+   */
+  deleteAccount: protectedProcedure
+    .input(z.object({ confirm: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.confirm.trim().toLowerCase() !== "delete") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Type delete to confirm" });
+      }
+      const reason = await cantDelete(ctx.db, ctx.session.user.id);
+      if (reason) throw new TRPCError({ code: "FORBIDDEN", message: reason });
+      await deleteAccount(ctx.db, ctx.session.user.id);
+      return { ok: true };
     }),
 });
 

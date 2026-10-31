@@ -25,6 +25,7 @@ const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
   r.post(`/api/trpc/${path}`, { data: { json: input ?? null } });
 const profile = (r: APIRequestContext, first: string, list: string) =>
   mutate(r, "profile.saveProfile", {
+    over16: true,
     firstName: first,
     lastName: "Shopper",
     amazonWishlistUrl: `https://www.amazon.co.uk/hz/wishlist/ls/${list}`,
@@ -164,6 +165,7 @@ test("a list on Amazon.com opens with the group's US tracking ID", async ({ page
   expect(
     (
       await mutate(page.request, "profile.saveProfile", {
+    over16: true,
         firstName: "Alma",
         lastName: "Shopper",
         amazonWishlistUrl: "https://www.amazon.com/hz/wishlist/ls/E2EAFUS001",

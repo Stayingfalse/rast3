@@ -81,6 +81,13 @@ model User {
   /// reminder emails (check-in, season open, gift check-in, new lists); sign-in links always go
   emailReminders       Boolean              @default(true)
   emailLog             EmailLog[]
+  /// last signed in and using the site (updated at most daily); accounts
+  /// unused for 24 months are deleted (privacy policy, Day 30)
+  lastSeenAt           DateTime?
+  /// confirmed they're 16 or over (new profiles from 31 Oct 2026)
+  ageConfirmedAt       DateTime?
+
+  @@index([lastSeenAt])
 }
 
 model VerificationToken {

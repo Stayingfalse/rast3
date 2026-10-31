@@ -1351,7 +1351,16 @@ that don't touch the data model. Known items to include:
     the footer, on gift pages and in the policy; cookies are essential-only
     and listed.
   - **Migration:** `20261031050000_privacy` (two nullable columns, a
-    backfill, an index).
+    backfill, an index). Applied on dev ("migrated").
+  - **Found on the way:** the first dev run had profile saves failing
+    (500) on a new member's first request: the unawaited last-seen update
+    raced the save on the same row. Signing in now sets `lastSeenAt` and
+    the daily refresh is awaited. The 16+ error also stayed visible after
+    ticking the box; fixed.
+  - **Tests:** new `account.spec.ts` (16+ rule, export, self-delete, admins
+    can't, 24-month clean-up deletes only the stale account); a11y now
+    covers `/terms` and `/account`. Dev CI 110/110 on desktop and on
+    mobile (run 41173630507). Screenshots in `e2e-screenshots/privacy/`.
   - **Backlog idea:** email people a month before the 24-month deletion
     ("still want your account?"), once the first deletions are close
     (2027).

@@ -41,7 +41,7 @@ outside or in the code; **Owner** means only the owner can do or confirm it.
 
 | | Item | Status |
 |---|---|---|
-| ⏳ | Full regression on dev: every page for visitors, members, organisers and site admins, desktop and Pixel 7 (`e2e/regression.spec.ts`), plus the full e2e suite and accessibility checks | Checked |
+| ✅ | Full regression on dev: every page for visitors, members, organisers and site admins, desktop and Pixel 7 (`e2e/regression.spec.ts`: 40 pages each, no errors, failed requests or broken links), plus the full e2e suite (115/115 each) and accessibility checks | Checked (1 Nov) |
 | ⬜ | At least one other site admin, so approvals don't wait on one person (the 15 Nov rush) | **Owner** |
 | ⬜ | Approvals queue empty on 14 Nov | **Owner** |
 | ⬜ | VAPID keys on dev and prod, if push notifications should ship this season | **Owner** |

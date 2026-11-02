@@ -118,7 +118,7 @@
 ### Week 5: launch (8–15 Nov)
 | Day | Date | Focus |
 |---|---|---|
-| 31 | Sat 7 Nov | Full regression on dev + launch checklist |
+| 31 | Sat 7 Nov | **Done early (1 Nov).** Full regression on dev + launch checklist |
 | 32 | Sun 8 Nov | Fixes from regression |
 | 33 | Mon 9 Nov | Release candidate → prod (with the owner's approval) |
 | 34 | Tue 10 Nov | **Wall of Kindness (owner, 27 Oct).** A group's thank-yous turned into a shareable page and image, under festive names only (no real names, no gifts' details), for organisers to post on Discord, Slack or LinkedIn. Works for every kind of group, any time in the season ("so far") and as the end-of-season recap. Builds on the share cards and the per-group thank-you feed. Organisers only; small groups (under 3 thank-yous) can't make one |
@@ -1366,3 +1366,32 @@ that don't touch the data model. Known items to include:
     (2027).
   - **Next (nightly, 1 Nov): Day 31,** full regression on dev and the
     launch checklist.
+- **Nightly run, 1 Nov: Day 31, full regression and launch checklist.**
+  - **Regression crawl (`e2e/regression.spec.ts`), now part of every dev
+    run:** signed out, as a member with gifts, as an organiser and as a site
+    admin, at desktop and Pixel 7, it follows every link on the site (two
+    pages per kind of address) and fails on server errors, script errors,
+    console errors, failed requests and broken links. First run: 40 pages
+    per device, **no findings**; pages loaded in 0.7 to 1.7 s from the CI
+    runner. Findings, timings and a screenshot of every kind of page are in
+    the CI artifact. Full suite 115/115 on desktop and on mobile (run
+    41274791838).
+  - **Checked on prod from outside:** healthy, migrations applied, the
+    test-only routes are off (404), security headers present, season dates
+    15 Nov to 6 Jan.
+  - **Database backups:** a daily 02:00 backup of prod's `ras` database is
+    scheduled and enabled in Easypanel, but the only backup runs on record
+    are manual (17 Oct 2026 and Jun 2025). **Owner: confirm recent backup
+    files exist and try a restore.**
+  - **Launch checklist:** `docs/launch-checklist.md` (what's checked, and
+    the owner's items: publish the Google app and re-authorise Gmail,
+    backups, privacy mailbox, ICO fee, log retention, a second site admin,
+    Associates switched on, the server stalls).
+  - **Found by eye in the screenshots, for Day 32:**
+    - The thank-you form says "Drag & drop images here" on phones.
+    - The thank-you preview shows a large empty "Photo preview" box when
+      there's no photo.
+    - Admin › People on phones cuts the Groups column off (it scrolls, but
+      it's cramped).
+  - **Next (nightly, 2 Nov): Day 32,** fixes from the regression (the three
+    above), then any owner feedback.

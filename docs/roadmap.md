@@ -119,7 +119,7 @@
 | Day | Date | Focus |
 |---|---|---|
 | 31 | Sat 7 Nov | **Done early (1 Nov).** Full regression on dev + launch checklist |
-| 32 | Sun 8 Nov | Fixes from regression |
+| 32 | Sun 8 Nov | **Done early (2 Nov).** Fixes from regression |
 | 33 | Mon 9 Nov | Release candidate → prod (with the owner's approval) |
 | 34 | Tue 10 Nov | **Wall of Kindness (owner, 27 Oct).** A group's thank-yous turned into a shareable page and image, under festive names only (no real names, no gifts' details), for organisers to post on Discord, Slack or LinkedIn. Works for every kind of group, any time in the season ("so far") and as the end-of-season recap. Builds on the share cards and the per-group thank-you feed. Organisers only; small groups (under 3 thank-yous) can't make one |
 | 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
@@ -1395,3 +1395,20 @@ that don't touch the data model. Known items to include:
       it's cramped).
   - **Next (nightly, 2 Nov): Day 32,** fixes from the regression (the three
     above), then any owner feedback.
+- **Nightly run, 2 Nov: Day 32, fixes from the regression.**
+  - The thank-you form no longer says "Drag & drop" on phones: it says
+    "Add photos" (the drag hint only shows where there's a mouse), and
+    "Up to 5 photos, 0.5 MB each".
+  - The thank-you preview no longer shows a large empty "Photo preview"
+    box without photos; it looks like a thank-you without photos does in
+    the feed.
+  - Admin › People on phones: each person's groups sit under their name
+    instead of in a cramped column; long group names are cut short (the
+    full name is in the tooltip).
+  - Branched from Day 31 (PR #69, not merged yet), so this PR includes it.
+  - **Next (nightly, 3 Nov): spare day.** Options for the owner to pick:
+    the admin launch-day status page (idea, 1 Nov), auto-approve for small
+    friends groups (backlog, 20 Oct), or the "unclaimed lists" nudge for
+    organisers (idea, 31 Oct). Without a pick, the run takes the status
+    page, as it helps the 15 Nov launch most. The Wall of Kindness stays on
+    10 Nov.

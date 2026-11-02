@@ -80,7 +80,7 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
   expect(d.health.migrations?.latest).toBeTruthy();
   expect(Date.parse(d.health.startedAt)).not.toBeNaN();
   // the attention list agrees with the numbers it's drawn from
-  expect(d.attention.some((a) => a.key === "email")).toBe(d.emailServer === "none");
+  expect(d.attention.some((a) => a.key === "mail-server")).toBe(d.emailServer === "none");
   expect(d.attention.some((a) => a.key === "failed")).toBe(d.failed > 0);
   expect(d.attention.some((a) => a.key === "pending")).toBe(d.groups.tooLong);
 

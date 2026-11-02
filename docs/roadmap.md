@@ -1415,7 +1415,8 @@ that don't touch the data model. Known items to include:
     server stalls again). The next run caught a race in the crawl itself:
     the admin crawl opened the other device's test group just as that run
     deleted it. The admin crawl now leaves group consoles to the organiser
-    crawl.
+    crawl. Final run: 115/115 on desktop and on mobile, no retries (run
+    41395478405).
   - **Next (nightly, 3 Nov): spare day.** Options for the owner to pick:
     the admin launch-day status page (idea, 1 Nov), auto-approve for small
     friends groups (backlog, 20 Oct), or the "unclaimed lists" nudge for

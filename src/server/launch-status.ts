@@ -135,7 +135,7 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
 
   const attention: Attention[] = [];
   if (emailSource === "none")
-    attention.push({ key: "email", text: "No email server is set up: sign-in links and reminders can't go out." });
+    attention.push({ key: "mail-server", text: "No email server is set up: sign-in links and reminders can't go out." });
   if (failed > 0)
     attention.push({ key: "failed", text: `${failed} reminder ${failed === 1 ? "email" : "emails"} failed in the last 24 hours.` });
   if (oldestHours !== null && oldestHours >= PENDING_TOO_LONG_HOURS)

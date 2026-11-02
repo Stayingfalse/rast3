@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api } from "~/trpc/react";
 import { ShareSheet, type ShareRequest } from "./share/share-sheet";
+import { getChristmasIdentity } from "~/lib/festive-name";
 import imageCompression from "browser-image-compression";
 import { useSession } from "next-auth/react";
 
@@ -30,73 +31,6 @@ export const KudosForm: React.FC<KudosFormProps> = ({
   const [shareRequest, setShareRequest] = useState<ShareRequest | null>(null);
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "anon";
-
-  // Christmas-themed names for anonymization
-  const CHRISTMAS_NAMES = [
-    "Jingle Bell",
-    "Holly Berry",
-    "Candy Cane",
-    "Snow Flake",
-    "Winter Star",
-    "Frost Bite",
-    "Pine Needle",
-    "Sugar Plum",
-    "Ginger Bread",
-    "Icicle Drop",
-    "Mistletoe",
-    "Nutcracker",
-    "Tinsel Shine",
-    "Cocoa Bean",
-    "Peppermint",
-    "Sleigh Bell",
-    "Reindeer",
-    "Snowball",
-    "Eggnog",
-    "Christmas Tree",
-    "Angel Wing",
-    "Star Light",
-    "Gift Wrap",
-    "Ribbon Bow",
-    "Ornament",
-    "Candy Mint",
-    "Hot Cocoa",
-    "Fire Place",
-    "Wreath Maker",
-    "Cookie Baker",
-    "Snow Angel",
-    "Ice Crystal",
-    "Winter Moon",
-    "Frost King",
-    "Snow Queen",
-    "Jingle Jangle",
-    "Merry Maker",
-    "Joy Bringer",
-    "Hope Bearer",
-    "Peace Keeper",
-    "Love Giver",
-    "Kind Heart",
-    "Gentle Soul",
-    "Warm Hug",
-    "Sweet Smile",
-    "Bright Light",
-    "Happy Helper",
-    "Cheerful Elf",
-    "Magic Maker",
-    "Wonder Worker",
-  ];
-
-  function getChristmasIdentity(userId: string) {
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-      const char = userId.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
-    }
-    const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
-    return {
-      name: CHRISTMAS_NAMES[nameIndex]!,
-    };
-  }
 
   // Keep liveMessage in sync with message
   useEffect(() => {

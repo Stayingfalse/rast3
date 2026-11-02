@@ -95,6 +95,27 @@ export function GroupTotals() {
                     You can share once 10 gifts have been sent this season.
                   </p>
                 )}
+                <div className="border-rule flex flex-col gap-2 border-t pt-4">
+                  <button
+                    type="button"
+                    disabled={!g.wallReady || !label.trim()}
+                    onClick={() =>
+                      setRequest({
+                        kind: "wall",
+                        groupId: g.groupId,
+                        label: label.trim(),
+                      })
+                    }
+                    className="btn-quiet text-ink self-start"
+                  >
+                    Share the Wall of Kindness
+                  </button>
+                  <p className="text-ink-soft text-sm">
+                    {g.wallReady
+                      ? "Your thank-yous on one page, under festive names. No real names, no gifts."
+                      : "Your thank-yous on one page, under festive names, once there are 3 this season."}
+                  </p>
+                </div>
               </div>
             </article>
           );

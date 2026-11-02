@@ -10,7 +10,8 @@ import { api } from "~/trpc/react";
 export type ShareRequest =
   | { kind: "sent"; purchaseId: string }
   | { kind: "thanks"; kudosId: string }
-  | { kind: "team"; scope: "org" | "team"; label: string };
+  | { kind: "team"; scope: "org" | "team"; label: string }
+  | { kind: "wall"; groupId: string; label: string };
 
 const COPY = {
   sent: {
@@ -24,6 +25,10 @@ const COPY = {
   team: {
     title: "Share your total",
     text: "Our Christmas of random acts of kindness so far:",
+  },
+  wall: {
+    title: "Share your Wall of Kindness",
+    text: "Our Wall of Kindness: the thank-yous for this Christmas's random acts.",
   },
 } as const;
 
@@ -103,7 +108,9 @@ export function ShareSheet({
               ? "Post it in your team chat or community. The card never shows who it was for, what you sent or anyone's address."
               : request.kind === "thanks"
                 ? "Share your thank-you, photos and all. Your Santa stays anonymous, and so does the card."
-                : "This season's totals, rounded and never named. The link stays live, so it always shows the latest total."}
+                : request.kind === "wall"
+                  ? "Your group's thank-yous, under festive names: no real names, no gifts, no photos. The link stays live all season, so post it now and again as your recap."
+                  : "This season's totals, rounded and never named. The link stays live, so it always shows the latest total."}
           </p>
 
           <div className="bg-label-shade border-rule relative aspect-[1200/630] w-full overflow-hidden rounded-sm border">
@@ -118,7 +125,9 @@ export function ShareSheet({
             {!loaded && (
               <div className="text-ink-soft absolute inset-0 flex items-center justify-center text-sm">
                 {create.isError
-                  ? "Couldn't make the card. Try again later."
+                  ? create.error.data?.code === "PRECONDITION_FAILED"
+                    ? create.error.message
+                    : "Couldn't make the card. Try again later."
                   : "Making your card…"}
               </div>
             )}

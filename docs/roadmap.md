@@ -1412,7 +1412,10 @@ that don't touch the data model. Known items to include:
   - Dev CI: 115/115 on desktop; 115/115 on mobile with two passing on
     retry: the crawl timeout above, and `group-home` waiting more than 15 s
     for a pick-up during a slow run (8.7 minutes against the usual 5; the
-    server stalls again).
+    server stalls again). The next run caught a race in the crawl itself:
+    the admin crawl opened the other device's test group just as that run
+    deleted it. The admin crawl now leaves group consoles to the organiser
+    crawl.
   - **Next (nightly, 3 Nov): spare day.** Options for the owner to pick:
     the admin launch-day status page (idea, 1 Nov), auto-approve for small
     friends groups (backlog, 20 Oct), or the "unclaimed lists" nudge for

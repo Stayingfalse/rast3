@@ -136,7 +136,7 @@ test("an organiser's pages", async ({ page }, testInfo) => {
 
 test("the site admin's pages", async ({ page }, testInfo) => {
   await loginAs(page, { email: `a11y-site-${testInfo.project.name}@${E}`, adminLevel: "SITE" });
-  for (const p of ["", "/approvals", "/season", "/groups", "/users", "/links", "/kudos", "/insights", "/affiliate", "/settings"]) {
+  for (const p of ["", "/status", "/approvals", "/season", "/groups", "/users", "/links", "/kudos", "/insights", "/affiliate", "/settings"]) {
     await visit(page, `/admin${p}`);
   }
 });

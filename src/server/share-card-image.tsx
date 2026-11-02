@@ -5,6 +5,7 @@ import { ImageResponse } from "next/og";
 import sharp from "sharp";
 
 import type { PublicShareCard } from "~/server/share-cards";
+import type { PublicWall } from "~/server/wall";
 import { readFromE2 } from "~/server/utils/e2-upload";
 
 const C = {
@@ -98,7 +99,15 @@ function Airmail() {
   );
 }
 
-function Postmark({ text, year }: { text: string; year: number }) {
+function Postmark({
+  text,
+  year,
+  size = 30,
+}: {
+  text: string;
+  year: number;
+  size?: number;
+}) {
   return (
     <div
       style={{
@@ -114,7 +123,7 @@ function Postmark({ text, year }: { text: string; year: number }) {
         transform: "rotate(-12deg)",
       }}
     >
-      <div style={{ fontFamily: "ArchivoX", fontSize: 30, letterSpacing: 2 }}>
+      <div style={{ fontFamily: "ArchivoX", fontSize: size, letterSpacing: 2 }}>
         {text}
       </div>
       <div
@@ -552,4 +561,188 @@ export async function renderShareCardImage(card: PublicShareCard) {
     fonts: fontList,
     headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
   });
+}
+
+/**
+ * Day 34: a Wall of Kindness as a 1200×630 PNG. The group's name, the
+ * rounded counts, and up to three short thank-yous under festive names.
+ */
+export async function renderWallImage(wall: PublicWall) {
+  const [fontList, stamp] = await Promise.all([
+    fonts(),
+    stampDataUri(wall.season),
+  ]);
+  // short ones first, so three fit; newest first otherwise
+  const notes = [
+    ...wall.notes.filter((n) => n.message.length <= 130),
+    ...wall.notes.filter((n) => n.message.length > 130),
+  ].slice(0, 3);
+  const counts = [
+    wall.thanks && `${wall.thanks} thank-yous`,
+    wall.gifts && `${wall.gifts} gifts sent`,
+  ].filter(Boolean);
+
+  return new ImageResponse(
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        padding: "48px 64px",
+        background: C.night,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 40,
+        }}
+      >
+        <div
+          style={{ display: "flex", flexDirection: "column", maxWidth: 860 }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              fontFamily: "ArchivoX",
+              fontSize: 46,
+              lineHeight: 1.1,
+              color: C.frost,
+            }}
+          >
+            {[
+              ..."A Wall of Kindness from"
+                .split(" ")
+                .map((w) => ({ w, gold: false })),
+              ...clip(wall.label, 44)
+                .split(/\s+/)
+                .map((w) => ({ w, gold: true })),
+            ].map(({ w, gold }, i) => (
+              <span
+                key={i}
+                style={{ color: gold ? C.goldSoft : C.frost, marginRight: 14 }}
+              >
+                {w}
+              </span>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Archivo",
+              fontWeight: 600,
+              fontSize: 26,
+              color: C.frostSoft,
+              marginTop: 14,
+            }}
+          >
+            {[`Christmas ${wall.season}`, ...counts].join("  ·  ")}
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            position: "relative",
+            width: 170,
+            height: 170,
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <img
+            src={stamp}
+            width={110}
+            height={134}
+            style={{ transform: "rotate(-6deg)" }}
+            alt=""
+          />
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              right: -40,
+              bottom: -40,
+            }}
+          >
+            <Postmark text="THANKS" year={wall.season} size={21} />
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 22,
+          marginTop: "auto",
+          marginBottom: 30,
+        }}
+      >
+        {notes.map((n, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flexGrow: 1,
+              flexBasis: 0,
+              height: 250,
+              background: C.label,
+              borderRadius: 8,
+              overflow: "hidden",
+              transform: `rotate(${[-1, 0.6, -0.4][i] ?? 0}deg)`,
+            }}
+          >
+            <Airmail />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flexGrow: 1,
+                padding: "18px 24px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexGrow: 1,
+                  fontFamily: "Archivo",
+                  fontSize: 23,
+                  lineHeight: 1.35,
+                  color: C.ink,
+                  overflow: "hidden",
+                }}
+              >
+                {`“${clip(n.message.replace(/\s+/g, " "), 130)}”`}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  borderTop: `1px solid ${C.rule}`,
+                  paddingTop: 10,
+                  fontFamily: "ArchivoX",
+                  fontSize: 17,
+                  color: C.ink,
+                }}
+              >
+                {n.name}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Footer />
+    </div>,
+    {
+      width: 1200,
+      height: 630,
+      fonts: fontList,
+      // short: hiding a thank-you should take it off the image soon
+      headers: { "Cache-Control": "public, max-age=600, s-maxage=600" },
+    },
+  );
 }

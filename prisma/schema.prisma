@@ -209,7 +209,8 @@ model ShareCard {
   userId     String
   purchaseId String?       @unique
   kudosId    String?       @unique
-  /// Group cards: "org:<groupId>" or "team:<groupId>", one card per group
+  /// Group cards: "org:<groupId>" or "team:<groupId>", one card per group;
+  /// walls of kindness: "wall:<groupId>", one per group
   groupKey   String?       @unique
   /// Group cards: the name shown on the card, chosen by the organiser
   label      String?
@@ -227,6 +228,8 @@ enum ShareCardKind {
   THANKS
   ORG
   TEAM
+  /// Day 34: a group's Wall of Kindness (its thank-yous under festive names)
+  WALL
 }
 
 /// Site admins run the whole site; organisers are group ADMIN memberships

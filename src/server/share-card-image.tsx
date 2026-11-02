@@ -742,7 +742,9 @@ export async function renderWallImage(wall: PublicWall) {
       height: 630,
       fonts: fontList,
       // short: hiding a thank-you should take it off the image soon
-      headers: { "Cache-Control": "public, max-age=600, s-maxage=600" },
+      // never kept by Cloudflare or browsers: a hidden thank-you, or a wall
+      // that drops under 3, must leave the image at once (moderation)
+      headers: { "Cache-Control": "no-store" },
     },
   );
 }

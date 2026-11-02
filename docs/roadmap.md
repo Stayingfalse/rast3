@@ -1396,9 +1396,10 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 2 Nov): Day 32,** fixes from the regression (the three
     above), then any owner feedback.
 - **Nightly run, 2 Nov: Day 32, fixes from the regression.**
-  - The thank-you form no longer says "Drag & drop" on phones: it says
-    "Add photos" (the drag hint only shows where there's a mouse), and
-    "Up to 5 photos, 0.5 MB each".
+  - The thank-you form no longer says "Drag & drop": it says "Add photos"
+    and "Up to 5 photos, 0.5 MB each" (dropping files on the box still
+    works on a computer). A mouse-only hint was tried first, but the phone
+    emulator in CI reports a mouse too, so it couldn't be checked.
   - The thank-you preview no longer shows a large empty "Photo preview"
     box without photos; it looks like a thank-you without photos does in
     the feed.

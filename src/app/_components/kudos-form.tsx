@@ -265,11 +265,9 @@ export const KudosForm: React.FC<KudosFormProps> = ({
                   d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                 />
               </svg>
-              {/* phones can't drag files in (Day 32): just "add photos" there */}
-              <span className="text-ink-soft text-sm">
-                <span className="underline">Add photos</span>
-                <span className="hidden pointer-fine:inline"> or drag them here</span>
-              </span>
+              {/* "Add photos" for everyone (Day 32): phones can't drag files in,
+                  and on a computer the dashed box still takes a drop */}
+              <span className="text-ink-soft text-sm underline">Add photos</span>
               <span className="text-ink-soft mt-1 text-xs">
                 Up to 5 photos, 0.5 MB each
                 {images.length > 0 && (

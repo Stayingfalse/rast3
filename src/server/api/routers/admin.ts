@@ -15,6 +15,7 @@ import {
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { insightSeasons, seasonInsights } from "~/server/insights";
+import { launchStatus } from "~/server/launch-status";
 import { storeDomain } from "~/server/opens";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
@@ -90,6 +91,12 @@ export const adminRouter = createTRPCRouter({
       },
     };
   }),
+
+  /**
+   * Launch status (2 Nov): is launch going well or is something stuck?
+   * Counts only, without test users; never credentials or names.
+   */
+  status: siteAdminProcedure.query(({ ctx }) => launchStatus(ctx.db)),
 
   /** Every group except teams (they're managed inside their organisation). */
   groups: siteAdminProcedure

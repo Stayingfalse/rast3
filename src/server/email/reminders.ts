@@ -38,7 +38,7 @@ const MAX_FAILURES = 3;
  * sign-in links (a free Gmail account sends about 500 a day), so they must
  * never use up its allowance; the rest wait for the next run.
  */
-const DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
+export const REMINDER_DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
 const DAY = 24 * 3600_000;
 
 /** sendOnce, or "HELD" when today's limit is reached (tried again next run) */
@@ -88,7 +88,7 @@ export async function runReminders(
     where: { status: "SENT", createdAt: { gte: new Date(now.getTime() - DAY) } },
   });
   const send: Send = async (...args) => {
-    if (sentToday >= DAILY_LIMIT) return "HELD";
+    if (sentToday >= REMINDER_DAILY_LIMIT) return "HELD";
     const r = await sendOnce(...args);
     if (r === "SENT") sentToday++;
     failures = r === "FAILED" ? failures + 1 : 0;

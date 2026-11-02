@@ -15,7 +15,9 @@ import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle, snap 
  * of page to test-results/screenshots.
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
-test.describe.configure({ mode: "serial" });
+// each crawl visits up to 45 pages and screenshots every kind (tall pages
+// on phones), well past the default 60 s
+test.describe.configure({ mode: "serial", timeout: 240_000 });
 
 const E = E2E_DOMAIN;
 const unwrap = async (res: { json: () => Promise<unknown> }) =>

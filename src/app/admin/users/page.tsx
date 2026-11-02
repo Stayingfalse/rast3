@@ -43,6 +43,26 @@ type Pending =
   | { kind: "siteAdmin"; person: Person; siteAdmin: boolean }
   | { kind: "delete"; person: Person };
 
+/** A person's groups as links to each group's console; long names are cut short. */
+function GroupBadges({ groups }: { groups: Person["groups"] }) {
+  return (
+    <ul className="flex flex-wrap gap-1">
+      {groups.map((g) => (
+        <li key={g.id} className="max-w-full">
+          <Badge variant="outline" className="max-w-full" asChild>
+            <Link href={`/groups/${g.id}/manage`} title={g.name}>
+              <span className="truncate">
+                {g.name}
+                {g.role === "ADMIN" && " · organiser"}
+              </span>
+            </Link>
+          </Badge>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Everyone on the site (Day 17), newest profiles first, 25 a page. */
 export default function AdminPeoplePage() {
   const [q, setQ] = useState("");
@@ -104,7 +124,7 @@ export default function AdminPeoplePage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Person</TableHead>
-                      <TableHead>Groups</TableHead>
+                      <TableHead className="hidden sm:table-cell">Groups</TableHead>
                       <TableHead>Wishlist</TableHead>
                       <TableHead className="text-right">Picked up</TableHead>
                       <TableHead className="text-right">Gifted</TableHead>
@@ -129,23 +149,18 @@ export default function AdminPeoplePage() {
                               .filter(Boolean)
                               .join(" · ")}
                           </p>
+                          {/* phones: groups under the name, not a cramped column (Day 32) */}
+                          {p.groups.length > 0 && (
+                            <div className="mt-1.5 sm:hidden">
+                              <GroupBadges groups={p.groups} />
+                            </div>
+                          )}
                         </TableCell>
-                        <TableCell className="max-w-72">
+                        <TableCell className="hidden max-w-72 sm:table-cell">
                           {p.groups.length === 0 ? (
                             <span className="text-ink-soft">None</span>
                           ) : (
-                            <ul className="flex flex-wrap gap-1">
-                              {p.groups.map((g) => (
-                                <li key={g.id}>
-                                  <Badge variant="outline" asChild>
-                                    <Link href={`/groups/${g.id}/manage`}>
-                                      {g.name}
-                                      {g.role === "ADMIN" && " · organiser"}
-                                    </Link>
-                                  </Badge>
-                                </li>
-                              ))}
-                            </ul>
+                            <GroupBadges groups={p.groups} />
                           )}
                         </TableCell>
                         <TableCell>{p.hasWishlist ? "Added" : "—"}</TableCell>

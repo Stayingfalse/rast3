@@ -15,7 +15,9 @@ import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle, snap 
  * of page to test-results/screenshots.
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
-test.describe.configure({ mode: "serial" });
+// each crawl visits up to 45 pages and screenshots every kind (tall pages
+// on phones), well past the default 60 s
+test.describe.configure({ mode: "serial", timeout: 240_000 });
 
 const E = E2E_DOMAIN;
 const unwrap = async (res: { json: () => Promise<unknown> }) =>
@@ -42,7 +44,7 @@ const MAX_PAGES = 45;
 const skip = (url: URL) =>
   url.pathname.startsWith("/api/auth/") || url.pathname === "/api/account/export" || url.pathname.endsWith(".png");
 
-async function crawl(page: Page, role: string, starts: string[], testInfo: TestInfo) {
+async function crawl(page: Page, role: string, starts: string[], testInfo: TestInfo, avoid?: RegExp) {
   const origin = new URL(page.url() === "about:blank" ? testInfo.project.use.baseURL! : page.url()).origin;
   const seen = new Map<string, number>();
   const shot = new Set<string>();
@@ -105,6 +107,7 @@ async function crawl(page: Page, role: string, starts: string[], testInfo: TestI
         continue;
       }
       const target = url.pathname + url.search;
+      if (avoid?.test(url.pathname)) continue;
       if (!done.has(target)) queue.push(target);
     }
   }
@@ -182,6 +185,9 @@ test("a site admin", async ({ page }, testInfo) => {
     "admin",
     ["/admin", "/admin/approvals", "/admin/season", "/admin/groups", "/admin/users", "/admin/links", "/admin/kudos", "/admin/insights", "/admin/affiliate", "/admin/settings"],
     testInfo,
+    // admins see every group, including the other device's test groups,
+    // which that run deletes as it goes; the organiser crawl covers consoles
+    /^\/groups\/[^/]+\//,
   );
   report("admin");
 });

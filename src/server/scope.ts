@@ -62,6 +62,18 @@ export const inGroup = (groupId: string): Prisma.UserWhereInput => ({
   memberships: { some: { groupId } },
 });
 
+/**
+ * Day 26: a friends or community group's own thank-you feed. Thank-yous for
+ * gifts given in the group, plus members' thank-yous not tied to a gift.
+ * Thank-yous for gifts from their other groups stay out.
+ */
+export const groupFeed = (groupId: string): Prisma.KudosWhereInput => ({
+  OR: [
+    { purchase: { wishlistAssignment: { groupId } } },
+    { purchaseId: null, user: inGroup(groupId) },
+  ],
+});
+
 /** Same organisation, outside the given team (or everyone if no team). */
 export const inOrgOutsideTeam = (
   orgId: string,

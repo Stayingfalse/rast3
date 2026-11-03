@@ -1423,3 +1423,24 @@ that don't touch the data model. Known items to include:
     organisers (idea, 31 Oct). Without a pick, the run takes the status
     page, as it helps the 15 Nov launch most. The Wall of Kindness stays on
     10 Nov.
+- **Nightly run, 3 Nov: failed reminder emails are kept (launch prep).**
+  - A failed send used to delete its log row (so the next run could
+    retry), so failures showed nowhere. Now the row is kept as FAILED with
+    the error, moved off the claim (`ref` becomes `!failed:<id>`), so the
+    next hourly run still retries. Every "has this person had this email?"
+    check ignores FAILED rows. Admin › Status counts them and shows the
+    latest error. Checked with the mailer pointed at a closed port: two
+    attempts, two FAILED rows, no duplicate block. Dev CI 125/125 on
+    desktop and on mobile (run 41580875410).
+  - Built on Admin › Status (PR #72, not merged), so this PR includes it.
+  - **Ops (read-only):**
+    - **The 02:00 database backup didn't run again** (3 Nov): the only
+      new backup is the owner's manual one from 2 Nov 19:02. The schedule
+      itself seems broken; recreating it (or a different storage) is the
+      owner's to try.
+    - **Prod and dev both restarted at about 03:06 UTC**, as on 2 Nov
+      (03:03): something on the host restarts nightly (OS updates?).
+  - **Next (nightly, 4 Nov): spare day,** owner's pick. Suggested: the
+    "first gift" moment (idea, 2 Nov) or auto-approve for small friends
+    groups (backlog, 20 Oct); without a pick, small fixes and a fresh
+    regression run.

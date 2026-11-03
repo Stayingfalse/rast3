@@ -16,6 +16,10 @@ import { oneClickUrl, siteUrl } from "./unsubscribe";
  * only kept for an email that actually went. Without an email server nothing is
  * claimed (so they all go once one is set up), and a failed send gives its claim
  * back, so the next hourly run tries again.
+ *
+ * Launch prep (3 Nov): a failed send is kept as a FAILED row, moved off the
+ * claim (its ref becomes "!failed:<id>"), so failures show in Admin › Status
+ * while the next run still retries. Eligibility checks ignore FAILED rows.
  */
 type Db = Pick<PrismaClient, "emailLog">;
 
@@ -93,9 +97,13 @@ export async function sendOnce(
     await db.emailLog.update({ where: { id: logId }, data: { status: "SENT" } });
     return "SENT";
   } catch (e) {
-    // give the claim back: the next run tries again
-    await db.emailLog.delete({ where: { id: logId } });
     lastError = (e instanceof Error ? e.message : String(e)).slice(0, 190);
+    // keep a record of the failure, but give the claim back so the next run
+    // tries again: the row moves to a ref of its own
+    await db.emailLog.update({
+      where: { id: logId },
+      data: { status: "FAILED", ref: `!failed:${logId}`, note: lastError },
+    });
     return "FAILED";
   }
 }

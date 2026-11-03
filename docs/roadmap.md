@@ -1430,7 +1430,8 @@ that don't touch the data model. Known items to include:
     next hourly run still retries. Every "has this person had this email?"
     check ignores FAILED rows. Admin › Status counts them and shows the
     latest error. Checked with the mailer pointed at a closed port: two
-    attempts, two FAILED rows, no duplicate block.
+    attempts, two FAILED rows, no duplicate block. Dev CI 125/125 on
+    desktop and on mobile (run 41580875410).
   - Built on Admin › Status (PR #72, not merged), so this PR includes it.
   - **Ops (read-only):**
     - **The 02:00 database backup didn't run again** (3 Nov): the only

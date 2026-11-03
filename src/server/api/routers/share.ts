@@ -10,6 +10,13 @@ import {
   type GroupScope,
 } from "~/server/share-cards";
 import { getWorkplace } from "~/server/groups";
+import {
+  requireWallOrganiser,
+  WALL_MIN_THANKS,
+  wallKeyOf,
+  wallPath,
+  wallStatus,
+} from "~/server/wall";
 import { createTRPCRouter, protectedProcedure, rateLimit } from "../trpc";
 
 /**
@@ -54,10 +61,34 @@ export const shareRouter = createTRPCRouter({
           where: { groupKey: groupKeyOf(g.scope, g.id) },
           select: { label: true },
         });
-        return groupTotals(g.scope, g.id, card?.label ?? g.label);
+        const [totals, wall] = await Promise.all([
+          groupTotals(g.scope, g.id, card?.label ?? g.label),
+          requireWallOrganiser(ctx.db, ctx.session.user.id, g.id)
+            .then((w) => wallStatus(ctx.db, w))
+            .catch(() => ({ ready: false })),
+        ]);
+        return { ...totals, groupId: g.id, wallReady: wall.ready };
       }),
     );
   }),
+
+  /**
+   * Day 34, organisers: whether this group can have a Wall of Kindness yet
+   * (live, and 3 or more visible thank-yous this season), and its link.
+   */
+  wall: protectedProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const group = await requireWallOrganiser(
+        ctx.db,
+        ctx.session.user.id,
+        input.groupId,
+      );
+      return {
+        ...(await wallStatus(ctx.db, group)),
+        min: WALL_MIN_THANKS,
+      };
+    }),
 
   /**
    * Returns the share link for one of your own gifts or thank-yous, creating
@@ -73,6 +104,11 @@ export const shareRouter = createTRPCRouter({
         z.object({
           kind: z.literal("team"),
           scope: z.enum(["org", "team"]),
+          label: z.string().trim().min(1).max(40),
+        }),
+        z.object({
+          kind: z.literal("wall"),
+          groupId: z.string(),
           label: z.string().trim().min(1).max(40),
         }),
       ]),
@@ -99,6 +135,36 @@ export const shareRouter = createTRPCRouter({
             })
           ).id;
         return { code, path: sharePath("sent", code) };
+      }
+
+      if (input.kind === "wall") {
+        const group = await requireWallOrganiser(ctx.db, userId, input.groupId);
+        const status = await wallStatus(ctx.db, group);
+        if (!status.live) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Your group needs to be approved before it can have a wall.",
+          });
+        }
+        if (!status.ready) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: `Your wall opens once your group has ${WALL_MIN_THANKS} thank-yous this season.`,
+          });
+        }
+        const groupKey = wallKeyOf(group.id);
+        const card = await ctx.db.shareCard.upsert({
+          where: { groupKey },
+          update: { label: input.label },
+          create: {
+            id: newShareCode(),
+            kind: "WALL",
+            userId,
+            groupKey,
+            label: input.label,
+          },
+        });
+        return { code: card.id, path: wallPath(card.id) };
       }
 
       if (input.kind === "team") {

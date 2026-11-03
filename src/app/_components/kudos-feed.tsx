@@ -9,6 +9,7 @@ import type { RouterOutputs } from "~/trpc/react";
 import { AdminActionsDropdown } from "./admin-actions-dropdown";
 import { GIFTING_IN_EVENT, GIFTING_IN_KEY } from "./groups/gifting-switcher";
 import { ShareSheet, type ShareRequest } from "./share/share-sheet";
+import { getChristmasIdentity } from "~/lib/festive-name";
 
 interface KudosFeedProps {
   className?: string;
@@ -102,77 +103,6 @@ const LightboxModal: React.FC<LightboxModalProps> = ({
 type ScopeType = "team" | "workplace" | "site" | `group:${string}`;
 const groupOf = (scope: ScopeType) =>
   scope.startsWith("group:") ? scope.slice("group:".length) : undefined;
-
-// Christmas-themed names for anonymization
-const CHRISTMAS_NAMES = [
-  "Jingle Bell",
-  "Holly Berry",
-  "Candy Cane",
-  "Snow Flake",
-  "Winter Star",
-  "Frost Bite",
-  "Pine Needle",
-  "Sugar Plum",
-  "Ginger Bread",
-  "Icicle Drop",
-  "Mistletoe",
-  "Nutcracker",
-  "Tinsel Shine",
-  "Cocoa Bean",
-  "Peppermint",
-  "Sleigh Bell",
-  "Reindeer",
-  "Snowball",
-  "Eggnog",
-  "Christmas Tree",
-  "Angel Wing",
-  "Star Light",
-  "Gift Wrap",
-  "Ribbon Bow",
-  "Ornament",
-  "Candy Mint",
-  "Hot Cocoa",
-  "Fire Place",
-  "Wreath Maker",
-  "Cookie Baker",
-  "Snow Angel",
-  "Ice Crystal",
-  "Winter Moon",
-  "Frost King",
-  "Snow Queen",
-  "Jingle Jangle",
-  "Merry Maker",
-  "Joy Bringer",
-  "Hope Bearer",
-  "Peace Keeper",
-  "Love Giver",
-  "Kind Heart",
-  "Gentle Soul",
-  "Warm Hug",
-  "Sweet Smile",
-  "Bright Light",
-  "Happy Helper",
-  "Cheerful Elf",
-  "Magic Maker",
-  "Wonder Worker",
-];
-
-// Consistent anonymous Christmas name for a user ID
-const getChristmasIdentity = (userId: string) => {
-  // Create a simple hash from the user ID for consistency
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    const char = userId.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-
-  const nameIndex = Math.abs(hash) % CHRISTMAS_NAMES.length;
-
-  return {
-    name: CHRISTMAS_NAMES[nameIndex]!,
-  };
-};
 
 // Image Carousel Component with max height enforced
 const ImageCarousel: React.FC<

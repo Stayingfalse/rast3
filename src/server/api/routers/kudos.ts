@@ -3,7 +3,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import { db } from "~/server/db";
 import { markArrived } from "~/server/gifts";
-import { getMemberships, inGroup } from "~/server/scope";
+import { getMemberships, groupFeed, inGroup } from "~/server/scope";
 import {
   checkAdminPermissions,
   inAnyGroup,
@@ -18,18 +18,6 @@ import {
 } from "../trpc";
 
 const logger = createChildLogger('kudos');
-
-/**
- * Day 26: a friends or community group's own thank-you feed. Thank-yous for
- * gifts given in the group, plus members' thank-yous not tied to a gift.
- * Thank-yous for gifts from their other groups stay out.
- */
-const groupFeed = (groupId: string) => ({
-  OR: [
-    { purchase: { wishlistAssignment: { groupId } } },
-    { purchaseId: null, user: inGroup(groupId) },
-  ],
-});
 
 /** Members of the group (and site admins) only; returns the group id. */
 async function requireGroupFeed(userId: string | undefined, groupId: string | undefined) {

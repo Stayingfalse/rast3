@@ -114,24 +114,35 @@ export async function ShareCardPage({
           </div>
         )}
 
-      <div className="border-frost/25 flex flex-col gap-4 border-y py-8 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-md">
-          <p className="font-expanded text-frost text-xl font-bold">
-            Random Acts, not Secret Santa
-          </p>
-          <p className="text-frost-soft mt-2">
-            Share your Amazon wishlist, pick up a few colleagues&apos; whenever
-            you&apos;re ready, and gift what you like. Nobody ever sees an
-            address.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3">
-          <JoinButton label="Join Random Acts of Santa" />
-          <Link href="/#how-it-works" className="btn-quiet text-frost">
-            How it works
-          </Link>
-        </div>
-      </div>
+      <ShareJoinFooter />
     </article>
+  );
+}
+
+/** The pitch under every public share page: what this is, and a way in. */
+export function ShareJoinFooter({
+  pickUp = "a few colleagues'",
+}: {
+  /** what members pick up: "a few colleagues'" (wishlists) by default */
+  pickUp?: string;
+}) {
+  return (
+    <div className="border-frost/25 flex flex-col gap-4 border-y py-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="max-w-md">
+        <p className="font-expanded text-frost text-xl font-bold">
+          Random Acts, not Secret Santa
+        </p>
+        <p className="text-frost-soft mt-2">
+          Share your Amazon wishlist, pick up {pickUp} whenever you&apos;re
+          ready, and gift what you like. Nobody ever sees an address.
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-3">
+        <JoinButton label="Join Random Acts of Santa" />
+        <Link href="/#how-it-works" className="btn-quiet text-frost">
+          How it works
+        </Link>
+      </div>
+    </div>
   );
 }

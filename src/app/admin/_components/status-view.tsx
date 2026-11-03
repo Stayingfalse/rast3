@@ -269,9 +269,9 @@ export function StatusView({
             <h2 className="font-expanded text-ink text-lg font-bold">Reminder emails, last 24 hours</h2>
           </CardTitle>
           <CardDescription>
-            Skipped emails went to test addresses. A send that fails is retried
-            at the next hourly run, so an email server that stops working shows
-            up as nothing sent rather than as failures.
+            Skipped emails went to test addresses. A send that fails is logged
+            here and tried again at the next hourly run; a run stops after 3
+            failures in a row.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">

@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { openReports } from "~/server/season";
 
 // GET - return grouped unresolved reports for the current user's wishlists
 export async function GET(req: NextRequest) {
@@ -12,17 +14,11 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const wishlistId = url.searchParams.get("wishlistId");
 
-  const where: {
-    resolved: boolean;
-    wishlistAssignment: {
-      wishlistOwnerId: string;
-    };
-    wishlistAssignmentId?: string;
-  } = {
+  // this season's open reports only (owner, 3 Nov)
+  const open = openReports();
+  const where: Prisma.WishlistReportWhereInput = {
     resolved: false,
-    wishlistAssignment: {
-      wishlistOwnerId: session.user.id,
-    },
+    wishlistAssignment: { ...open.wishlistAssignment, wishlistOwnerId: session.user.id },
   };
 
   if (wishlistId) {

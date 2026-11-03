@@ -17,7 +17,7 @@ import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health"
 import { insightSeasons, seasonInsights } from "~/server/insights";
 import { launchStatus } from "~/server/launch-status";
 import { storeDomain } from "~/server/opens";
-import { currentSeason, seasonWindow } from "~/server/season";
+import { currentSeason, openReports as thisSeasonReports, seasonWindow } from "~/server/season";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
 
 const trackingId = z.string().trim().toLowerCase().regex(TRACKING_ID, TRACKING_ID_HINT);
@@ -61,7 +61,7 @@ export const adminRouter = createTRPCRouter({
       ctx.db.wishlistAssignment.count({ where: { archived: false } }),
       ctx.db.purchase.count(),
       ctx.db.kudos.count({ where: { hidden: false } }),
-      ctx.db.wishlistReport.count({ where: { resolved: false } }),
+      ctx.db.wishlistReport.count({ where: thisSeasonReports() }),
       ctx.db.authProvider.findMany({
         select: { name: true, displayName: true, enabled: true },
         orderBy: { displayName: "asc" },

@@ -27,6 +27,7 @@ type Finding = { page: string; id: string; impact: string | null; help: string; 
 const findings: Finding[] = [];
 let groupId = "";
 let joinCode = "";
+let wallCode = "";
 let domain = "";
 
 async function audit(page: Page, name: string) {
@@ -72,7 +73,7 @@ test.afterAll(async ({ playwright }, testInfo: TestInfo) => {
   await request.dispose();
 });
 
-test("set up: an approved friends group", async ({ page }, testInfo) => {
+test("set up: an approved friends group with a Wall of Kindness", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   await loginAs(page, { email: `a11y-host-${p}@${E}` });
   await mutate(page.request, "profile.saveProfile", {
@@ -88,10 +89,22 @@ test("set up: an approved friends group", async ({ page }, testInfo) => {
   joinCode = g.joinCode;
   await loginAs(page, { email: `a11y-site-${p}@${E}`, adminLevel: "SITE" });
   expect((await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status()).toBe(200);
+  // Day 34: three thank-yous make a wall
+  await loginAs(page, { email: `a11y-host-${p}@${E}` });
+  for (const message of [
+    "Thank you, Santa! It arrived on a grey Monday and made the whole week.",
+    "Best surprise ever.",
+    "Whoever you are: thank you. Truly kind, and exactly what I'd hoped for.",
+  ]) {
+    expect((await mutate(page.request, "kudos.createKudos", { message, images: [] })).status()).toBe(200);
+  }
+  const wall = await mutate(page.request, "share.create", { kind: "wall", groupId, label: `E2E A11y Club ${p}` });
+  expect(wall.status(), await wall.text()).toBe(200);
+  wallCode = ((await unwrap(wall)) as { code: string }).code;
 });
 
 test("public pages", async ({ page }) => {
-  for (const url of ["/", "/?for=discord-run", "/?for=friends-join", "/privacy", "/terms", "/account", `/join/${joinCode}`, `/${domain}`, "/no-such-page"]) {
+  for (const url of ["/", "/?for=discord-run", "/?for=friends-join", "/privacy", "/terms", "/account", `/join/${joinCode}`, `/${domain}`, `/wall/${wallCode}`, "/no-such-page"]) {
     await visit(page, url);
   }
 });

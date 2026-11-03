@@ -43,6 +43,7 @@ import {
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { WallCard } from "../share/wall-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
 
 type Console = RouterOutputs["groups"]["manage"];
@@ -120,6 +121,8 @@ export function OrganiserConsole({ groupId }: { groupId: string }) {
           ))}
         </dl>
       </header>
+
+      <WallCard groupId={g.id} groupName={g.name} />
 
       <Tabs defaultValue="members" className="w-full">
         <TabsList>

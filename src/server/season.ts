@@ -17,6 +17,14 @@ type Db = Pick<PrismaClient, "season" | "seasonCheckIn" | "group" | "wishlistAss
 
 export const currentSeason = () => seasonYearOf(new Date());
 
+/**
+ * Open wishlist problem reports worth showing (owner, 3 Nov): only this
+ * season's. Each season starts with a check-in, so last year's reports are
+ * history; they're kept, never shown.
+ */
+export const openReports = (season = currentSeason()) =>
+  ({ resolved: false, wishlistAssignment: { season } }) satisfies Prisma.WishlistReportWhereInput;
+
 /** This season's gifting window, falling back to 15 Nov to 6 Jan. */
 export async function seasonWindow(db: Db, year = currentSeason()) {
   const row = await db.season.findUnique({ where: { year } });

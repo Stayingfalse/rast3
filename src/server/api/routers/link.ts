@@ -1,4 +1,5 @@
 import { createTRPCRouter, siteAdminProcedure } from "../trpc";
+import { openReports } from "~/server/season";
 
 export const linkRouter = createTRPCRouter({
   /** Site admins: everyone with a wishlist, with their workplace and team. */
@@ -78,7 +79,7 @@ export const linkRouter = createTRPCRouter({
     const reports = await ctx.db.wishlistReport.findMany({
       where: {
         wishlistAssignmentId: { in: allAssignmentIds },
-        resolved: false,
+        ...openReports(),
       },
       select: {
         wishlistAssignmentId: true,

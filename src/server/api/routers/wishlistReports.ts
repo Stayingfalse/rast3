@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { openReports } from "~/server/season";
 
 /**
  * Router: wishlistReports
@@ -22,7 +23,7 @@ export const wishlistReportsRouter = createTRPCRouter({
     // We conservatively query `wishlistReport` and join wishlist owner via prisma relations.
     const reports = await ctx.db.wishlistReport.findMany({
       where: {
-        resolved: false,
+        ...openReports(),
         userId: userId,
       },
       select: {

@@ -38,8 +38,10 @@ const MAX_FAILURES = 3;
  * sign-in links (a free Gmail account sends about 500 a day), so they must
  * never use up its allowance; the rest wait for the next run.
  */
-const DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
+export const REMINDER_DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
 const DAY = 24 * 3600_000;
+/** failed sends are logged (3 Nov) but don't count as having had the email */
+const counted = { status: { not: "FAILED" } } as const;
 
 /** sendOnce, or "HELD" when today's limit is reached (tried again next run) */
 type Send = (...args: Parameters<typeof sendOnce>) => Promise<Awaited<ReturnType<typeof sendOnce>> | "HELD">;
@@ -88,7 +90,7 @@ export async function runReminders(
     where: { status: "SENT", createdAt: { gte: new Date(now.getTime() - DAY) } },
   });
   const send: Send = async (...args) => {
-    if (sentToday >= DAILY_LIMIT) return "HELD";
+    if (sentToday >= REMINDER_DAILY_LIMIT) return "HELD";
     const r = await sendOnce(...args);
     if (r === "SENT") sentToday++;
     failures = r === "FAILED" ? failures + 1 : 0;
@@ -105,7 +107,7 @@ export async function runReminders(
       where: {
         ...base,
         seasonCheckIns: { none: { season } },
-        emailLog: { none: { kind: "CHECK_IN_NUDGE", season } },
+        emailLog: { none: { kind: "CHECK_IN_NUDGE", season, ...counted } },
       },
       select: { id: true, email: true },
       orderBy: { id: "asc" },
@@ -126,7 +128,7 @@ export async function runReminders(
         ...base,
         // joined before it opened (older profiles have no date)
         OR: [{ profileCompletedAt: null }, { profileCompletedAt: { lt: w.opensAt } }],
-        emailLog: { none: { kind: "SEASON_OPEN", season } },
+        emailLog: { none: { kind: "SEASON_OPEN", season, ...counted } },
       },
       select: { id: true, email: true, seasonCheckIns: { where: { season }, select: { season: true } } },
       orderBy: { id: "asc" },
@@ -171,6 +173,7 @@ export async function runReminders(
           userId: owner.id,
           kind: "GIFT_CHECK_IN",
           createdAt: { gte: new Date(now.getTime() - GIFT_LATEST_DAYS * DAY) },
+          ...counted,
         },
       }),
     ]);
@@ -212,12 +215,12 @@ async function sendNewLists(
       ...base,
       assignedLinks: { some: { season } },
       memberships: { some: { group: open } },
-      emailLog: { none: { kind: { in: ["NEW_LISTS", "SEASON_OPEN"] }, createdAt: { gte: lastWeek } } },
+      emailLog: { none: { kind: { in: ["NEW_LISTS", "SEASON_OPEN"] }, createdAt: { gte: lastWeek }, ...counted } },
     },
     select: {
       id: true,
       email: true,
-      emailLog: { where: { kind: "NEW_LISTS" }, orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
+      emailLog: { where: { kind: "NEW_LISTS", ...counted }, orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
     },
     orderBy: { id: "asc" },
     take: BATCH,

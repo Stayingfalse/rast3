@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 
 import { api } from "~/trpc/react";
+import { STAMP_CELEBRATED_EVENT } from "./share/share-sheet";
 import { Postmark } from "./post/postmark";
 import { StampMark } from "./post/stamp-mark";
 
@@ -20,9 +21,16 @@ export function StampAlbum() {
   // Celebrate the moment this season's stamp is collected.
   const current = album?.find((p) => p.current);
   const wasCollected = useRef<boolean | null>(null);
+  // the first-gift window already shows the stamp landing (4 Nov)
+  const celebrated = useRef(false);
+  useEffect(() => {
+    const onCelebrated = () => (celebrated.current = true);
+    window.addEventListener(STAMP_CELEBRATED_EVENT, onCelebrated);
+    return () => window.removeEventListener(STAMP_CELEBRATED_EVENT, onCelebrated);
+  }, []);
   useEffect(() => {
     if (!current) return;
-    if (wasCollected.current === false && current.collected) {
+    if (wasCollected.current === false && current.collected && !celebrated.current) {
       toast.success(
         `You've collected the ${current.year} stamp for your album.`,
       );

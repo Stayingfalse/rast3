@@ -57,9 +57,11 @@ test("member gets 3 wishlists and marks one as gifted", async ({
     .fill("A very festive jumper");
   await page.getByRole("button", { name: "Confirm Purchase" }).click();
 
-  // The giving share card is offered straight away and renders.
-  const sheet = page.getByRole("dialog", { name: "Share your random act" });
+  // The giving share card is offered straight away and renders. It's the
+  // giver's first gift this season, so it's the first-gift window (4 Nov).
+  const sheet = page.getByRole("dialog", { name: /^Your (very )?first random act/ });
   await expect(sheet).toBeVisible();
+  await expect(sheet.getByText(/You've collected the \d{4} stamp for your album/)).toBeVisible();
   const card = sheet.getByRole("img", { name: "Your share card" });
   await expect(card).toBeVisible();
   await expect
@@ -75,6 +77,14 @@ test("member gets 3 wishlists and marks one as gifted", async ({
   await expect(album.getByText("Still to collect this season")).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "wishlist-gifted");
+
+  // the second gift is the everyday window again
+  await page.getByRole("button", { name: "Gifted" }).first().click();
+  await page.getByRole("button", { name: "Confirm Purchase" }).click();
+  const again = page.getByRole("dialog", { name: "Share your random act" });
+  await expect(again).toBeVisible();
+  await again.getByRole("button", { name: "Not now" }).click();
+  await expect(again).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

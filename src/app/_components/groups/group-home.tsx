@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { type FirstGift, ShareSheet, type ShareRequest } from "../share/share-sheet";
 import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
@@ -25,10 +27,21 @@ export function GroupHome({ group }: { group: Group }) {
     },
     onError: (e) => toast.error(e.message),
   });
+  // a Santa's first gift (ever, or of the season) opens the share window
+  // with the season's stamp (4 Nov); later gifts just get the toast
+  const [share, setShare] = useState<{ request: ShareRequest; first: FirstGift } | null>(null);
   const gifted = api.wishlist.markPurchase.useMutation({
-    onSuccess: async () => {
-      toast.success("Marked as gifted. Thank you, Santa!");
+    onSuccess: async (purchase) => {
+      if (purchase.first) {
+        setShare({
+          request: { kind: "sent", purchaseId: purchase.id },
+          first: { kind: purchase.first, year: purchase.season, stamp: purchase.stamp },
+        });
+      } else {
+        toast.success("Marked as gifted. Thank you, Santa!");
+      }
       await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
+      void utils.stamps.getMyAlbum.invalidate();
     },
     onError: (e) => toast.error(e.message),
   });
@@ -132,6 +145,7 @@ export function GroupHome({ group }: { group: Group }) {
           })}
         </ul>
       )}
+      <ShareSheet request={share?.request ?? null} first={share?.first} onClose={() => setShare(null)} />
     </section>
   );
 }

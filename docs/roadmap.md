@@ -1516,3 +1516,22 @@ that don't touch the data model. Known items to include:
     moment, auto-approve for small friends groups, or the "we're live"
     email to organisers on 15 Nov (idea, 3 Nov). Day 33 (release candidate)
     is effectively done: prod already runs everything.
+- **4 Nov (owner: "Let's do it"): the first-gift moment.**
+  - A Santa's first gift of the season opens its own share window: the
+    season's stamp drops in and is franked "2026 COLLECTED", the heading is
+    "Your first random act of Christmas 2026" ("Your very first random
+    act", with a welcome, for a first gift ever), and the share card is
+    ready to post. Later gifts get the everyday window (workplaces) or the
+    toast (groups). Friends and community groups had no share window after
+    a gift at all; they now get this one for a first gift.
+  - `markPurchase` also returns `first` ("ever", "season" or null), the
+    season and its stamp artwork: counts of the Santa's own gifts, nothing
+    about the owner. The album's own "stamp collected" toast is skipped
+    when the window has already shown it.
+  - **CI fix, own PR:** #75's manual trigger let dev e2e start before the
+    deploy finished (the first run tested the old build). `ci.yml` is back
+    to its earlier gating; the manual rerun is now its own workflow,
+    "E2E on dev (manual)", which only runs the tests.
+  - Dev CI also hit two `ECONNRESET`s from dev during e2e on 4 Nov
+    evening (connection dropped mid-request; retries passed): worth a
+    look at the tunnel if it keeps happening.

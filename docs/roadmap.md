@@ -1494,7 +1494,7 @@ that don't touch the data model. Known items to include:
     dev it reruns the whole e2e suite against the dev site as it stands.
     It never deploys (deploys stay push-only). Usable once this is on
     `main`, from GitHub › Actions › CI.
-  - **Regression:** full dev run 115+10 = 125/125 on desktop and on mobile
+  - **Regression:** full dev run 125/125 on desktop and on mobile
     (run 41778948689); the crawl visited 39 pages per device with no
     findings.
   - **Backups (read-only):** the owner recreated the schedule on 3 Nov

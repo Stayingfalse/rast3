@@ -18,6 +18,9 @@ export type ShareRequest =
 /** A Santa's first gift ever, or first this season (owner, 4 Nov). */
 export type FirstGift = { kind: "ever" | "season"; year: number; stamp: string | null };
 
+/** Sent when the first-gift window has celebrated the stamp, so the album doesn't toast it again. */
+export const STAMP_CELEBRATED_EVENT = "raos:stamp-celebrated";
+
 const COPY = {
   sent: {
     title: "Share your random act",
@@ -66,6 +69,10 @@ export function ShareSheet({
     if (!request) return;
     mutate(request, { onSuccess: (r) => setPath(r.path) });
   }, [request, mutate, reset]);
+
+  useEffect(() => {
+    if (request?.kind === "sent" && first) window.dispatchEvent(new Event(STAMP_CELEBRATED_EVENT));
+  }, [request, first]);
 
   useEffect(() => {
     if (!request) return;

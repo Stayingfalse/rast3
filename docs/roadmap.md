@@ -121,7 +121,7 @@
 | 31 | Sat 7 Nov | **Done early (1 Nov).** Full regression on dev + launch checklist |
 | 32 | Sun 8 Nov | **Done early (2 Nov).** Fixes from regression |
 | 33 | Mon 9 Nov | Release candidate → prod (with the owner's approval) |
-| 34 | Tue 10 Nov | **Wall of Kindness (owner, 27 Oct).** A group's thank-yous turned into a shareable page and image, under festive names only (no real names, no gifts' details), for organisers to post on Discord, Slack or LinkedIn. Works for every kind of group, any time in the season ("so far") and as the end-of-season recap. Builds on the share cards and the per-group thank-you feed. Organisers only; small groups (under 3 thank-yous) can't make one |
+| 34 | Tue 10 Nov | **Done early (2 Nov). Wall of Kindness (owner, 27 Oct).** A group's thank-yous turned into a shareable page and image, under festive names only (no real names, no gifts' details), for organisers to post on Discord, Slack or LinkedIn. Works for every kind of group, any time in the season ("so far") and as the end-of-season recap. Builds on the share cards and the per-group thank-you feed. Organisers only; small groups (under 3 thank-yous) can't make one |
 | 35 | Wed 11 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 36 | Thu 12 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
 | 37 | Fri 13 Nov | **Spare day** (gained by working ahead on 18 Oct): launch support, last fixes, or an extra feature from the backlog |
@@ -1423,6 +1423,46 @@ that don't touch the data model. Known items to include:
     organisers (idea, 31 Oct). Without a pick, the run takes the status
     page, as it helps the 15 Nov launch most. The Wall of Kindness stays on
     10 Nov.
+- **2 Nov (evening, owner: "tackle as many of the remaining actions today
+  as we can", in parallel).** Merged #69 and #70 (Days 31 and 32) to prod
+  first. Then three parallel pieces, each on its own branch, put through
+  dev one at a time:
+  - **Wall of Kindness (Day 34), PR from `feat/wall-of-kindness`.** An
+    organiser (3+ visible thank-yous, approved group) makes a public page
+    and image of the group's thank-yous under festive names: no names,
+    emails, gifts or photos, noindex, one per group, live all season.
+    Hidden thank-yous never show; under 3 or not live takes it down (404).
+    In the organiser console, and on the home page's "Your Christmas so
+    far" cards for workplaces and teams. Migration
+    `20261102050000_wall_of_kindness` (adds `WALL` to `ShareCardKind`).
+    Counts are rounded like other public totals ("10+"); messages are shown
+    as written. **Found by e2e:** Cloudflare kept the image for 10 minutes,
+    so a hidden thank-you stayed in it; the image is no longer cached.
+  - **Admin › Status, PR from `feat/admin-status`.** One page for launch
+    week: sign-ups (finished profiles), check-ins, joins, active members
+    (24 h, 7 days); groups waiting and the longest wait; reminder emails by
+    kind and status against the daily limit, and where email is set up;
+    today's pick-ups, gifts and thank-yous; season; app health; a "needs
+    attention" list. Counts only, site admins only, test users left out.
+    **Gap found:** a failed reminder email deletes its log row (so it can
+    be retried), so failures never show anywhere; the page says so. Worth
+    keeping a failure count before 15 Nov (owner to decide).
+  - **Ops investigation (read-only, no changes).**
+    - **Prod backups had never run on schedule** (only manual backups, the
+      latest 17 Oct). The owner made a backup (2 Nov 19:02 UTC, done) and
+      moved the schedule to new storage; check the 02:00 run on 3 Nov.
+      `ras/database-dev` has no backups.
+    - **Stalls:** CPU, not memory (33% used) or the tunnel. Host CPU hit
+      84 to 93% during dev builds and 100% at 08:01, 11:16 and 18:01 UTC
+      (the owner confirms: techshorts rendering videos). Options: a 1-CPU
+      limit on techshorts, rendering at night, and building the app image
+      in GitHub Actions instead of on the host. The owner stopped the
+      cezz.co.uk WordPress site (known exploits, constant load). The host
+      also rebooted at 03:03 UTC on 2 Nov (cause unknown); Easypanel's log
+      collection is off.
+    - **Security note:** some read-only Easypanel connector queries return
+      secrets in plain text (storage keys, the tunnel token, WordPress
+      database passwords). The owner may want to rotate them.
 - **Nightly run, 3 Nov: failed reminder emails are kept (launch prep).**
   - A failed send used to delete its log row (so the next run could
     retry), so failures showed nowhere. Now the row is kept as FAILED with

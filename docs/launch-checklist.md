@@ -13,7 +13,8 @@ outside or in the code; **Owner** means only the owner can do or confirm it.
 | ✅ | Security headers: HSTS (preload), CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy | Checked |
 | ✅ | Season dates: gifting opens 15 Nov, closes 6 Jan (home page) | Checked |
 | ✅ | Privacy policy, terms and "Your data" live; Amazon Associates disclosure in the footer | Checked |
-| ⚠️ | **Database backups.** A daily 02:00 backup of `ras` is scheduled and enabled in Easypanel, but the only backup runs on record are manual (17 Oct 2026, 8 Jun 2025). Confirm recent files exist in the storage provider under `ras/database/`, and try one restore into a scratch database | **Owner** |
+| ⚠️ | **Database backups.** The 02:00 schedule had never run (only manual backups). Owner made a backup on 2 Nov (done) and moved the schedule to new storage. Still to do: confirm the 3 Nov 02:00 run, and try one restore into a scratch database | **Owner** (Claude can check the run) |
+| ⬜ | Dev database (`ras/database-dev`) has no backup schedule | **Owner** |
 | ⚠️ | Take a manual backup right before the release candidate (Day 33) | **Owner** |
 | ⬜ | Thank-you photo storage (iDrive E2): bucket has a lifecycle/backup you're happy with | **Owner** |
 
@@ -45,5 +46,7 @@ outside or in the code; **Owner** means only the owner can do or confirm it.
 | ⬜ | At least one other site admin, so approvals don't wait on one person (the 15 Nov rush) | **Owner** |
 | ⬜ | Approvals queue empty on 14 Nov | **Owner** |
 | ⬜ | VAPID keys on dev and prod, if push notifications should ship this season | **Owner** |
-| ⬜ | Server stalls (requests sometimes hang for seconds while the CPU is idle): look at the `cloudflare-tunnel` container and the `websites/cezz` WordPress traffic before the rush | **Owner** |
+| ⚠️ | Server stalls: CPU saturation (techshorts renders at 08:01, 11:16, 18:01 UTC; builds on the host). WordPress site stopped (2 Nov). Still: a CPU limit on techshorts (e.g. 1 CPU), and ideally build the app image in GitHub Actions | **Owner** |
+| ⬜ | Rotate secrets visible through the Easypanel connector (storage keys, tunnel token, WordPress DB passwords) and limit who can use it | **Owner** |
+| ⬜ | Turn on Easypanel log collection, so the next incident has logs | **Owner** |
 | ⬜ | Someone outside the project signs up on a phone from scratch and tells you what confused them | **Owner** |

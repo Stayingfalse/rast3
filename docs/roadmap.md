@@ -1488,8 +1488,15 @@ that don't touch the data model. Known items to include:
   - All of #71 to #74 were merged and deployed on 3 Nov (Wall of Kindness,
     Admin › Status, failed emails kept, this season's reports only). Prod
     has 21 migrations, latest `20261102050000_wall_of_kindness`.
-  - `dev` brought level with `main` (it lacked #71 and #74) and given a
-    full CI run as the day's regression.
+  - `dev` brought level with `main` (it lacked only #71 and #74's docs:
+    the code had already been through dev, so that push didn't run CI).
+  - **CI: a manual "Run workflow"** (workflow_dispatch): checks always; on
+    dev it reruns the whole e2e suite against the dev site as it stands.
+    It never deploys (deploys stay push-only). Usable once this is on
+    `main`, from GitHub › Actions › CI.
+  - **Regression:** full dev run 115+10 = 125/125 on desktop and on mobile
+    (run 41778948689); the crawl visited 39 pages per device with no
+    findings.
   - **Backups (read-only):** the owner recreated the schedule on 3 Nov
     09:03 and took a manual backup, but the 02:00 run on 4 Nov still
     didn't happen. At 02:00 Easypanel ran the four scheduled *volume*

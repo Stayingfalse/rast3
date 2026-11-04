@@ -17,6 +17,7 @@ import { cleanWishlistUrl } from "~/lib/wishlist";
 import { fairShareFields, pickFairly } from "~/server/fair-share";
 import { getWorkplace } from "~/server/groups";
 import { markArrived, showableBefore } from "~/server/gifts";
+import { STAMP_DESIGNS } from "~/server/stamps";
 import {
   archivePastSeasons,
   checkedIn,
@@ -571,13 +572,25 @@ export const wishlistRouter = createTRPCRouter({
 
       // Create the purchase record. The buyer gets the purchase only, never
       // the owner's id (anonymity).
-      return ctx.db.purchase.create({
+      const purchase = await ctx.db.purchase.create({
         data: {
           userId,
           wishlistAssignmentId: input.assignmentId,
           notes: input.notes,
         },
       });
+      // Their first gift ever, or their first this season, gets its own
+      // moment in the share window (owner, 4 Nov)
+      const [ever, thisSeason] = await Promise.all([
+        ctx.db.purchase.count({ where: { userId } }),
+        ctx.db.purchase.count({
+          where: { userId, wishlistAssignment: { season: assignment.season } },
+        }),
+      ]);
+      const first: "ever" | "season" | null =
+        ever === 1 ? "ever" : thisSeason === 1 ? "season" : null;
+      const stamp = STAMP_DESIGNS[assignment.season] ? `/brand/stamps/${assignment.season}.svg` : null;
+      return { ...purchase, first, season: assignment.season, stamp };
     }),
 
   /**

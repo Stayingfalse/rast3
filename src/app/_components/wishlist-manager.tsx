@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { Postmark } from "./post/postmark";
-import { ShareSheet, type ShareRequest } from "./share/share-sheet";
+import { type FirstGift, ShareSheet, type ShareRequest } from "./share/share-sheet";
 import { Preloader } from "./preloader";
 import { ProfileSetupModal } from "./profile-setup-modal";
 
@@ -124,9 +124,13 @@ export function WishlistManager() {
     });
   const utils = api.useUtils();
   const [shareRequest, setShareRequest] = useState<ShareRequest | null>(null);
+  const [firstGift, setFirstGift] = useState<FirstGift | null>(null);
   const markPurchase = api.wishlist.markPurchase.useMutation({
     onSuccess: (purchase) => {
       setShareRequest({ kind: "sent", purchaseId: purchase.id });
+      setFirstGift(
+        purchase.first ? { kind: purchase.first, year: purchase.season, stamp: purchase.stamp } : null,
+      );
       void refetch();
       void utils.stamps.getMyAlbum.invalidate();
       setSelectedAssignment(null);
@@ -482,12 +486,14 @@ export function WishlistManager() {
             {!archived && hasPurchase && assignment.purchases && (
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  // sharing again later is the everyday window, not the first-gift one
+                  setFirstGift(null);
                   setShareRequest({
                     kind: "sent",
                     purchaseId: assignment.purchases!.id,
-                  })
-                }
+                  });
+                }}
                 className="btn-quiet text-ink"
               >
                 Share this act
@@ -977,7 +983,11 @@ export function WishlistManager() {
       {/* Profile Setup Modal (open when user needs to complete profile) */}
       <ShareSheet
         request={shareRequest}
-        onClose={() => setShareRequest(null)}
+        first={firstGift}
+        onClose={() => {
+          setShareRequest(null);
+          setFirstGift(null);
+        }}
       />
 
       <ProfileSetupModal

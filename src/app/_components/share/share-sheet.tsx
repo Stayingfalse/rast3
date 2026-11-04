@@ -6,12 +6,17 @@ import { createPortal } from "react-dom";
 import { toast } from "react-hot-toast";
 
 import { api } from "~/trpc/react";
+import { Postmark } from "../post/postmark";
+import { StampMark } from "../post/stamp-mark";
 
 export type ShareRequest =
   | { kind: "sent"; purchaseId: string }
   | { kind: "thanks"; kudosId: string }
   | { kind: "team"; scope: "org" | "team"; label: string }
   | { kind: "wall"; groupId: string; label: string };
+
+/** A Santa's first gift ever, or first this season (owner, 4 Nov). */
+export type FirstGift = { kind: "ever" | "season"; year: number; stamp: string | null };
 
 const COPY = {
   sent: {
@@ -36,12 +41,17 @@ const COPY = {
  * Offers a share card for one gift sent or one thank-you posted. The card
  * never shows names, the gift or an address; a thank-you card carries the
  * message and photos the recipient already posted.
+ *
+ * A Santa's first gift (ever, or of the season) gets its own moment: the
+ * season's stamp lands in their album, and the card leads (4 Nov).
  */
 export function ShareSheet({
   request,
+  first = null,
   onClose,
 }: {
   request: ShareRequest | null;
+  first?: FirstGift | null;
   onClose: () => void;
 }) {
   const create = api.share.create.useMutation();
@@ -65,7 +75,16 @@ export function ShareSheet({
   }, [request, onClose]);
 
   if (!request || typeof document === "undefined") return null;
-  const copy = COPY[request.kind];
+  const firstGift = request.kind === "sent" ? first : null;
+  const copy = firstGift
+    ? {
+        title:
+          firstGift.kind === "ever"
+            ? "Your very first random act"
+            : `Your first random act of Christmas ${firstGift.year}`,
+        text: "I just sent my first random act of kindness this Christmas with Random Acts of Santa.",
+      }
+    : COPY[request.kind];
   const url = path ? `${window.location.origin}${path}` : null;
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
@@ -97,6 +116,22 @@ export function ShareSheet({
       >
         <div className="airmail h-2.5" aria-hidden />
         <div className="flex flex-col gap-4 p-6 pt-5">
+          {firstGift && (
+            // the season's stamp lands, then it's franked: one authored moment
+            <div className="relative mx-auto mt-1 mb-1 h-28 w-40" aria-hidden>
+              <StampMark
+                src={firstGift.stamp ?? undefined}
+                year={String(firstGift.year)}
+                className="animate-stamp-in absolute top-0 left-6 w-[4.5rem]"
+              />
+              <Postmark
+                centre={String(firstGift.year)}
+                sub="COLLECTED"
+                animate
+                className="text-gold-ink absolute right-2 bottom-0 w-20 [animation-delay:380ms]"
+              />
+            </div>
+          )}
           <h2
             id="share-title"
             className="font-expanded text-ink text-2xl leading-tight font-extrabold"
@@ -104,7 +139,9 @@ export function ShareSheet({
             {copy.title}
           </h2>
           <p className="text-ink-soft text-sm">
-            {request.kind === "sent"
+            {firstGift
+              ? `${firstGift.kind === "ever" ? "Welcome to Random Acts of Santa. " : ""}You've collected the ${firstGift.year} stamp for your album. Tell your group you've started: the card never shows who it was for, what you sent or anyone's address.`
+              : request.kind === "sent"
               ? "Post it in your team chat or community. The card never shows who it was for, what you sent or anyone's address."
               : request.kind === "thanks"
                 ? "Share your thank-you, photos and all. Your Santa stays anonymous, and so does the card."

@@ -94,6 +94,21 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
   await snap(page, testInfo, "group-home");
 
   await parcel.getByRole("button", { name: "Mark as gifted" }).click();
+
+  // Ava's first gift ever: its own share window with this season's stamp
+  // (4 Nov), and the card ready to share
+  const sheet = page.getByRole("dialog", { name: "Your very first random act" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText("Welcome to Random Acts of Santa.", { exact: false })).toBeVisible();
+  await expect(sheet.getByText(/You've collected the \d{4} stamp for your album/)).toBeVisible();
+  const card = sheet.getByRole("img", { name: "Your share card" });
+  await expect
+    .poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBe(1200);
+  await settle(page);
+  await snap(page, testInfo, "first-gift");
+  await sheet.getByRole("button", { name: "Not now" }).click();
+  await expect(sheet).toHaveCount(0);
   await expect(parcel.getByText("Gifted. Thank you!")).toBeVisible();
 
   // nobody else left in the group

@@ -1484,3 +1484,28 @@ that don't touch the data model. Known items to include:
     "first gift" moment (idea, 2 Nov) or auto-approve for small friends
     groups (backlog, 20 Oct); without a pick, small fixes and a fresh
     regression run.
+- **Nightly run, 4 Nov: spare day, no owner pick (catch-up and checks).**
+  - All of #71 to #74 were merged and deployed on 3 Nov (Wall of Kindness,
+    Admin › Status, failed emails kept, this season's reports only). Prod
+    has 21 migrations, latest `20261102050000_wall_of_kindness`.
+  - `dev` brought level with `main` (it lacked #71 and #74) and given a
+    full CI run as the day's regression.
+  - **Backups (read-only):** the owner recreated the schedule on 3 Nov
+    09:03 and took a manual backup, but the 02:00 run on 4 Nov still
+    didn't happen. At 02:00 Easypanel ran the four scheduled *volume*
+    backups (mcwales) and no *database* backup, so its scheduler works and
+    skips database backups: likely an Easypanel bug. Workarounds for the
+    owner: a volume backup of `ras/database`'s data volume, or a small
+    cron service that runs `mysqldump` nightly to IDrive e2, until
+    Easypanel's database schedule works. Until then, a manual backup each
+    evening.
+  - **03:06 UTC restarts** (2, 3 and 4 Nov): no Easypanel action at that
+    time, so it's the host (OS updates or Docker). Harmless at that hour.
+  - **techshorts** now renders on a second server (owner, 3 Nov), which
+    should end the CPU spikes behind the stalls.
+  - **Weekly reminder: VAPID keys** for push notifications (dev and prod)
+    are still unset; PWA push stays off until they are.
+  - **Next (nightly, 5 Nov): spare day,** owner's pick: the "first gift"
+    moment, auto-approve for small friends groups, or the "we're live"
+    email to organisers on 15 Nov (idea, 3 Nov). Day 33 (release candidate)
+    is effectively done: prod already runs everything.

@@ -8,8 +8,8 @@
 #   commit that fails the checks is never deployed.
 # - Pushes to dev: the Playwright suite runs against https://dev.raosanta.uk
 #   once the deploy is live, desktop and Pixel 7 as two parallel jobs.
-# - Run workflow (manual, 4 Nov): checks, and on dev the whole e2e suite
-#   (regression crawl included) against the dev site as it is. Never deploys.
+# - A manual rerun of the e2e suite lives in e2e-manual.yml, apart from this
+#   pipeline (4 Nov: a combined trigger here let e2e start before the deploy).
 #
 # Secrets: WEBHOOK_URL (prod), DEV_WEBHOOK_URI (dev), E2E_TEST_LOGIN_SECRET
 # (dev-only test login; without it the signed-in e2e tests are skipped).
@@ -17,7 +17,6 @@ name: CI
 
 on:
   pull_request:
-  workflow_dispatch:
   push:
     branches: [main, dev]
     # Roadmap and other docs don't change the app: no deploy, no e2e run
@@ -89,11 +88,8 @@ jobs:
 
   e2e:
     name: E2E on dev (${{ matrix.project }})
-    needs: [check, deploy]
-    # after a dev deploy, or run by hand on dev (deploy is skipped then)
-    if: >-
-      !cancelled() && github.ref_name == 'dev' && needs.check.result == 'success' &&
-      (needs.deploy.result == 'success' || github.event_name == 'workflow_dispatch')
+    needs: deploy
+    if: github.event_name == 'push' && github.ref_name == 'dev'
     runs-on: ubuntu-latest
     # Desktop and mobile run side by side, each in its own test email
     # subdomain (E2E_NS), so their seeds and clean-ups never collide.

@@ -35,6 +35,10 @@ const USERS_PAGE = 25;
 export const adminRouter = createTRPCRouter({
   overview: siteAdminProcedure.query(async ({ ctx }) => {
     const week = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // gifting figures are this season's (owner, 3 Nov: don't lead with past
+    // years); all-time totals ride along as the small print
+    const season = currentSeason();
+    const range = seasonRange(season);
     const [
       users,
       profiles,
@@ -44,6 +48,9 @@ export const adminRouter = createTRPCRouter({
       pickUps,
       gifts,
       kudos,
+      checkedIn,
+      giftsAllTime,
+      kudosAllTime,
       openReports,
       providers,
       migrations,
@@ -58,7 +65,10 @@ export const adminRouter = createTRPCRouter({
         distinct: ["userId"],
       }),
       ctx.db.group.groupBy({ by: ["kind", "status"], _count: { _all: true } }),
-      ctx.db.wishlistAssignment.count({ where: { archived: false } }),
+      ctx.db.wishlistAssignment.count({ where: { season } }),
+      ctx.db.purchase.count({ where: { wishlistAssignment: { season } } }),
+      ctx.db.kudos.count({ where: { hidden: false, createdAt: { gte: range.gte, lt: range.lt } } }),
+      ctx.db.seasonCheckIn.count({ where: { season } }),
       ctx.db.purchase.count(),
       ctx.db.kudos.count({ where: { hidden: false } }),
       ctx.db.wishlistReport.count({ where: thisSeasonReports() }),
@@ -78,7 +88,7 @@ export const adminRouter = createTRPCRouter({
 
     return {
       people: { users, profiles, wishlists, joinedThisWeek: joinedThisWeek.length },
-      gifting: { pickUps, gifts, kudos, openReports },
+      gifting: { season, checkedIn, pickUps, gifts, kudos, openReports, allTime: { gifts: giftsAllTime, kudos: kudosAllTime } },
       groups,
       waiting: groups.reduce((n, g) => n + g.waiting, 0),
       providers,

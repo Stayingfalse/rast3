@@ -1516,3 +1516,36 @@ that don't touch the data model. Known items to include:
     moment, auto-approve for small friends groups, or the "we're live"
     email to organisers on 15 Nov (idea, 3 Nov). Day 33 (release candidate)
     is effectively done: prod already runs everything.
+- **4 Nov (owner: "Let's do it"): the first-gift moment.**
+  - A Santa's first gift of the season opens its own share window: the
+    season's stamp drops in and is franked "2026 COLLECTED", the heading is
+    "Your first random act of Christmas 2026" ("Your very first random
+    act", with a welcome, for a first gift ever), and the share card is
+    ready to post. Later gifts get the everyday window (workplaces) or the
+    toast (groups). Friends and community groups had no share window after
+    a gift at all; they now get this one for a first gift.
+  - `markPurchase` also returns `first` ("ever", "season" or null), the
+    season and its stamp artwork: counts of the Santa's own gifts, nothing
+    about the owner. The album's own "stamp collected" toast is skipped
+    when the window has already shown it.
+  - **CI fix, own PR:** #75's manual trigger let dev e2e start before the
+    deploy finished (the first run tested the old build). `ci.yml` is back
+    to its earlier gating; the manual rerun is now its own workflow,
+    "E2E on dev (manual)", which only runs the tests.
+  - Dev CI also hit two `ECONNRESET`s from dev during e2e on 4 Nov
+    evening (connection dropped mid-request; retries passed): worth a
+    look at the tunnel if it keeps happening.
+- **Nightly run, 5 Nov: admin overview shows this Christmas (owner's 3 Nov
+  principle: don't lead with past years).**
+  - The overview's gifting figures were all-time (291 gifts, 334 kudos,
+    pick-ups of every year). Now: **Checked in** (new), **Picked up** and
+    **Gifts sent** count this season, and thank-yous this Christmas; the
+    all-time gifts total stays as small print. People and Wishlists stay
+    as they are (they describe today, not a season).
+  - **Backups:** still none since the manual one on 3 Nov 09:03; the 02:00
+    schedule didn't run again on 5 Nov. Owner: a manual backup now, and a
+    fallback (volume backup or `mysqldump` cron) before launch.
+  - **Restarts:** prod and dev restarted at 03:06 UTC again (fourth night).
+  - **Next (nightly, 6 Nov): spare day,** owner's pick (auto-approve small
+    friends groups, the "we're live" organiser email on 15 Nov, or the
+    morning status email to the owner during launch week).

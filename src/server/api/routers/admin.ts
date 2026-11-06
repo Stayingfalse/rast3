@@ -14,6 +14,7 @@ import {
   type Store,
 } from "~/server/affiliate";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
+import { launchInfo, setGroupLaunch } from "~/server/group-launch";
 import { insightSeasons, seasonInsights } from "~/server/insights";
 import { launchStatus } from "~/server/launch-status";
 import { storeDomain } from "~/server/opens";
@@ -137,21 +138,22 @@ export const adminRouter = createTRPCRouter({
           discordGuildId: true,
           discordGuildName: true,
           discordMemberCount: true,
-          openEarlySeason: true,
+          launchAt: true,
+          launchSeason: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
           _count: { select: { memberships: true, children: true } },
         },
       });
-      const season = currentSeason();
-      return rows.map(({ _count, discordGuildId, discordGuildName, discordMemberCount, openEarlySeason, ...g }) => ({
+      const w = await seasonWindow(ctx.db);
+      return rows.map(({ _count, discordGuildId, discordGuildName, discordMemberCount, launchAt, launchSeason, ...g }) => ({
         ...g,
         members: _count.memberships,
         teams: _count.children,
         discord: !!discordGuildId,
         discordName: discordGuildName,
         discordMembers: discordMemberCount,
-        openEarly: openEarlySeason === season,
+        launch: launchInfo({ launchAt, launchSeason }, w),
       }));
     }),
 
@@ -520,20 +522,26 @@ export const adminRouter = createTRPCRouter({
       return { ...data, seasons, current };
     }),
 
-  /** Day 18: this season's dates, check-ins and the groups opened early. */
+  /** Day 18: this season's dates, check-ins and the groups with their own launch date (7 Nov). */
   season: siteAdminProcedure.query(async ({ ctx }) => {
     const year = currentSeason();
-    const [w, members, checkedIn, early] = await Promise.all([
+    const [w, members, checkedIn, own] = await Promise.all([
       seasonWindow(ctx.db, year),
       ctx.db.user.count({ where: { profileCompleted: true } }),
       ctx.db.seasonCheckIn.count({ where: { season: year } }),
       ctx.db.group.findMany({
-        where: { openEarlySeason: year },
-        orderBy: { name: "asc" },
-        select: { id: true, name: true, kind: true },
+        where: { launchSeason: year, launchAt: { not: null }, kind: { not: "TEAM" } },
+        orderBy: { launchAt: "asc" },
+        select: { id: true, name: true, kind: true, status: true, launchAt: true },
       }),
     ]);
-    return { ...w, members, checkedIn, openEarly: early };
+    const now = new Date();
+    return {
+      ...w,
+      members,
+      checkedIn,
+      ownDates: own.map((g) => ({ ...g, launchAt: g.launchAt!, open: now >= g.launchAt! && now <= w.closesAt })),
+    };
   }),
 
   setSeasonDates: siteAdminProcedure
@@ -601,14 +609,34 @@ export const adminRouter = createTRPCRouter({
       return { ok: true };
     }),
 
-  /** Let a group (and its teams) pick up outside the season's dates. */
+  /**
+   * Open a group (and its teams) for gifting now, whatever the season's
+   * dates (its launch becomes the start of the season's year), or put it
+   * back on the season's date. Admin › Groups' "Open now", and the e2e
+   * tests' way of opening a group before 15 November.
+   */
   setOpenEarly: siteAdminProcedure
     .input(z.object({ groupId: z.string(), open: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
+      const year = currentSeason();
       await ctx.db.group.update({
         where: { id: input.groupId },
-        data: { openEarlySeason: input.open ? currentSeason() : null },
+        data: input.open
+          ? { launchAt: seasonRange(year).gte, launchSeason: year }
+          : { launchAt: null, launchSeason: null },
       });
       return { ok: true };
     }),
+
+  /** A group's own gifting launch date (a UK day), or null for the season's (7 Nov). */
+  setLaunchDate: siteAdminProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date").nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) =>
+      setGroupLaunch(ctx.db, await seasonWindow(ctx.db), input.groupId, input.date, { by: "SITE" }),
+    ),
 });

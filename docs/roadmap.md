@@ -1611,3 +1611,25 @@ that don't touch the data model. Known items to include:
     to order" on the day, then "Gifts that arrive in the New Year are
     still random acts". No date, no banner. Owner: set the date once
     Amazon UK publishes it.
+- **Owner, 7 Nov: launch dates per group** (`feat/group-launch-dates`,
+  migration `20261107050000_group_launch`). Every group opens on the
+  season's date (15 Nov) unless its organiser (console › Settings ›
+  Gifting dates) or a site admin (Admin › Groups › Gifting date…) picks
+  another day, earlier or later: a community joining after the 15th can
+  agree its own start. Organisers can pick today or later, and only until
+  their group opens; site admins any day of the season. Closing stays
+  site-wide. Teams follow their workplace; an own date lapses next season.
+  - Replaces "open early": groups opened early became an own date of
+    1 August (the migration fills it in); "Open now" on Admin › Groups
+    does the same. `openEarlySeason` is no longer read, and is kept until
+    after the season for a rollback.
+  - Follows the group's date: picking up (and the error saying when it
+    opens), the workplace pool (other workplaces join once open), group
+    home ("Gifting opens in this group on …", no pick-up button yet), the
+    group card and console badges, the home countdown (your first group to
+    open), the last-order banner, "new wishlists" emails (open groups
+    only), "gifting is open" (when the season opens, to members who can
+    pick up somewhere; others when their first group opens) and the
+    organisers' "we're live" (on their group's own date).
+  - Admin › Season lists groups with their own date, with "Use the
+    season's date".

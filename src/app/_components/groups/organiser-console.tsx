@@ -46,6 +46,7 @@ import { inviteLink, inviteMessage } from "~/lib/invite-message";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { WallCard } from "../share/wall-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
+import { LaunchDateEditor } from "./launch-date-editor";
 
 type Console = RouterOutputs["groups"]["manage"];
 
@@ -99,6 +100,16 @@ export function OrganiserConsole({ groupId }: { groupId: string }) {
           >
             {STATUS[g.status]}
           </Badge>
+          {g.status === "ACTIVE" && !g.launch.open && new Date(g.launch.opensAt) > new Date() && (
+            <Badge variant="outline" className="text-frost">
+              Gifting opens{" "}
+              {new Date(g.launch.opensAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                timeZone: "Europe/London",
+              })}
+            </Badge>
+          )}
         </div>
         <h1 className="font-expanded text-frost text-4xl leading-none font-extrabold break-words uppercase sm:text-5xl">
           {g.name}
@@ -425,6 +436,20 @@ function Settings({ g }: { g: Console }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Gifting dates</CardTitle>
+          <CardDescription>
+            {g.kind === "ORG"
+              ? "When your workplace (and its teams) can start picking up wishlists."
+              : "When your group can start picking up wishlists."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LaunchDateEditor groupId={g.id} launch={g.launch} siteAdmin={g.siteAdmin} />
+        </CardContent>
+      </Card>
+
       {!isOrg && (
         <Card>
           <CardHeader>

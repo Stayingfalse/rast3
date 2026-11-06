@@ -19,6 +19,8 @@ import {
   serverColumns,
 } from "~/server/discord";
 import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
+import { launchInfo, setGroupLaunch } from "~/server/group-launch";
+import { seasonWindow } from "~/server/season";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
@@ -153,12 +155,16 @@ export const groupsRouter = createTRPCRouter({
             status: true,
             joinCode: true,
             discordGuildId: true,
+            launchAt: true,
+            launchSeason: true,
             _count: { select: { memberships: true } },
           },
         },
       },
     });
     const settings = await getAffiliateSettings(ctx.db);
+    const w = await seasonWindow(ctx.db);
+    const now = new Date();
     return Promise.all(
       rows.map(async ({ role, group }) => ({
         id: group.id,
@@ -170,6 +176,8 @@ export const groupsRouter = createTRPCRouter({
         // only organisers can see and share the code
         joinCode: role === "ADMIN" ? group.joinCode : null,
         discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
+        /** when gifting opens here (its own date or the season's), and whether it is now */
+        ...(({ opensAt, open }) => ({ opensAt, open, opensLater: now < opensAt }))(launchInfo(group, w, now)),
         /** wishlists here open from gift pages with affiliate links */
         affiliate: (await affiliateFor(ctx.db, group.id, undefined, settings)).enabled,
       })),
@@ -728,6 +736,9 @@ export const groupsRouter = createTRPCRouter({
         joinCode: group.joinCode,
         discordGuildId: group.discordGuildId,
         createdAt: group.createdAt,
+        launch: launchInfo(group, await seasonWindow(ctx.db)),
+        /** site admins can set any date; organisers only before it opens */
+        siteAdmin: site,
         stats: {
           members: members.length,
           joinedFirst48h: members.filter((m) => m.joinedAt <= firstTwoDays)
@@ -763,6 +774,29 @@ export const groupsRouter = createTRPCRouter({
           };
         }),
       };
+    }),
+
+  /**
+   * Organisers (and site admins): this group's own gifting launch date, a UK
+   * day, or null to follow the season's (7 Nov). See ~/server/group-launch.
+   */
+  setLaunchDate: protectedProcedure
+    .use(rateLimit("groups.setLaunchDate", 30, HOUR))
+    .input(
+      z.object({
+        groupId: z.string(),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date").nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireOrganiser(ctx.db, input.groupId, ctx.session.user.id);
+      const me = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { adminLevel: true },
+      });
+      return setGroupLaunch(ctx.db, await seasonWindow(ctx.db), input.groupId, input.date, {
+        by: me?.adminLevel === "SITE" ? "SITE" : "ORGANISER",
+      });
     }),
 
   /** Friends/community organisers: make someone an organiser, or not. */

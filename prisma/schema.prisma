@@ -312,9 +312,15 @@ model Group {
   createdBy          User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
   memberships        Membership[]
   assignments        WishlistAssignment[]
-  /// the season a site admin opened this group early for (testing, early
-  /// groups); it lapses when the next season starts
+  /// retired 7 Nov (now launchAt/launchSeason, which the migration filled
+  /// from it); kept until after the season so a rollback still works
   openEarlySeason    Int?
+  /// this group's own gifting launch (UK midnight of the chosen day), for
+  /// launchSeason only; otherwise it opens on the season's date. Set by a
+  /// site admin or the group's organiser (owner, 7 Nov). Teams follow their
+  /// workplace.
+  launchAt           DateTime?
+  launchSeason       Int?
   /// Amazon affiliate links in this group: the site default for its kind, or forced on/off
   affiliate          AffiliateMode        @default(DEFAULT)
   affiliateTags      AffiliateTag[]

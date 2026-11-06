@@ -48,6 +48,8 @@ export function GroupHome({ group }: { group: Group }) {
   });
 
   const live = group.status === "ACTIVE";
+  // approved, but its gifting date (the site's or its own, 7 Nov) is still to come
+  const opensLater = live && group.opensLater;
   return (
     <section
       aria-labelledby="group-home-heading"
@@ -69,14 +71,30 @@ export function GroupHome({ group }: { group: Group }) {
 
       {live && <LastOrderBanner />}
 
-      {!live ? (
+      {!live || opensLater ? (
         <p
           role="status"
           className="rounded-label border-gold/50 text-gold-soft max-w-xl border px-4 py-3"
         >
-          {group.status === "PENDING"
-            ? "This group is waiting for our approval. Gifting opens once it's approved; meanwhile, invite people so there are lists waiting."
-            : "This group is closed."}
+          {opensLater ? (
+            <>
+              <strong className="text-frost">
+                Gifting opens in this group on{" "}
+                {new Date(group.opensAt).toLocaleDateString("en-GB", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  timeZone: "Europe/London",
+                })}
+                .
+              </strong>{" "}
+              Until then, invite people so there are lists waiting.
+            </>
+          ) : group.status === "PENDING" ? (
+            "This group is waiting for our approval. Gifting opens once it's approved; meanwhile, invite people so there are lists waiting."
+          ) : (
+            "This group is closed."
+          )}
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-3">

@@ -128,7 +128,8 @@ const kindOf = (log: Log[], kind: string, email: string) =>
 
 test("organisers of live groups hear they're live once gifting opens", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
-  // an organiser whose group still waits for approval
+  // an organiser whose group still waits for approval (a community: friends
+  // groups go live straight away)
   await loginAs(page, { email: who("pend", p) });
   await mutate(page.request, "profile.saveProfile", {
     over16: true,
@@ -136,7 +137,7 @@ test("organisers of live groups hear they're live once gifting opens", async ({ 
     lastName: "Pending",
     amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2EREM0003",
   });
-  expect((await mutate(page.request, "groups.create", { name: `E2E Pending ${p}`, kind: "FRIENDS" })).status()).toBe(200);
+  expect((await mutate(page.request, "groups.create", { name: `E2E Pending ${p}`, kind: "COMMUNITY" })).status()).toBe(200);
   // an organiser of a live group who has stopped reminders
   await loginAs(page, { email: who("off", p) });
   const offGroup = (await unwrap(

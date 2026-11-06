@@ -69,7 +69,14 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
   expect(isCount(d.unfinished)).toBe(true);
   expect(isCount(d.groups.pending)).toBe(true);
   expect(isCount(d.groups.largeFriends)).toBe(true);
-  expect(d.emails.map((e) => e.kind)).toEqual(["CHECK_IN_NUDGE", "SEASON_OPEN", "GIFT_CHECK_IN", "NEW_LISTS"]);
+  expect(d.emails.map((e) => e.kind)).toEqual([
+    "CHECK_IN_NUDGE",
+    "SEASON_OPEN",
+    "GIFT_CHECK_IN",
+    "NEW_LISTS",
+    "ORGANISER_LIVE",
+    "ADMIN_STATUS",
+  ]);
   for (const e of d.emails) expect([e.SENT, e.SKIPPED, e.FAILED].every(isCount)).toBe(true);
   expect(isCount(d.failed)).toBe(true);
   expect(["environment", "admin settings", "none"]).toContain(d.emailServer);

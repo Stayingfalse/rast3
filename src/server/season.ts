@@ -32,6 +32,8 @@ export async function seasonWindow(db: Db, year = currentSeason()) {
     year,
     opensAt: row?.opensAt ?? new Date(Date.UTC(year, 10, 15)),
     closesAt: row?.closesAt ?? new Date(Date.UTC(year + 1, 0, 6, 23, 59, 59)),
+    /** Amazon UK's last day for Christmas delivery, if an admin set it */
+    lastOrderAt: row?.lastOrderAt ?? null,
   };
 }
 

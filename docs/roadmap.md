@@ -1549,3 +1549,27 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 6 Nov): spare day,** owner's pick (auto-approve small
     friends groups, the "we're live" organiser email on 15 Nov, or the
     morning status email to the owner during launch week).
+- **Nightly run, 6 Nov: dependency security before launch (no owner pick
+  for the spare day).**
+  - `npm audit` (production): 18 known issues (12 high). Updated what's
+    safe before launch:
+    - **nodemailer 7.0.13 to 8.0.11** (sign-in links and reminders): fixes
+      SMTP and header injection (CRLF) and the OAuth2 TLS check. 8's only
+      breaking change is an error code rename (`NoAuth` to `ENOAUTH`),
+      which the site doesn't use. Auth.js accepts `^7.0.7 || ^8.0.5`.
+    - **sharp 0.34 to 0.35.5** (thank-you photos, share cards): libvips,
+      libheif and librsvg fixes; Next already ran 0.35.5 in the same image.
+    - `npm audit fix`: body-parser; the shadcn CLI 4.22.1 to 4.23.0.
+  - **Left for after launch, on purpose:** the remaining nodemailer
+    advisories are address-parser bugs fixed only in 10.x, which Auth.js
+    doesn't accept yet; zod's fix is in zod 4 (a major upgrade touching
+    every validator); Prisma's `deepmerge-ts` is in its config loader
+    (build time, not the running site); the rest are the shadcn CLI's own
+    tools. Now 16 (10 high).
+  - **Email can't be tested on dev** (no email server there): after this
+    reaches prod, the owner sends themself a sign-in link once to confirm.
+  - **Backups:** the owner took a manual backup on 6 Nov 01:58; the 02:00
+    schedule still hasn't run on its own.
+  - **Next (nightly, 7 Nov): spare day,** owner's pick (auto-approve small
+    friends groups, the "we're live" organiser email, the morning status
+    email, or the last-order countdown from 10 Dec).

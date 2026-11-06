@@ -513,6 +513,7 @@ function Settings({ g }: { g: Console }) {
             <DiscordLinkEditor
               groupId={g.id}
               guildId={g.discordGuildId}
+              pending={g.status === "PENDING"}
               returnTo={`/groups/${g.id}/manage`}
             />
           </CardContent>

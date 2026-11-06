@@ -1573,3 +1573,41 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 7 Nov): spare day,** owner's pick (auto-approve small
     friends groups, the "we're live" organiser email, the morning status
     email, or the last-order countdown from 10 Dec).
+- **Owner, 6 Nov: "let's do all 4 of those ideas now".** Three PRs, tested
+  together on dev:
+  - **Friends groups go live straight away** (`feat/auto-approve-friends`).
+    Workplaces and communities still wait. Admin › Approvals lists friends
+    groups past 15 members ("Large friends groups to check", also an
+    attention item on Admin › Status) and those started in the last 7
+    days, each with Close. One person can start 5 friends groups a
+    season; group creation is limited to 10 an hour. Friends groups
+    already waiting stay waiting until approved.
+  - **Owner, 6 Nov: communities linked to Discord go live too** (same
+    branch). Linking a Discord server the organiser owns or manages
+    (checked with Discord) puts a waiting community live; one a site admin closed stays closed, and
+    unlinking keeps it live. Site admins see what Discord tells the
+    organiser about the server (no bot): name, icon, rough member and
+    online counts, when it was made (from its id; one made in the last 30
+    days is flagged "New server"), Partner/Verified/Discovery/Community
+    features, and whether the organiser owns it, is an admin or a manager.
+    Stored when it's linked (migrations `20261106070000_discord_names`,
+    `20261106080000_discord_details`) and refreshed whenever the organiser
+    opens their console, which also fills it in for servers linked before.
+    Shown on Admin › Approvals (each card, plus "Communities on Discord":
+    those linked in the last 7 days) and Admin › Groups. Privacy policy
+    says so. e2e links through a test-only route, since dev has no Discord
+    sign-in.
+  - **Launch emails** (`feat/launch-emails`, migration
+    `20261106050000_launch_emails`): organisers of live groups get "Gifting
+    is open in <group>" once, from 15 Nov (with their invite link and a
+    paste-ready message); site admins get a morning status email from
+    14 Nov to 22 Nov, from 07:00 UK. Both use the reminders' daily limit,
+    opt-out and failure rules. Privacy policy mentions them.
+  - **Last-order countdown** (`feat/last-order`, migration
+    `20261106060000_last_order`): Admin › Season › "Last order for
+    Christmas". From 10 Dec (or 9 days before, if the date is earlier)
+    members who are gifting see "Order by Saturday 19 December for
+    Christmas delivery · N days left" on home and group pages, "Last day
+    to order" on the day, then "Gifts that arrive in the New Year are
+    still random acts". No date, no banner. Owner: set the date once
+    Amazon UK publishes it.

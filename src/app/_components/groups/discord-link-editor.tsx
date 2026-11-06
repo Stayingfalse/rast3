@@ -26,10 +26,13 @@ type Servers = RouterOutputs["groups"]["discordServers"];
 export function DiscordLinkEditor({
   groupId,
   guildId,
+  pending = false,
   returnTo = "/groups",
 }: {
   groupId: string;
   guildId: string | null;
+  /** still waiting for approval: linking a server puts it live */
+  pending?: boolean;
   returnTo?: string;
 }) {
   const utils = api.useUtils();
@@ -43,7 +46,11 @@ export function DiscordLinkEditor({
   const save = api.groups.setDiscordLink.useMutation({
     onSuccess: async (g) => {
       toast.success(
-        g.discordGuildId ? "Discord server linked" : "Discord server unlinked",
+        g.approved
+          ? `Discord server linked: ${g.name} is live`
+          : g.discordGuildId
+            ? "Discord server linked"
+            : "Discord server unlinked",
       );
       await utils.groups.mine.invalidate();
       await utils.groups.manage.invalidate();
@@ -64,6 +71,12 @@ export function DiscordLinkEditor({
       className="border-rule flex flex-col gap-3 border-t border-dashed pt-4"
     >
       <p className="label-caps text-ink-soft">Discord server</p>
+      {!guildId && pending && (
+        <p className="text-ink text-sm">
+          Link a Discord server you own or manage and your community goes
+          live straight away, without waiting for us to check it.
+        </p>
+      )}
       {guildId && (
         <p className="text-ink text-sm">
           Linked{linkedName ? ` to ${linkedName}` : ""}: anyone in the server

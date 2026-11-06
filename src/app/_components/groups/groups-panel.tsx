@@ -35,9 +35,13 @@ export function GroupsPanel() {
   const [code, setCode] = useState("");
 
   const create = api.groups.create.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (g) => {
       setName("");
-      toast.success("Group started. Share the invite link below.");
+      toast.success(
+        g.status === "ACTIVE"
+          ? "Group started and live. Share the invite link below."
+          : "Community started. Link its Discord server below to go live now, or we'll check it before gifting opens.",
+      );
       await utils.groups.mine.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -62,7 +66,8 @@ export function GroupsPanel() {
           Gifting happens inside groups. Join your workplace with your work
           email, or a friends group or community (a Discord server, a club, a
           street) with an invite code, or start your own. You can be in more
-          than one. We check each new group before it goes live.
+          than one. Friends groups go live straight away; we check each new
+          community and workplace before gifting opens in it.
         </p>
       </header>
 
@@ -104,9 +109,13 @@ export function GroupsPanel() {
                   [
                     "FRIENDS",
                     "Friends or family",
-                    "People who know each other",
+                    "People who know each other. Live straight away.",
                   ],
-                  ["COMMUNITY", "Community", "A Discord server, club or forum"],
+                  [
+                    "COMMUNITY",
+                    "Community",
+                    "A Discord server, club or forum. Link your Discord server to go live straight away; otherwise we check it first.",
+                  ],
                 ] as const
               ).map(([value, title, hint]) => (
                 <label
@@ -279,6 +288,7 @@ function GroupCard({ group }: { group: Group }) {
           <DiscordLinkEditor
             groupId={group.id}
             guildId={group.discord.guildId}
+            pending={group.status === "PENDING"}
           />
         )}
 

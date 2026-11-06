@@ -25,7 +25,7 @@ type Status = {
   attention: { key: string; text: string }[];
   people: { what: string; day: number; week: number }[];
   unfinished: number;
-  groups: { pending: number; oldestHours: number | null; tooLong: boolean };
+  groups: { pending: number; oldestHours: number | null; tooLong: boolean; largeFriends: number };
   emails: { kind: string; SENT: number; SKIPPED: number; FAILED: number }[];
   failed: number;
   latestFailed: { note: string | null } | null;
@@ -68,6 +68,7 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
   }
   expect(isCount(d.unfinished)).toBe(true);
   expect(isCount(d.groups.pending)).toBe(true);
+  expect(isCount(d.groups.largeFriends)).toBe(true);
   expect(d.emails.map((e) => e.kind)).toEqual(["CHECK_IN_NUDGE", "SEASON_OPEN", "GIFT_CHECK_IN", "NEW_LISTS"]);
   for (const e of d.emails) expect([e.SENT, e.SKIPPED, e.FAILED].every(isCount)).toBe(true);
   expect(isCount(d.failed)).toBe(true);
@@ -83,6 +84,7 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
   expect(d.attention.some((a) => a.key === "mail-server")).toBe(d.emailServer === "none");
   expect(d.attention.some((a) => a.key === "failed")).toBe(d.failed > 0);
   expect(d.attention.some((a) => a.key === "pending")).toBe(d.groups.tooLong);
+  expect(d.attention.some((a) => a.key === "large-friends")).toBe(d.groups.largeFriends > 0);
 
   // counts only: nothing about any one person, and no credentials
   expect(JSON.stringify(d)).not.toMatch(/@|userId|email"|name"|password|pass"|clientSecret|refreshToken/i);

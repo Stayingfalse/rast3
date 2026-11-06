@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { type FirstGift, ShareSheet, type ShareRequest } from "../share/share-sheet";
+import { LastOrderBanner } from "../last-order-banner";
 import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
@@ -65,6 +66,8 @@ export function GroupHome({ group }: { group: Group }) {
         </h2>
         {group.affiliate && <AffiliateNote />}
       </div>
+
+      {live && <LastOrderBanner />}
 
       {!live ? (
         <p

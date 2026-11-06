@@ -252,6 +252,10 @@ model Season {
   year      Int      @unique
   opensAt   DateTime
   closesAt  DateTime
+  /// Amazon UK's last day to order for standard Christmas delivery, set by a
+  /// site admin each season (6 Nov 2026). Only its UK calendar date matters;
+  /// stored at 12:00 UTC. Null: no last-order countdown.
+  lastOrderAt DateTime?
   createdAt DateTime @default(now())
 }
 
@@ -272,35 +276,49 @@ model SeasonCheckIn {
 /// or a friends group (FRIENDS). Replaces Domain/Department (Day 8 backfill;
 /// queries move over on Day 9).
 model Group {
-  id              String               @id @default(cuid())
-  kind            GroupKind
-  name            String
-  slug            String               @unique
-  status          GroupStatus          @default(PENDING)
-  description     String?
-  parentId        String?
+  id                 String               @id @default(cuid())
+  kind               GroupKind
+  name               String
+  slug               String               @unique
+  status             GroupStatus          @default(PENDING)
+  description        String?
+  parentId           String?
   /// ORG groups: the email domain members join with (legacy Domain.name)
-  emailDomain     String?              @unique
-  joinCode        String?              @unique
+  emailDomain        String?              @unique
+  joinCode           String?              @unique
   /// COMMUNITY groups: the Discord server members join through (Day 13)
-  discordGuildId  String?              @unique
+  discordGuildId     String?              @unique
   /// optional Discord role required to join
-  discordRoleId   String?
-  createdById     String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  parent          Group?               @relation("GroupTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children        Group[]              @relation("GroupTree")
-  createdBy       User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  memberships     Membership[]
-  assignments     WishlistAssignment[]
+  discordRoleId      String?
+  /// the linked server as Discord described it to the organiser when they
+  /// linked it (refreshed when they open the console), for site admins
+  discordGuildName   String?              @db.VarChar(100)
+  discordMemberCount Int?
+  discordLinkedAt    DateTime?
+  /// icon hash, rough online count, notable features (comma-separated:
+  /// PARTNERED, VERIFIED, ...), and whether the organiser owns it (OWNER),
+  /// is an admin (ADMIN) or a server manager (MANAGER)
+  discordIcon        String?              @db.VarChar(64)
+  discordOnlineCount Int?
+  discordFeatures    String?              @db.VarChar(255)
+  discordLinkedBy    String?              @db.VarChar(16)
+  /// when those details last came from Discord
+  discordCheckedAt   DateTime?
+  createdById        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  parent             Group?               @relation("GroupTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children           Group[]              @relation("GroupTree")
+  createdBy          User?                @relation("GroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  memberships        Membership[]
+  assignments        WishlistAssignment[]
   /// the season a site admin opened this group early for (testing, early
   /// groups); it lapses when the next season starts
-  openEarlySeason Int?
+  openEarlySeason    Int?
   /// Amazon affiliate links in this group: the site default for its kind, or forced on/off
-  affiliate       AffiliateMode        @default(DEFAULT)
-  affiliateTags   AffiliateTag[]
-  giftPages       GiftPage[]
+  affiliate          AffiliateMode        @default(DEFAULT)
+  affiliateTags      AffiliateTag[]
+  giftPages          GiftPage[]
 
   @@index([parentId])
   @@index([kind, status])
@@ -327,7 +345,8 @@ enum GroupKind {
   FRIENDS
 }
 
-/// PENDING groups wait for a site admin's approval (owner, 18 Oct)
+/// PENDING groups wait for a site admin's approval (owner, 18 Oct); friends
+/// groups skip it and start ACTIVE (owner, 6 Nov)
 enum GroupStatus {
   PENDING
   ACTIVE

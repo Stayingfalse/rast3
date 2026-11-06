@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { lastOrderNotice } from "~/lib/last-order";
 import { amazonWishlistRegex, cleanWishlistUrl, WISHLIST_HINT } from "~/lib/wishlist";
 import {
   checkIn,
@@ -31,13 +32,19 @@ export const seasonRouter = createTRPCRouter({
     ]);
     const now = new Date();
     const inWindow = now >= w.opensAt && now <= w.closesAt;
+    const openNow = inWindow || groups.some((m) => m.group.openEarlySeason === season);
     return {
       season,
       opensAt: w.opensAt,
       closesAt: w.closesAt,
       phase: now < w.opensAt ? ("before" as const) : inWindow ? ("open" as const) : ("after" as const),
       /** can you pick up anywhere right now (the season, or a group opened early) */
-      openNow: inWindow || groups.some((m) => m.group.openEarlySeason === season),
+      openNow,
+      /**
+       * The last-order countdown (6 Nov), worked out here so the server
+       * render and the browser show the same words
+       */
+      lastOrder: lastOrderNotice({ now, lastOrderAt: w.lastOrderAt, giftingOpen: openNow }),
       checkedIn: done,
       profileCompleted: !!me?.profileCompleted,
       wishlistUrl: me?.amazonWishlistUrl ?? null,

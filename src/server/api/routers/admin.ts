@@ -135,6 +135,8 @@ export const adminRouter = createTRPCRouter({
           status: true,
           emailDomain: true,
           discordGuildId: true,
+          discordGuildName: true,
+          discordMemberCount: true,
           openEarlySeason: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
@@ -142,11 +144,13 @@ export const adminRouter = createTRPCRouter({
         },
       });
       const season = currentSeason();
-      return rows.map(({ _count, discordGuildId, openEarlySeason, ...g }) => ({
+      return rows.map(({ _count, discordGuildId, discordGuildName, discordMemberCount, openEarlySeason, ...g }) => ({
         ...g,
         members: _count.memberships,
         teams: _count.children,
         discord: !!discordGuildId,
+        discordName: discordGuildName,
+        discordMembers: discordMemberCount,
         openEarly: openEarlySeason === season,
       }));
     }),
@@ -552,6 +556,47 @@ export const adminRouter = createTRPCRouter({
         where: { year },
         update: input,
         create: { id: `season_${year}`, year, ...input },
+      });
+      return { ok: true };
+    }),
+
+  /**
+   * Amazon UK's last day to order for standard Christmas delivery this
+   * season (6 Nov), or null for no countdown. Stored at 12:00 UTC on the
+   * chosen day, so it's the same calendar date in UK time all year.
+   */
+  setLastOrder: siteAdminProcedure
+    .input(
+      z.object({
+        lastOrderAt: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date")
+          .nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const year = currentSeason();
+      const lastOrderAt = input.lastOrderAt ? new Date(`${input.lastOrderAt}T12:00:00Z`) : null;
+      if (lastOrderAt) {
+        const { gte, lt } = seasonRange(year);
+        if (Number.isNaN(lastOrderAt.getTime()) || lastOrderAt < gte || lastOrderAt >= lt) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Pick a date between 1 August ${year} and 31 July ${year + 1}.`,
+          });
+        }
+      }
+      const w = await seasonWindow(ctx.db, year);
+      await ctx.db.season.upsert({
+        where: { year },
+        update: { lastOrderAt },
+        create: {
+          id: `season_${year}`,
+          year,
+          opensAt: w.opensAt,
+          closesAt: w.closesAt,
+          lastOrderAt,
+        },
       });
       return { ok: true };
     }),

@@ -2,6 +2,7 @@ import type { EmailKind, EmailStatus, Prisma, PrismaClient } from "@prisma/clien
 
 import { emailSettings } from "~/server/email/smtp";
 import { REMINDER_DAILY_LIMIT } from "~/server/email/rules";
+import { largeFriendsGroupIds, LARGE_FRIENDS_GROUP } from "~/server/friends-groups";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { publicSeason, seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
@@ -91,6 +92,7 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     schemaSync,
     season,
     w,
+    largeFriends,
   ] = await Promise.all([
     db.user.count({ where: { ...realUser, profileCompletedAt: { gte: day } } }),
     db.user.count({ where: { ...realUser, profileCompletedAt: { gte: week } } }),
@@ -131,6 +133,7 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     getSchemaSync(),
     publicSeason(db, now),
     seasonWindow(db),
+    largeFriendsGroupIds(db, byRealPeople),
   ]);
 
   const count = (kind: EmailKind, status: EmailStatus) =>
@@ -157,6 +160,11 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
       key: "pending",
       text: `A group has waited ${waited(oldestHours)} for approval.`,
     });
+  if (largeFriends.length > 0)
+    attention.push({
+      key: "large-friends",
+      text: `${largeFriends.length === 1 ? "A friends group has" : `${largeFriends.length} friends groups have`} grown past ${LARGE_FRIENDS_GROUP} members: check ${largeFriends.length === 1 ? "it's" : "they're"} really friends and family.`,
+    });
   if (sentForLimit >= REMINDER_DAILY_LIMIT * LIMIT_WARN)
     attention.push({
       key: "limit",
@@ -175,7 +183,13 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
       { what: "Signed in and active", note: "last seen, updated daily", day: seenDay, week: seenWeek },
     ],
     unfinished,
-    groups: { pending, oldestHours, tooLong: oldestHours !== null && oldestHours >= PENDING_TOO_LONG_HOURS },
+    groups: {
+      pending,
+      oldestHours,
+      tooLong: oldestHours !== null && oldestHours >= PENDING_TOO_LONG_HOURS,
+      // friends groups skip approval (6 Nov); big ones are listed for a look
+      largeFriends: largeFriends.length,
+    },
     emails,
     failed,
     latestFailed: latestFailed && {
@@ -196,11 +210,19 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
   };
 }
 
-/** Groups waiting for approval (teams are approved with their workplace), not made by test users. */
+/** Groups not made by test users. */
+const byRealPeople: Prisma.GroupWhereInput = {
+  OR: [{ createdById: null }, { createdBy: realUser }],
+};
+
+/**
+ * Groups waiting for approval (teams are approved with their workplace), not
+ * made by test users. Since 6 Nov only workplaces and communities wait.
+ */
 const pendingGroups: Prisma.GroupWhereInput = {
   status: "PENDING",
   kind: { not: "TEAM" },
-  OR: [{ createdById: null }, { createdBy: realUser }],
+  ...byRealPeople,
 };
 
 const waited = (hours: number) =>

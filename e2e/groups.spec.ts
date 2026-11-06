@@ -39,7 +39,9 @@ test("a member starts a friends group and gets an invite code", async ({
 
   const card = page.getByRole("listitem").filter({ hasText: groupName });
   await expect(card).toBeVisible();
-  await expect(card.getByText("Waiting for approval")).toBeVisible();
+  // friends groups go live straight away (6 Nov)
+  await expect(card.getByText("Live", { exact: true })).toBeVisible();
+  await expect(card.getByText("Waiting for approval")).toHaveCount(0);
   await expect(card.getByText("1 member", { exact: true })).toBeVisible();
   const label = await card.getByLabel(/^Invite code /).getAttribute("aria-label");
   code = (label ?? "").replace("Invite code ", "").replace(/ /g, "");
@@ -64,7 +66,7 @@ test("a friend joins with the link", async ({ page }, testInfo) => {
   // the invite
   await page.goto(`/join/${code.slice(0, 4).toLowerCase()}-${code.slice(4)}`);
   await expect(page.getByRole("heading", { name: groupName })).toBeVisible();
-  await expect(page.getByText("waiting for our approval").first()).toBeVisible();
+  await expect(page.getByText("waiting for our approval")).toHaveCount(0);
   await expect(page.getByText("Your email stays private.")).toBeVisible();
   await page.getByRole("button", { name: `Join ${groupName}` }).click();
   const dialog = page.getByRole("dialog");

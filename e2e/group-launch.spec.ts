@@ -108,6 +108,7 @@ test("an organiser picks a later launch date: the group waits until then", async
   const home = page.getByRole("tabpanel", { name: state.name });
   await expect(home.getByText(`Gifting opens in this group on ${longDay(state.later)}.`)).toBeVisible();
   await expect(home.getByRole("button", { name: "Pick up a wishlist" })).toHaveCount(0);
+  await expect(home.getByText(/Pick one up whenever you're ready/)).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "group-launch-waiting");
   expect(errors).toEqual([]);

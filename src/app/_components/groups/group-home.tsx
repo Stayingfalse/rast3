@@ -113,7 +113,7 @@ export function GroupHome({ group }: { group: Group }) {
       )}
 
       {isLoading ? null : !parcels?.length ? (
-        live && (
+        live && !opensLater && (
           <p className="text-frost-soft max-w-xl">
             You haven&apos;t picked up anyone&apos;s wishlist in this group yet.
             Pick one up whenever you&apos;re ready; there&apos;s no draw and no

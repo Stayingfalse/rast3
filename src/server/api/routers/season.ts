@@ -10,6 +10,7 @@ import {
   hasCheckedIn,
   seasonWindow,
 } from "~/server/season";
+import { launchOf, launchSelect } from "~/server/group-launch";
 
 /** Day 18: this season's dates and your yearly check-in. */
 export const seasonRouter = createTRPCRouter({
@@ -26,19 +27,29 @@ export const seasonRouter = createTRPCRouter({
       ctx.db.membership.findMany({
         where: { userId, group: { kind: { not: "TEAM" } } },
         select: {
-          group: { select: { id: true, name: true, kind: true, openEarlySeason: true } },
+          group: { select: { id: true, name: true, ...launchSelect } },
         },
       }),
     ]);
     const now = new Date();
-    const inWindow = now >= w.opensAt && now <= w.closesAt;
-    const openNow = inWindow || groups.some((m) => m.group.openEarlySeason === season);
+    const mine = groups.map(({ group: { launchAt: _a, launchSeason: _s, parent: _p, ...g } }, i) => {
+      const opensAt = launchOf(groups[i]!.group, w);
+      return { ...g, opensAt, open: now >= opensAt && now <= w.closesAt };
+    });
+    // with no groups yet, the season's own dates
+    const openNow = mine.length ? mine.some((g) => g.open) : now >= w.opensAt && now <= w.closesAt;
+    // when gifting next opens for you: your earliest group still to open
+    const next = mine
+      .filter((g) => !g.open && g.opensAt > now)
+      .reduce<Date | null>((a, g) => (!a || g.opensAt < a ? g.opensAt : a), null);
     return {
       season,
-      opensAt: w.opensAt,
+      /** when gifting opens for you (your first group to open), or the season's date */
+      opensAt: openNow ? w.opensAt : (next ?? w.opensAt),
+      siteOpensAt: w.opensAt,
       closesAt: w.closesAt,
-      phase: now < w.opensAt ? ("before" as const) : inWindow ? ("open" as const) : ("after" as const),
-      /** can you pick up anywhere right now (the season, or a group opened early) */
+      phase: now > w.closesAt ? ("after" as const) : openNow ? ("open" as const) : ("before" as const),
+      /** can you pick up anywhere right now (in at least one of your groups) */
       openNow,
       /**
        * The last-order countdown (6 Nov), worked out here so the server
@@ -48,7 +59,7 @@ export const seasonRouter = createTRPCRouter({
       checkedIn: done,
       profileCompleted: !!me?.profileCompleted,
       wishlistUrl: me?.amazonWishlistUrl ?? null,
-      groups: groups.map(({ group: { openEarlySeason: _o, ...g } }) => g),
+      groups: mine,
     };
   }),
 

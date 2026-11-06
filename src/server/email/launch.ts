@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
 import { launchStatus, PENDING_TOO_LONG_HOURS } from "~/server/launch-status";
 import { seasonRange } from "~/server/stamps";
 import { WALL_MIN_THANKS } from "~/server/wall";
@@ -13,7 +14,8 @@ import { adminStatus, organiserLive, type StatusSummary } from "./templates";
  *
  * - ORGANISER_LIVE: in gifting's first week (as SEASON_OPEN), each organiser
  *   of a live group hears it's open, with the group's invite link and a
- *   message to paste. One per organiser per group (ref = group id), so an
+ *   message to paste; a group with its own launch date (7 Nov) hears in the
+ *   week after that date instead. One per organiser per group (ref = group id), so an
  *   organiser of two groups gets two, each about its own group.
  * - ADMIN_STATUS: site admins get Admin › Status by email each morning from
  *   the day before gifting opens to a week after, from 07:00 UK time (the
@@ -28,9 +30,13 @@ type Ctx = {
   scope: Prisma.UserWhereInput;
   send: Send;
   went: (r: Awaited<ReturnType<Send>>) => boolean;
+  /** in the season's first week */
+  seasonJustOpened?: boolean;
 };
 
 const BATCH = 100;
+/** an own-date group's organiser hears within this many days of it opening */
+const LIVE_DAYS = 7;
 const DAY = 24 * 3600_000;
 /** the status email goes from this UK hour */
 export const ADMIN_STATUS_HOUR = 7;
@@ -56,14 +62,22 @@ export function ukClock(d: Date) {
   return { date, dayNo: Date.UTC(+p.year!, +p.month! - 1, +p.day!) / DAY, hour: Number(p.hour) };
 }
 
-export async function organiserLiveEmails(db: PrismaClient, { now, w, scope, send, went }: Ctx) {
+export async function organiserLiveEmails(
+  db: PrismaClient,
+  { now, w, scope, send, went, seasonJustOpened = false }: Ctx,
+) {
   const season = w.year;
-  if (now < w.opensAt || now > w.closesAt) return 0;
+  if (now > w.closesAt) return 0;
+  // groups open now: in the season's first week, all of them; otherwise ones
+  // whose own launch date was in the last week (7 Nov)
+  const opened: Prisma.GroupWhereInput = seasonJustOpened
+    ? openNowWhere(w, now)
+    : ownLaunchWithinWhere(w, LIVE_DAYS, now);
   const organisers = await db.membership.findMany({
     where: {
       role: "ADMIN",
       // teams are organised through their workplace
-      group: { status: "ACTIVE", kind: { not: "TEAM" } },
+      group: { AND: [{ status: "ACTIVE", kind: { not: "TEAM" } }, opened] },
       user: { emailReminders: true, email: { not: null }, AND: [scope] },
       // joined in this Christmas (checked in, signed up, or started organising
       // this group since the season began): last year's organisers who

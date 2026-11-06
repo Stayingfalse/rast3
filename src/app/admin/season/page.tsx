@@ -49,9 +49,9 @@ export default function AdminSeasonPage() {
     },
     onError: (e) => toast.error(e.message),
   });
-  const close = api.admin.setOpenEarly.useMutation({
+  const resetDate = api.admin.setLaunchDate.useMutation({
     onSuccess: async () => {
-      toast.success("Back to the season's dates");
+      toast.success("Back to the season's date");
       await utils.admin.season.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -186,28 +186,41 @@ export default function AdminSeasonPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Groups open early</CardTitle>
+          <CardTitle>Groups with their own gifting date</CardTitle>
           <CardDescription>
-            Open a group from its menu on the Groups tab. These can pick up
-            outside the season&apos;s dates.
+            Every group opens on the season&apos;s date unless its organiser or
+            a site admin picks another (from its console, or Gifting date… on
+            the Groups tab). Gifting closes on the season&apos;s date for all.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {data.openEarly.length === 0 ? (
-            <p className="text-ink-soft">None.</p>
+          {data.ownDates.length === 0 ? (
+            <p className="text-ink-soft">None: every group opens on the season&apos;s date.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {data.openEarly.map((g) => (
-                <li key={g.id} className="border-rule flex items-center justify-between gap-3 border-b pb-2 last:border-b-0">
-                  <span className="text-ink">
-                    {g.name} <Badge variant="outline">{KIND[g.kind]}</Badge>
+              {data.ownDates.map((g) => (
+                <li key={g.id} className="border-rule flex flex-wrap items-center justify-between gap-3 border-b pb-2 last:border-b-0">
+                  <span className="text-ink flex flex-col">
+                    <span>
+                      {g.name} <Badge variant="outline">{KIND[g.kind]}</Badge>
+                    </span>
+                    <span className="text-ink-soft text-sm tabular-nums">
+                      {g.open ? "Open since" : "Opens"}{" "}
+                      {new Date(g.launchAt).toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        timeZone: "Europe/London",
+                      })}
+                      {g.status !== "ACTIVE" && (g.status === "PENDING" ? " · waiting for approval" : " · closed")}
+                    </span>
                   </span>
                   <Button
                     variant="outline"
-                    disabled={close.isPending}
-                    onClick={() => close.mutate({ groupId: g.id, open: false })}
+                    disabled={resetDate.isPending}
+                    onClick={() => resetDate.mutate({ groupId: g.id, date: null })}
                   >
-                    Follow season dates
+                    Use the season&apos;s date
                   </Button>
                 </li>
               ))}

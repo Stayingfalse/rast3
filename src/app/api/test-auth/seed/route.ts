@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { createOrgGroup, createTeam, setTeam, setWorkplace } from "~/server/groups";
 import { currentSeason } from "~/server/season";
+import { seasonRange } from "~/server/stamps";
 import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
 
 /**
@@ -258,7 +259,8 @@ export async function POST(req: NextRequest) {
   });
   await db.group.updateMany({
     where: { id: { in: [org.id, rivalOrg.id, pendingOrg.id] } },
-    data: { openEarlySeason: currentSeason() },
+    // open now, whatever the season's dates (as Admin › Groups' "Open now")
+    data: { launchAt: seasonRange(currentSeason()).gte, launchSeason: currentSeason() },
   });
   const lastSeason = { season: currentSeason() - 1, assignedAt: new Date("2025-12-01T10:00:00Z") };
   await db.wishlistAssignment.create({

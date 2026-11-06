@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
+import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
 import { seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { adminStatusEmails, organiserLiveEmails } from "./launch";
@@ -98,7 +99,8 @@ export async function runReminders(
 
   // first, so a busy day's reminders never hold them back
   run.adminStatus = await adminStatusEmails(db, { now, w, scope, send, went });
-  if (justOpened) run.organisersLive = await organiserLiveEmails(db, { now, w, scope, send, went });
+  // when the season opens, and when a group with its own date opens (7 Nov)
+  run.organisersLive = await organiserLiveEmails(db, { now, w, scope, send, went, seasonJustOpened: justOpened });
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({
@@ -119,12 +121,34 @@ export async function runReminders(
     }
   }
 
-  if (justOpened) {
+  // "Gifting is open": when the season opens, to members who can pick up
+  // somewhere then (or have no groups yet); members whose groups all have a
+  // later launch date hear when their first one opens (7 Nov)
+  const openNow = openNowWhere(w, now);
+  const whoHears: Prisma.UserWhereInput[] = [
+    { memberships: { some: { group: ownLaunchWithinWhere(w, OPEN_DAYS, now) } } },
+    ...(justOpened
+      ? [
+          {
+            // joined before it opened (older profiles have no date)
+            OR: [{ profileCompletedAt: null }, { profileCompletedAt: { lt: w.opensAt } }],
+            AND: [
+              {
+                OR: [
+                  { memberships: { none: { group: { kind: { not: "TEAM" as const } } } } },
+                  { memberships: { some: { group: openNow } } },
+                ],
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
+  if (now <= w.closesAt) {
     const users = await db.user.findMany({
       where: {
         ...base,
-        // joined before it opened (older profiles have no date)
-        OR: [{ profileCompletedAt: null }, { profileCompletedAt: { lt: w.opensAt } }],
+        OR: whoHears,
         emailLog: { none: { kind: "SEASON_OPEN", season, ...counted } },
       },
       select: { id: true, email: true, seasonCheckIns: { where: { season }, select: { season: true } } },
@@ -195,17 +219,14 @@ async function sendNewLists(
   db: PrismaClient,
   base: Prisma.UserWhereInput,
   season: number,
-  w: { opensAt: Date; closesAt: Date },
+  w: { year: number; opensAt: Date; closesAt: Date },
   now: Date,
   send: Send,
   went: (r: Awaited<ReturnType<Send>>) => boolean,
 ) {
   if (now > w.closesAt) return 0;
-  const inWindow = now >= w.opensAt;
-  // groups people can pick up in right now (before the season: opened early)
-  const open: Prisma.GroupWhereInput = inWindow
-    ? { status: "ACTIVE" }
-    : { status: "ACTIVE", OR: [{ openEarlySeason: season }, { parent: { openEarlySeason: season } }] };
+  // groups people can pick up in right now (each opens on its own date)
+  const open: Prisma.GroupWhereInput = { AND: [{ status: "ACTIVE" }, openNowWhere(w, now)] };
   const lastWeek = new Date(now.getTime() - NEW_LISTS_EVERY_DAYS * DAY);
   const santas = await db.user.findMany({
     where: {

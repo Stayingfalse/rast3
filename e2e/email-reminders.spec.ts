@@ -28,6 +28,7 @@ const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
 type Log = { kind: string; status: string; note: string | null; ref: string; email: string };
 type Reminders = {
   window: { opensAt: string; closesAt: string };
+  run: { organisersLive: number; adminStatus: number } | null;
   log: Log[];
   tokens: Record<string, { u: string; t: string }>;
 };
@@ -108,13 +109,104 @@ test("two weeks before gifting opens, this season's members who haven't checked 
   expect(mine(r.log, p)).toHaveLength(1);
 });
 
+/**
+ * Launch emails (6 Nov). Organisers of live groups hear they're live once
+ * gifting opens; site admins get a morning status email each UK day from the
+ * day before it opens to a week after, from 07:00.
+ */
+const HOUR = 3600_000;
+const ukDate = (t: number) => new Date(t).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+/** The time that is hh:mm UK time, `days` UK days after the day gifting opens. */
+const ukAt = (days: number, hh: number, mm = 0) => {
+  const [y, m, d] = ukDate(opensAt).split("-").map(Number) as [number, number, number];
+  const guess = Date.UTC(y, m - 1, d + days, hh, mm);
+  const wall = (tz: string) => Date.parse(new Date(guess).toLocaleString("en-US", { timeZone: tz }));
+  return guess - (wall("Europe/London") - wall("UTC"));
+};
+const kindOf = (log: Log[], kind: string, email: string) =>
+  log.filter((l) => l.kind === kind && l.email === email);
+
+test("organisers of live groups hear they're live once gifting opens", async ({ page }, testInfo) => {
+  const p = testInfo.project.name;
+  // an organiser whose group still waits for approval
+  await loginAs(page, { email: who("pend", p) });
+  await mutate(page.request, "profile.saveProfile", {
+    over16: true,
+    firstName: "Pia",
+    lastName: "Pending",
+    amazonWishlistUrl: "https://www.amazon.co.uk/hz/wishlist/ls/E2EREM0003",
+  });
+  expect((await mutate(page.request, "groups.create", { name: `E2E Pending ${p}`, kind: "FRIENDS" })).status()).toBe(200);
+  // an organiser of a live group who has stopped reminders
+  await loginAs(page, { email: who("off", p) });
+  const offGroup = (await unwrap(
+    await mutate(page.request, "groups.create", { name: `E2E Opted out ${p}`, kind: "COMMUNITY" }),
+  )) as { id: string };
+  await loginAs(page, { email: `rem-site-${p}@${E}`, adminLevel: "SITE" });
+  expect((await mutate(page.request, "groups.setStatus", { groupId: offGroup.id, status: "ACTIVE" })).status()).toBe(200);
+
+  const live = async (t: number) =>
+    mine((await reminders(page.request, { now: new Date(t).toISOString() })).log, p)
+      .filter((l) => l.kind === "ORGANISER_LIVE")
+      .map((l) => [l.email, l.status, l.ref]);
+  // not before it opens
+  expect(await live(opensAt - HOUR)).toEqual([]);
+  // on the day: Ina, who organises the live group; not Santa (a member), nor
+  // the pending group's organiser, nor the one who opted out
+  expect(await live(opensAt + HOUR)).toEqual([[who("in", p), "SKIPPED", groupId]]);
+  // and only once
+  expect(await live(opensAt + 2 * DAY)).toEqual([[who("in", p), "SKIPPED", groupId]]);
+});
+
+test("site admins get the status email once a UK morning in launch week", async ({ page }, testInfo) => {
+  const p = testInfo.project.name;
+  const boss = who("boss", p);
+  const bossOff = who("bossoff", p);
+  await loginAs(page, { email: boss, adminLevel: "SITE" });
+  await loginAs(page, { email: bossOff, adminLevel: "SITE" });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Bea", lastName: "Off", emailReminders: false });
+
+  const at = async (t: number) => {
+    const r = await reminders(page.request, { now: new Date(t).toISOString() });
+    expect(kindOf(r.log, "ADMIN_STATUS", bossOff)).toEqual([]);
+    return { count: r.run!.adminStatus, refs: kindOf(r.log, "ADMIN_STATUS", boss).map((l) => l.ref) };
+  };
+  // two days before gifting opens: too early
+  expect((await at(ukAt(-2, 9))).count).toBe(0);
+  // before 07:00 UK time: not yet
+  const day4 = ukDate(ukAt(4, 12));
+  let r = await at(ukAt(4, 6, 30));
+  expect(r.count).toBe(0);
+  expect(r.refs).not.toContain(day4);
+  // from 07:00: once that day, logged as a test address
+  r = await at(ukAt(4, 7, 5));
+  expect(r.refs.filter((d) => d === day4)).toHaveLength(1);
+  const logged = kindOf((await reminders(page.request, { run: false })).log, "ADMIN_STATUS", boss);
+  expect(logged.every((l) => l.status === "SKIPPED" && l.note === "test address")).toBe(true);
+  r = await at(ukAt(4, 21));
+  expect(r.refs.filter((d) => d === day4)).toHaveLength(1);
+  // the next morning, and the last day of the week
+  r = await at(ukAt(5, 7));
+  expect(r.refs).toContain(ukDate(ukAt(5, 12)));
+  r = await at(ukAt(7, 23, 30));
+  expect(r.refs).toContain(ukDate(ukAt(7, 12)));
+  // eight days after opening: over
+  const before = r.refs.length;
+  r = await at(ukAt(8, 8));
+  expect(r.count).toBe(0);
+  expect(r.refs).toHaveLength(before);
+});
+
 test("when gifting opens, members hear about it once (not the one who opted out, nor last year's)", async ({
   page,
 }, testInfo) => {
   const p = testInfo.project.name;
   const r = await reminders(page.request, { now: new Date(opensAt + DAY).toISOString() });
   const open = mine(r.log, p).filter((l) => l.kind === "SEASON_OPEN");
-  expect(open.map((l) => l.email).sort()).toEqual([who("in", p), who("out", p), who("santa", p)].sort());
+  // (Pia, the pending group's organiser, is a member like any other)
+  expect(open.map((l) => l.email).sort()).toEqual(
+    [who("in", p), who("out", p), who("pend", p), who("santa", p)].sort(),
+  );
   // a week later: nothing more
   const again = await reminders(page.request, { now: new Date(opensAt + 9 * DAY).toISOString() });
   expect(mine(again.log, p)).toHaveLength(mine(r.log, p).length);

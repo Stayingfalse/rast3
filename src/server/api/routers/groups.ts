@@ -13,6 +13,8 @@ import {
   fetchMyGuilds,
   getDiscordToken,
   isSnowflake,
+  linkDiscordServer,
+  type LinkedServer,
   manageable,
 } from "~/server/discord";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
@@ -500,13 +502,32 @@ export const groupsRouter = createTRPCRouter({
       const token = await getDiscordToken(ctx.session.user.id);
       const guilds = token ? await fetchMyGuilds(token) : null;
       if (!guilds) return { needsDiscord: true as const, servers: [] };
-      return { needsDiscord: false as const, servers: manageable(guilds) };
+      const servers = manageable(guilds);
+      // keep the linked server's name and size current for site admins (and
+      // fill them in for servers linked before they were recorded)
+      const group = await ctx.db.group.findUnique({
+        where: { id: input.groupId },
+        select: { discordGuildId: true, discordGuildName: true, discordMemberCount: true },
+      });
+      const linked = servers.find((g) => g.id === group?.discordGuildId);
+      if (
+        linked &&
+        (linked.name.slice(0, 100) !== group?.discordGuildName ||
+          linked.members !== group.discordMemberCount)
+      ) {
+        await ctx.db.group.update({
+          where: { id: input.groupId },
+          data: { discordGuildName: linked.name.slice(0, 100), discordMemberCount: linked.members },
+        });
+      }
+      return { needsDiscord: false as const, servers };
     }),
 
   /**
    * Link (or unlink) a community group to a Discord server the organiser
    * manages, checked with Discord. Anyone in a linked server can join; no
-   * role requirement (owner, 20 Oct).
+   * role requirement (owner, 20 Oct). Linking a community that's waiting
+   * for approval puts it live (owner, 6 Nov).
    */
   setDiscordLink: protectedProcedure
     .input(
@@ -519,6 +540,7 @@ export const groupsRouter = createTRPCRouter({
         ctx.session.user.id,
       );
       const guildId = input.guildId ?? null;
+      let server: LinkedServer | null = null;
       if (guildId) {
         if (!isSnowflake(guildId)) {
           throw new TRPCError({
@@ -534,7 +556,8 @@ export const groupsRouter = createTRPCRouter({
             message: "Connect Discord first.",
           });
         }
-        if (!manageable(guilds).some((g) => g.id === guildId)) {
+        const mine = manageable(guilds).find((g) => g.id === guildId);
+        if (!mine) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "You can only link a Discord server you own or manage.",
@@ -550,12 +573,9 @@ export const groupsRouter = createTRPCRouter({
             message: "That Discord server is already linked to another group.",
           });
         }
+        server = { id: mine.id, name: mine.name, members: mine.members };
       }
-      return ctx.db.group.update({
-        where: { id: input.groupId },
-        data: { discordGuildId: guildId, discordRoleId: null },
-        select: { id: true, discordGuildId: true },
-      });
+      return linkDiscordServer(ctx.db, input.groupId, server);
     }),
 
   /**
@@ -926,6 +946,9 @@ export const groupsRouter = createTRPCRouter({
           kind: true,
           status: true,
           emailDomain: true,
+          discordGuildId: true,
+          discordGuildName: true,
+          discordMemberCount: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
           _count: { select: { memberships: true } },
@@ -938,9 +961,10 @@ export const groupsRouter = createTRPCRouter({
     }),
 
   /**
-   * Site admins: friends groups to keep an eye on, since they skip approval.
-   * `large`: live ones past the size for friends and family; `recent`: the
-   * other live ones started in the last few days.
+   * Site admins: groups to keep an eye on, since they skip approval.
+   * `large`: live friends groups past the size for friends and family;
+   * `recent`: the other live friends groups started in the last few days;
+   * `discord`: live communities linked to a Discord server in that time.
    */
   friendsToCheck: siteAdminProcedure.query(async ({ ctx }) => {
     const since = new Date(Date.now() - RECENT_FRIENDS_DAYS * 24 * HOUR);
@@ -953,7 +977,7 @@ export const groupsRouter = createTRPCRouter({
       createdBy: { select: { name: true, email: true } },
       _count: { select: { memberships: true } },
     } as const;
-    const [large, recent] = await Promise.all([
+    const [large, recent, discord] = await Promise.all([
       largeIds.length
         ? ctx.db.group.findMany({ where: { id: { in: largeIds } }, take: 100, select })
         : Promise.resolve([]),
@@ -968,6 +992,12 @@ export const groupsRouter = createTRPCRouter({
         take: 100,
         select,
       }),
+      ctx.db.group.findMany({
+        where: { kind: "COMMUNITY", status: "ACTIVE", discordLinkedAt: { gte: since } },
+        orderBy: { discordLinkedAt: "desc" },
+        take: 100,
+        select: { ...select, discordGuildName: true, discordMemberCount: true, discordLinkedAt: true },
+      }),
     ]);
     const shape = ({ _count, ...g }: (typeof recent)[number]) => ({
       ...g,
@@ -979,6 +1009,7 @@ export const groupsRouter = createTRPCRouter({
       // biggest first
       large: large.map(shape).sort((a, b) => b.members - a.members),
       recent: recent.map(shape),
+      discord: discord.map(({ _count, ...g }) => ({ ...g, members: _count.memberships })),
     };
   }),
 

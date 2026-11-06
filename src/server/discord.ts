@@ -1,3 +1,5 @@
+import type { PrismaClient } from "@prisma/client";
+
 import { db } from "~/server/db";
 import { createChildLogger } from "~/utils/logger";
 
@@ -118,11 +120,12 @@ type Guild = {
   icon: string | null;
   owner?: boolean;
   permissions?: string;
+  approximate_member_count?: number;
 };
 
-/** The servers this person is in. */
+/** The servers this person is in, with their rough member counts. */
 export async function fetchMyGuilds(token: string) {
-  const res = await fetch(`${API}/users/@me/guilds`, {
+  const res = await fetch(`${API}/users/@me/guilds?with_counts=true`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
@@ -146,8 +149,53 @@ export function manageable(guilds: Guild[]) {
     .map((g) => ({
       id: g.id,
       name: g.name,
+      members: g.approximate_member_count ?? null,
       icon: g.icon
         ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`
         : null,
     }));
+}
+
+/** A server as Discord described it to the organiser who linked it. */
+export type LinkedServer = { id: string; name: string; members: number | null };
+
+/**
+ * Links a community group to a Discord server (already checked: the
+ * organiser runs it, and no other group has it), recording its name and
+ * rough size for site admins. A community still waiting for approval goes
+ * live: being run from a real Discord server is the check (owner, 6 Nov).
+ * One a site admin closed stays closed. Unlinking keeps the group's status.
+ */
+export async function linkDiscordServer(
+  db: Pick<PrismaClient, "group">,
+  groupId: string,
+  server: LinkedServer | null,
+) {
+  const before = await db.group.findUniqueOrThrow({
+    where: { id: groupId },
+    select: { status: true, kind: true },
+  });
+  const approve = !!server && before.kind === "COMMUNITY" && before.status === "PENDING";
+  const group = await db.group.update({
+    where: { id: groupId },
+    data: server
+      ? {
+          discordGuildId: server.id,
+          discordRoleId: null,
+          discordGuildName: server.name.slice(0, 100),
+          discordMemberCount: server.members,
+          discordLinkedAt: new Date(),
+          ...(approve && { status: "ACTIVE" as const }),
+        }
+      : {
+          discordGuildId: null,
+          discordRoleId: null,
+          discordGuildName: null,
+          discordMemberCount: null,
+          discordLinkedAt: null,
+        },
+    select: { id: true, name: true, status: true, discordGuildId: true, discordGuildName: true },
+  });
+  if (approve) logger.info({ groupId, guildId: server.id }, "Community approved through its Discord server");
+  return { ...group, approved: approve };
 }

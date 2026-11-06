@@ -135,6 +135,7 @@ export const adminRouter = createTRPCRouter({
           status: true,
           emailDomain: true,
           discordGuildId: true,
+          discordGuildName: true,
           openEarlySeason: true,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
@@ -142,11 +143,12 @@ export const adminRouter = createTRPCRouter({
         },
       });
       const season = currentSeason();
-      return rows.map(({ _count, discordGuildId, openEarlySeason, ...g }) => ({
+      return rows.map(({ _count, discordGuildId, discordGuildName, openEarlySeason, ...g }) => ({
         ...g,
         members: _count.memberships,
         teams: _count.children,
         discord: !!discordGuildId,
+        discordName: discordGuildName,
         openEarly: openEarlySeason === season,
       }));
     }),

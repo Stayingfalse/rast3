@@ -327,7 +327,8 @@ enum GroupKind {
   FRIENDS
 }
 
-/// PENDING groups wait for a site admin's approval (owner, 18 Oct)
+/// PENDING groups wait for a site admin's approval (owner, 18 Oct); friends
+/// groups skip it and start ACTIVE (owner, 6 Nov)
 enum GroupStatus {
   PENDING
   ACTIVE

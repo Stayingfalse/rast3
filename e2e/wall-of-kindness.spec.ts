@@ -72,9 +72,9 @@ test("set up: a friends group with two visible thank-yous and a hidden one", asy
   state.groupId = g.id;
   await thank("ann");
 
-  // not approved yet: no wall
-  const pending = (await unwrap(await query(page.request, "share.wall", { groupId: g.id }))) as { live: boolean };
-  expect(pending.live).toBe(false);
+  // friends groups are live from the start (6 Nov): the wall waits only for thank-yous
+  const fresh = (await unwrap(await query(page.request, "share.wall", { groupId: g.id }))) as { live: boolean };
+  expect(fresh.live).toBe(true);
 
   state.bea = (await loginAs(page, { email: who("bea", p) })).userId;
   await profile("Beatrix", "2");

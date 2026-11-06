@@ -166,7 +166,7 @@ export function HomePitch({
     {
       topic: "who",
       q: "Who can join?",
-      a: "Anyone with an Amazon wishlist, from any Amazon store, through their workplace, a Discord community or a friends group. We check each new group before it opens for gifting.",
+      a: "Anyone with an Amazon wishlist, from any Amazon store, through their workplace, a Discord community or a friends group. Friends groups start straight away; we check each new workplace and community before it opens for gifting.",
     },
     {
       topic: "free",

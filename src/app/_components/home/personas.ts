@@ -2,8 +2,9 @@
  * The stamp rack (owner, 22 Oct 2026): the home page asks who is posting and
  * re-prints itself as that visitor's pitch. Three kinds of group, each with
  * two kinds of visitor (owner: "the organisers and the users"), so six
- * pitches. Every claim here is true of the product as built: groups are
- * approved by a site admin, workplaces can require a join code and have a
+ * pitches. Every claim here is true of the product as built: workplaces and
+ * communities are approved by a site admin (friends groups go live straight
+ * away, owner 6 Nov), workplaces can require a join code and have a
  * printable poster, Discord groups only admit members of the linked server
  * (no role gating yet), and pick-ups go fewest gifts first.
  */
@@ -260,7 +261,7 @@ export const PITCH: Record<Persona, Pitch> = {
       },
     ],
     steps: [
-      { title: "Start a group", body: "Sign in and start a friends group. We give it a quick check before gifting opens." },
+      { title: "Start a group", body: "Sign in and start a friends group. It's live straight away, no waiting for us." },
       { title: "Send the link", body: "Share the invite link or code in your group chat." },
       { title: "Everyone joins in", body: "Each person adds a wishlist and picks up lists when they're ready." },
       { title: "Thank-yous all round", body: "Post a thank-you when your parcel arrives. Your Santa stays a mystery." },

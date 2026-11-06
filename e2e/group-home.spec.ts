@@ -38,29 +38,24 @@ test.afterAll(async ({ playwright }, testInfo) => {
   await request.dispose();
 });
 
-test("two friends set up a group that a site admin approves", async ({ page }, testInfo) => {
+test("two friends set up a group, live without approval (6 Nov)", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   groupName = `E2E Book Club ${p}`;
   await loginAs(page, { email: `friend-a-${p}@${E}` });
   expect((await profile(page.request, "Ava", "E2EFRA0001")).status()).toBe(200);
   const created = (await unwrap(
     await mutate(page.request, "groups.create", { name: groupName, kind: "FRIENDS" }),
-  )) as { id: string; joinCode: string };
+  )) as { id: string; joinCode: string; status: string };
   groupId = created.id;
   code = created.joinCode;
-
-  // pending: no pick-ups yet
-  const early = await mutate(page.request, "wishlist.requestFromGroup", { groupId, count: 1 });
-  expect(early.status()).toBe(412);
+  // friends groups skip the approval queue
+  expect(created.status).toBe("ACTIVE");
 
   await loginAs(page, { email: `friend-b-${p}@${E}` });
   expect((await profile(page.request, "Ben", "E2EFRB0001")).status()).toBe(200);
   expect((await mutate(page.request, "groups.join", { code })).status()).toBe(200);
 
   await loginAs(page, { email: `friend-site-${p}@${E}`, adminLevel: "SITE" });
-  expect(
-    (await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status(),
-  ).toBe(200);
   // gifting before the season opens needs the group opened early (Day 18)
   expect(
     (await mutate(page.request, "admin.setOpenEarly", { groupId, open: true })).status(),

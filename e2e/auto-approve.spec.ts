@@ -209,6 +209,8 @@ test("a community linked to its Discord server goes live, and site admins see th
   await loginAs(page, { email: who("host", testInfo) });
   const errors = trackPageErrors(page);
   await page.goto(`/groups/${state.communityId}/manage`);
+  // the Discord card is on the console's Settings tab
+  await page.getByRole("tab", { name: "Settings" }).click();
   await expect(
     page.getByRole("region", { name: "Discord server" }).getByText(/goes live straight away/),
   ).toBeVisible();

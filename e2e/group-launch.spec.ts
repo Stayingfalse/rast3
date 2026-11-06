@@ -193,6 +193,9 @@ test("once it opens the organiser can't move it; a site admin can", async ({ pag
 
   await page.goto("/admin/groups");
   await page.getByLabel("Search").fill(state.name);
+  // the search waits a moment before filtering; open the menu once the list
+  // has settled on this group, or the refresh closes it
+  await expect(page.getByText("1 group", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: `Actions for ${state.name}` }).click();
   await page.getByRole("menuitem", { name: "Gifting date…" }).click();
   const dialog = page.getByRole("dialog");

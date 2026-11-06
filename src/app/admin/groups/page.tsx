@@ -164,7 +164,7 @@ function GroupsTable() {
           ) : (
             <>
               <p className="text-ink-soft text-sm tabular-nums">
-                {data.length === 200 ? "Showing the newest 200" : `${data.length} groups`}
+                {data.length === 200 ? "Showing the newest 200" : `${data.length} ${data.length === 1 ? "group" : "groups"}`}
               </p>
               <div className="overflow-x-auto">
                 <Table>

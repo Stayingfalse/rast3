@@ -1581,7 +1581,18 @@ that don't touch the data model. Known items to include:
     attention item on Admin › Status) and those started in the last 7
     days, each with Close. One person can start 5 friends groups a
     season; group creation is limited to 10 an hour. Friends groups
-    already waiting stay waiting until approved. No migration.
+    already waiting stay waiting until approved.
+  - **Owner, 6 Nov: communities linked to Discord go live too** (same
+    branch, migration `20261106070000_discord_names`). Linking a Discord
+    server the organiser owns or manages (checked with Discord) puts a
+    waiting community live; one a site admin closed stays closed, and
+    unlinking keeps it live. The server's name and rough member count are
+    stored when it's linked (and refreshed whenever the organiser opens
+    their console, which also fills them in for servers linked before) and
+    shown on Admin › Approvals (each card, plus "Communities on Discord":
+    those linked in the last 7 days) and Admin › Groups. Privacy policy
+    says so. e2e links through a test-only route, since dev has no Discord
+    sign-in.
   - **Launch emails** (`feat/launch-emails`, migration
     `20261106050000_launch_emails`): organisers of live groups get "Gifting
     is open in <group>" once, from 15 Nov (with their invite link and a

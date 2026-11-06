@@ -56,10 +56,17 @@ const date = (d: Date | string) =>
     year: "numeric",
   });
 
+/** "Name · about 1,234 members", or a note when the name isn't recorded yet. */
+const discordServer = (name: string | null, members: number | null) =>
+  name
+    ? `${name}${members != null ? ` · about ${members.toLocaleString("en-GB")} ${members === 1 ? "member" : "members"}` : ""}`
+    : "Linked (name shows once the organiser opens their console)";
+
 /**
  * Site admins: approve new organisations and communities (owner, 18 Oct).
- * Friends groups go live without approval (owner, 6 Nov), so they're listed
- * below the queue instead: big ones to check, and the past week's new ones.
+ * Friends groups, and communities linked to a Discord server, go live
+ * without approval (owner, 6 Nov), so they're listed below the queue
+ * instead: big friends groups to check, and the past week's new ones.
  */
 export default function ApprovalsPage() {
   const [status, setStatus] = useState<Status>("PENDING");
@@ -90,8 +97,9 @@ export default function ApprovalsPage() {
         <p className="text-frost-soft max-w-2xl">
           New workplaces and communities wait here until you approve them.
           People can join while they wait; gifting opens once they&apos;re
-          live. Friends groups go live straight away: they&apos;re listed
-          below so you can still keep an eye on them.
+          live. Friends groups, and communities linked to their Discord
+          server, go live straight away: they&apos;re listed below so you can
+          still keep an eye on them.
         </p>
       </div>
 
@@ -140,6 +148,14 @@ export default function ApprovalsPage() {
                             <dd className="text-ink py-1 break-all">{g.emailDomain}</dd>
                           </>
                         )}
+                        {g.discordGuildId && (
+                          <>
+                            <dt className="text-ink-soft py-1">Discord server</dt>
+                            <dd className="text-ink py-1 break-words">
+                              {discordServer(g.discordGuildName, g.discordMemberCount)}
+                            </dd>
+                          </>
+                        )}
                         <dt className="text-ink-soft py-1">Started by</dt>
                         <dd className="text-ink py-1 break-all">
                           {g.createdBy
@@ -185,6 +201,10 @@ export default function ApprovalsPage() {
       </Tabs>
 
       <FriendsGroups
+        closing={setGroupStatus.isPending}
+        onClose={(groupId) => setGroupStatus.mutate({ groupId, status: "DISABLED" })}
+      />
+      <DiscordCommunities
         closing={setGroupStatus.isPending}
         onClose={(groupId) => setGroupStatus.mutate({ groupId, status: "DISABLED" })}
       />
@@ -344,6 +364,113 @@ function FriendsGroups({
             </CardContent>
           </Card>
         </div>
+      )}
+    </section>
+  );
+}
+
+type DiscordCommunity = RouterOutputs["groups"]["friendsToCheck"]["discord"][number];
+
+/** Communities that went live by linking their Discord server this past week. */
+function DiscordCommunities({
+  closing,
+  onClose,
+}: {
+  closing: boolean;
+  onClose: (groupId: string) => void;
+}) {
+  const { data, isLoading, error } = api.groups.friendsToCheck.useQuery();
+  const rows: DiscordCommunity[] = data?.discord ?? [];
+
+  return (
+    <section aria-labelledby="discord-communities-heading" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <h2
+          id="discord-communities-heading"
+          className="font-expanded text-frost text-2xl font-extrabold uppercase"
+        >
+          Communities on Discord
+        </h2>
+        <p className="text-frost-soft max-w-2xl">
+          A community goes live when its organiser links a Discord server they
+          own or manage. Check the server looks real; a brand-new server with a
+          handful of members is worth a look.
+        </p>
+      </div>
+      {error ? (
+        <p className="text-frost">{error.message}</p>
+      ) : isLoading || !data ? (
+        <p className="text-frost-soft">Loading…</p>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h3 className="font-expanded text-ink text-lg font-bold">
+                Linked in the last {data.days} days
+              </h3>
+            </CardTitle>
+            <CardDescription>Newest first, up to 100.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rows.length ? (
+              <Table aria-label={`Communities linked to Discord in the last ${data.days} days`}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Community</TableHead>
+                    <TableHead>Discord server</TableHead>
+                    <TableHead className="text-right">Members here</TableHead>
+                    <TableHead>Linked</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((g) => (
+                    <TableRow key={g.id}>
+                      <TableCell className="max-w-56">
+                        <p className="text-ink truncate font-semibold">{g.name}</p>
+                        <p className="text-ink-soft truncate text-xs">
+                          {g.createdBy
+                            ? `Started by ${g.createdBy.name ?? g.createdBy.email ?? "someone unnamed"}`
+                            : "Starter unknown"}
+                        </p>
+                      </TableCell>
+                      <TableCell className="max-w-56">
+                        <p className="text-ink truncate font-semibold">
+                          {g.discordGuildName ?? "Name not recorded"}
+                        </p>
+                        {g.discordMemberCount != null && (
+                          <p className="text-ink-soft text-xs tabular-nums">
+                            about {g.discordMemberCount.toLocaleString("en-GB")} on Discord
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{g.members}</TableCell>
+                      <TableCell className="whitespace-nowrap tabular-nums">
+                        {g.discordLinkedAt ? date(g.discordLinkedAt) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button asChild variant="link">
+                            <Link href={`/groups/${g.id}/manage`}>Open console</Link>
+                          </Button>
+                          <CloseGroup
+                            name={g.name}
+                            disabled={closing}
+                            onClose={() => onClose(g.id)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-ink-soft">No communities linked this week.</p>
+            )}
+          </CardContent>
+        </Card>
       )}
     </section>
   );

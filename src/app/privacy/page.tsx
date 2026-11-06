@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "31 October 2026";
+const LAST_UPDATED = "6 November 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -84,8 +84,10 @@ export default function PrivacyPolicyPage() {
             <strong>If you join a community with Discord.</strong> When you
             ask us to, we check which Discord servers you are in (and, for
             organisers, which ones you manage). We use this only to join or
-            link a group, and we don&apos;t keep your server list. We never
-            read or post messages.
+            link a group, and we don&apos;t keep your server list. For a
+            server linked to a community we keep its name and rough member
+            count, so site admins can see which server it is. We never read
+            or post messages.
           </p>
           <p>
             <strong>Your profile.</strong> Your first and last name, your work

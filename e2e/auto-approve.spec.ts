@@ -7,6 +7,7 @@ import {
   loginAs,
   settle,
   snap,
+  testHeaders,
   trackPageErrors,
 } from "./helpers";
 
@@ -38,7 +39,8 @@ const profile = (r: APIRequestContext, first: string, list: string) =>
 
 type Created = { id: string; joinCode: string; status: string };
 type Row = { id: string; name: string; members: number };
-type ToCheck = { over: number; days: number; large: Row[]; recent: Row[] };
+type DiscordRow = Row & { discordGuildName: string | null; discordMemberCount: number | null };
+type ToCheck = { over: number; days: number; large: Row[]; recent: Row[]; discord: DiscordRow[] };
 
 /** Unique per project and attempt, so a retry starts from fresh accounts. */
 const who = (name: string, testInfo: { project: { name: string }; retry: number }) =>
@@ -178,4 +180,76 @@ test("one person can start at most 5 friends groups a season", async ({ page }, 
   // communities aren't part of this limit
   const community = await mutate(page.request, "groups.create", { name: `E2E Many Community ${p}`, kind: "COMMUNITY" });
   expect(community.status()).toBe(200);
+});
+
+test("a community linked to its Discord server goes live, and site admins see the server", async ({
+  page,
+}, testInfo) => {
+  const p = testInfo.project.name;
+  // Discord ids are 17-20 digits; unique per run, project and attempt
+  const serverId = (n: number) => `9${Date.now()}${p === "desktop" ? 1 : 2}${n}${testInfo.retry}`;
+  const server = { id: serverId(1), name: `E2E Tinsel Town ${p}`, members: 1234 };
+  // dev has no Discord sign-in: link as if the organiser picked a server they run
+  const link = (groupId: string, s: typeof server | null) =>
+    page.request.post("/api/test-auth/discord-link", { headers: testHeaders, data: { groupId, server: s } });
+
+  // the organiser of a community still waiting is told linking puts it live
+  await loginAs(page, { email: who("host", testInfo) });
+  const errors = trackPageErrors(page);
+  await page.goto(`/groups/${state.communityId}/manage`);
+  await expect(
+    page.getByRole("region", { name: "Discord server" }).getByText(/goes live straight away/),
+  ).toBeVisible();
+
+  const name = `E2E Discord Community ${p}`;
+  await loginAs(page, { email: who("discord-host", testInfo) });
+  const community = (await unwrap(
+    await mutate(page.request, "groups.create", { name, kind: "COMMUNITY" }),
+  )) as Created;
+  expect(community.status).toBe("PENDING");
+  const linked = await link(community.id, server);
+  expect(linked.status(), await linked.text()).toBe(200);
+  expect(await linked.json()).toMatchObject({ status: "ACTIVE", approved: true, discordGuildName: server.name });
+
+  // one a site admin closed stays closed, Discord or not
+  const closedName = `E2E Closed Community ${p}`;
+  const closed = (await unwrap(
+    await mutate(page.request, "groups.create", { name: closedName, kind: "COMMUNITY" }),
+  )) as Created;
+  await loginAs(page, { email: who("site", testInfo), adminLevel: "SITE" });
+  expect((await mutate(page.request, "groups.setStatus", { groupId: closed.id, status: "DISABLED" })).status()).toBe(200);
+  const relinked = await link(closed.id, { ...server, id: serverId(2), name: `E2E Closed Server ${p}` });
+  expect(await relinked.json()).toMatchObject({ status: "DISABLED", approved: false });
+
+  const check = (await unwrap(await query(page.request, "groups.friendsToCheck"))) as ToCheck;
+  expect(check.discord.find((g) => g.id === community.id)).toMatchObject({
+    discordGuildName: server.name,
+    discordMemberCount: 1234,
+  });
+  expect(check.discord.some((g) => g.id === closed.id)).toBe(false);
+
+  await page.goto("/admin/approvals");
+  await expect(page.getByRole("heading", { name: "Communities on Discord", level: 2 })).toBeVisible();
+  const table = page.getByRole("table", { name: /Communities linked to Discord/ });
+  const row = table.getByRole("row").filter({ hasText: name });
+  await expect(row).toHaveCount(1);
+  await expect(row.getByText(server.name, { exact: true })).toBeVisible();
+  await expect(row.getByText("about 1,234 on Discord")).toBeVisible();
+  // the closed one shows its server on its card in the Closed tab
+  await page.getByRole("tab", { name: "Closed" }).click();
+  const card = page.getByRole("listitem").filter({ hasText: closedName });
+  await expect(card.getByText(`E2E Closed Server ${p} · about 1,234 members`)).toBeVisible();
+  await page.getByRole("tab", { name: "Waiting" }).click();
+  await settle(page);
+  await row.scrollIntoViewIfNeeded();
+  await snap(page, testInfo, "admin-approvals-discord");
+
+  // Admin › Groups names the server too
+  await page.goto(`/admin/groups`);
+  await expect(page.getByText(`Discord: ${server.name}`)).toBeVisible();
+
+  // unlinking keeps the community live and forgets the server
+  const unlinked = await link(community.id, null);
+  expect(await unlinked.json()).toMatchObject({ status: "ACTIVE", approved: false, discordGuildName: null });
+  expect(errors).toEqual([]);
 });

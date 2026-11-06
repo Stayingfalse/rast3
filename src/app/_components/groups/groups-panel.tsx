@@ -40,7 +40,7 @@ export function GroupsPanel() {
       toast.success(
         g.status === "ACTIVE"
           ? "Group started and live. Share the invite link below."
-          : "Community started. Share the invite link below; we'll check it before gifting opens.",
+          : "Community started. Link its Discord server below to go live now, or we'll check it before gifting opens.",
       );
       await utils.groups.mine.invalidate();
     },
@@ -114,7 +114,7 @@ export function GroupsPanel() {
                   [
                     "COMMUNITY",
                     "Community",
-                    "A Discord server, club or forum. We check it first.",
+                    "A Discord server, club or forum. Link your Discord server to go live straight away; otherwise we check it first.",
                   ],
                 ] as const
               ).map(([value, title, hint]) => (
@@ -288,6 +288,7 @@ function GroupCard({ group }: { group: Group }) {
           <DiscordLinkEditor
             groupId={group.id}
             guildId={group.discord.guildId}
+            pending={group.status === "PENDING"}
           />
         )}
 

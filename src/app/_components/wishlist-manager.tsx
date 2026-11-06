@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { LastOrderBanner } from "./last-order-banner";
 import { Postmark } from "./post/postmark";
 import { type FirstGift, ShareSheet, type ShareRequest } from "./share/share-sheet";
 import { Preloader } from "./preloader";
@@ -604,6 +605,9 @@ export function WishlistManager() {
           ))}
         </dl>
       )}
+
+      {/* last-order countdown, above the pick-up button and the parcels */}
+      <LastOrderBanner />
 
       {waitingForPeople ? (
         <section

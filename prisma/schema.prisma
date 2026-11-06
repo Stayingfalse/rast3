@@ -252,6 +252,10 @@ model Season {
   year      Int      @unique
   opensAt   DateTime
   closesAt  DateTime
+  /// Amazon UK's last day to order for standard Christmas delivery, set by a
+  /// site admin each season (6 Nov 2026). Only its UK calendar date matters;
+  /// stored at 12:00 UTC. Null: no last-order countdown.
+  lastOrderAt DateTime?
   createdAt DateTime @default(now())
 }
 

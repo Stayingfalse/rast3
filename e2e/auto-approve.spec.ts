@@ -152,9 +152,16 @@ test("a friends group past 15 members is flagged for a site admin, and can still
   // closing it uses the usual status control and takes it off the list
   await row.getByRole("button", { name: `Close ${state.bigName}` }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Close group" }).click();
+  // while the dialog closes the page behind it is aria-hidden, so the row
+  // "vanishes" before the close is saved: wait for the dialog, then the server
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(large.getByRole("row").filter({ hasText: state.bigName })).toHaveCount(0);
-  const closed = (await unwrap(await query(page.request, "groups.friendsToCheck"))) as ToCheck;
-  expect(closed.large.some((g) => g.id === big.id)).toBe(false);
+  await expect
+    .poll(async () => {
+      const closed = (await unwrap(await query(page.request, "groups.friendsToCheck"))) as ToCheck;
+      return closed.large.some((g) => g.id === big.id);
+    })
+    .toBe(false);
   expect(errors).toEqual([]);
 });
 

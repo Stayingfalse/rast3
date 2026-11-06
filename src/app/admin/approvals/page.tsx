@@ -36,6 +36,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api, type RouterOutputs } from "~/trpc/react";
 
+import { DiscordServer } from "../_components/discord-server";
+
 type Status = "PENDING" | "ACTIVE" | "DISABLED";
 const TABS: { status: Status; label: string }[] = [
   { status: "PENDING", label: "Waiting" },
@@ -55,12 +57,6 @@ const date = (d: Date | string) =>
     month: "short",
     year: "numeric",
   });
-
-/** "Name · about 1,234 members", or a note when the name isn't recorded yet. */
-const discordServer = (name: string | null, members: number | null) =>
-  name
-    ? `${name}${members != null ? ` · about ${members.toLocaleString("en-GB")} ${members === 1 ? "member" : "members"}` : ""}`
-    : "Linked (name shows once the organiser opens their console)";
 
 /**
  * Site admins: approve new organisations and communities (owner, 18 Oct).
@@ -148,14 +144,6 @@ export default function ApprovalsPage() {
                             <dd className="text-ink py-1 break-all">{g.emailDomain}</dd>
                           </>
                         )}
-                        {g.discordGuildId && (
-                          <>
-                            <dt className="text-ink-soft py-1">Discord server</dt>
-                            <dd className="text-ink py-1 break-words">
-                              {discordServer(g.discordGuildName, g.discordMemberCount)}
-                            </dd>
-                          </>
-                        )}
                         <dt className="text-ink-soft py-1">Started by</dt>
                         <dd className="text-ink py-1 break-all">
                           {g.createdBy
@@ -165,6 +153,15 @@ export default function ApprovalsPage() {
                         <dt className="text-ink-soft py-1">Members</dt>
                         <dd className="text-ink py-1 tabular-nums">{g.members}</dd>
                       </dl>
+                      {g.discord && (
+                        <section
+                          aria-label="Discord server"
+                          className="border-rule mt-3 border-t border-dashed pt-3"
+                        >
+                          <p className="label-caps text-ink-soft mb-2">Discord server</p>
+                          <DiscordServer server={g.discord} />
+                        </section>
+                      )}
                     </CardContent>
                     <CardFooter className="flex flex-wrap gap-2">
                       {g.status !== "ACTIVE" && (
@@ -393,8 +390,8 @@ function DiscordCommunities({
         </h2>
         <p className="text-frost-soft max-w-2xl">
           A community goes live when its organiser links a Discord server they
-          own or manage. Check the server looks real; a brand-new server with a
-          handful of members is worth a look.
+          own or manage. Check the server looks real: one made this month, or
+          with only a handful of members, is worth a look.
         </p>
       </div>
       {error ? (
@@ -436,19 +433,12 @@ function DiscordCommunities({
                             : "Starter unknown"}
                         </p>
                       </TableCell>
-                      <TableCell className="max-w-56">
-                        <p className="text-ink truncate font-semibold">
-                          {g.discordGuildName ?? "Name not recorded"}
-                        </p>
-                        {g.discordMemberCount != null && (
-                          <p className="text-ink-soft text-xs tabular-nums">
-                            about {g.discordMemberCount.toLocaleString("en-GB")} on Discord
-                          </p>
-                        )}
+                      <TableCell className="min-w-56 max-w-80 whitespace-normal">
+                        <DiscordServer server={g.server} compact />
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{g.members}</TableCell>
                       <TableCell className="whitespace-nowrap tabular-nums">
-                        {g.discordLinkedAt ? date(g.discordLinkedAt) : "—"}
+                        {g.server.linkedAt ? date(g.server.linkedAt) : "—"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">

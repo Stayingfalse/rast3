@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
+import { launchOf, launchSelect } from "~/server/group-launch";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
 
 /**
@@ -38,19 +39,22 @@ export async function seasonWindow(db: Db, year = currentSeason()) {
 }
 
 /**
- * Can people pick up in this group now? Inside the season's dates, or any
- * time for a group (or a team's workplace) a site admin opened early.
+ * When gifting opens and closes in this group: the season's dates, or the
+ * group's own launch date (7 Nov; a team follows its workplace). Without a
+ * group, the season's.
  */
-export async function giftingOpen(db: Db, groupId: string | null, now = new Date()) {
+export async function groupWindow(db: Db, groupId: string | null, now = new Date()) {
   const w = await seasonWindow(db);
-  if (now >= w.opensAt && now <= w.closesAt) return true;
-  if (!groupId) return false;
-  const season = currentSeason();
-  const g = await db.group.findUnique({
-    where: { id: groupId },
-    select: { openEarlySeason: true, parent: { select: { openEarlySeason: true } } },
-  });
-  return g?.openEarlySeason === season || g?.parent?.openEarlySeason === season;
+  const g = groupId
+    ? await db.group.findUnique({ where: { id: groupId }, select: launchSelect })
+    : null;
+  const opensAt = g ? launchOf(g, w) : w.opensAt;
+  return { ...w, opensAt, open: now >= opensAt && now <= w.closesAt };
+}
+
+/** Can people pick up in this group now (by its dates)? */
+export async function giftingOpen(db: Db, groupId: string | null, now = new Date()) {
+  return (await groupWindow(db, groupId, now)).open;
 }
 
 /** Is the season's gifting window open right now? */
@@ -103,8 +107,8 @@ export async function requireCanPickUp(db: Db, userId: string, groupId: string |
       message: `Check in for Christmas ${season} first: confirm your wishlist and groups.`,
     });
   }
-  if (!(await giftingOpen(db, groupId))) {
-    const w = await seasonWindow(db, season);
+  const w = await groupWindow(db, groupId);
+  if (!w.open) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message:

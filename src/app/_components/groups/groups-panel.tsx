@@ -266,6 +266,16 @@ function GroupCard({ group }: { group: Group }) {
           >
             {status.label}
           </span>
+          {group.status === "ACTIVE" && group.opensLater && (
+            <span className="bg-gold-soft text-ink rounded-full px-2.5 py-0.5 text-xs font-bold">
+              Gifting opens{" "}
+              {new Date(group.opensAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                timeZone: "Europe/London",
+              })}
+            </span>
+          )}
         </div>
         <h3 className="font-expanded text-ink text-2xl leading-tight font-extrabold">
           {group.name}

@@ -22,9 +22,10 @@ import {
   archivePastSeasons,
   checkedIn,
   currentSeason,
-  inSeasonWindow,
   requireCanPickUp,
+  seasonWindow,
 } from "~/server/season";
+import { openNowWhere } from "~/server/group-launch";
 
 const HOUR = 60 * 60_000;
 // Picking up wishlists hands out other people's links, so cap how fast one
@@ -396,7 +397,9 @@ export const wishlistRouter = createTRPCRouter({
       });
       await requireCanPickUp(ctx.db, userId, scope.orgId);
 
-      const outsideWindow = !(await inSeasonWindow(ctx.db));
+      // other workplaces join the pool once they've opened (each has its own
+      // launch date, by default the season's)
+      const openOrgs = openNowWhere(await seasonWindow(ctx.db));
       // Get eligible users from a different domain
       const eligibleUsers = await ctx.db.user.findMany({
         where: {
@@ -407,10 +410,8 @@ export const wishlistRouter = createTRPCRouter({
             { amazonWishlistUrl: { not: null } },
             checkedIn(), // checked in for this season (Day 18)
             inOtherActiveOrg(scope.orgId), // Another approved organisation
-            // ...that is open too: before the season, only ones opened early
-            ...(outsideWindow
-              ? [{ memberships: { some: { group: { kind: "ORG" as const, openEarlySeason: currentSeason() } } } }]
-              : []),
+            // ...that is open too
+            { memberships: { some: { group: { AND: [{ kind: "ORG" as const }, openOrgs] } } } },
           ],
         },
         // no names: buyers never learn whose list it is

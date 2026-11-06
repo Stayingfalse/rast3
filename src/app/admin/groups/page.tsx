@@ -35,7 +35,15 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { useDebounced } from "~/lib/use-debounced";
-import { api } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
+import { LaunchDateEditor } from "~/app/_components/groups/launch-date-editor";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 
 const KINDS = { ORG: "Workplace", COMMUNITY: "Community", FRIENDS: "Friends group" } as const;
 const STATUSES = { ACTIVE: "Live", PENDING: "Waiting", DISABLED: "Closed" } as const;
@@ -45,6 +53,9 @@ const ALL = "all";
 
 const date = (d: Date | string) =>
   new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const shortDay = (d: Date | string) =>
+  new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Europe/London" });
+type Row = RouterOutputs["admin"]["groups"][number];
 
 /** Every group on the site (Day 17); teams live inside their workplace. */
 export default function AdminGroupsPage() {
@@ -73,11 +84,13 @@ function GroupsTable() {
   });
   const setOpenEarly = api.admin.setOpenEarly.useMutation({
     onSuccess: async (_, v) => {
-      toast.success(v.open ? "Open early: pick-ups work now" : "Back to the season's dates");
+      toast.success(v.open ? "Open now: pick-ups work straight away" : "Back to the season's date");
       await utils.admin.groups.invalidate();
     },
     onError: (e) => toast.error(e.message),
   });
+  // the group whose gifting date is being set (7 Nov)
+  const [dating, setDating] = useState<Row | null>(null);
   const setGroupStatus = api.groups.setStatus.useMutation({
     onSuccess: async (g) => {
       toast.success(g.status === "ACTIVE" ? "It's live" : "Closed");
@@ -181,7 +194,10 @@ function GroupsTable() {
                                 (g.discordName
                                   ? `Discord: ${g.discordName}${g.discordMembers != null ? ` (about ${g.discordMembers.toLocaleString("en-GB")})` : ""}`
                                   : "Discord linked"),
-                              g.openEarly && "Open early",
+                              g.launch.own &&
+                                (g.launch.open
+                                  ? `Open since ${shortDay(g.launch.opensAt)}`
+                                  : `Opens ${shortDay(g.launch.opensAt)}`),
                             ]
                               .filter(Boolean)
                               .join(" · ")}
@@ -212,13 +228,16 @@ function GroupsTable() {
                                 <DropdownMenuItem asChild>
                                   <Link href={`/groups/${g.id}/manage`}>Open console</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={() =>
-                                    setOpenEarly.mutate({ groupId: g.id, open: !g.openEarly })
-                                  }
-                                >
-                                  {g.openEarly ? "Follow season dates" : "Open early"}
+                                <DropdownMenuItem onSelect={() => setDating(g)}>
+                                  Gifting date…
                                 </DropdownMenuItem>
+                                {!g.launch.open && (
+                                  <DropdownMenuItem
+                                    onSelect={() => setOpenEarly.mutate({ groupId: g.id, open: true })}
+                                  >
+                                    Open now
+                                  </DropdownMenuItem>
+                                )}
                                 {g.status !== "ACTIVE" && (
                                   <DropdownMenuItem
                                     onSelect={() =>
@@ -251,6 +270,29 @@ function GroupsTable() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!dating} onOpenChange={(o) => !o && setDating(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Gifting date: {dating?.name}</DialogTitle>
+            <DialogDescription>
+              The site&apos;s date unless you pick another. Its organiser can
+              change it too, until it opens.
+            </DialogDescription>
+          </DialogHeader>
+          {dating && (
+            <LaunchDateEditor
+              groupId={dating.id}
+              launch={dating.launch}
+              siteAdmin
+              onSaved={async () => {
+                await utils.admin.groups.invalidate();
+                setDating(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

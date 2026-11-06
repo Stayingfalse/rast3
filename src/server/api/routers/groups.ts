@@ -35,9 +35,16 @@ import {
   emailDomain,
   isPublicEmailDomain,
 } from "~/server/public-email-domains";
+import {
+  friendsStartedThisSeason,
+  LARGE_FRIENDS_GROUP,
+  largeFriendsGroupIds,
+  MAX_FRIENDS_PER_SEASON,
+  RECENT_FRIENDS_DAYS,
+} from "~/server/friends-groups";
 
 const HOUR = 60 * 60_000;
-/** Most groups one person can start (while it's free, owner approves each). */
+/** Most groups one person can start, of any kind, ever. */
 const MAX_CREATED = 10;
 
 const slugify = (name: string) =>
@@ -56,8 +63,9 @@ const notFound = () =>
 
 /**
  * Day 10: friends and community groups people start themselves and invite
- * others to with a link or code. New groups wait for a site admin's approval
- * (owner, 18 Oct) before they can be used for gifting.
+ * others to with a link or code. New communities wait for a site admin's
+ * approval (owner, 18 Oct) before they can be used for gifting; friends
+ * groups go live straight away (owner, 6 Nov; see ~/server/friends-groups).
  */
 /** The group, if this person organises it (or is a site admin); else throws. */
 async function requireOrganiser(
@@ -165,7 +173,9 @@ export const groupsRouter = createTRPCRouter({
   }),
 
   create: protectedProcedure
-    .use(rateLimit("groups.create", 5, HOUR))
+    // above the friends-per-season limit, so that limit's message is the one
+    // people see; MAX_CREATED still caps the total
+    .use(rateLimit("groups.create", 10, HOUR))
     .input(
       z.object({
         name: z.string().trim().min(2, "Give your group a name").max(60),
@@ -183,17 +193,28 @@ export const groupsRouter = createTRPCRouter({
           message: `You can start up to ${MAX_CREATED} groups.`,
         });
       }
+      const friends = input.kind === "FRIENDS";
+      if (
+        friends &&
+        (await friendsStartedThisSeason(ctx.db, userId)) >= MAX_FRIENDS_PER_SEASON
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `You've started ${MAX_FRIENDS_PER_SEASON} friends groups this Christmas, the most one person can. Invite people to one you already run instead.`,
+        });
+      }
       const group = await ctx.db.group.create({
         data: {
           kind: input.kind,
           name: input.name,
           slug: `${slugify(input.name)}-${randomBytes(3).toString("hex")}`,
-          status: "PENDING",
+          // friends groups are live at once; communities wait for approval
+          status: friends ? "ACTIVE" : "PENDING",
           joinCode: newJoinCode(),
           createdById: userId,
           memberships: { create: { userId, role: "ADMIN" } },
         },
-        select: { id: true, joinCode: true },
+        select: { id: true, joinCode: true, status: true },
       });
       return group;
     }),
@@ -915,6 +936,51 @@ export const groupsRouter = createTRPCRouter({
         members: _count.memberships,
       }));
     }),
+
+  /**
+   * Site admins: friends groups to keep an eye on, since they skip approval.
+   * `large`: live ones past the size for friends and family; `recent`: the
+   * other live ones started in the last few days.
+   */
+  friendsToCheck: siteAdminProcedure.query(async ({ ctx }) => {
+    const since = new Date(Date.now() - RECENT_FRIENDS_DAYS * 24 * HOUR);
+    const largeIds = await largeFriendsGroupIds(ctx.db);
+    const select = {
+      id: true,
+      name: true,
+      status: true,
+      createdAt: true,
+      createdBy: { select: { name: true, email: true } },
+      _count: { select: { memberships: true } },
+    } as const;
+    const [large, recent] = await Promise.all([
+      largeIds.length
+        ? ctx.db.group.findMany({ where: { id: { in: largeIds } }, take: 100, select })
+        : Promise.resolve([]),
+      ctx.db.group.findMany({
+        where: {
+          kind: "FRIENDS",
+          status: "ACTIVE",
+          createdAt: { gte: since },
+          id: { notIn: largeIds },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select,
+      }),
+    ]);
+    const shape = ({ _count, ...g }: (typeof recent)[number]) => ({
+      ...g,
+      members: _count.memberships,
+    });
+    return {
+      over: LARGE_FRIENDS_GROUP,
+      days: RECENT_FRIENDS_DAYS,
+      // biggest first
+      large: large.map(shape).sort((a, b) => b.members - a.members),
+      recent: recent.map(shape),
+    };
+  }),
 
   /** Site admins: approve (ACTIVE), close (DISABLED) or re-queue a group. */
   setStatus: siteAdminProcedure

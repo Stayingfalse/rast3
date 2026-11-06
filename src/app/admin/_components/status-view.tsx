@@ -236,7 +236,8 @@ export function StatusView({
               <h2 className="font-expanded text-ink text-lg font-bold">Groups waiting</h2>
             </CardTitle>
             <CardDescription>
-              New groups wait for approval before gifting opens in them.
+              New workplaces and communities wait for approval before gifting
+              opens in them. Friends groups go live straight away.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -254,9 +255,22 @@ export function StatusView({
                     </span>
                   ),
                 ],
+                [
+                  "Large friends groups",
+                  <span key="l" className="flex flex-wrap items-center gap-2">
+                    <span className="tabular-nums">{n(data.groups.largeFriends)}</span>
+                    <Flag ok={!data.groups.largeFriends}>
+                      {data.groups.largeFriends ? "To check" : undefined}
+                    </Flag>
+                  </span>,
+                ],
               ]}
             />
-            <Button asChild variant={data.groups.pending ? "default" : "outline"} className="self-start">
+            <Button
+              asChild
+              variant={data.groups.pending || data.groups.largeFriends ? "default" : "outline"}
+              className="self-start"
+            >
               <Link href="/admin/approvals">Review approvals</Link>
             </Button>
           </CardContent>

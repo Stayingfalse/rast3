@@ -17,7 +17,8 @@ kinds of group ("three ways in"):
   large Discord servers, joined through a linked Discord server.
 - **Friends and family.** Small groups joined with an invite link or code.
 - **Organisers and admins:** group organisers manage members and invites;
-  site admins approve new groups, and moderate kudos.
+  site admins approve new workplaces and communities (friends groups go
+  live straight away), and moderate kudos.
 
 ## Product Purpose
 

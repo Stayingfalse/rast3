@@ -25,8 +25,16 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { api } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
 
 type Status = "PENDING" | "ACTIVE" | "DISABLED";
 const TABS: { status: Status; label: string }[] = [
@@ -41,9 +49,17 @@ const KIND = {
   TEAM: "Team",
 } as const;
 
+const date = (d: Date | string) =>
+  new Date(d).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
 /**
- * Site admins: approve new organisations and groups. While the service is
- * free, nothing goes live without this (owner, 18 Oct).
+ * Site admins: approve new organisations and communities (owner, 18 Oct).
+ * Friends groups go live without approval (owner, 6 Nov), so they're listed
+ * below the queue instead: big ones to check, and the past week's new ones.
  */
 export default function ApprovalsPage() {
   const [status, setStatus] = useState<Status>("PENDING");
@@ -59,6 +75,7 @@ export default function ApprovalsPage() {
             : "Moved back to waiting",
       );
       await utils.groups.forReview.invalidate();
+      await utils.groups.friendsToCheck.invalidate();
       await utils.admin.overview.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -71,8 +88,10 @@ export default function ApprovalsPage() {
           Approvals
         </h1>
         <p className="text-frost-soft max-w-2xl">
-          New organisations and groups wait here until you approve them. People
-          can join while they wait; gifting opens once they&apos;re live.
+          New workplaces and communities wait here until you approve them.
+          People can join while they wait; gifting opens once they&apos;re
+          live. Friends groups go live straight away: they&apos;re listed
+          below so you can still keep an eye on them.
         </p>
       </div>
 
@@ -143,32 +162,13 @@ export default function ApprovalsPage() {
                         </Button>
                       )}
                       {g.status !== "DISABLED" && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" disabled={setGroupStatus.isPending}>
-                              Close
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Close {g.name}?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Members won&apos;t be able to pick up wishlists in
-                                it. You can re-open it later.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Keep it open</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() =>
-                                  setGroupStatus.mutate({ groupId: g.id, status: "DISABLED" })
-                                }
-                              >
-                                Close group
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <CloseGroup
+                          name={g.name}
+                          disabled={setGroupStatus.isPending}
+                          onClose={() =>
+                            setGroupStatus.mutate({ groupId: g.id, status: "DISABLED" })
+                          }
+                        />
                       )}
                       {g.kind !== "TEAM" && (
                         <Button asChild variant="link">
@@ -183,6 +183,168 @@ export default function ApprovalsPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <FriendsGroups
+        closing={setGroupStatus.isPending}
+        onClose={(groupId) => setGroupStatus.mutate({ groupId, status: "DISABLED" })}
+      />
     </div>
+  );
+}
+
+/** Close, after a confirmation: members can't pick up in it until it's re-opened. */
+function CloseGroup({
+  name,
+  disabled,
+  onClose,
+}: {
+  name: string;
+  disabled: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" disabled={disabled} aria-label={`Close ${name}`}>
+          Close
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Close {name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Members won&apos;t be able to pick up wishlists in it. You can
+            re-open it later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep it open</AlertDialogCancel>
+          <AlertDialogAction onClick={onClose}>Close group</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+type FriendsGroup = RouterOutputs["groups"]["friendsToCheck"]["recent"][number];
+
+/** Live friends groups to look over: the oversized ones, then the past week's. */
+function FriendsGroups({
+  closing,
+  onClose,
+}: {
+  closing: boolean;
+  onClose: (groupId: string) => void;
+}) {
+  const { data, isLoading, error } = api.groups.friendsToCheck.useQuery();
+
+  const table = (rows: FriendsGroup[], label: string) => (
+    <Table aria-label={label}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Group</TableHead>
+            <TableHead className="text-right">Members</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((g) => (
+            <TableRow key={g.id}>
+              <TableCell className="max-w-64">
+                <p className="text-ink truncate font-semibold">{g.name}</p>
+                <p className="text-ink-soft truncate text-xs">
+                  {g.createdBy
+                    ? `Started by ${g.createdBy.name ?? g.createdBy.email ?? "someone unnamed"}`
+                    : "Starter unknown"}
+                </p>
+              </TableCell>
+              <TableCell className="text-right tabular-nums">{g.members}</TableCell>
+              <TableCell className="whitespace-nowrap tabular-nums">{date(g.createdAt)}</TableCell>
+              <TableCell>
+                <div className="flex items-center justify-end gap-1">
+                  <Button asChild variant="link">
+                    <Link href={`/groups/${g.id}/manage`}>Open console</Link>
+                  </Button>
+                  <CloseGroup
+                    name={g.name}
+                    disabled={closing}
+                    onClose={() => onClose(g.id)}
+                  />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+    </Table>
+  );
+
+  return (
+    <section aria-labelledby="friends-groups-heading" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <h2
+          id="friends-groups-heading"
+          className="font-expanded text-frost text-2xl font-extrabold uppercase"
+        >
+          Friends groups
+        </h2>
+        <p className="text-frost-soft max-w-2xl">
+          These went live without approval. Close any that don&apos;t look like
+          friends and family; members keep their accounts.
+        </p>
+      </div>
+      {error ? (
+        <p className="text-frost">{error.message}</p>
+      ) : isLoading || !data ? (
+        <p className="text-frost-soft">Loading…</p>
+      ) : (
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle>
+                  <h3 className="font-expanded text-ink text-lg font-bold">
+                    Large friends groups to check
+                  </h3>
+                </CardTitle>
+                {data.large.length > 0 && (
+                  <Badge className="tabular-nums">{data.large.length}</Badge>
+                )}
+              </div>
+              <CardDescription>
+                Friends groups are for friends and family. These have grown past{" "}
+                {data.over} members; people can still join until you close one.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.large.length ? (
+                table(data.large, "Large friends groups to check")
+              ) : (
+                <p className="text-ink-soft">None over {data.over} members.</p>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <h3 className="font-expanded text-ink text-lg font-bold">
+                  Started in the last {data.days} days
+                </h3>
+              </CardTitle>
+              <CardDescription>Newest first, up to 100.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.recent.length ? (
+                table(data.recent, `Friends groups started in the last ${data.days} days`)
+              ) : (
+                <p className="text-ink-soft">No new friends groups this week.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </section>
   );
 }

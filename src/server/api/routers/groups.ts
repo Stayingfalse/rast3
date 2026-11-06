@@ -16,7 +16,9 @@ import {
   linkDiscordServer,
   type LinkedServer,
   manageable,
+  serverColumns,
 } from "~/server/discord";
+import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
@@ -503,21 +505,17 @@ export const groupsRouter = createTRPCRouter({
       const guilds = token ? await fetchMyGuilds(token) : null;
       if (!guilds) return { needsDiscord: true as const, servers: [] };
       const servers = manageable(guilds);
-      // keep the linked server's name and size current for site admins (and
-      // fill them in for servers linked before they were recorded)
+      // keep what site admins see about the linked server current (and fill
+      // it in for servers linked before it was recorded)
       const group = await ctx.db.group.findUnique({
         where: { id: input.groupId },
-        select: { discordGuildId: true, discordGuildName: true, discordMemberCount: true },
+        select: { discordGuildId: true },
       });
       const linked = servers.find((g) => g.id === group?.discordGuildId);
-      if (
-        linked &&
-        (linked.name.slice(0, 100) !== group?.discordGuildName ||
-          linked.members !== group.discordMemberCount)
-      ) {
+      if (linked) {
         await ctx.db.group.update({
           where: { id: input.groupId },
-          data: { discordGuildName: linked.name.slice(0, 100), discordMemberCount: linked.members },
+          data: serverColumns(linked),
         });
       }
       return { needsDiscord: false as const, servers };
@@ -573,7 +571,7 @@ export const groupsRouter = createTRPCRouter({
             message: "That Discord server is already linked to another group.",
           });
         }
-        server = { id: mine.id, name: mine.name, members: mine.members };
+        server = mine;
       }
       return linkDiscordServer(ctx.db, input.groupId, server);
     }),
@@ -946,17 +944,22 @@ export const groupsRouter = createTRPCRouter({
           kind: true,
           status: true,
           emailDomain: true,
-          discordGuildId: true,
-          discordGuildName: true,
-          discordMemberCount: true,
+          ...discordSummarySelect,
           createdAt: true,
           createdBy: { select: { name: true, email: true } },
           _count: { select: { memberships: true } },
         },
       });
-      return groups.map(({ _count, ...g }) => ({
-        ...g,
-        members: _count.memberships,
+      return groups.map((g) => ({
+        id: g.id,
+        name: g.name,
+        kind: g.kind,
+        status: g.status,
+        emailDomain: g.emailDomain,
+        createdAt: g.createdAt,
+        createdBy: g.createdBy,
+        members: g._count.memberships,
+        discord: discordSummary(g),
       }));
     }),
 
@@ -996,7 +999,7 @@ export const groupsRouter = createTRPCRouter({
         where: { kind: "COMMUNITY", status: "ACTIVE", discordLinkedAt: { gte: since } },
         orderBy: { discordLinkedAt: "desc" },
         take: 100,
-        select: { ...select, discordGuildName: true, discordMemberCount: true, discordLinkedAt: true },
+        select: { ...select, ...discordSummarySelect },
       }),
     ]);
     const shape = ({ _count, ...g }: (typeof recent)[number]) => ({
@@ -1009,7 +1012,14 @@ export const groupsRouter = createTRPCRouter({
       // biggest first
       large: large.map(shape).sort((a, b) => b.members - a.members),
       recent: recent.map(shape),
-      discord: discord.map(({ _count, ...g }) => ({ ...g, members: _count.memberships })),
+      discord: discord.map((g) => ({
+        id: g.id,
+        name: g.name,
+        createdAt: g.createdAt,
+        createdBy: g.createdBy,
+        members: g._count.memberships,
+        server: discordSummary(g)!,
+      })),
     };
   }),
 

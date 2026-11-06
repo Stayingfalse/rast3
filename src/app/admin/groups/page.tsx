@@ -177,7 +177,10 @@ function GroupsTable() {
                             {[
                               g.emailDomain,
                               g.kind === "ORG" && `${g.teams} ${g.teams === 1 ? "team" : "teams"}`,
-                              g.discord && (g.discordName ? `Discord: ${g.discordName}` : "Discord linked"),
+                              g.discord &&
+                                (g.discordName
+                                  ? `Discord: ${g.discordName}${g.discordMembers != null ? ` (about ${g.discordMembers.toLocaleString("en-GB")})` : ""}`
+                                  : "Discord linked"),
                               g.openEarly && "Open early",
                             ]
                               .filter(Boolean)

@@ -1583,13 +1583,17 @@ that don't touch the data model. Known items to include:
     season; group creation is limited to 10 an hour. Friends groups
     already waiting stay waiting until approved.
   - **Owner, 6 Nov: communities linked to Discord go live too** (same
-    branch, migration `20261106070000_discord_names`). Linking a Discord
-    server the organiser owns or manages (checked with Discord) puts a
-    waiting community live; one a site admin closed stays closed, and
-    unlinking keeps it live. The server's name and rough member count are
-    stored when it's linked (and refreshed whenever the organiser opens
-    their console, which also fills them in for servers linked before) and
-    shown on Admin › Approvals (each card, plus "Communities on Discord":
+    branch). Linking a Discord server the organiser owns or manages
+    (checked with Discord) puts a waiting community live; one a site admin closed stays closed, and
+    unlinking keeps it live. Site admins see what Discord tells the
+    organiser about the server (no bot): name, icon, rough member and
+    online counts, when it was made (from its id; one made in the last 30
+    days is flagged "New server"), Partner/Verified/Discovery/Community
+    features, and whether the organiser owns it, is an admin or a manager.
+    Stored when it's linked (migrations `20261106070000_discord_names`,
+    `20261106080000_discord_details`) and refreshed whenever the organiser
+    opens their console, which also fills it in for servers linked before.
+    Shown on Admin › Approvals (each card, plus "Communities on Discord":
     those linked in the last 7 days) and Admin › Groups. Privacy policy
     says so. e2e links through a test-only route, since dev has no Discord
     sign-in.

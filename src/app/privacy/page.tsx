@@ -85,8 +85,10 @@ export default function PrivacyPolicyPage() {
             ask us to, we check which Discord servers you are in (and, for
             organisers, which ones you manage). We use this only to join or
             link a group, and we don&apos;t keep your server list. For a
-            server linked to a community we keep its name and rough member
-            count, so site admins can see which server it is. We never read
+            server linked to a community we keep what Discord shows about the
+            server itself (its name, icon, rough member and online counts and
+            features such as Partnered) and whether the organiser owns or
+            manages it, so site admins can see which server it is. We never read
             or post messages.
           </p>
           <p>

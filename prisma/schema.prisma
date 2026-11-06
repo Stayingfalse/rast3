@@ -286,11 +286,20 @@ model Group {
   discordGuildId     String?              @unique
   /// optional Discord role required to join
   discordRoleId      String?
-  /// the linked server's name and rough size, as Discord gave them when the
-  /// organiser linked it (or last opened the console), for site admins
+  /// the linked server as Discord described it to the organiser when they
+  /// linked it (refreshed when they open the console), for site admins
   discordGuildName   String?              @db.VarChar(100)
   discordMemberCount Int?
   discordLinkedAt    DateTime?
+  /// icon hash, rough online count, notable features (comma-separated:
+  /// PARTNERED, VERIFIED, ...), and whether the organiser owns it (OWNER),
+  /// is an admin (ADMIN) or a server manager (MANAGER)
+  discordIcon        String?              @db.VarChar(64)
+  discordOnlineCount Int?
+  discordFeatures    String?              @db.VarChar(255)
+  discordLinkedBy    String?              @db.VarChar(16)
+  /// when those details last came from Discord
+  discordCheckedAt   DateTime?
   createdById        String?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt

@@ -61,6 +61,9 @@ test("overview shows what needs attention and health", async ({ page }, testInfo
   await expect(page.getByRole("link", { name: "Review approvals" })).toBeVisible();
   await expect(page.getByText("Connected")).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Site admin" })).toBeVisible();
+  // gifting figures are this season's, all time only in the small print (3 Nov)
+  await expect(page.getByText(/^for Christmas \d{4}$/)).toBeVisible();
+  await expect(page.getByText(/thank-yous this Christmas · [\d,]+ gifts all time/)).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "admin-overview");
   expect(errors).toEqual([]);

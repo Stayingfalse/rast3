@@ -40,8 +40,14 @@ export default function AdminOverviewPage() {
     ["People", data.people.users, `${n(data.people.profiles)} finished their profile`],
     ["Wishlists", data.people.wishlists, "people with a wishlist link"],
     ["Joined this week", data.people.joinedThisWeek, "joined a group in 7 days"],
-    ["Picked up", data.gifting.pickUps, "wishlists picked up"],
-    ["Gifts sent", data.gifting.gifts, `${n(data.gifting.kudos)} kudos posted`],
+    // this season's (3 Nov); all time in the small print
+    ["Checked in", data.gifting.checkedIn, `for Christmas ${data.gifting.season}`],
+    ["Picked up", data.gifting.pickUps, `wishlists, Christmas ${data.gifting.season}`],
+    [
+      "Gifts sent",
+      data.gifting.gifts,
+      `${n(data.gifting.kudos)} thank-yous this Christmas · ${n(data.gifting.allTime.gifts)} gifts all time`,
+    ],
   ] as const;
 
   return (

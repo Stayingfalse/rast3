@@ -1535,3 +1535,17 @@ that don't touch the data model. Known items to include:
   - Dev CI also hit two `ECONNRESET`s from dev during e2e on 4 Nov
     evening (connection dropped mid-request; retries passed): worth a
     look at the tunnel if it keeps happening.
+- **Nightly run, 5 Nov: admin overview shows this Christmas (owner's 3 Nov
+  principle: don't lead with past years).**
+  - The overview's gifting figures were all-time (291 gifts, 334 kudos,
+    pick-ups of every year). Now: **Checked in** (new), **Picked up** and
+    **Gifts sent** count this season, and thank-yous this Christmas; the
+    all-time gifts total stays as small print. People and Wishlists stay
+    as they are (they describe today, not a season).
+  - **Backups:** still none since the manual one on 3 Nov 09:03; the 02:00
+    schedule didn't run again on 5 Nov. Owner: a manual backup now, and a
+    fallback (volume backup or `mysqldump` cron) before launch.
+  - **Restarts:** prod and dev restarted at 03:06 UTC again (fourth night).
+  - **Next (nightly, 6 Nov): spare day,** owner's pick (auto-approve small
+    friends groups, the "we're live" organiser email on 15 Nov, or the
+    morning status email to the owner during launch week).

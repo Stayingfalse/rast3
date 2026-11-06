@@ -252,6 +252,10 @@ model Season {
   year      Int      @unique
   opensAt   DateTime
   closesAt  DateTime
+  /// Amazon UK's last day to order for standard Christmas delivery, set by a
+  /// site admin each season (6 Nov 2026). Only its UK calendar date matters;
+  /// stored at 12:00 UTC. Null: no last-order countdown.
+  lastOrderAt DateTime?
   createdAt DateTime @default(now())
 }
 
@@ -366,6 +370,10 @@ enum EmailKind {
   /// Day 24: at most weekly, to people who have picked up a list this season,
   /// when new members' wishlists are waiting for a first gift
   NEW_LISTS
+  /// 6 Nov: to each organiser of a live group when gifting opens (ref = group id)
+  ORGANISER_LIVE
+  /// 6 Nov: site admins' morning status email in launch week (ref = UK date)
+  ADMIN_STATUS
 }
 
 enum EmailStatus {

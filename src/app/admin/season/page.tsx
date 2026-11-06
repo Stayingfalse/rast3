@@ -28,14 +28,23 @@ export default function AdminSeasonPage() {
   const { data, error, isLoading } = api.admin.season.useQuery();
   const [opens, setOpens] = useState("");
   const [closes, setCloses] = useState("");
+  const [lastOrder, setLastOrder] = useState("");
   useEffect(() => {
     if (!data) return;
     setOpens(ymd(data.opensAt));
     setCloses(ymd(data.closesAt));
+    setLastOrder(data.lastOrderAt ? ymd(data.lastOrderAt) : "");
   }, [data]);
   const save = api.admin.setSeasonDates.useMutation({
     onSuccess: async () => {
       toast.success("Season dates saved");
+      await utils.admin.season.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const saveLastOrder = api.admin.setLastOrder.useMutation({
+    onSuccess: async (_r, input) => {
+      toast.success(input.lastOrderAt ? "Last order date saved" : "Last order date cleared");
       await utils.admin.season.invalidate();
     },
     onError: (e) => toast.error(e.message),
@@ -65,7 +74,7 @@ export default function AdminSeasonPage() {
         </p>
       </div>
 
-      <dl className="border-frost/25 text-frost grid grid-cols-2 border-y sm:grid-cols-3">
+      <dl className="border-frost/25 text-frost grid grid-cols-2 border-y sm:grid-cols-4">
         <div className="flex flex-col gap-1 py-4">
           <dt className="label-caps text-frost-soft">Checked in</dt>
           <dd className="font-expanded text-3xl font-extrabold tabular-nums">
@@ -82,6 +91,12 @@ export default function AdminSeasonPage() {
         <div className="flex flex-col gap-1 py-4">
           <dt className="label-caps text-frost-soft">Closes</dt>
           <dd className="font-expanded text-xl font-extrabold">{ymd(data.closesAt)}</dd>
+        </div>
+        <div className="flex flex-col gap-1 py-4">
+          <dt className="label-caps text-frost-soft">Last order</dt>
+          <dd className="font-expanded text-xl font-extrabold">
+            {data.lastOrderAt ? ymd(data.lastOrderAt) : "Not set"}
+          </dd>
         </div>
       </dl>
 
@@ -115,6 +130,56 @@ export default function AdminSeasonPage() {
             <Button type="submit" className="self-start" disabled={save.isPending}>
               Save dates
             </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Last order for Christmas</CardTitle>
+          <CardDescription>
+            From 10 December (or ten days before, if it&apos;s earlier) until
+            the end of this day, members who are gifting see how long they
+            have left to order. No date, no countdown.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveLastOrder.mutate({ lastOrderAt: lastOrder || null });
+            }}
+          >
+            <Field className="sm:max-w-xs">
+              <FieldLabel htmlFor="season-last-order">Last order date</FieldLabel>
+              <Input
+                id="season-last-order"
+                type="date"
+                value={lastOrder}
+                onChange={(e) => setLastOrder(e.target.value)}
+                aria-describedby="season-last-order-help"
+              />
+              <FieldDescription id="season-last-order-help">
+                Amazon UK&apos;s last day for standard Christmas delivery; check
+                amazon.co.uk&apos;s Christmas delivery page.
+              </FieldDescription>
+            </Field>
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" disabled={saveLastOrder.isPending}>
+                Save last order date
+              </Button>
+              {data.lastOrderAt && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={saveLastOrder.isPending}
+                  onClick={() => saveLastOrder.mutate({ lastOrderAt: null })}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>

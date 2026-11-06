@@ -384,6 +384,10 @@ enum EmailKind {
   /// Day 24: at most weekly, to people who have picked up a list this season,
   /// when new members' wishlists are waiting for a first gift
   NEW_LISTS
+  /// 6 Nov: to each organiser of a live group when gifting opens (ref = group id)
+  ORGANISER_LIVE
+  /// 6 Nov: site admins' morning status email in launch week (ref = UK date)
+  ADMIN_STATUS
 }
 
 enum EmailStatus {

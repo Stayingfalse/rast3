@@ -1,4 +1,5 @@
 import { arrivalPath } from "~/server/gifts";
+import { inviteLink, inviteMessage } from "~/lib/invite-message";
 import { siteUrl, unsubscribeUrl } from "./unsubscribe";
 import type { Message } from "./mailer";
 
@@ -26,8 +27,17 @@ type Parts = {
   kicker: string;
   heading: string;
   paragraphs: string[];
+  /** a boxed passage after the paragraphs, e.g. a message to copy and paste */
+  quote?: string;
+  /** figures in a two-column table after the paragraphs */
+  rows?: [string, string][];
+  /** after the quote and the figures */
+  after?: string[];
   button: { label: string; path: string };
 };
+
+const para = (t: string) =>
+  `<p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:${C.ink};">${esc(t)}</p>`;
 
 function render(p: Parts): Message {
   const url = `${siteUrl()}${p.button.path}`;
@@ -44,7 +54,22 @@ function render(p: Parts): Message {
 <div style="padding:28px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
 <p style="margin:0 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:${C.inkSoft};">${esc(p.kicker)}</p>
 <h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:${C.ink};">${esc(p.heading)}</h1>
-${p.paragraphs.map((t) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:${C.ink};">${esc(t)}</p>`).join("\n")}
+${p.paragraphs.map(para).join("\n")}
+${
+  p.quote
+    ? `<div style="margin:0 0 14px;padding:12px 14px;border-left:4px solid ${C.post};background:#ffffff;font-size:15px;line-height:1.5;color:${C.ink};">${esc(p.quote)}</div>`
+    : ""
+}${
+  p.rows?.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px;border-collapse:collapse;">${p.rows
+        .map(
+          ([k, v]) =>
+            `<tr><td style="padding:6px 12px 6px 0;border-bottom:1px solid #e2d9c4;font-size:15px;color:${C.inkSoft};">${esc(k)}</td><td style="padding:6px 0;border-bottom:1px solid #e2d9c4;font-size:15px;font-weight:bold;color:${C.ink};text-align:right;">${esc(v)}</td></tr>`,
+        )
+        .join("")}</table>`
+    : ""
+}
+${(p.after ?? []).map(para).join("\n")}
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 0;"><tr><td style="background:${C.post};border-radius:6px;">
 <a href="${esc(url)}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;">${esc(p.button.label)}</a>
 </td></tr></table>
@@ -61,6 +86,9 @@ You're getting this because you have a Random Acts of Santa account. Sign-in lin
     p.heading,
     "",
     ...p.paragraphs.flatMap((t) => [t, ""]),
+    ...(p.quote ? [...p.quote.split("\n").map((l) => `> ${l}`), ""] : []),
+    ...(p.rows?.length ? [...p.rows.map(([k, v]) => `${k}: ${v}`), ""] : []),
+    ...(p.after ?? []).flatMap((t) => [t, ""]),
     `${p.button.label}: ${url}`,
     "",
     "--",
@@ -163,4 +191,64 @@ export const newLists = (
       `Gifting closes on ${day(closesAt)}.`,
     ],
     button: { label: "Pick up a wishlist", path: "/" },
+  });
+
+/**
+ * 6 Nov: to each organiser of a live group on the day gifting opens: the
+ * group's invite link, a message to paste into the group chat, and where
+ * the Wall of Kindness will be once there are enough thank-yous.
+ */
+export const organiserLive = (
+  userId: string,
+  season: number,
+  group: { id: string; name: string; kind: string; emailDomain: string | null; joinCode: string | null },
+  closesAt: Date,
+  wallMinThanks: number,
+) => {
+  const link = inviteLink(group, siteUrl());
+  const isOrg = group.kind === "ORG";
+  return render({
+    userId,
+    subject: `Gifting is open in ${group.name}`,
+    kicker: `Christmas ${season} · for organisers`,
+    heading: `${group.name} is live`,
+    paragraphs: [
+      `Gifting is open on Random Acts of Santa, and ${group.name} is ready to go. Thank you for organising it.`,
+      `The first couple of days are when groups take off, so now is a great time to send the invite. ${
+        isOrg ? `Colleagues join with their @${group.emailDomain} email here` : "People join here"
+      }: ${link}`,
+      "A message you can paste into Discord, Slack, Teams or WhatsApp:",
+    ],
+    quote: inviteMessage(group, siteUrl()),
+    after: [
+      `Once your group has ${wallMinThanks} thank-yous, you can make its Wall of Kindness on your organiser page: one page of the group's thank-yous to share, under festive names.`,
+      `Gifting closes on ${day(closesAt)}.`,
+    ],
+    button: { label: "Open your organiser page", path: `/groups/${group.id}/manage` },
+  });
+};
+
+export type StatusSummary = {
+  attention: string[];
+  rows: [string, string][];
+};
+
+/**
+ * 6 Nov: site admins' morning status email in launch week. Counts only:
+ * never a member's name or email.
+ */
+export const adminStatus = (userId: string, season: number, date: Date, s: StatusSummary) =>
+  render({
+    userId,
+    subject: `Launch status, ${day(date)}: ${
+      s.attention.length ? `${s.attention.length} to look at` : "all clear"
+    }`,
+    kicker: `Christmas ${season} · site admins`,
+    heading: s.attention.length ? "Something needs a look" : "Nothing needs attention",
+    paragraphs: s.attention.length
+      ? s.attention
+      : ["All of Admin › Status's checks looked fine when this was sent."],
+    rows: s.rows,
+    after: ["Figures are for the last 24 hours, without test accounts."],
+    button: { label: "Open Admin › Status", path: "/admin/status" },
   });

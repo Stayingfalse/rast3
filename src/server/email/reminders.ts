@@ -2,8 +2,9 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { seasonWindow } from "~/server/season";
-import { seasonRange } from "~/server/stamps";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
+import { adminStatusEmails, organiserLiveEmails } from "./launch";
+import { counted, engagedThisSeason, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
@@ -21,6 +22,8 @@ import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
  *   Only to people already gifting: nobody who just receives is chased.
  * The first two go once per person per season; anyone can opt out. None go
  * to last year's members until they check in again (see engagedThisSeason).
+ * Launch emails (6 Nov, ./launch): organisers hear their group is live, and
+ * site admins get a morning status email in launch week.
  */
 export const NUDGE_DAYS = 14;
 const OPEN_DAYS = 7;
@@ -33,18 +36,8 @@ const NEW_LISTS_EVERY_DAYS = 7;
 const BATCH = 100;
 /** failed sends in a row that stop a run (SMTP down or misconfigured); the next run retries */
 const MAX_FAILURES = 3;
-/**
- * Reminders sent in any 24 hours, at most (27 Oct). They share a mailbox with
- * sign-in links (a free Gmail account sends about 500 a day), so they must
- * never use up its allowance; the rest wait for the next run.
- */
-export const REMINDER_DAILY_LIMIT = Number(process.env.REMINDER_DAILY_LIMIT ?? 300);
+export { engagedThisSeason, REMINDER_DAILY_LIMIT };
 const DAY = 24 * 3600_000;
-/** failed sends are logged (3 Nov) but don't count as having had the email */
-const counted = { status: { not: "FAILED" } } as const;
-
-/** sendOnce, or "HELD" when today's limit is reached (tried again next run) */
-type Send = (...args: Parameters<typeof sendOnce>) => Promise<Awaited<ReturnType<typeof sendOnce>> | "HELD">;
 
 export type ReminderRun = {
   season: number;
@@ -52,20 +45,10 @@ export type ReminderRun = {
   opened: number;
   giftCheckIns: number;
   newLists: number;
+  /** launch emails (6 Nov): organisers' "we're live", site admins' morning status */
+  organisersLive: number;
+  adminStatus: number;
 };
-
-/**
- * Only people who have joined in this Christmas get reminders (owner, 26 Oct):
- * they checked in for this season, or signed up during it. Last year's
- * members never agreed to how we handle data now, so they hear nothing
- * until they come back and check in.
- */
-export const engagedThisSeason = (season: number): Prisma.UserWhereInput => ({
-  OR: [
-    { seasonCheckIns: { some: { season } } },
-    { profileCompletedAt: { gte: seasonRange(season).gte } },
-  ],
-});
 
 export async function runReminders(
   db: PrismaClient,
@@ -73,18 +56,27 @@ export async function runReminders(
 ): Promise<ReminderRun> {
   const w = await seasonWindow(db);
   const season = w.year;
+  // the scheduled runs leave e2e test users to the test route (28 Oct):
+  // an hourly run in the middle of a test would race it
+  const scope: Prisma.UserWhereInput = only ?? { NOT: { email: { endsWith: TEST_EMAIL_DOMAIN } } };
   const base: Prisma.UserWhereInput = {
     emailReminders: true,
     email: { not: null },
     profileCompleted: true,
     AND: [
       engagedThisSeason(season),
-      // the scheduled runs leave e2e test users to the test route (28 Oct):
-      // an hourly run in the middle of a test would race it
-      only ?? { NOT: { email: { endsWith: TEST_EMAIL_DOMAIN } } },
+      scope,
     ],
   };
-  const run: ReminderRun = { season, nudged: 0, opened: 0, giftCheckIns: 0, newLists: 0 };
+  const run: ReminderRun = {
+    season,
+    nudged: 0,
+    opened: 0,
+    giftCheckIns: 0,
+    newLists: 0,
+    organisersLive: 0,
+    adminStatus: 0,
+  };
   let failures = 0;
   let sentToday = await db.emailLog.count({
     where: { status: "SENT", createdAt: { gte: new Date(now.getTime() - DAY) } },
@@ -101,6 +93,12 @@ export async function runReminders(
   };
   /** sent, or logged as a test address */
   const went = (r: Awaited<ReturnType<Send>>) => r === "SENT" || r === "SKIPPED";
+  const openUntil = Math.min(w.opensAt.getTime() + OPEN_DAYS * DAY, w.closesAt.getTime());
+  const justOpened = now >= w.opensAt && now.getTime() <= openUntil;
+
+  // first, so a busy day's reminders never hold them back
+  run.adminStatus = await adminStatusEmails(db, { now, w, scope, send, went });
+  if (justOpened) run.organisersLive = await organiserLiveEmails(db, { now, w, scope, send, went });
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({
@@ -121,8 +119,7 @@ export async function runReminders(
     }
   }
 
-  const openUntil = Math.min(w.opensAt.getTime() + OPEN_DAYS * DAY, w.closesAt.getTime());
-  if (now >= w.opensAt && now.getTime() <= openUntil) {
+  if (justOpened) {
     const users = await db.user.findMany({
       where: {
         ...base,

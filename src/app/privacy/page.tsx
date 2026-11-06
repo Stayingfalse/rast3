@@ -180,7 +180,10 @@ export default function PrivacyPolicyPage() {
               you haven&apos;t posted a thank-you yet (never on the day, and
               never saying who). Once you&apos;ve picked up a list, at most
               one a week when new members&apos; wishlists are waiting for a
-              first gift. They only go to people who have checked in or
+              first gift. If you organise a group, one email when gifting
+              opens with your group&apos;s invite link; the site&apos;s own
+              admins also get a daily status email (counts only) in launch
+              week. They only go to people who have checked in or
               signed up this Christmas: if you were with us in an earlier year,
               you won&apos;t hear from us until you come back and check in.
               Every one has a link to stop them, and sign-in links still

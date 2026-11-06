@@ -24,7 +24,8 @@ export function startReminderSchedule() {
         log.warn("No email server (EMAIL_SERVER_* or Admin › Settings): reminder emails wait until one is set up");
       }
       const run = await runReminders(db);
-      if (run.nudged || run.opened || run.giftCheckIns || run.newLists) log.info(run, "Reminder emails processed");
+      const { nudged, opened, giftCheckIns, newLists, organisersLive, adminStatus } = run;
+      if (nudged || opened || giftCheckIns || newLists || organisersLive || adminStatus) log.info(run, "Reminder emails processed");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
     }

@@ -42,6 +42,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { inviteLink, inviteMessage } from "~/lib/invite-message";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { WallCard } from "../share/wall-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
@@ -299,16 +300,9 @@ function Members({ g }: { g: Console }) {
 function Invite({ g }: { g: Console }) {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
-  const isOrg = g.kind === "ORG";
   // workplaces have their own memorable link: raosanta.uk/<domain> (23 Oct)
-  const link = isOrg
-    ? `${origin}/${g.emailDomain}`
-    : g.joinCode
-      ? `${origin}/join/${g.joinCode}`
-      : origin;
-  const message = isOrg
-    ? `Christmas is coming! I've set us up on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here with your @${g.emailDomain} email: ${link}${g.joinCode ? ` (join code ${formatCode(g.joinCode)})` : ""}`
-    : `Christmas is coming! Join ${g.name} on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up someone's whenever you're ready. Join here: ${link}`;
+  const link = inviteLink(g, origin);
+  const message = inviteMessage(g, origin);
 
   const copy = async (text: string, what: string) => {
     await navigator.clipboard.writeText(text);

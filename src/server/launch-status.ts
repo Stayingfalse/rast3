@@ -1,7 +1,7 @@
 import type { EmailKind, EmailStatus, Prisma, PrismaClient } from "@prisma/client";
 
 import { emailSettings } from "~/server/email/smtp";
-import { REMINDER_DAILY_LIMIT } from "~/server/email/reminders";
+import { REMINDER_DAILY_LIMIT } from "~/server/email/rules";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { publicSeason, seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
@@ -20,7 +20,14 @@ export const PENDING_TOO_LONG_HOURS = 24;
 /** Reminders this far into the day's limit are worth a look. */
 const LIMIT_WARN = 0.8;
 
-const KINDS: EmailKind[] = ["CHECK_IN_NUDGE", "SEASON_OPEN", "GIFT_CHECK_IN", "NEW_LISTS"];
+const KINDS: EmailKind[] = [
+  "CHECK_IN_NUDGE",
+  "SEASON_OPEN",
+  "GIFT_CHECK_IN",
+  "NEW_LISTS",
+  "ORGANISER_LIVE",
+  "ADMIN_STATUS",
+];
 const STATUSES: EmailStatus[] = ["SENT", "SKIPPED", "FAILED"];
 
 /** Real people only: no e2e test users (a person without an email is real). */
@@ -76,6 +83,9 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     pickUps,
     gifts,
     thanks,
+    pickUpsDay,
+    giftsDay,
+    thanksDay,
     email,
     migrations,
     schemaSync,
@@ -112,6 +122,10 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     db.wishlistAssignment.count({ where: { assignedAt: { gte: today }, assignedUser: realUser } }),
     db.purchase.count({ where: { purchasedAt: { gte: today }, ...real } }),
     db.kudos.count({ where: { createdAt: { gte: today }, ...real } }),
+    // the same over the last 24 hours, for the morning status email
+    db.wishlistAssignment.count({ where: { assignedAt: { gte: day }, assignedUser: realUser } }),
+    db.purchase.count({ where: { purchasedAt: { gte: day }, ...real } }),
+    db.kudos.count({ where: { createdAt: { gte: day }, ...real } }),
     emailSettings().catch(() => null),
     getMigrations(),
     getSchemaSync(),
@@ -171,6 +185,7 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     emailServer: emailSource,
     limit: { daily: REMINDER_DAILY_LIMIT, used: sentForLimit },
     today: { since: today, pickUps, gifts, thanks },
+    lastDay: { pickUps: pickUpsDay, gifts: giftsDay, thanks: thanksDay },
     season: { year: w.year, phase: season.phase, opensAt: season.opensAt, closesAt: season.closesAt },
     health: {
       database: true,

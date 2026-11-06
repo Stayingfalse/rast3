@@ -28,6 +28,8 @@ const KIND = {
   SEASON_OPEN: "Gifting is open",
   GIFT_CHECK_IN: "Gift check-in",
   NEW_LISTS: "New wishlists",
+  ORGANISER_LIVE: "Organisers: we're live",
+  ADMIN_STATUS: "Admins' morning status",
 } as const;
 
 const PHASE = { before: "Not open yet", open: "Gifting open", after: "Closed" } as const;

@@ -1573,3 +1573,26 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 7 Nov): spare day,** owner's pick (auto-approve small
     friends groups, the "we're live" organiser email, the morning status
     email, or the last-order countdown from 10 Dec).
+- **Owner, 6 Nov: "let's do all 4 of those ideas now".** Three PRs, tested
+  together on dev:
+  - **Friends groups go live straight away** (`feat/auto-approve-friends`).
+    Workplaces and communities still wait. Admin › Approvals lists friends
+    groups past 15 members ("Large friends groups to check", also an
+    attention item on Admin › Status) and those started in the last 7
+    days, each with Close. One person can start 5 friends groups a
+    season; group creation is limited to 10 an hour. Friends groups
+    already waiting stay waiting until approved. No migration.
+  - **Launch emails** (`feat/launch-emails`, migration
+    `20261106050000_launch_emails`): organisers of live groups get "Gifting
+    is open in <group>" once, from 15 Nov (with their invite link and a
+    paste-ready message); site admins get a morning status email from
+    14 Nov to 22 Nov, from 07:00 UK. Both use the reminders' daily limit,
+    opt-out and failure rules. Privacy policy mentions them.
+  - **Last-order countdown** (`feat/last-order`, migration
+    `20261106060000_last_order`): Admin › Season › "Last order for
+    Christmas". From 10 Dec (or 9 days before, if the date is earlier)
+    members who are gifting see "Order by Saturday 19 December for
+    Christmas delivery · N days left" on home and group pages, "Last day
+    to order" on the day, then "Gifts that arrive in the New Year are
+    still random acts". No date, no banner. Owner: set the date once
+    Amazon UK publishes it.

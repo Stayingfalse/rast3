@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "The plain-English terms for using Random Acts of Santa: who it's for, how gifting works, being kind, and what we're responsible for.",
 };
 
-const LAST_UPDATED = "31 October 2026";
+const LAST_UPDATED = "7 November 2026";
 const CONTACT = "privacy@raosanta.uk";
 const link = "text-post font-semibold underline underline-offset-4";
 
@@ -83,9 +83,9 @@ export default function TermsPage() {
             </li>
           </ul>
           <p>
-            Organisers can remove members from their groups, site admins can
-            hide thank-yous, and we can suspend or delete accounts that break
-            these terms.
+            Organisers can remove members from their groups and hide
+            thank-yous posted there, site admins can hide any thank-you, and
+            we can suspend or delete accounts that break these terms.
           </p>
         </Section>
 

@@ -540,8 +540,8 @@ export const KudosFeed: React.FC<KudosFeedProps> = ({ className = "" }) => {
               {session && (
                 <AdminActionsDropdown
                   kudosId={kudos.id}
-                  kudosUserId={kudos.user.id}
                   isHidden={kudos.hidden}
+                  moderation={kudos.moderation}
                 />
               )}
             </div>

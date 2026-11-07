@@ -182,3 +182,57 @@ test("the home page's feed follows the group you're gifting in", async ({ page }
   await snap(page, testInfo, "group-thanks");
   expect(errors).toEqual([]);
 });
+
+test("a group's organiser hides a thank-you for a gift in their group, and only that (7 Nov)", async ({
+  page,
+}, testInfo) => {
+  const errors = trackPageErrors(page);
+  const p = testInfo.project.name;
+  type Item = { id: string; message: string; hidden: boolean; moderation: { hide: boolean; remove: boolean; as: string } | null };
+  const items = async (groupId: string) =>
+    ((await unwrap(await query(page.request, "kudos.getFeed", { scope: "group", groupId, limit: 50 }))) as {
+      items: Item[];
+    }).items;
+  const hide = (kudosId: string, hidden: boolean) => mutate(page.request, "kudos.adminHideKudos", { kudosId, hidden });
+
+  // Ann organises the supper club: she can hide its gift's thank-you, not
+  // Bea's general one, and nothing from the book club; she can't delete
+  await loginAs(page, { email: who("ann", p) });
+  const supper = await items(groups.supper.id);
+  const gift = supper.find((k) => k.message === msg("supper", p))!;
+  const general = supper.find((k) => k.message === msg("general", p))!;
+  expect(gift.moderation).toEqual({ hide: true, remove: false, as: "GROUP" });
+  expect(general.moderation).toBeNull();
+  expect((await hide(general.id, true)).status()).toBe(403);
+  expect((await mutate(page.request, "kudos.adminDeleteKudos", { kudosId: gift.id })).ok()).toBe(false);
+
+  await loginAs(page, { email: who("dan", p) });
+  const books = (await items(groups.books.id)).find((k) => k.message === msg("books", p))!;
+  expect(books.moderation).toBeNull(); // Dan is a member, not the organiser
+  expect((await hide(books.id, true)).status()).toBe(403);
+  await loginAs(page, { email: who("ann", p) });
+  expect((await hide(books.id, true)).status()).toBe(403);
+
+  // from the supper club's feed on her home page
+  await page.goto("/");
+  await page.getByRole("tablist", { name: "Gifting in" }).getByRole("tab", { name: groups.supper.name }).click();
+  const post = page.locator("#kudos-section article").filter({ hasText: msg("supper", p) });
+  await post.scrollIntoViewIfNeeded();
+  await settle(page);
+  await post.getByRole("button", { name: "Moderate this thank-you" }).click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByText("Your group's organiser")).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Delete Post" })).toHaveCount(0);
+  await snap(page, testInfo, "group-moderation");
+  await menu.getByRole("menuitem", { name: "Hide Post" }).click();
+
+  // hidden for members; still in Ann's feed, so she can bring it back
+  await expect.poll(async () => (await items(groups.supper.id)).find((k) => k.id === gift.id)?.hidden).toBe(true);
+  await loginAs(page, { email: who("bea", p) });
+  expect((await feed(page.request, groups.supper.id)).messages).not.toContain(msg("supper", p));
+  await loginAs(page, { email: who("ann", p) });
+  expect((await hide(gift.id, false)).status()).toBe(200);
+  await loginAs(page, { email: who("bea", p) });
+  expect((await feed(page.request, groups.supper.id)).messages).toContain(msg("supper", p));
+  expect(errors).toEqual([]);
+});

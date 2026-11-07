@@ -56,12 +56,13 @@ const label = (ymd: string) =>
 
 // Desktop and mobile run side by side against the same dev Season, so both
 // only ever set these days, and each sets its day again right before it
-// looks (a check retries if the other run changed it in between). A run
-// that finds one of these days already set is seeing the other run's, and
-// leaves the restoring to the run that saw dev's own value.
-const ours = () => new Set([ukDay(-1), ukDay(0), ukDay(3)]);
+// looks (a check retries if the other run changed it in between). Every
+// day this spec sets is no more than 3 days ahead, so a date up to then
+// (or in the past) is this run's, the other's or one an earlier run left
+// behind (7 Nov: one stuck as "too late" on dev): both runs put back "no
+// date". A later date is dev's own, and is put back as it was.
+const LAST_TEST_DAY = 3;
 let previous: string | null = null;
-let restore = false;
 /** signed in as this run's site admin, apart from the page's member */
 let admin: APIRequestContext;
 
@@ -105,15 +106,12 @@ test.beforeAll(async ({ playwright, request }, testInfo) => {
   const was = season.lastOrderAt
     ? new Date(season.lastOrderAt).toLocaleDateString("en-CA", { timeZone: UK })
     : null;
-  if (!was || !ours().has(was)) {
-    previous = was;
-    restore = true;
-  }
+  previous = was && was > ukDay(LAST_TEST_DAY) ? was : null;
 });
 
 test.afterAll(async ({ playwright }, testInfo) => {
   if (admin) {
-    if (restore) await setLastOrder(previous);
+    await setLastOrder(previous);
     await admin.dispose();
   }
   const { baseURL, proxy } = testInfo.project.use;

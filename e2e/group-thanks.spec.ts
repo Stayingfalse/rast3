@@ -220,10 +220,11 @@ test("a group's organiser hides a thank-you for a gift in their group, and only 
   await post.scrollIntoViewIfNeeded();
   await settle(page);
   await post.getByRole("button", { name: "Moderate this thank-you" }).click();
-  await expect(page.getByText("Your group's organiser")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Delete Post/ })).toHaveCount(0);
+  const menu = page.getByRole("menu");
+  await expect(menu.getByText("Your group's organiser")).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Delete Post" })).toHaveCount(0);
   await snap(page, testInfo, "group-moderation");
-  await page.getByRole("button", { name: "Hide Post" }).click();
+  await menu.getByRole("menuitem", { name: "Hide Post" }).click();
 
   // hidden for members; still in Ann's feed, so she can bring it back
   await expect.poll(async () => (await items(groups.supper.id)).find((k) => k.id === gift.id)?.hidden).toBe(true);

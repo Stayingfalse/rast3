@@ -24,3 +24,19 @@ export function inviteMessage(g: InviteGroup, origin: string) {
     ? `Christmas is coming! I've set us up on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here with your @${g.emailDomain} email: ${link}${g.joinCode ? ` (join code ${formatCode(g.joinCode)})` : ""}`
     : `Christmas is coming! Join ${g.name} on Random Acts of Santa: no draw, just share your Amazon wishlist and pick up someone's whenever you're ready. Join here: ${link}`;
 }
+
+/**
+ * A team lead's invite (7 Nov): the workplace's link, joining straight into
+ * their team.
+ */
+type Workplace = Omit<InviteGroup, "kind">;
+
+export function teamInviteLink(workplace: Workplace, team: { id: string }, origin: string) {
+  const link = inviteLink({ ...workplace, kind: "ORG" }, origin);
+  return `${link}${link.includes("?") ? "&" : "?"}team=${encodeURIComponent(team.id)}`;
+}
+
+export function teamInviteMessage(workplace: Workplace, team: { id: string; name: string }, origin: string) {
+  const link = teamInviteLink(workplace, team, origin);
+  return `Christmas is coming! ${team.name} is doing Random Acts of Santa this year: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here with your @${workplace.emailDomain} email and you'll be in ${team.name}: ${link}${workplace.joinCode ? ` (join code ${formatCode(workplace.joinCode)})` : ""}`;
+}

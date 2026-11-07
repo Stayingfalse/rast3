@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle } from "./helpers";
 
 /**
  * Day 9 tenant isolation: who people can give to, read and manage is decided
@@ -134,4 +134,42 @@ test("members of an organisation awaiting approval can't pick up lists", async (
   expect(res.status()).toBe(412);
   const allowed = await page.request.get("/api/kudos/allowed");
   expect(await allowed.json()).toEqual({ allowed: false });
+});
+
+test("a workplace organiser (or a site admin) makes a colleague an organiser (owner, 7 Nov)", async ({
+  page,
+}) => {
+  await loginAs(page, { email: `rival1@${E}` });
+  const org = (await unwrap(await query(page.request, "groups.myOrganisation"))) as { id: string };
+  type Console = { members: { userId: string; email: string; role: string }[] };
+  const members = async () =>
+    ((await unwrap(await query(page.request, "groups.manage", { groupId: org.id }))) as Console).members;
+  const rival2 = (await members()).find((m) => m.email === `rival2@${E}`)!;
+
+  // from the console's Members tab, once everything above the table has
+  // loaded (a late layout shift moves the row, and its open menu, off-screen)
+  await page.goto(`/groups/${org.id}/manage`);
+  await settle(page);
+  const row = page.getByRole("row").filter({ hasText: `rival2@${E}` });
+  await row.getByRole("button", { name: /^Actions for / }).click();
+  await page.getByRole("menuitem", { name: "Make an organiser" }).click();
+  await expect(row.getByText("Organiser", { exact: true })).toBeVisible();
+
+  // a colleague who isn't an organiser can't
+  await loginAs(page, { email: `rival3@${E}` });
+  expect(
+    (await mutate(page.request, "groups.setMemberRole", { groupId: org.id, userId: rival2.userId, role: "MEMBER" })).status(),
+  ).toBe(403);
+
+  // a site admin can, and puts it back
+  await loginAs(page, { email: `iso-site@${E}`, adminLevel: "SITE" });
+  expect(
+    (await mutate(page.request, "groups.setMemberRole", { groupId: org.id, userId: rival2.userId, role: "MEMBER" })).status(),
+  ).toBe(200);
+  expect((await members()).find((m) => m.userId === rival2.userId)?.role).toBe("MEMBER");
+
+  // the last organiser can't step down
+  const rival1 = (await members()).find((m) => m.email === `rival1@${E}`)!;
+  const last = await mutate(page.request, "groups.setMemberRole", { groupId: org.id, userId: rival1.userId, role: "MEMBER" });
+  expect(last.status()).toBe(400);
 });

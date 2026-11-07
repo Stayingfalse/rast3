@@ -20,7 +20,8 @@ import {
 } from "~/server/discord";
 import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
 import { launchInfo, setGroupLaunch } from "~/server/group-launch";
-import { seasonWindow } from "~/server/season";
+import { requireTeamAccess, runsWorkplace } from "~/server/teams";
+import { currentSeason, seasonWindow } from "~/server/season";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
@@ -352,6 +353,8 @@ export const groupsRouter = createTRPCRouter({
       teamId: team?.group.id ?? null,
       teams,
       isOrganiser: org.role === "ADMIN",
+      /** leads their team (7 Nov): a link to its page */
+      teamLead: team?.role === "ADMIN",
       affiliate: (await affiliateFor(ctx.db, org.group.id)).enabled,
     };
   }),
@@ -363,7 +366,14 @@ export const groupsRouter = createTRPCRouter({
    */
   joinOrganisation: protectedProcedure
     .use(rateLimit("groups.joinOrganisation", 20, HOUR))
-    .input(z.object({ workEmail, joinCode: z.string().max(200).optional() }))
+    .input(
+      z.object({
+        workEmail,
+        joinCode: z.string().max(200).optional(),
+        /** from a team lead's invite link: join straight into that team (7 Nov) */
+        teamId: z.string().max(40).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const domain = emailDomain(input.workEmail);
@@ -395,6 +405,15 @@ export const groupsRouter = createTRPCRouter({
         data: { workEmail: input.workEmail },
       });
       await setWorkplace(ctx.db, userId, org.id);
+      if (input.teamId) {
+        const team = await ctx.db.group.findUnique({
+          where: { id: input.teamId },
+          select: { kind: true, parentId: true },
+        });
+        if (team?.kind === "TEAM" && team.parentId === org.id) {
+          await setTeam(ctx.db, userId, org.id, input.teamId);
+        }
+      }
       return {
         result: "joined" as const,
         domain,
@@ -718,6 +737,10 @@ export const groupsRouter = createTRPCRouter({
                 id: true,
                 name: true,
                 _count: { select: { memberships: true } },
+                memberships: {
+                  where: { role: "ADMIN" },
+                  select: { user: { select: { name: true, firstName: true, lastName: true } } },
+                },
               },
             })
           : [];
@@ -753,6 +776,9 @@ export const groupsRouter = createTRPCRouter({
           id: t.id,
           name: t.name,
           members: t._count.memberships,
+          leads: t.memberships.map(({ user: u }) =>
+            [u.firstName, u.lastName].filter(Boolean).join(" ") || (u.name ?? "Unnamed"),
+          ),
         })),
         members: members.map((m) => {
           const full = [m.user.firstName, m.user.lastName]
@@ -799,7 +825,7 @@ export const groupsRouter = createTRPCRouter({
       });
     }),
 
-  /** Friends/community organisers: make someone an organiser, or not. */
+  /** Organisers (and site admins): make a member an organiser, or not. */
   setMemberRole: protectedProcedure
     .input(
       z.object({
@@ -814,13 +840,8 @@ export const groupsRouter = createTRPCRouter({
         input.groupId,
         ctx.session.user.id,
       );
-      if (!(INVITE_KINDS as readonly string[]).includes(group.kind)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Workplace organisers are managed in the admin area for now.",
-        });
-      }
+      // workplaces too (owner, 7 Nov): their organisers, or a site admin,
+      // can make a colleague an organiser
       const target = await ctx.db.membership.findUnique({
         where: { groupId_userId: { groupId: group.id, userId: input.userId } },
         select: { id: true },
@@ -914,6 +935,128 @@ export const groupsRouter = createTRPCRouter({
         });
       }
       return { ok: true };
+    }),
+
+  /**
+   * A team's page (owner, 7 Nov), for its leads, its workplace's organisers
+   * and site admins: members, this season's numbers and the invite kit.
+   */
+  team: protectedProcedure
+    .input(z.object({ teamId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const access = await requireTeamAccess(ctx.db, input.teamId, ctx.session.user.id);
+      const { team } = access;
+      const members = await ctx.db.membership.findMany({
+        where: { groupId: team.id },
+        orderBy: { joinedAt: "desc" },
+        select: {
+          role: true,
+          joinedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              workEmail: true,
+              amazonWishlistUrl: true,
+            },
+          },
+        },
+      });
+      const ids = members.map((m) => m.user.id);
+      const season = currentSeason();
+      const [picked, gifted] = await Promise.all([
+        ctx.db.wishlistAssignment.count({ where: { assignedUserId: { in: ids }, season } }),
+        ctx.db.wishlistAssignment.count({
+          where: { assignedUserId: { in: ids }, season, purchases: { isNot: null } },
+        }),
+      ]);
+      // as on the workplace's console: work emails once it's approved
+      const showEmails = access.siteAdmin || team.parent.status === "ACTIVE";
+      return {
+        id: team.id,
+        name: team.name,
+        workplace: team.parent,
+        viewer: { siteAdmin: access.siteAdmin, organiser: access.organiser, lead: access.lead },
+        stats: { members: members.length, picked, gifted },
+        members: members.map((m) => {
+          const full = [m.user.firstName, m.user.lastName].filter(Boolean).join(" ");
+          return {
+            userId: m.user.id,
+            name: full !== "" ? full : (m.user.name ?? "Unnamed"),
+            email: showEmails ? (m.user.workEmail ?? m.user.email) : null,
+            lead: m.role === "ADMIN",
+            joinedAt: m.joinedAt,
+            hasWishlist: !!m.user.amazonWishlistUrl,
+            you: m.user.id === ctx.session.user.id,
+          };
+        }),
+      };
+    }),
+
+  /**
+   * Make a team member a lead, or not. Leads can add a co-lead and step down
+   * themselves; workplace organisers and site admins can do either for anyone.
+   */
+  setTeamLead: protectedProcedure
+    .input(z.object({ teamId: z.string(), userId: z.string(), lead: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const access = await requireTeamAccess(ctx.db, input.teamId, ctx.session.user.id);
+      const target = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: input.teamId, userId: input.userId } },
+        select: { id: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "They aren't in this team." });
+      if (!input.lead && !runsWorkplace(access) && input.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only a workplace organiser can take someone else off as lead.",
+        });
+      }
+      await ctx.db.membership.update({
+        where: { groupId_userId: { groupId: input.teamId, userId: input.userId } },
+        data: { role: input.lead ? "ADMIN" : "MEMBER" },
+      });
+      return { ok: true };
+    }),
+
+  /** Move someone out of the team (they stay in the workplace). */
+  removeFromTeam: protectedProcedure
+    .input(z.object({ teamId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const access = await requireTeamAccess(ctx.db, input.teamId, ctx.session.user.id);
+      const target = await ctx.db.membership.findUnique({
+        where: { groupId_userId: { groupId: input.teamId, userId: input.userId } },
+        select: { role: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "They aren't in this team." });
+      if (target.role === "ADMIN" && !runsWorkplace(access) && input.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only a workplace organiser can move another lead out of the team.",
+        });
+      }
+      await setTeam(ctx.db, input.userId, access.team.parent.id, null);
+      return { ok: true };
+    }),
+
+  /** Rename a team (its leads, workplace organisers, site admins). */
+  renameTeam: protectedProcedure
+    .input(z.object({ teamId: z.string(), name: z.string().trim().min(1, "Give the team a name").max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const access = await requireTeamAccess(ctx.db, input.teamId, ctx.session.user.id);
+      const clash = await ctx.db.group.findFirst({
+        where: { kind: "TEAM", parentId: access.team.parent.id, name: input.name, id: { not: input.teamId } },
+        select: { id: true },
+      });
+      if (clash) throw new TRPCError({ code: "CONFLICT", message: "There's already a team with that name." });
+      return ctx.db.group.update({
+        where: { id: input.teamId },
+        data: { name: input.name },
+        select: { id: true, name: true },
+      });
     }),
 
   /** Workplace organisers (and site admins): add a team. */

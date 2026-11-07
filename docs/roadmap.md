@@ -1633,3 +1633,20 @@ that don't touch the data model. Known items to include:
     organisers' "we're live" (on their group's own date).
   - Admin › Season lists groups with their own date, with "Use the
     season's date".
+- **Owner, 7 Nov: workplace organisers and team leads** (`feat/workplace-roles`,
+  no migration).
+  - Workplace organisers (and site admins) can now make a colleague an
+    organiser, or not, from the console's Members tab, as friends groups
+    and communities already could. It used to say "managed in the admin
+    area", which had no such option.
+  - Team leads (owner's picks: a team page; appointed by organisers, site
+    admins and leads). A lead is an ADMIN member of a team. They get the
+    team's page (`/groups/<team>/manage`, linked as "Manage your team" on
+    /groups and "Team page" on the workplace console's Teams list): its
+    members, this season's pick-ups and gifts by them, an invite link that
+    joins people straight into the team (`/<domain>?team=<id>`), renaming
+    it, adding a co-lead, stepping down, and moving someone out of the team
+    (they stay in the workplace). Only organisers and site admins take
+    another lead off or move them out. Leads already moderated their
+    team's thank-yous.
+

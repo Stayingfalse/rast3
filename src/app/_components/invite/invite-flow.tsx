@@ -27,7 +27,18 @@ export type InviteGroup = {
 };
 
 type Props =
-  | { kind: "workplace"; group: InviteGroup; domain: string; codeRequired: boolean; code?: string; signedIn: boolean; sessionEmail?: string | null; alreadyIn: boolean }
+  | {
+      kind: "workplace";
+      group: InviteGroup;
+      domain: string;
+      codeRequired: boolean;
+      code?: string;
+      /** a team lead's invite: join straight into this team (7 Nov) */
+      teamId?: string;
+      signedIn: boolean;
+      sessionEmail?: string | null;
+      alreadyIn: boolean;
+    }
   | { kind: "discord" | "friends"; group: InviteGroup; code: string; signedIn: boolean; alreadyIn: boolean };
 
 type Step = "start" | "joining" | "profile" | "done" | "connectDiscord" | "notInServer" | "error";
@@ -205,6 +216,7 @@ function WorkplaceStep({
   domain,
   codeRequired,
   code: linkCode,
+  teamId,
   signedIn,
   sessionEmail,
   onJoined,
@@ -242,7 +254,7 @@ function WorkplaceStep({
     if (saved.code) setCode(saved.code);
     if (signedIn && start && !tried.current && (!codeRequired || saved.code || linkCode)) {
       tried.current = true;
-      join.mutate({ workEmail: start, joinCode: saved.code ?? linkCode });
+      join.mutate({ workEmail: start, joinCode: saved.code ?? linkCode, teamId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
@@ -265,7 +277,7 @@ function WorkplaceStep({
           return;
         }
         setError(null);
-        if (signedIn) join.mutate({ workEmail: email.trim(), joinCode: code.trim() || undefined });
+        if (signedIn) join.mutate({ workEmail: email.trim(), joinCode: code.trim() || undefined, teamId });
       }}
     >
       <Field data-invalid={!!error || undefined}>

@@ -143,6 +143,14 @@ export function WorkplaceCard() {
               Manage workplace
             </Link>
           )}
+          {org.teamLead && org.teamId && (
+            <Link
+              href={`/groups/${org.teamId}/manage`}
+              className="btn-quiet text-ink self-start"
+            >
+              Manage your team
+            </Link>
+          )}
           <button
             type="button"
             disabled={leave.isPending}

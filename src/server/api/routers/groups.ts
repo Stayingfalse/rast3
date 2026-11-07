@@ -799,7 +799,7 @@ export const groupsRouter = createTRPCRouter({
       });
     }),
 
-  /** Friends/community organisers: make someone an organiser, or not. */
+  /** Organisers (and site admins): make a member an organiser, or not. */
   setMemberRole: protectedProcedure
     .input(
       z.object({
@@ -814,13 +814,8 @@ export const groupsRouter = createTRPCRouter({
         input.groupId,
         ctx.session.user.id,
       );
-      if (!(INVITE_KINDS as readonly string[]).includes(group.kind)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Workplace organisers are managed in the admin area for now.",
-        });
-      }
+      // workplaces too (owner, 7 Nov): their organisers, or a site admin,
+      // can make a colleague an organiser
       const target = await ctx.db.membership.findUnique({
         where: { groupId_userId: { groupId: group.id, userId: input.userId } },
         select: { id: true },

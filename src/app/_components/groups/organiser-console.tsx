@@ -198,7 +198,7 @@ function Members({ g }: { g: Console }) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              {showEmail && <TableHead>Email</TableHead>}
+              {showEmail && <TableHead className="hidden sm:table-cell">Email</TableHead>}
               <TableHead>Joined</TableHead>
               <TableHead>Wishlist</TableHead>
               <TableHead>Role</TableHead>
@@ -218,9 +218,15 @@ function Members({ g }: { g: Console }) {
                       {m.name}
                       {recent && <Badge variant="secondary">New</Badge>}
                     </span>
+                    {/* on phones the email sits under the name, so the table fits */}
+                    {showEmail && m.email && (
+                      <span className="text-muted-foreground block max-w-48 truncate text-xs font-normal sm:hidden">
+                        {m.email}
+                      </span>
+                    )}
                   </TableCell>
                   {showEmail && (
-                    <TableCell className="text-muted-foreground max-w-56 truncate">
+                    <TableCell className="text-muted-foreground hidden max-w-56 truncate sm:table-cell">
                       {m.email ?? "—"}
                     </TableCell>
                   )}

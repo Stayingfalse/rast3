@@ -140,7 +140,7 @@ function Members({ t, runsWorkplace }: { t: Team; runsWorkplace: boolean }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                {showEmail && <TableHead>Email</TableHead>}
+                {showEmail && <TableHead className="hidden sm:table-cell">Email</TableHead>}
                 <TableHead>Joined</TableHead>
                 <TableHead>Wishlist</TableHead>
                 <TableHead>Role</TableHead>
@@ -159,9 +159,17 @@ function Members({ t, runsWorkplace }: { t: Team; runsWorkplace: boolean }) {
                     <TableCell className="font-semibold">
                       {m.name}
                       {m.you && <span className="text-muted-foreground font-normal"> (you)</span>}
+                      {/* on phones the email sits under the name, so the table fits */}
+                      {m.email && (
+                        <span className="text-muted-foreground block max-w-48 truncate text-xs font-normal sm:hidden">
+                          {m.email}
+                        </span>
+                      )}
                     </TableCell>
                     {showEmail && (
-                      <TableCell className="text-muted-foreground max-w-56 truncate">{m.email ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground hidden max-w-56 truncate sm:table-cell">
+                        {m.email ?? "—"}
+                      </TableCell>
                     )}
                     <TableCell className="whitespace-nowrap">{day(m.joinedAt)}</TableCell>
                     <TableCell>{m.hasWishlist ? "Added" : "Not yet"}</TableCell>

@@ -11,7 +11,7 @@ import { db } from "~/server/db";
  */
 type Props = {
   params: Promise<{ domain: string }>;
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; team?: string }>;
 };
 
 const DOMAIN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
@@ -49,7 +49,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function WorkplaceInvitePage({ params, searchParams }: Props) {
   const org = await findWorkplace((await params).domain);
   if (!org) notFound();
-  const { code } = await searchParams;
+  const { code, team: teamParam } = await searchParams;
+  // a team lead's invite (7 Nov): join straight into their team
+  const team = teamParam
+    ? await db.group.findFirst({
+        where: { id: teamParam, kind: "TEAM", parentId: org.id },
+        select: { id: true, name: true },
+      })
+    : null;
 
   const session = await auth();
   const alreadyIn = session?.user?.id
@@ -74,6 +81,11 @@ export default async function WorkplaceInvitePage({ params, searchParams }: Prop
           your Amazon wishlist, pick up a colleague&apos;s whenever you&apos;re
           ready, and send them something anonymously. Nobody ever sees an address.
         </p>
+        {team && !alreadyIn && (
+          <p className="text-ink">
+            You&apos;ll join the <strong>{team.name}</strong> team.
+          </p>
+        )}
         {org.status === "PENDING" && !alreadyIn && (
           <p role="status" className="bg-gold-soft/40 border-gold rounded-label border px-3 py-2 text-sm">
             {org.name} is new and waiting for our approval. You can join now;
@@ -86,6 +98,7 @@ export default async function WorkplaceInvitePage({ params, searchParams }: Prop
           domain={org.domain}
           codeRequired={!!org.joinCode}
           code={code}
+          teamId={team?.id}
           signedIn={!!session?.user}
           sessionEmail={session?.user?.email ?? null}
           alreadyIn={alreadyIn}

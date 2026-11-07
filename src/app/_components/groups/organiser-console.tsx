@@ -542,18 +542,30 @@ function Settings({ g }: { g: Console }) {
             <CardTitle>Teams</CardTitle>
             <CardDescription>
               Members pick their team; their team&apos;s wishlists are offered
-              first.
+              first. A team lead looks after one team from its page: make
+              someone lead there.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {g.teams.length > 0 ? (
               <ul className="flex flex-col gap-1">
                 {g.teams.map((t) => (
-                  <li key={t.id} className="flex justify-between gap-4">
-                    <span>{t.name}</span>
-                    <span className="text-muted-foreground tabular">
-                      {t.members}
+                  <li
+                    key={t.id}
+                    className="border-rule flex items-center justify-between gap-4 border-b py-2 last:border-b-0"
+                  >
+                    <span className="flex min-w-0 flex-col">
+                      <span className="font-semibold">{t.name}</span>
+                      <span className="text-muted-foreground text-sm">
+                        {t.members} {t.members === 1 ? "member" : "members"}
+                        {t.leads.length > 0 ? ` · led by ${t.leads.join(", ")}` : " · no lead yet"}
+                      </span>
                     </span>
+                    <Button asChild variant="link" className="shrink-0">
+                      <Link href={`/groups/${t.id}/manage`} aria-label={`Open ${t.name}'s team page`}>
+                        Team page
+                      </Link>
+                    </Button>
                   </li>
                 ))}
               </ul>

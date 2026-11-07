@@ -1649,4 +1649,29 @@ that don't touch the data model. Known items to include:
     (they stay in the workplace). Only organisers and site admins take
     another lead off or move them out. Leads already moderated their
     team's thank-yous.
+- **Nightly run, 7 Nov: friends and community organisers moderate their
+  group's feed (spare day; backlog idea from 27 Oct).** Friends groups and
+  Discord-linked communities now go live without a site admin, so their
+  organisers need to look after their own feed before the 15 Nov rush.
+  - An organiser of a friends or community group can hide (and unhide) a
+    thank-you for a gift picked up in their group. Not general thank-yous
+    (they belong to the writer's other groups too: someone could otherwise
+    start a group just to hide another person's posts site-wide), not
+    other groups' gifts, and no deleting (still site admins and workplace
+    organisers). They keep seeing thank-yous under festive names.
+  - In their own group's feed they also see what they've hidden, marked
+    Hidden, so they can bring it back. A hidden thank-you leaves the group
+    feed, the site feed and the Wall of Kindness.
+  - The feed now says, per thank-you, what you can do to it, so the
+    "Moderate this thank-you" menu no longer asks the server once per post.
+    The menu shows "Your group's organiser" and no Delete for them.
+  - Terms (updated 7 November): "Organisers can remove members from their
+    groups and hide thank-yous posted there". The privacy policy already
+    said organisers can hide thank-yous.
+  - New e2e test in `group-thanks.spec.ts`; screenshot `group-moderation`.
+  - **Next (nightly, 8 Nov): launch-week regression refresh.** A lot changed
+    this week (launch dates, team pages, Discord approvals, launch
+    emails); point the regression crawl at the new pages (team page,
+    console › Gifting dates, Admin › Status and Season) and bring
+    `docs/launch-checklist.md` up to date for the release on 9 Nov.
 

@@ -8,25 +8,22 @@ const logger = clientLogger;
 
 interface AdminActionsDropdownProps {
   kudosId: string;
-  kudosUserId: string;
   isHidden?: boolean;
+  /** from the feed: what you can do to this thank-you, if anything */
+  moderation: { hide: boolean; remove: boolean; as: "SITE" | "ORGANISER" | "GROUP" } | null;
   onActionComplete?: () => void;
 }
 
 export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
   kudosId,
-  kudosUserId,
   isHidden = false,
+  moderation,
   onActionComplete,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check if current user has admin permissions for this content
-  const { data: permissions } = api.kudos.checkAdminPermissions.useQuery({
-    targetUserId: kudosUserId,
-  });
   const utils = api.useUtils();
 
   // Admin mutations
@@ -77,7 +74,7 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
   }, []);
 
   // Don't render if user doesn't have admin permissions
-  if (!permissions?.canModerate) {
+  if (!moderation?.hide) {
     return null;
   }
 
@@ -103,7 +100,9 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="hover:bg-opacity-20 rounded-full p-1 text-gray-700 transition-colors hover:bg-white hover:text-gray-900"
-        title="Admin Actions"
+        title="Moderate this thank-you"
+        aria-label="Moderate this thank-you"
+        aria-expanded={isOpen}
       >
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -115,7 +114,11 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
         <div className="absolute top-8 right-0 z-50 min-w-[150px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
           {/* Admin Level Badge */}
           <div className="border-b border-gray-100 px-3 py-1 text-xs text-gray-500">
-            {permissions.adminLevel === "SITE" ? "Site admin" : "Organiser"}
+            {moderation.as === "SITE"
+              ? "Site admin"
+              : moderation.as === "GROUP"
+                ? "Your group's organiser"
+                : "Organiser"}
           </div>
 
           {/* Hide/Unhide Action */}
@@ -172,36 +175,38 @@ export const AdminActionsDropdown: React.FC<AdminActionsDropdownProps> = ({
             )}
           </button>
 
-          {/* Delete Action */}
-          <button
-            onClick={handleDelete}
-            disabled={deleteKudosMutation.isPending}
-            className={`flex w-full items-center space-x-2 px-3 py-2 text-left text-sm hover:bg-red-50 disabled:opacity-50 ${
-              isConfirmingDelete ? "bg-red-50 text-red-700" : "text-red-600"
-            }`}
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Delete Action: site admins and workplace organisers only */}
+          {moderation.remove && (
+            <button
+              onClick={handleDelete}
+              disabled={deleteKudosMutation.isPending}
+              className={`flex w-full items-center space-x-2 px-3 py-2 text-left text-sm hover:bg-red-50 disabled:opacity-50 ${
+                isConfirmingDelete ? "bg-red-50 text-red-700" : "text-red-600"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            <span>
-              {isConfirmingDelete ? "Confirm Delete?" : "Delete Post"}
-            </span>
-            {deleteKudosMutation.isPending && (
-              <div className="ml-auto">
-                <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-transparent"></div>
-              </div>
-            )}
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              <span>
+                {isConfirmingDelete ? "Confirm Delete?" : "Delete Post"}
+              </span>
+              {deleteKudosMutation.isPending && (
+                <div className="ml-auto">
+                  <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-transparent"></div>
+                </div>
+              )}
+            </button>
+          )}
 
           {isConfirmingDelete && (
             <div className="border-t border-gray-100 bg-red-50 px-3 py-1 text-xs text-red-600">

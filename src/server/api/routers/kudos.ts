@@ -6,6 +6,8 @@ import { markArrived } from "~/server/gifts";
 import { getMemberships, groupFeed, inGroup } from "~/server/scope";
 import {
   checkAdminPermissions,
+  feedGroupIds,
+  kudosModeration,
   inAnyGroup,
 } from "~/server/utils/admin-permissions";
 import { deleteFromE2, uploadToE2 } from "~/server/utils/e2-upload";
@@ -125,6 +127,10 @@ export const kudosRouter = createTRPCRouter({
         const groupId = await requireGroupFeed(ctx.session?.user?.id, input.groupId);
         scopeFilter = groupFeed(groupId);
       }
+      // friends/community organisers (7 Nov): the groups whose gift thank-yous
+      // they can hide, and in their own group's feed the ones they've hidden
+      const ownFeeds = currentUser ? await feedGroupIds(currentUser.id) : [];
+      const ownFeed = input.scope === "group" && input.groupId && ownFeeds.includes(input.groupId) ? input.groupId : null;
       // For "site" scope or unauthenticated users, no scope filter needed
 
       // Step 2: Apply hidden post visibility rules based on admin level
@@ -156,6 +162,12 @@ export const kudosRouter = createTRPCRouter({
         };
       }
 
+      if (ownFeed && userPermissions?.adminLevel !== "SITE") {
+        whereClause = {
+          OR: [whereClause, { hidden: true, purchase: { wishlistAssignment: { groupId: ownFeed } } }],
+        };
+      }
+
       const kudos = await db.kudos.findMany({
         where: {
           ...whereClause,
@@ -176,6 +188,8 @@ export const kudosRouter = createTRPCRouter({
               memberships: { select: { groupId: true } },
             },
           },
+          // which group's gift it thanks for, to know who can hide it (not returned)
+          purchase: { select: { wishlistAssignment: { select: { groupId: true } } } },
         },
         orderBy: {
           createdAt: "desc",
@@ -203,11 +217,23 @@ export const kudosRouter = createTRPCRouter({
           moderatedBy,
           moderatedAt,
           userId: _userId,
+          purchase,
           ...item
         }) => {
           const sees = seesIdentity(memberships);
+          const giftGroup = purchase?.wishlistAssignment.groupId;
           return {
             ...item,
+            /**
+             * what you can do to it: site admins and workplace organisers
+             * hide and delete; a friends/community organiser hides gift
+             * thank-yous from their own group (7 Nov)
+             */
+            moderation: sees
+              ? { hide: true, remove: true, as: userPermissions?.adminLevel === "SITE" ? ("SITE" as const) : ("ORGANISER" as const) }
+              : giftGroup && ownFeeds.includes(giftGroup)
+                ? { hide: true, remove: false, as: "GROUP" as const }
+                : null,
             /** a thank-you for a gift (not which one) */
             forGift: !!purchaseId,
             purchaseId: sees ? purchaseId : null,
@@ -284,13 +310,11 @@ export const kudosRouter = createTRPCRouter({
         throw new Error("Kudos not found");
       }
 
-      // Check admin permissions
-      const permissions = await checkAdminPermissions(
-        ctx.session.user.id,
-        kudos.user.id,
-      );
-      if (!permissions.canModerate) {
-        throw new Error("Insufficient permissions to moderate this content");
+      // site admins, workplace organisers and team leads (by author), or a
+      // friends/community organiser for a gift picked up in their group (7 Nov)
+      const can = await kudosModeration(ctx.session.user.id, kudos.id);
+      if (!can?.hide) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can't moderate this thank-you." });
       }
 
       // Update the hidden status

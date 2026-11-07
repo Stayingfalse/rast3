@@ -5,10 +5,17 @@ import { cn } from "~/lib/utils"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
+/**
+ * Not modal by default (7 Nov): a modal menu locks the page's scroll, and on
+ * a long page (the workplace console's members table, below the fold) that
+ * jumped the page back to the top and left the open menu off-screen. Menus
+ * still close on Escape and on a click outside.
+ */
 function DropdownMenu({
+  modal = false,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />
 }
 
 function DropdownMenuPortal({

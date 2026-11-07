@@ -59,6 +59,7 @@ test("a workplace organiser makes a colleague lead of their team", async ({ page
   for (const m of team.members) state.ids[m.email!.split("@")[0]!] = m.userId;
   expect(Object.keys(state.ids).sort()).toEqual(["rival1", "rival2", "rival3"]);
 
+  await settle(page);
   const row = page.getByRole("row").filter({ hasText: `rival2@${E}` });
   await row.getByRole("button", { name: /^Actions for / }).click();
   await page.getByRole("menuitem", { name: "Make a team lead" }).click();

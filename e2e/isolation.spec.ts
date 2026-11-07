@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle } from "./helpers";
 
 /**
  * Day 9 tenant isolation: who people can give to, read and manage is decided
@@ -146,8 +146,10 @@ test("a workplace organiser (or a site admin) makes a colleague an organiser (ow
     ((await unwrap(await query(page.request, "groups.manage", { groupId: org.id }))) as Console).members;
   const rival2 = (await members()).find((m) => m.email === `rival2@${E}`)!;
 
-  // from the console's Members tab
+  // from the console's Members tab, once everything above the table has
+  // loaded (a late layout shift moves the row, and its open menu, off-screen)
   await page.goto(`/groups/${org.id}/manage`);
+  await settle(page);
   const row = page.getByRole("row").filter({ hasText: `rival2@${E}` });
   await row.getByRole("button", { name: /^Actions for / }).click();
   await page.getByRole("menuitem", { name: "Make an organiser" }).click();

@@ -177,7 +177,6 @@ function Members({ g }: { g: Console }) {
     },
     onError: (e) => toast.error(e.message),
   });
-  const canChangeRoles = g.kind !== "ORG";
   // only workplaces have an email column (owner, 26 and 27 Oct); site admins
   // still see emails everywhere
   const showEmail = g.kind === "ORG" || g.members.some((m) => m.email);
@@ -247,21 +246,19 @@ function Members({ g }: { g: Console }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuGroup>
-                          {canChangeRoles && (
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                setRole.mutate({
-                                  groupId: g.id,
-                                  userId: m.userId,
-                                  role: m.role === "ADMIN" ? "MEMBER" : "ADMIN",
-                                })
-                              }
-                            >
-                              {m.role === "ADMIN"
-                                ? "Make a member"
-                                : "Make an organiser"}
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              setRole.mutate({
+                                groupId: g.id,
+                                userId: m.userId,
+                                role: m.role === "ADMIN" ? "MEMBER" : "ADMIN",
+                              })
+                            }
+                          >
+                            {m.role === "ADMIN"
+                              ? "Make a member"
+                              : "Make an organiser"}
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             variant="destructive"
                             onSelect={() => setRemoving(m)}

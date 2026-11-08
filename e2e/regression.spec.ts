@@ -6,8 +6,9 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from "
 import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, seed, settle, snap } from "./helpers";
 
 /**
- * Day 31: full regression crawl. Signed out, as a member, as an organiser
- * and as a site admin, at desktop and Pixel 7: start from each one's pages
+ * Day 31: full regression crawl. Signed out, as a member, as an organiser,
+ * as a workplace organiser (their console and a team's page, 8 Nov) and as
+ * a site admin, at desktop and Pixel 7: start from each one's pages
  * and follow every link on the site (a few pages per kind of address).
  * Every page must load without a server error, a script error, a console
  * error or a failed request, and every link must lead somewhere. Findings
@@ -22,6 +23,8 @@ test.describe.configure({ mode: "serial", timeout: 240_000 });
 const E = E2E_DOMAIN;
 const unwrap = async (res: { json: () => Promise<unknown> }) =>
   ((await res.json()) as { result: { data: { json: unknown } } }).result.data.json;
+const query = (r: APIRequestContext, p: string, input?: unknown) =>
+  r.get(`/api/trpc/${p}?input=${encodeURIComponent(JSON.stringify({ json: input ?? null }))}`);
 const mutate = (r: APIRequestContext, p: string, input?: unknown) =>
   r.post(`/api/trpc/${p}`, { data: { json: input ?? null } });
 
@@ -31,6 +34,8 @@ const visited: { role: string; page: string; status: number | undefined; ms: num
 let groupId = "";
 let joinCode = "";
 let domain = "";
+let rivalDomain = "";
+const workplace = { orgId: "", teamId: "" };
 
 /** /groups/abc123/manage -> /groups/:id/manage, so each kind of page is crawled a few times, not every one */
 const pattern = (p: string) =>
@@ -124,7 +129,7 @@ const report = (role: string) => {
 };
 
 test.beforeAll(async ({ request }) => {
-  domain = ((await seed(request)) as unknown as { domain: string }).domain;
+  ({ domain, rivalDomain } = (await seed(request)) as unknown as { domain: string; rivalDomain: string });
 });
 
 test.afterAll(async ({ playwright }, testInfo) => {
@@ -153,6 +158,15 @@ test("set up: an approved friends group with an organiser", async ({ page }, tes
   joinCode = g.joinCode;
   await loginAs(page, { email: `reg-site-${p}@${E}`, adminLevel: "SITE" });
   expect((await mutate(page.request, "groups.setStatus", { groupId, status: "ACTIVE" })).status()).toBe(200);
+
+  // the seed's rival workplace: rival1 organises it; its one team
+  await loginAs(page, { email: `rival1@${E}` });
+  workplace.orgId = ((await unwrap(await query(page.request, "groups.myOrganisation"))) as { id: string }).id;
+  workplace.teamId = (
+    (await unwrap(await query(page.request, "groups.manage", { groupId: workplace.orgId }))) as {
+      teams: { id: string }[];
+    }
+  ).teams[0]!.id;
   await page.goto("about:blank");
 });
 
@@ -160,7 +174,20 @@ test("signed out", async ({ page }, testInfo) => {
   await crawl(
     page,
     "visitor",
-    ["/", "/?for=discord-run", "/?for=friends-join", "/privacy", "/terms", "/account", `/join/${joinCode}`, `/${domain}`, "/auth/verify-request", "/unsubscribe"],
+    [
+      "/",
+      "/?for=discord-run",
+      "/?for=friends-join",
+      "/privacy",
+      "/terms",
+      "/account",
+      `/join/${joinCode}`,
+      `/${domain}`,
+      // a team lead's invite link (8 Nov)
+      `/${rivalDomain}?team=${workplace.teamId}`,
+      "/auth/verify-request",
+      "/unsubscribe",
+    ],
     testInfo,
   );
   report("visitor");
@@ -178,12 +205,35 @@ test("an organiser", async ({ page }, testInfo) => {
   report("organiser");
 });
 
+test("a workplace organiser, on their console and a team's page", async ({ page }, testInfo) => {
+  await loginAs(page, { email: `rival1@${E}` });
+  await crawl(
+    page,
+    "workplace",
+    ["/groups", `/groups/${workplace.orgId}/manage`, `/groups/${workplace.teamId}/manage`, `/groups/${workplace.orgId}/poster`, "/"],
+    testInfo,
+  );
+  report("workplace");
+});
+
 test("a site admin", async ({ page }, testInfo) => {
   await loginAs(page, { email: `reg-site-${testInfo.project.name}@${E}`, adminLevel: "SITE" });
   await crawl(
     page,
     "admin",
-    ["/admin", "/admin/approvals", "/admin/season", "/admin/groups", "/admin/users", "/admin/links", "/admin/kudos", "/admin/insights", "/admin/affiliate", "/admin/settings"],
+    [
+      "/admin",
+      "/admin/status",
+      "/admin/approvals",
+      "/admin/season",
+      "/admin/groups",
+      "/admin/users",
+      "/admin/links",
+      "/admin/kudos",
+      "/admin/insights",
+      "/admin/affiliate",
+      "/admin/settings",
+    ],
     testInfo,
     // admins see every group, including the other device's test groups,
     // which that run deletes as it goes; the organiser crawl covers consoles

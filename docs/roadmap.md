@@ -1674,4 +1674,23 @@ that don't touch the data model. Known items to include:
     emails); point the regression crawl at the new pages (team page,
     console › Gifting dates, Admin › Status and Season) and bring
     `docs/launch-checklist.md` up to date for the release on 9 Nov.
+- **Nightly run, 8 Nov: launch-week regression refresh.**
+  - The regression crawl (`e2e/regression.spec.ts`) now also signs in as a
+    workplace organiser (the seed's rival1) and starts from their workplace
+    console, a team's page and the poster. The visitor crawl opens a team
+    lead's invite link (`/<domain>?team=…`), and the site admin's crawl
+    starts at Admin › Status too.
+  - `docs/launch-checklist.md` refreshed: prod at 26 migrations; backups
+    still not running on schedule; Gmail now also carries the launch
+    emails; a new "Launch week" section (last order date, gifting dates for
+    groups that agreed one, checking Approvals' friends and Discord lists,
+    second organisers and team leads).
+  - **Backups (checked 8 Nov):** the 02:00 database schedule has still
+    never run on its own; the last backup is the owner's manual one on
+    6 Nov 01:58, before five migrations reached prod.
+  - **Next (nightly, 9 Nov): Day 33, release candidate.** Prod already has
+    everything merged, so: a read-only smoke check of prod (health, public
+    pages, sign-in page), then launch-email quiet hours (hold non-urgent
+    emails until 08:00 UK so the 15 Nov burst doesn't trip Gmail's limits)
+    unless the owner picks something else.
 

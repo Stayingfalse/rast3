@@ -28,13 +28,13 @@ const mutate = (r: APIRequestContext, path: string, input?: unknown) =>
 type Log = { kind: string; status: string; note: string | null; ref: string; email: string };
 type Reminders = {
   window: { opensAt: string; closesAt: string };
-  run: { organisersLive: number; adminStatus: number } | null;
+  run: { organisersLive: number; adminStatus: number; opened: number; quiet?: boolean } | null;
   log: Log[];
   tokens: Record<string, { u: string; t: string }>;
 };
 const reminders = async (
   r: APIRequestContext,
-  data: { now?: string; run?: boolean; backdate?: string[] },
+  data: { now?: string; run?: boolean; backdate?: string[]; quietHours?: boolean },
 ) => {
   const res = await r.post("/api/test-auth/reminders", { headers: testHeaders, data });
   expect(res.status()).toBe(200);
@@ -320,3 +320,32 @@ test("members switch reminders on or off in their profile", async ({ page }, tes
   expect(me.emailReminders).toBe(true);
   expect(errors).toEqual([]);
 });
+
+/**
+ * Quiet hours (9 Nov): the hourly schedule holds members' and organisers'
+ * emails outside 08:00–21:00 UK time, so the 15 November midnight opening
+ * doesn't send hundreds at once; site admins' status email keeps 07:00.
+ */
+test("the hourly schedule keeps members' emails to the day, admins' status from 07:00", async ({
+  page,
+}, testInfo) => {
+  const p = testInfo.project.name;
+  const boss = who("quietboss", p);
+  await loginAs(page, { email: boss, adminLevel: "SITE" });
+  const at = async (t: number) => {
+    const r = await reminders(page.request, { now: new Date(t).toISOString(), quietHours: true });
+    return { run: r.run!, status: kindOf(r.log, "ADMIN_STATUS", boss).map((l) => l.ref) };
+  };
+  // 02:00 the night gifting opens: nothing for members or organisers
+  let r = await at(ukAt(1, 2));
+  expect(r.run).toMatchObject({ quiet: true, opened: 0, organisersLive: 0 });
+  // 07:05: still quiet for members, but the site admins' status goes
+  r = await at(ukAt(6, 7, 5));
+  expect(r.run.quiet).toBe(true);
+  expect(r.status).toContain(ukDate(ukAt(6, 12)));
+  // 09:00 and 20:30: the day's emails go; 21:00: quiet again
+  expect((await at(ukAt(6, 9))).run.quiet).toBeUndefined();
+  expect((await at(ukAt(6, 20, 30))).run.quiet).toBeUndefined();
+  expect((await at(ukAt(6, 21))).run.quiet).toBe(true);
+});
+

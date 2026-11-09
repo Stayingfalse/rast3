@@ -1693,4 +1693,23 @@ that don't touch the data model. Known items to include:
     pages, sign-in page), then launch-email quiet hours (hold non-urgent
     emails until 08:00 UK so the 15 Nov burst doesn't trip Gmail's limits)
     unless the owner picks something else.
+- **Nightly run, 9 Nov: Day 33, release candidate + email quiet hours.**
+  - **Release candidate:** prod already runs everything merged, so this
+    was a read-only smoke check from outside: every public page loads
+    (under a second), account export and admin are closed to visitors,
+    all test-only routes are 404 (including `discord-link`), security
+    headers are in place, and the home page shows 15 November to 6
+    January. Prod's sign-in offers Google, Discord and an email link;
+    Twitch, GitHub and Reddit aren't set up there (checklist updated).
+  - **Quiet hours** (the 7 Nov idea): the hourly schedule now holds
+    members' and organisers' emails outside 08:00–21:00 UK. On 15 Nov
+    gifting opens at midnight; "gifting is open" and "we're live" now go
+    from 08:00 instead of 00:05, when hundreds at once would risk Gmail's
+    limits and land unread. Site admins' status email keeps 07:00; sign-in
+    links aren't affected. `runReminders(…, { quietHours })` is used by the
+    schedule; the test route can ask for it.
+  - New e2e test in `email-reminders.spec.ts`.
+  - **Next (nightly, 10 Nov): spare day,** owner's pick. Without one: the
+    organiser's live launch-morning counter on the console (idea, 8 Nov),
+    or small launch fixes.
 

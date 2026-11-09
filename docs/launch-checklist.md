@@ -10,7 +10,8 @@ verified from the outside or in the code (1 Nov, or the date given);
 | | Item | Status |
 |---|---|---|
 | ✅ | Prod healthy, database connected, migrations applied (26, latest `20261107050000_group_launch`), `PRISMA_SCHEMA_SYNC=migrate` | Checked 8 Nov (`/api/health`) |
-| ✅ | Test-only routes are off on prod (`/api/test-auth/*` → 404) | Checked |
+| ✅ | Test-only routes are off on prod (`/api/test-auth/*` → 404, including the new `discord-link`) | Checked 9 Nov |
+| ✅ | Release candidate smoke check (Day 33): public pages, sign-in, account and admin closed to visitors, security headers, season dates on the home page | Checked 9 Nov (read-only, from outside) |
 | ✅ | Security headers: HSTS (preload), CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy | Checked |
 | ✅ | Season dates: gifting opens 15 Nov, closes 6 Jan (home page) | Checked |
 | ✅ | Privacy policy, terms and "Your data" live; Amazon Associates disclosure in the footer | Checked |
@@ -28,7 +29,7 @@ verified from the outside or in the code (1 Nov, or the date given);
 | ⬜ | Send yourself a sign-in link on prod and check it arrives (not in spam) | **Owner** |
 | ⬜ | Consider a raosanta.uk sender (SPF/DKIM/DMARC) rather than a personal Gmail for 300 emails a day | **Owner** |
 | ⬜ | `privacy@raosanta.uk` mailbox exists and is read (named in the policy and terms) | **Owner** |
-| ⬜ | Other sign-in providers (Discord, Twitch, GitHub, Reddit) each tried once on prod | **Owner** |
+| ⬜ | Other sign-in providers each tried once on prod. Prod offers Google, Discord and an email link (checked 9 Nov); Twitch, GitHub and Reddit aren't set up there, so the sign-in page doesn't show them | **Owner** |
 
 ## Money and the law
 
@@ -62,4 +63,5 @@ verified from the outside or in the code (1 Nov, or the date given);
 | ⬜ | Workplaces with a single organiser: add a second from the console's Members tab, and team leads where a workplace has teams | **Owner** / organisers |
 | ✅ | Friends and community organisers can hide thank-yous for gifts in their group; terms say so (7 Nov) | Checked (e2e) |
 | ✅ | Morning status email to site admins from 14 Nov (07:00 UK), "gifting is open" and "we're live" from each group's launch date | Checked (e2e on pretend dates) |
+| ✅ | Quiet hours: members' and organisers' emails go 08:00–21:00 UK, so the midnight opening on 15 Nov doesn't send hundreds at once (9 Nov) | Checked (e2e) |
 

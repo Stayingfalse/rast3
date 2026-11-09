@@ -23,7 +23,8 @@ export function startReminderSchedule() {
         warned = true;
         log.warn("No email server (EMAIL_SERVER_* or Admin › Settings): reminder emails wait until one is set up");
       }
-      const run = await runReminders(db);
+      // members' and organisers' emails wait for 08:00–21:00 UK (9 Nov)
+      const run = await runReminders(db, { quietHours: true });
       const { nudged, opened, giftCheckIns, newLists, organisersLive, adminStatus } = run;
       if (nudged || opened || giftCheckIns || newLists || organisersLive || adminStatus) log.info(run, "Reminder emails processed");
     } catch (error) {

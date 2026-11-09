@@ -21,13 +21,15 @@ import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
  * backdate: these test users' profiles become last year's (a returning
  * member who hasn't checked in yet).
  *
- * POST { now?: ISO date, run?: boolean, ageGifts?: days, backdate?: emails } -> { window, run, log, tokens }
+ * POST { now?: ISO date, run?: boolean, ageGifts?: days, backdate?: emails, quietHours?: boolean } -> { window, run, log, tokens }
  */
 const body = z.object({
   now: z.string().datetime().optional(),
   run: z.boolean().default(true),
   ageGifts: z.number().int().min(0).max(60).optional(),
   backdate: z.array(z.string()).max(20).optional(),
+  /** run as the hourly schedule does, with quiet hours (9 Nov) */
+  quietHours: z.boolean().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -51,7 +53,11 @@ export async function POST(req: NextRequest) {
   }
 
   const run = input.data.run
-    ? await runReminders(db, { now: input.data.now ? new Date(input.data.now) : undefined, only })
+    ? await runReminders(db, {
+        now: input.data.now ? new Date(input.data.now) : undefined,
+        only,
+        quietHours: input.data.quietHours,
+      })
     : null;
   const log = await db.emailLog.findMany({
     where: { user: only },

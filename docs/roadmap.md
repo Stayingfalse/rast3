@@ -1712,4 +1712,20 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 10 Nov): spare day,** owner's pick. Without one: the
     organiser's live launch-morning counter on the console (idea, 8 Nov),
     or small launch fixes.
+- **Nightly run, 10 Nov: launch-morning counter + launch day runbook (spare
+  day, no owner pick; the 8 and 9 Nov ideas).**
+  - **Organiser console "Today" line:** today's joiners (UK day), this
+    Christmas's check-ins out of the members, today's wishlists picked up
+    and gifts sent, with the time it was last updated. The console
+    refreshes every minute while it's open, so on 15 Nov organisers can
+    see their group getting going without asking. A workplace's pick-ups
+    are counted by its members as Santas (they have no group).
+  - **`docs/launch-day-runbook.md`:** the night before, what happens on its
+    own (00:00 opening, 07:00 status email, 08:00 member emails, the
+    nightly restart), the checks through the day, and what to do when
+    emails fail, the site stalls, a group or thank-you looks wrong, or a
+    fix is needed.
+  - e2e: the console test checks the Today line.
+  - **Next (nightly, 11 Nov): spare day,** owner's pick; without one,
+    small launch fixes from the runbook walk-through.
 

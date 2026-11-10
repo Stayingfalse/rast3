@@ -59,6 +59,8 @@ test("the organiser manages members", async ({ page }, testInfo) => {
     .getByRole("link", { name: "Manage group" })
     .click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  // launch morning (10 Nov): today's numbers; both members joined today
+  await expect(page.getByText(/^\d+ joined · \d+ of 2 checked in for Christmas · 0 wishlists picked up · 0 gifts sent$/)).toBeVisible();
 
   const guest = page.getByRole("row").filter({ hasText: "Gus Guest" });
   await expect(guest.getByText("New")).toBeVisible();

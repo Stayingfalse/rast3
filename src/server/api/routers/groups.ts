@@ -22,6 +22,7 @@ import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
 import { launchInfo, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
 import { currentSeason, seasonWindow } from "~/server/season";
+import { ukDateString, ukMidnight } from "~/lib/uk-date";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
   createOrgGroup,
@@ -750,6 +751,23 @@ export const groupsRouter = createTRPCRouter({
       const gifted = await ctx.db.purchase.count({
         where: { wishlistAssignment: { groupId: group.id } },
       });
+      // launch morning (owner, 10 Nov): today's numbers, UK day, for the
+      // console's live "Today" line. A workplace's pick-ups have no group, so
+      // they're counted by its members as Santas.
+      const dayStart = ukMidnight(ukDateString(new Date()))!;
+      const memberIds = members.map((m) => m.user.id);
+      const season = currentSeason();
+      const ofThisGroup =
+        group.kind === "ORG"
+          ? { assignedUserId: { in: memberIds }, season }
+          : { groupId: group.id };
+      const [checkedInCount, pickedToday, giftedToday] = await Promise.all([
+        ctx.db.seasonCheckIn.count({ where: { season, userId: { in: memberIds } } }),
+        ctx.db.wishlistAssignment.count({ where: { ...ofThisGroup, assignedAt: { gte: dayStart } } }),
+        ctx.db.purchase.count({
+          where: { purchasedAt: { gte: dayStart }, wishlistAssignment: ofThisGroup },
+        }),
+      ]);
       return {
         id: group.id,
         name: group.name,
@@ -764,6 +782,12 @@ export const groupsRouter = createTRPCRouter({
         siteAdmin: site,
         stats: {
           members: members.length,
+          checkedIn: checkedInCount,
+          today: {
+            joined: members.filter((m) => m.joinedAt >= dayStart).length,
+            picked: pickedToday,
+            gifted: giftedToday,
+          },
           joinedFirst48h: members.filter((m) => m.joinedAt <= firstTwoDays)
             .length,
           joinedLast7d: members.filter(

@@ -75,7 +75,11 @@ const RECENT_MS = 30 * 24 * 3600_000;
  * team" invite kit, and settings. Built on shadcn/ui.
  */
 export function OrganiserConsole({ groupId }: { groupId: string }) {
-  const { data: g, isLoading, error } = api.groups.manage.useQuery({ groupId });
+  // live during launch (10 Nov): today's numbers refresh every minute
+  const { data: g, isLoading, error, dataUpdatedAt } = api.groups.manage.useQuery(
+    { groupId },
+    { refetchInterval: 60_000, refetchIntervalInBackground: false },
+  );
   if (isLoading) return <p className="text-frost-soft">Loading…</p>;
   if (error || !g)
     return <p className="text-frost">{error?.message ?? "Group not found."}</p>;
@@ -132,6 +136,7 @@ export function OrganiserConsole({ groupId }: { groupId: string }) {
             </div>
           ))}
         </dl>
+        <TodayLine g={g} updatedAt={dataUpdatedAt} />
       </header>
 
       <WallCard groupId={g.id} groupName={g.name} />
@@ -153,6 +158,31 @@ export function OrganiserConsole({ groupId }: { groupId: string }) {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/**
+ * Launch morning (owner, 10 Nov): "is it working?" at a glance. Today's
+ * joiners, pick-ups and gifts (UK day) and this Christmas's check-ins,
+ * refreshed every minute while the page is open.
+ */
+function TodayLine({ g, updatedAt }: { g: Console; updatedAt: number }) {
+  const n = (v: number, one: string, many: string) => `${v} ${v === 1 ? one : many}`;
+  const parts = [
+    n(g.stats.today.joined, "joined", "joined"),
+    `${g.stats.checkedIn} of ${g.stats.members} checked in for Christmas`,
+    n(g.stats.today.picked, "wishlist picked up", "wishlists picked up"),
+    n(g.stats.today.gifted, "gift sent", "gifts sent"),
+  ];
+  const time = updatedAt
+    ? new Date(updatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })
+    : null;
+  return (
+    <p className="text-frost-soft flex flex-wrap items-baseline gap-x-2 text-sm">
+      <span className="label-caps text-gold-soft">Today</span>
+      <span className="text-frost tabular-nums">{parts.join(" · ")}</span>
+      {time && <span className="tabular-nums">(updated {time})</span>}
+    </p>
   );
 }
 

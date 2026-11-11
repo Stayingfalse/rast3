@@ -33,3 +33,20 @@ export const engagedThisSeason = (season: number): Prisma.UserWhereInput => ({
     { profileCompletedAt: { gte: seasonRange(season).gte } },
   ],
 });
+
+/**
+ * Quiet hours (9 Nov): members' and organisers' emails go between 08:00 and
+ * 21:00 UK time. Gifting opens at midnight on 15 November, and hundreds of
+ * "gifting is open" emails at 00:05 would land unread and risk Gmail's
+ * sending limits; they go from 08:00 instead. Site admins' morning status
+ * keeps its own 07:00 start. Sign-in links aren't reminders and always go.
+ */
+export const QUIET_UNTIL_HOUR = 8;
+export const QUIET_FROM_HOUR = 21;
+const ukHour = (d: Date) =>
+  Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", hourCycle: "h23" }).format(d));
+export const isQuietHour = (now: Date) => {
+  const h = ukHour(now);
+  return h < QUIET_UNTIL_HOUR || h >= QUIET_FROM_HOUR;
+};
+

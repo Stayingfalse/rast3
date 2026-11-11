@@ -287,8 +287,18 @@ export function StatusView({
           <CardDescription>
             Skipped emails went to test addresses. A send that fails is logged
             here and tried again at the next hourly run; a run stops after 3
-            failures in a row.
+            failures in a row. Members&apos; and organisers&apos; emails go
+            between {String(data.quiet.until).padStart(2, "0")}:00 and{" "}
+            {data.quiet.from}:00 UK time; site admins&apos; status email from
+            07:00.
           </CardDescription>
+          {data.quiet.now && (
+            <p role="status" className="bg-gold-soft/40 border-gold rounded-label border px-3 py-2 text-sm text-ink">
+              Quiet hours now: members&apos; and organisers&apos; emails are
+              waiting until {String(data.quiet.until).padStart(2, "0")}:00. Nothing is wrong
+              if none have gone yet.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <div className="overflow-x-auto">

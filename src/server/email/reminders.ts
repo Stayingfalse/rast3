@@ -4,8 +4,8 @@ import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
 import { seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
-import { adminStatusEmails, organiserLiveEmails, ukClock } from "./launch";
-import { counted, engagedThisSeason, REMINDER_DAILY_LIMIT, type Send } from "./rules";
+import { adminStatusEmails, organiserLiveEmails } from "./launch";
+import { counted, engagedThisSeason, isQuietHour, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
 
@@ -53,19 +53,7 @@ export type ReminderRun = {
   quiet?: boolean;
 };
 
-/**
- * Quiet hours (9 Nov): members' and organisers' emails go between 08:00 and
- * 21:00 UK time. Gifting opens at midnight on 15 November, and hundreds of
- * "gifting is open" emails at 00:05 would land unread and risk Gmail's
- * sending limits; they go from 08:00 instead. Site admins' morning status
- * keeps its own 07:00 start. Sign-in links aren't reminders and always go.
- */
-export const QUIET_UNTIL_HOUR = 8;
-export const QUIET_FROM_HOUR = 21;
-export const isQuietHour = (now: Date) => {
-  const h = ukClock(now).hour;
-  return h < QUIET_UNTIL_HOUR || h >= QUIET_FROM_HOUR;
-};
+export { isQuietHour, QUIET_FROM_HOUR, QUIET_UNTIL_HOUR } from "./rules";
 
 export async function runReminders(
   db: PrismaClient,

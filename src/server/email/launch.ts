@@ -175,7 +175,12 @@ async function statusSummary(db: PrismaClient, now: Date): Promise<StatusSummary
               s.groups.tooLong ? ` (over ${PENDING_TOO_LONG_HOURS} hours)` : ""
             }`,
       ],
-      ["Reminder emails sent", n(sent)],
+      [
+        "Reminder emails sent",
+        s.quiet.now
+          ? `${n(sent)} (members' emails wait for ${String(s.quiet.until).padStart(2, "0")}:00, quiet hours)`
+          : n(sent),
+      ],
       ["Reminder emails failed", n(s.failed)],
       ["Daily email limit used", `${n(s.limit.used)} of ${n(s.limit.daily)}`],
       ["Wishlists picked up", n(s.lastDay.pickUps)],

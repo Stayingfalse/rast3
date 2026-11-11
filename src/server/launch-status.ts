@@ -1,7 +1,7 @@
 import type { EmailKind, EmailStatus, Prisma, PrismaClient } from "@prisma/client";
 
 import { emailSettings } from "~/server/email/smtp";
-import { REMINDER_DAILY_LIMIT } from "~/server/email/rules";
+import { isQuietHour, QUIET_FROM_HOUR, QUIET_UNTIL_HOUR, REMINDER_DAILY_LIMIT } from "~/server/email/rules";
 import { largeFriendsGroupIds, LARGE_FRIENDS_GROUP } from "~/server/friends-groups";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { publicSeason, seasonWindow } from "~/server/season";
@@ -198,6 +198,8 @@ export async function launchStatus(db: PrismaClient, now = new Date()) {
     },
     emailServer: emailSource,
     limit: { daily: REMINDER_DAILY_LIMIT, used: sentForLimit },
+    /** quiet hours (9 Nov): members' and organisers' emails wait for 08:00–21:00 UK */
+    quiet: { now: isQuietHour(now), until: QUIET_UNTIL_HOUR, from: QUIET_FROM_HOUR },
     today: { since: today, pickUps, gifts, thanks },
     lastDay: { pickUps: pickUpsDay, gifts: giftsDay, thanks: thanksDay },
     season: { year: w.year, phase: season.phase, opensAt: season.opensAt, closesAt: season.closesAt },

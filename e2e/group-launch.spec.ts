@@ -61,8 +61,14 @@ test.afterAll(async ({ playwright }, testInfo) => {
 test("an organiser picks a later launch date: the group waits until then", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   state.name = `E2E Launch Later ${p}`;
-  state.later = ukDay(3);
   await loginAs(page, { email: who("host", testInfo) });
+  // three days ahead, or four when that's the site's own date (on 12 Nov it
+  // was 15 Nov, and choosing the site's date isn't a change)
+  const site = (
+    (await unwrap(await query(page.request, "season.status"))) as { siteOpensAt: string }
+  ).siteOpensAt;
+  const siteDay = new Date(site).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+  state.later = ukDay(3) === siteDay ? ukDay(4) : ukDay(3);
   await mutate(page.request, "profile.saveProfile", {
     over16: true,
     firstName: "Lana",

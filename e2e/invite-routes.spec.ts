@@ -137,5 +137,5 @@ test("the organiser's invite message uses the workplace's own link", async ({ pa
   await loginAs(page, { email: `inv-boss-${testInfo.project.name}@${E}` });
   await page.goto(`/groups/${orgId}/manage`);
   await page.getByRole("tab", { name: "Bring your team" }).click();
-  await expect(page.getByLabel("Message")).toHaveValue(new RegExp(`/${domain.replace(/\./g, "\\.")} \\(join code`));
+  await expect(page.getByLabel("Message", { exact: true })).toHaveValue(new RegExp(`/${domain.replace(/\./g, "\\.")} \\(join code`));
 });

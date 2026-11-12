@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { inviteLink, inviteMessage } from "~/lib/invite-message";
+import { inviteLink, inviteMessage, launchMessage } from "~/lib/invite-message";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { WallCard } from "../share/wall-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
@@ -347,6 +347,14 @@ function Invite({ g }: { g: Console }) {
   // workplaces have their own memorable link: raosanta.uk/<domain> (23 Oct)
   const link = inviteLink(g, origin);
   const message = inviteMessage(g, origin);
+  // the day gifting opens in this group (its own date or the season's)
+  const opensOn = new Date(g.launch.opensAt).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/London",
+  });
+  const launch = launchMessage(g, origin, opensOn);
 
   const copy = async (text: string, what: string) => {
     await navigator.clipboard.writeText(text);
@@ -402,6 +410,31 @@ function Invite({ g }: { g: Console }) {
               Teams / Slack
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Launch day message</CardTitle>
+          <CardDescription>
+            Pin this in your group&apos;s chat when gifting opens, on {opensOn}.
+            It answers most first-day questions before they&apos;re asked.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Field>
+            <FieldLabel htmlFor="launch-message">Launch day message</FieldLabel>
+            <textarea
+              id="launch-message"
+              readOnly
+              value={launch}
+              rows={8}
+              className="border-input text-foreground rounded-label w-full border bg-white p-3"
+            />
+          </Field>
+          <Button type="button" className="self-start" onClick={() => void copy(launch, "Launch day message")}>
+            Copy launch day message
+          </Button>
         </CardContent>
       </Card>
 

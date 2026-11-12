@@ -40,3 +40,22 @@ export function teamInviteMessage(workplace: Workplace, team: { id: string; name
   const link = teamInviteLink(workplace, team, origin);
   return `Christmas is coming! ${team.name} is doing Random Acts of Santa this year: no draw, just share your Amazon wishlist and pick up a colleague's whenever you're ready. Join here with your @${workplace.emailDomain} email and you'll be in ${team.name}: ${link}${workplace.joinCode ? ` (join code ${formatCode(workplace.joinCode)})` : ""}`;
 }
+
+/**
+ * Launch day (owner's idea list, 11 Nov): a short "how it works" to pin in
+ * the group's own chat when gifting opens, since most launch-day questions
+ * come from people who never read the site's instructions.
+ */
+export function launchMessage(g: InviteGroup, origin: string, opensOn: string) {
+  const link = inviteLink(g, origin);
+  const who = g.kind === "ORG" ? "a colleague's" : "someone's";
+  return [
+    `🎁 Gifting is open on Random Acts of Santa${opensOn ? ` from ${opensOn}` : ""}!`,
+    `1. Sign in and check your Amazon wishlist is up to date (that's your check-in for Christmas).`,
+    `2. Pick up ${who} wishlist whenever you're ready, as many as you like.`,
+    `3. Order something from it on Amazon and mark it gifted. Nobody sees an address.`,
+    `No draw, no deadline: anyone can pick up, and anyone can be picked.`,
+    `${g.kind === "ORG" ? `Not joined yet? Use your @${g.emailDomain} email here` : "Not joined yet? Start here"}: ${link}`,
+  ].join("\n");
+}
+

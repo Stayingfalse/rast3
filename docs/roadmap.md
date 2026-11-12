@@ -1744,4 +1744,18 @@ that don't touch the data model. Known items to include:
     line of history.
   - **Next (nightly, 12 Nov): spare day,** owner's pick; without one, keep
     walking the runbook (the night-before checks on dev).
+- **Nightly run, 12 Nov: a launch day message for organisers (spare day,
+  no owner pick; the 11 Nov idea).**
+  - The console's "Bring your team" tab gets a **Launch day message** card:
+    a short "how it works" to pin in the group's own chat when gifting
+    opens (its own date or the season's), with the group's link: check
+    your wishlist, pick up whenever you're ready, mark it gifted; no draw,
+    no deadline, no addresses. Workplaces get the @domain line. One copy
+    button.
+  - e2e: the console test checks the message; two other tests' "Message"
+    lookups are now exact (there are two message boxes on that tab).
+  - Stacked on #90 (and so #89): **merge #89, then #90, then this.**
+  - **Next (nightly, 13 Nov): spare day,** owner's pick; without one, no
+    new features before launch: dependency and security re-check, and the
+    runbook's night-before checks on dev.
 

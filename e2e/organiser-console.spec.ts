@@ -86,7 +86,11 @@ test("bring your team: invite message and printable poster", async ({ page }, te
   await loginAs(page, { email: `host-${testInfo.project.name}@${E}` });
   await page.goto(`/groups/${groupId}/manage`);
   await page.getByRole("tab", { name: "Bring your team" }).click();
-  await expect(page.getByLabel("Message")).toHaveValue(new RegExp(`/join/${code}`));
+  await expect(page.getByLabel("Message", { exact: true })).toHaveValue(new RegExp(`/join/${code}`));
+  // launch day (12 Nov): a "how it works" to pin, with the group's link
+  const launch = page.getByLabel("Launch day message", { exact: true });
+  await expect(launch).toHaveValue(/^🎁 Gifting is open on Random Acts of Santa from \w+day \d+ \w+!/);
+  await expect(launch).toHaveValue(new RegExp(`No draw, no deadline[\\s\\S]*/join/${code}$`));
   await settle(page);
   await snap(page, testInfo, "console-invite");
 

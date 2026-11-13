@@ -1758,4 +1758,21 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 13 Nov): spare day,** owner's pick; without one, no
     new features before launch: dependency and security re-check, and the
     runbook's night-before checks on dev.
+- **Nightly run, 13 Nov: pre-launch checks, no new features.**
+  - **Dependencies:** `npm audit --omit=dev` shows the same 16 advisories
+    (10 high, 0 critical) as on 6 Nov, nothing new; all were already
+    judged after-launch work (nodemailer fixed only in 10.x, zod 4,
+    Prisma's build-time `deepmerge-ts`, the shadcn CLI). Next has patch
+    releases (16.4.1 → 16.4.6) with no advisory against 16.4.1: left for
+    after launch rather than changing the framework two days out.
+  - **Prod smoke check (read-only):** public pages load, admin and the data
+    export are closed to visitors, every test-only route is 404, sign-in
+    offers Google, Discord and an email link.
+  - **Backups:** the newest is still the owner's manual one on 8 Nov 18:25;
+    the 02:00 schedule has never run on its own.
+  - **Open:** #89, #90 and #91 (stacked; merge in that order) await the
+    owner.
+  - **Next (nightly, 14 Nov): the night before launch,** no new features:
+    check the 07:00 status email went (it needs Gmail), prod health, and
+    remind the owner of the evening backup and the runbook.
 

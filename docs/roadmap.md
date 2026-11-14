@@ -1775,4 +1775,20 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 14 Nov): the night before launch,** no new features:
     check the 07:00 status email went (it needs Gmail), prod health, and
     remind the owner of the evening backup and the runbook.
+- **Nightly run, 14 Nov: the night before launch, no changes.**
+  - Prod and dev healthy (restarted at 03:06 again, as every night since
+    2 Nov). Season dates unchanged: gifting opens 00:00 on 15 Nov.
+  - **Backups:** the newest is still the owner's manual one on 8 Nov
+    18:25; the 02:00 schedule has never run on its own. A manual backup
+    this evening is the launch restore point.
+  - **Email can't be checked from here:** Easypanel's log collection is off
+    (`getLogsSettings` is empty, so service logs can't be queried), and the
+    status page needs a site admin's sign-in. The 07:00 status email
+    arriving in the owner's inbox is the check that Gmail works.
+  - **Still open:** #89, #90, #91 (stacked; merge in order). Without #90,
+    Admin › Status shows no "gifting is open" emails sent until 08:00 on
+    launch morning (quiet hours), which is expected.
+  - **Next (nightly, 15 Nov): launch day.** Read-only: prod health, public
+    pages, and (if log collection is on by then) the first reminder runs;
+    report to the owner by 08:30 UK.
 

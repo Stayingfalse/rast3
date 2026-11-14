@@ -1744,4 +1744,51 @@ that don't touch the data model. Known items to include:
     line of history.
   - **Next (nightly, 12 Nov): spare day,** owner's pick; without one, keep
     walking the runbook (the night-before checks on dev).
+- **Nightly run, 12 Nov: a launch day message for organisers (spare day,
+  no owner pick; the 11 Nov idea).**
+  - The console's "Bring your team" tab gets a **Launch day message** card:
+    a short "how it works" to pin in the group's own chat when gifting
+    opens (its own date or the season's), with the group's link: check
+    your wishlist, pick up whenever you're ready, mark it gifted; no draw,
+    no deadline, no addresses. Workplaces get the @domain line. One copy
+    button.
+  - e2e: the console test checks the message; two other tests' "Message"
+    lookups are now exact (there are two message boxes on that tab).
+  - Stacked on #90 (and so #89): **merge #89, then #90, then this.**
+  - **Next (nightly, 13 Nov): spare day,** owner's pick; without one, no
+    new features before launch: dependency and security re-check, and the
+    runbook's night-before checks on dev.
+- **Nightly run, 13 Nov: pre-launch checks, no new features.**
+  - **Dependencies:** `npm audit --omit=dev` shows the same 16 advisories
+    (10 high, 0 critical) as on 6 Nov, nothing new; all were already
+    judged after-launch work (nodemailer fixed only in 10.x, zod 4,
+    Prisma's build-time `deepmerge-ts`, the shadcn CLI). Next has patch
+    releases (16.4.1 → 16.4.6) with no advisory against 16.4.1: left for
+    after launch rather than changing the framework two days out.
+  - **Prod smoke check (read-only):** public pages load, admin and the data
+    export are closed to visitors, every test-only route is 404, sign-in
+    offers Google, Discord and an email link.
+  - **Backups:** the newest is still the owner's manual one on 8 Nov 18:25;
+    the 02:00 schedule has never run on its own.
+  - **Open:** #89, #90 and #91 (stacked; merge in that order) await the
+    owner.
+  - **Next (nightly, 14 Nov): the night before launch,** no new features:
+    check the 07:00 status email went (it needs Gmail), prod health, and
+    remind the owner of the evening backup and the runbook.
+- **Nightly run, 14 Nov: the night before launch, no changes.**
+  - Prod and dev healthy (restarted at 03:06 again, as every night since
+    2 Nov). Season dates unchanged: gifting opens 00:00 on 15 Nov.
+  - **Backups:** the newest is still the owner's manual one on 8 Nov
+    18:25; the 02:00 schedule has never run on its own. A manual backup
+    this evening is the launch restore point.
+  - **Email can't be checked from here:** Easypanel's log collection is off
+    (`getLogsSettings` is empty, so service logs can't be queried), and the
+    status page needs a site admin's sign-in. The 07:00 status email
+    arriving in the owner's inbox is the check that Gmail works.
+  - **Still open:** #89, #90, #91 (stacked; merge in order). Without #90,
+    Admin › Status shows no "gifting is open" emails sent until 08:00 on
+    launch morning (quiet hours), which is expected.
+  - **Next (nightly, 15 Nov): launch day.** Read-only: prod health, public
+    pages, and (if log collection is on by then) the first reminder runs;
+    report to the owner by 08:30 UK.
 

@@ -90,7 +90,7 @@ test("the lead finds their team, adds a co-lead, renames it and invites people i
   await page.getByRole("button", { name: "Save name" }).click();
   await expect(page.getByRole("heading", { name: NEW_NAME, level: 1 })).toBeVisible();
 
-  const message = page.getByLabel("Message");
+  const message = page.getByLabel("Message", { exact: true });
   await expect(message).toHaveValue(new RegExp(`/${state.rivalDomain.replace(/\./g, "\\.")}\\?team=${state.teamId}`));
   await expect(message).toHaveValue(/you'll be in E2E Rival Squad/);
   await settle(page);

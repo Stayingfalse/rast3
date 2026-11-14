@@ -1728,4 +1728,20 @@ that don't touch the data model. Known items to include:
   - e2e: the console test checks the Today line.
   - **Next (nightly, 11 Nov): spare day,** owner's pick; without one,
     small launch fixes from the runbook walk-through.
+- **Nightly run, 11 Nov: runbook walk-through: quiet hours on Admin ›
+  Status (spare day, no owner pick).**
+  - Walking the launch day runbook, the first thing that would worry the
+    owner is 07:00 on 15 Nov: the status email and Admin › Status would
+    show no "gifting is open" emails sent, because quiet hours hold them
+    until 08:00. Admin › Status now says so ("Quiet hours now: members'
+    and organisers' emails are waiting until 08:00. Nothing is wrong if
+    none have gone yet."), its email card says when emails go, and the
+    status email's "Reminder emails sent" row adds "(members' emails wait
+    for 08:00, quiet hours)" before 08:00.
+  - The quiet-hours rule moved to `src/server/email/rules.ts` so Admin ›
+    Status can use it without a circular import.
+  - Stacked on #89 (`feat/launch-counter`) to keep the roadmap log in one
+    line of history.
+  - **Next (nightly, 12 Nov): spare day,** owner's pick; without one, keep
+    walking the runbook (the night-before checks on dev).
 

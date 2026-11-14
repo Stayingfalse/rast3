@@ -31,6 +31,7 @@ type Status = {
   latestFailed: { note: string | null } | null;
   emailServer: string;
   limit: { daily: number; used: number };
+  quiet: { now: boolean; until: number; from: number };
   today: { pickUps: number; gifts: number; thanks: number };
   season: { year: number; phase: string };
   health: { database: boolean; migrations: { applied: number; latest: string | null } | null; startedAt: string };
@@ -81,6 +82,9 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
   expect(isCount(d.failed)).toBe(true);
   expect(["environment", "admin settings", "none"]).toContain(d.emailServer);
   expect(d.limit.daily).toBeGreaterThan(0);
+  // quiet hours (9 Nov): whether members' emails are waiting right now, by UK time
+  const ukHour = Number(new Date().toLocaleString("en-GB", { timeZone: "Europe/London", hour: "2-digit", hourCycle: "h23" }));
+  expect(d.quiet).toEqual({ now: ukHour < 8 || ukHour >= 21, until: 8, from: 21 });
   expect(isCount(d.limit.used)).toBe(true);
   expect([d.today.pickUps, d.today.gifts, d.today.thanks].every(isCount)).toBe(true);
   expect(["before", "open", "after"]).toContain(d.season.phase);

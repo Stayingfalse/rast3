@@ -15,7 +15,7 @@ import {
  * Day 18: the Christmas season. Returning members check in (wishlist and
  * groups) before picking up or being picked up; pick-ups wait for the
  * season's dates unless a site admin opens a group early; last season's
- * pick-ups are archived. Runs before 15 Nov, when the season hasn't opened.
+ * pick-ups are archived. Runs before gifting opens (27 Nov this year).
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });

@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { inviteLink, inviteMessage, launchMessage } from "~/lib/invite-message";
+import { driveMessage, inviteLink, inviteMessage, launchMessage } from "~/lib/invite-message";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { WallCard } from "../share/wall-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
@@ -355,6 +355,8 @@ function Invite({ g }: { g: Console }) {
     timeZone: "Europe/London",
   });
   const launch = launchMessage(g, origin, opensOn);
+  // before the group opens: the wishlist drive (owner, 14 Nov)
+  const drive = driveMessage(g, origin, opensOn);
 
   const copy = async (text: string, what: string) => {
     await navigator.clipboard.writeText(text);
@@ -412,6 +414,34 @@ function Invite({ g }: { g: Console }) {
           </div>
         </CardContent>
       </Card>
+
+      {!g.launch.open && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Wishlist drive message</CardTitle>
+            <CardDescription>
+              Until gifting opens on {opensOn}, the most useful thing is getting
+              people in with their wishlists. Send this now; the &ldquo;Today&rdquo;
+              line above shows who has checked in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Field>
+              <FieldLabel htmlFor="drive-message">Wishlist drive message</FieldLabel>
+              <textarea
+                id="drive-message"
+                readOnly
+                value={drive}
+                rows={7}
+                className="border-input text-foreground rounded-label w-full border bg-white p-3"
+              />
+            </Field>
+            <Button type="button" className="self-start" onClick={() => void copy(drive, "Wishlist drive message")}>
+              Copy wishlist drive message
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

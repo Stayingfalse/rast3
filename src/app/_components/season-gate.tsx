@@ -47,7 +47,11 @@ function Countdown({ status }: { status: Status }) {
         <>
           <strong className="text-frost">Gifting opens on {longDate(status.opensAt)}</strong>
           {days > 0 && <> ({days} {days === 1 ? "day" : "days"} to go)</>}. You&apos;re checked in
-          and your wishlist is ready; pick-ups start then.
+          and your wishlist is ready; pick-ups start then. Until then it&apos;s the wishlist
+          drive: the more people who add theirs now, the more lists there are on day one.{" "}
+          <Link href="/groups" className="text-frost font-semibold underline underline-offset-4">
+            Invite people to your groups
+          </Link>
         </>
       ) : (
         <>

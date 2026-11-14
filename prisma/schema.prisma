@@ -394,6 +394,9 @@ enum EmailKind {
   ORGANISER_LIVE
   /// 6 Nov: site admins' morning status email in launch week (ref = UK date)
   ADMIN_STATUS
+  /// 14 Nov: the wishlist drive, to each organiser of a group not yet open,
+  /// from 15 Nov (ref = group id)
+  ORGANISER_DRIVE
 }
 
 enum EmailStatus {

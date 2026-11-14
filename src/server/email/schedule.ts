@@ -25,8 +25,9 @@ export function startReminderSchedule() {
       }
       // members' and organisers' emails wait for 08:00–21:00 UK (9 Nov)
       const run = await runReminders(db, { quietHours: true });
-      const { nudged, opened, giftCheckIns, newLists, organisersLive, adminStatus } = run;
-      if (nudged || opened || giftCheckIns || newLists || organisersLive || adminStatus) log.info(run, "Reminder emails processed");
+      const { nudged, opened, giftCheckIns, newLists, organisersLive, organisersDrive, adminStatus } = run;
+      if (nudged || opened || giftCheckIns || newLists || organisersLive || organisersDrive || adminStatus)
+        log.info(run, "Reminder emails processed");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
     }

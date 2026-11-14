@@ -11,7 +11,7 @@ export default function HomeMarketingServer({ season }: { season: HomeSeason }) 
     season.phase === "before"
       ? {
           heading: `Gifting opens on ${season.opens}.`,
-          body: "Get your wishlist ready now and be first in the post.",
+          body: "Until then it's the wishlist drive: add yours now, and bring your colleagues and friends, so there are lists waiting for every Santa on day one.",
         }
       : season.phase === "open"
         ? {

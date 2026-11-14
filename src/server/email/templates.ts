@@ -1,5 +1,5 @@
 import { arrivalPath } from "~/server/gifts";
-import { inviteLink, inviteMessage } from "~/lib/invite-message";
+import { driveMessage, inviteLink, inviteMessage } from "~/lib/invite-message";
 import { siteUrl, unsubscribeUrl } from "./unsubscribe";
 import type { Message } from "./mailer";
 
@@ -223,6 +223,40 @@ export const organiserLive = (
     after: [
       `Once your group has ${wallMinThanks} thank-yous, you can make its Wall of Kindness on your organiser page: one page of the group's thank-yous to share, under festive names.`,
       `Gifting closes on ${day(closesAt)}.`,
+    ],
+    button: { label: "Open your organiser page", path: `/groups/${group.id}/manage` },
+  });
+};
+
+/**
+ * The wishlist drive (owner, 14 Nov): to each organiser of a group that
+ * hasn't opened yet, once, from 15 November. Get people in with their
+ * wishlists before gifting opens.
+ */
+export const organiserDrive = (
+  userId: string,
+  season: number,
+  group: { id: string; name: string; kind: string; emailDomain: string | null; joinCode: string | null },
+  opensAt: Date,
+  counts: { members: number; ready: number },
+) => {
+  const link = inviteLink(group, siteUrl());
+  const isOrg = group.kind === "ORG";
+  return render({
+    userId,
+    subject: `Wishlist drive: ${group.name} opens for gifting on ${day(opensAt)}`,
+    kicker: `Christmas ${season} · for organisers`,
+    heading: `Fill ${group.name}'s post before ${day(opensAt)}`,
+    paragraphs: [
+      `Gifting opens in ${group.name} on ${day(opensAt)}. Until then it's the wishlist drive: the more people who join and add their Amazon wishlist now, the more lists there are waiting for your Santas on day one.`,
+      `So far ${counts.members} ${counts.members === 1 ? "person has" : "people have"} joined, and ${counts.ready} ${counts.ready === 1 ? "has" : "have"} a wishlist in for this Christmas. ${
+        isOrg ? `Colleagues join with their @${group.emailDomain} email here` : "People join here"
+      }: ${link}`,
+      "A message you can paste into Discord, Slack, Teams or WhatsApp:",
+    ],
+    quote: driveMessage(group, siteUrl(), day(opensAt)),
+    after: [
+      "Your organiser page shows who has joined and who has a wishlist ready, updated through the day.",
     ],
     button: { label: "Open your organiser page", path: `/groups/${group.id}/manage` },
   });

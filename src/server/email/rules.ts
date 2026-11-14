@@ -36,7 +36,7 @@ export const engagedThisSeason = (season: number): Prisma.UserWhereInput => ({
 
 /**
  * Quiet hours (9 Nov): members' and organisers' emails go between 08:00 and
- * 21:00 UK time. Gifting opens at midnight on 15 November, and hundreds of
+ * 21:00 UK time. Gifting opens at midnight on the season's opening day, and hundreds of
  * "gifting is open" emails at 00:05 would land unread and risk Gmail's
  * sending limits; they go from 08:00 instead. Site admins' morning status
  * keeps its own 07:00 start. Sign-in links aren't reminders and always go.

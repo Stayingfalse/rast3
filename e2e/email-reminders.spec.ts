@@ -349,3 +349,35 @@ test("the hourly schedule keeps members' emails to the day, admins' status from 
   expect((await at(ukAt(6, 21))).run.quiet).toBe(true);
 });
 
+/**
+ * The wishlist drive (owner, 14 Nov): from 15 November, organisers of a group
+ * that hasn't opened yet hear once that it's time to gather wishlists.
+ */
+test("organisers of groups still to open get one wishlist drive email from 15 Nov", async ({ page }, testInfo) => {
+  const p = testInfo.project.name;
+  await loginAs(page, { email: who("drv", p) });
+  await mutate(page.request, "profile.saveProfile", { over16: true, firstName: "Dora", lastName: "Drive" });
+  const g = (await unwrap(
+    await mutate(page.request, "groups.create", { name: `E2E Drive ${p}`, kind: "FRIENDS" }),
+  )) as { id: string };
+  // a later launch, so the group is still to open on the pretend day
+  await loginAs(page, { email: `rem-site-${p}@${E}`, adminLevel: "SITE" });
+  const later = await mutate(page.request, "admin.setLaunchDate", { groupId: g.id, date: "2026-12-20" });
+  expect(later.status(), await later.text()).toBe(200);
+
+  const drive = async (at: string) =>
+    mine((await reminders(page.request, { now: at })).log, p)
+      .filter((l) => l.kind === "ORGANISER_DRIVE")
+      .map((l) => [l.email, l.status, l.ref]);
+  // the day before the drive: nothing
+  expect(await drive("2026-11-14T12:00:00Z")).toEqual([]);
+  // during it: once, to the organiser of the group still to open (Ina's group
+  // opened early, so she hears nothing)
+  // (others whose groups follow a later season date may hear too)
+  let log = await drive("2026-11-20T10:00:00Z");
+  expect(log.filter(([email]) => email === who("drv", p))).toEqual([[who("drv", p), "SKIPPED", g.id]]);
+  expect(log.filter(([email]) => email === who("in", p))).toEqual([]);
+  log = await drive("2026-11-22T10:00:00Z");
+  expect(log.filter(([email]) => email === who("drv", p))).toHaveLength(1);
+});
+

@@ -1,20 +1,32 @@
-# Launch day runbook (Sunday 15 November 2026)
+# Launch day runbook (Friday 27 November 2026)
 
 What to look at on launch day, when, and what to do if something goes
-wrong. Written 10 Nov from the launch checklist and this autumn's incidents.
-UK times throughout.
+wrong. Written 10 Nov from the launch checklist and this autumn's incidents;
+moved on 14 Nov when the owner put gifting back to the last Friday in
+November. 15–26 Nov is the **wishlist drive**: people join, add their
+wishlists and invite others, but nobody picks up yet. UK times throughout.
 
-## The night before (Saturday 14 Nov)
+## During the wishlist drive (15–26 Nov)
+
+- From 08:00 on 15 Nov each organiser of a group still to open gets one
+  "wishlist drive" email: how many members have added their wishlist, and
+  a message to share. Their console has the same message to copy.
+- Check-in nudges carry on as before. Admin › Status works any time; the
+  daily status email only starts the day before gifting opens.
+- Approvals: keep the queue short so new workplaces and communities have
+  time to fill up before the 27th.
+
+## The night before (Thursday 26 Nov)
 
 - **Take a database backup** in Easypanel (`ras/database` → Backups →
   Run now). The 02:00 schedule has never run on its own, so tonight's
   manual one is the restore point for launch.
 - **Admin › Status** (`/admin/status`): everything green, or each item
-  understood. The admins' morning status email started at 07:00 today;
-  check it arrived (if not, Gmail is the problem: see below).
+  understood. The admins' morning status email starts at 07:00 on the
+  26th; check it arrived (if not, Gmail is the problem: see below).
 - **Admin › Approvals:** the waiting list empty, so no community or
   workplace starts launch day stuck.
-- **Admin › Season:** dates read 15 November to 6 January; the last order
+- **Admin › Season:** dates read 27 November to 6 January (the Season row's "Gifting opens" is what counts, not the code's default); the last order
   date is set if Amazon has published it; the groups with their own launch
   date are the ones you expect.
 
@@ -23,7 +35,7 @@ UK times throughout.
 | When | What |
 |---|---|
 | 00:00 | Gifting opens in every group on the season's date (groups with their own date open on that date instead) |
-| 07:00 | Site admins' morning status email (then daily until 22 Nov) |
+| 07:00 | Site admins' morning status email (then daily until 4 Dec) |
 | 08:00 | "Gifting is open" to members, and "we're live" to organisers, start going out (quiet hours hold them overnight), up to the daily limit of 300 emails, then the rest next day |
 | hourly | New-wishlist emails, gift check-ins, and anything held by the limit |
 | ~03:05 | The server restarts most nights (seen every night since 2 Nov); a minute's outage |
@@ -79,4 +91,4 @@ minutes and restart the app (a minute's outage).
 
 - Keep the evening backup going until the schedule (or a `mysqldump`
   cron) runs on its own.
-- The status email stops after 22 Nov; Admin › Status stays.
+- The status email stops after 4 Dec; Admin › Status stays.

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "6 November 2026";
+const LAST_UPDATED = "14 November 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -180,8 +180,10 @@ export default function PrivacyPolicyPage() {
               you haven&apos;t posted a thank-you yet (never on the day, and
               never saying who). Once you&apos;ve picked up a list, at most
               one a week when new members&apos; wishlists are waiting for a
-              first gift. If you organise a group, one email when gifting
-              opens with your group&apos;s invite link; the site&apos;s own
+              first gift. If you organise a group, one email during the
+              wishlist drive before gifting opens (how many members have
+              added their wishlist, and a message to share) and one when
+              gifting opens with your group&apos;s invite link; the site&apos;s own
               admins also get a daily status email (counts only) in launch
               week. They only go to people who have checked in or
               signed up this Christmas: if you were with us in an earlier year,

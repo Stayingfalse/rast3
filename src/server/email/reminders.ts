@@ -4,7 +4,7 @@ import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
 import { seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
-import { adminStatusEmails, organiserLiveEmails } from "./launch";
+import { adminStatusEmails, organiserDriveEmails, organiserLiveEmails } from "./launch";
 import { counted, engagedThisSeason, isQuietHour, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
@@ -48,6 +48,8 @@ export type ReminderRun = {
   newLists: number;
   /** launch emails (6 Nov): organisers' "we're live", site admins' morning status */
   organisersLive: number;
+  /** the wishlist drive (14 Nov) */
+  organisersDrive: number;
   adminStatus: number;
   /** quiet hours (9 Nov): only the site admins' status email went this run */
   quiet?: boolean;
@@ -89,6 +91,7 @@ export async function runReminders(
     giftCheckIns: 0,
     newLists: 0,
     organisersLive: 0,
+    organisersDrive: 0,
     adminStatus: 0,
   };
   let failures = 0;
@@ -115,6 +118,8 @@ export async function runReminders(
   if (quietHours && isQuietHour(now)) return { ...run, quiet: true };
   // when the season opens, and when a group with its own date opens (7 Nov)
   run.organisersLive = await organiserLiveEmails(db, { now, w, scope, send, went, seasonJustOpened: justOpened });
+  // the wishlist drive (14 Nov): organisers of groups not open yet, from 15 Nov
+  run.organisersDrive = await organiserDriveEmails(db, { now, w, scope, send, went });
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({

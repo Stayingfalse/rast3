@@ -28,6 +28,7 @@ const KINDS: EmailKind[] = [
   "NEW_LISTS",
   "ORGANISER_LIVE",
   "ADMIN_STATUS",
+  "ORGANISER_DRIVE",
 ];
 const STATUSES: EmailStatus[] = ["SENT", "SKIPPED", "FAILED"];
 

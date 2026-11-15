@@ -77,6 +77,7 @@ test("site admins get counts, emails, season and health", async ({ page }, testI
     "NEW_LISTS",
     "ORGANISER_LIVE",
     "ADMIN_STATUS",
+    "ORGANISER_DRIVE",
   ]);
   for (const e of d.emails) expect([e.SENT, e.SKIPPED, e.FAILED].every(isCount)).toBe(true);
   expect(isCount(d.failed)).toBe(true);

@@ -7,7 +7,8 @@ import { seasonRange, seasonYearOf } from "~/server/stamps";
 /**
  * Day 18: the Christmas season. A season is the stamps' year (1 Aug to
  * 31 Jul); gifting inside it opens and closes on the Season table's dates
- * (default 15 Nov to 6 Jan). Every member checks in once a season (owner,
+ * (default: the last Friday in November to 6 Jan; owner, 14 Nov, moved
+ * from 15 Nov so the fortnight before is a wishlist drive). Every member checks in once a season (owner,
  * 19 Oct) before they pick up or are handed out, and pick-ups from earlier
  * seasons are archived so last year's lists are never held or passed on.
  *
@@ -26,12 +27,22 @@ export const currentSeason = () => seasonYearOf(new Date());
 export const openReports = (season = currentSeason()) =>
   ({ resolved: false, wishlistAssignment: { season } }) satisfies Prisma.WishlistReportWhereInput;
 
-/** This season's gifting window, falling back to 15 Nov to 6 Jan. */
+/** The last Friday in November of a year (27 November in 2026), UK midnight. */
+export function lastFridayOfNovember(year: number) {
+  const nov30 = new Date(Date.UTC(year, 10, 30));
+  const back = (nov30.getUTCDay() - 5 + 7) % 7; // days back to Friday
+  return new Date(Date.UTC(year, 10, 30 - back));
+}
+
+/** When this season's wishlist drive starts: 15 November (owner, 14 Nov). */
+export const driveStartsAt = (year: number) => new Date(Date.UTC(year, 10, 15));
+
+/** This season's gifting window, falling back to the last Friday in November to 6 Jan. */
 export async function seasonWindow(db: Db, year = currentSeason()) {
   const row = await db.season.findUnique({ where: { year } });
   return {
     year,
-    opensAt: row?.opensAt ?? new Date(Date.UTC(year, 10, 15)),
+    opensAt: row?.opensAt ?? lastFridayOfNovember(year),
     closesAt: row?.closesAt ?? new Date(Date.UTC(year + 1, 0, 6, 23, 59, 59)),
     /** Amazon UK's last day for Christmas delivery, if an admin set it */
     lastOrderAt: row?.lastOrderAt ?? null,

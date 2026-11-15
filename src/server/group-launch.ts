@@ -6,7 +6,7 @@ import { seasonRange } from "~/server/stamps";
 
 /**
  * Per-group launch dates (owner, 7 Nov). Every group opens for gifting on the
- * season's date (15 November by default) unless a site admin or its
+ * season's date (the last Friday in November by default) unless a site admin or its
  * organiser picks another day, earlier or later: a community that joins
  * after the 15th can agree its own start. Gifting closes for everyone on the
  * season's closing date. Teams follow their workplace. A group's own date

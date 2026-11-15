@@ -1,12 +1,13 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
+import { launchOf, openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
+import { driveStartsAt } from "~/server/season";
 import { launchStatus, PENDING_TOO_LONG_HOURS } from "~/server/launch-status";
 import { seasonRange } from "~/server/stamps";
 import { WALL_MIN_THANKS } from "~/server/wall";
 import { isTestAddress } from "./mailer";
 import { counted, engagedThisSeason, type Send } from "./rules";
-import { adminStatus, organiserLive, type StatusSummary } from "./templates";
+import { adminStatus, organiserDrive, organiserLive, type StatusSummary } from "./templates";
 
 /**
  * Launch emails (owner, 6 Nov), run from runReminders, so they share its
@@ -112,6 +113,80 @@ export async function organiserLiveEmails(
     if (went(r)) sent++;
   }
   return sent;
+}
+
+/**
+ * The wishlist drive (owner, 14 Nov): from 15 November until a group opens
+ * for gifting (its own date or the season's, by default the last Friday in
+ * November), each organiser of a live or waiting group hears once that it's
+ * time to gather wishlists, with the group's numbers and invite message.
+ * Once per organiser per group per season (ref = group id).
+ */
+export async function organiserDriveEmails(db: PrismaClient, { now, w, scope, send, went }: Ctx) {
+  const season = w.year;
+  // from 15 Nov; after the season opens, only for groups with a later date
+  if (now < driveStartsAt(season)) return 0;
+  if (now >= w.opensAt && !(await anyLaterLaunch(db, w, now))) return 0;
+  const organisers = await db.membership.findMany({
+    where: {
+      role: "ADMIN",
+      group: { status: { in: ["ACTIVE", "PENDING"] }, kind: { not: "TEAM" } },
+      user: { emailReminders: true, email: { not: null }, AND: [scope] },
+      OR: [{ user: engagedThisSeason(season) }, { joinedAt: { gte: seasonRange(season).gte } }],
+    },
+    select: {
+      user: { select: { id: true, email: true } },
+      group: {
+        select: {
+          id: true,
+          name: true,
+          kind: true,
+          emailDomain: true,
+          joinCode: true,
+          launchAt: true,
+          launchSeason: true,
+          parent: { select: { launchAt: true, launchSeason: true } },
+        },
+      },
+    },
+    orderBy: { joinedAt: "asc" },
+  });
+  // only groups still to open
+  const due = organisers.filter((o) => launchOf(o.group, w) > now);
+  if (due.length === 0) return 0;
+  const had = await db.emailLog.findMany({
+    where: { kind: "ORGANISER_DRIVE", season, userId: { in: due.map((o) => o.user.id) }, ...counted },
+    select: { userId: true, ref: true },
+  });
+  const done = new Set(had.map((l) => `${l.userId} ${l.ref}`));
+  let sent = 0;
+  let tried = 0;
+  for (const { user, group } of due) {
+    if (done.has(`${user.id} ${group.id}`)) continue;
+    if (tried++ >= BATCH) break;
+    const [members, ready] = await Promise.all([
+      db.membership.count({ where: { groupId: group.id } }),
+      db.membership.count({ where: { groupId: group.id, user: { seasonCheckIns: { some: { season } } } } }),
+    ]);
+    const r = await send(
+      db,
+      { id: user.id, email: user.email! },
+      "ORGANISER_DRIVE",
+      season,
+      () => organiserDrive(user.id, season, group, launchOf(group, w), { members, ready }),
+      group.id,
+    );
+    if (went(r)) sent++;
+  }
+  return sent;
+}
+
+/** Any group with its own launch date still to come this season. */
+async function anyLaterLaunch(db: PrismaClient, w: Ctx["w"], now: Date) {
+  return !!(await db.group.findFirst({
+    where: { launchSeason: w.year, launchAt: { gt: now } },
+    select: { id: true },
+  }));
 }
 
 export async function adminStatusEmails(db: PrismaClient, { now, w, scope, send, went }: Ctx) {

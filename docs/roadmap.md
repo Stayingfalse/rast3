@@ -1792,3 +1792,17 @@ that don't touch the data model. Known items to include:
     pages, and (if log collection is on by then) the first reminder runs;
     report to the owner by 08:30 UK.
 
+- **14 Nov (owner's request, daytime): gifting moves to Fri 27 Nov; 15–26 Nov is the wishlist drive.**
+  - The owner: "push the launch date back to the last Friday in November
+    instead of 15th with period from 15th to that Friday focusing on
+    recruiting people to add their wishlists."
+  - The code's default opening is now the last Friday in November (27 Nov
+    this year). Prod's Season row overrides it: the owner sets Admin ›
+    Season › Gifting opens = 27/11/2026.
+  - Drive: the countdown, home page and pitch say "wishlist drive: add
+    yours now" and point at inviting people; organisers' consoles get a
+    "Wishlist drive message" to copy; from 15 Nov each organiser of a group
+    still to open gets one email (new `ORGANISER_DRIVE` kind, migration
+    `20261114120000_wishlist_drive`) with how many members have added a
+    wishlist. Quiet hours apply, and it shows on Admin › Status.
+  - Runbook and checklist moved to 27 Nov; privacy page mentions the email.

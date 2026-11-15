@@ -59,3 +59,19 @@ export function launchMessage(g: InviteGroup, origin: string, opensOn: string) {
   ].join("\n");
 }
 
+/**
+ * The wishlist drive (owner, 14 Nov): from 15 November until gifting opens
+ * (the last Friday in November by default), groups gather wishlists. A
+ * message for organisers to pin before their group opens.
+ */
+export function driveMessage(g: InviteGroup, origin: string, opensOn: string) {
+  const link = inviteLink(g, origin);
+  const who = g.kind === "ORG" ? "colleague" : "person";
+  return [
+    `🎁 Random Acts of Santa: gifting opens on ${opensOn}, and the wishlist drive is on now.`,
+    `Before then: join, add your Amazon wishlist and check in for Christmas, so there's a list waiting for every Santa on day one.`,
+    `Then from ${opensOn}, pick up a ${who}'s wishlist whenever you're ready, as many as you like. No draw, no deadline, no addresses shared.`,
+    `${g.kind === "ORG" ? `Join with your @${g.emailDomain} email here` : "Join here"}: ${link}`,
+  ].join("\n");
+}
+

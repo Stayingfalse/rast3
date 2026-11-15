@@ -135,7 +135,7 @@ export function HomePitch({
 
   const posting =
     season.phase === "before"
-      ? { value: `Opens ${season.opens}`, hint: "Get your wishlist ready now" }
+      ? { value: `Opens ${season.opens}`, hint: "Wishlist drive: add yours now" }
       : season.phase === "open"
         ? { value: `Open until ${season.closes}`, hint: "Pick up a wishlist any time" }
         : { value: "Closed until next November", hint: "See you next Christmas" };

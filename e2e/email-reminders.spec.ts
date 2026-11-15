@@ -369,8 +369,10 @@ test("organisers of groups still to open get one wishlist drive email from 15 No
     mine((await reminders(page.request, { now: at })).log, p)
       .filter((l) => l.kind === "ORGANISER_DRIVE")
       .map((l) => [l.email, l.status, l.ref]);
-  // the day before the drive: nothing
-  expect(await drive("2026-11-14T12:00:00Z")).toEqual([]);
+  // the day before the drive: nothing for this group (the log is the whole
+  // run's, and from 15 Nov earlier tests' reminder runs at today's date can
+  // already have sent their own organisers one)
+  expect((await drive("2026-11-14T12:00:00Z")).filter(([, , ref]) => ref === g.id)).toEqual([]);
   // during it: once, to the organiser of the group still to open (Ina's group
   // opened early, so she hears nothing)
   // (others whose groups follow a later season date may hear too)

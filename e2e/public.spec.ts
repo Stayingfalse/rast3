@@ -90,3 +90,26 @@ test.describe("public pages", () => {
     expect(res.status()).toBe(404);
   });
 });
+
+test("the season's dates download as a calendar file, linked from the home page before gifting opens", async ({
+  page,
+  request,
+}) => {
+  const res = await request.get("/api/calendar");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("text/calendar");
+  expect(res.headers()["content-disposition"]).toMatch(/attachment; filename="random-acts-of-santa-\d{4}\.ics"/);
+  const ics = await res.text();
+  expect(ics.startsWith("BEGIN:VCALENDAR\r\n")).toBe(true);
+  expect(ics).toContain("SUMMARY:Random Acts of Santa: gifting opens");
+  expect(ics).toMatch(/DTSTART;VALUE=DATE:\d{8}\r\n/);
+  // every line within 75 octets (longer ones are folded)
+  for (const line of ics.split("\r\n")) expect(Buffer.byteLength(line)).toBeLessThanOrEqual(75);
+
+  await page.goto("/");
+  const link = page.getByRole("link", { name: /^Add .+ to your calendar$/ });
+  const before = await page.getByText(/^Gifting opens on /).count();
+  // only while gifting is still to open
+  await expect(link).toHaveCount(before ? 1 : 0);
+  if (before) await expect(link).toHaveAttribute("href", "/api/calendar");
+});

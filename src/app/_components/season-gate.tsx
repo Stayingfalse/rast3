@@ -52,6 +52,16 @@ function Countdown({ status }: { status: Status }) {
           <Link href="/groups" className="text-frost font-semibold underline underline-offset-4">
             Invite people to your groups
           </Link>
+          {/* the calendar has the site's dates, so only when they're this member's too */}
+          {new Date(status.opensAt).getTime() === new Date(status.siteOpensAt).getTime() && (
+            <>
+              {" · "}
+              {/* a file download, not a page */}
+              <a download href="/api/calendar" className="text-frost font-semibold underline underline-offset-4">
+                Add it to your calendar
+              </a>
+            </>
+          )}
         </>
       ) : (
         <>

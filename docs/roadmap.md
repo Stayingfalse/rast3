@@ -1806,3 +1806,24 @@ that don't touch the data model. Known items to include:
     `20261114120000_wishlist_drive`) with how many members have added a
     wishlist. Quiet hours apply, and it shows on Admin › Status.
   - Runbook and checklist moved to 27 Nov; privacy page mentions the email.
+- **Nightly run, 15 Nov: wishlist drive day 1; season calendar file.**
+  - Owner set prod's gifting date to 27 Nov at about 00:18 UK, so gifting
+    was open for the first ~18 minutes of 15 Nov. No emails went out in
+    that time (quiet hours until 08:00, and the opening emails no longer
+    qualify). #92 merged at 00:19 and is live: 27 migrations, latest
+    `20261114120000_wishlist_drive`; the home page reads "Opens 27
+    November · Wishlist drive: add yours now".
+  - Prod smoke check: home, privacy, terms 200; admin 404 to visitors;
+    test-only routes 404. Dev healthy.
+  - **Backups:** the newest is still the owner's manual one on 8 Nov 18:25;
+    the 02:00 schedule has never run on its own.
+  - **Built (backlog "Calendar (.ics) export"):** `/api/calendar` serves
+    the season's dates (gifting opens, last order day if set, season's last
+    day) as all-day events on UK days, with folded lines per RFC 5545.
+    Linked as "Add 27 November to your calendar" on the public home page
+    before gifting opens, and "Add it to your calendar" on the signed-in
+    countdown when the member's date is the site's (a group with its own
+    date doesn't get the site's file). e2e in `public.spec.ts`.
+  - **Next (nightly, 16 Nov):** drive day 2. Check the drive emails went
+    (Admin › Status needs the owner; logs are off), then the next backlog
+    item the owner picks; otherwise Day 26's remainder.

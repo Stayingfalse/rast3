@@ -1826,4 +1826,23 @@ that don't touch the data model. Known items to include:
     date doesn't get the site's file). e2e in `public.spec.ts`.
   - **Next (nightly, 16 Nov):** drive day 2. Check the drive emails went
     (Admin › Status needs the owner; logs are off), then the next backlog
-    item the owner picks; otherwise Day 26's remainder.
+    item the owner picks. (Correction, 16 Nov: Day 26's remainder was
+    already done on 27 Oct.)
+- **Nightly run, 16 Nov: a launch rehearsal on dev.**
+  - With no backlog item picked, rehearsed 27 Nov instead: set dev's Season
+    to open on 15 Nov (so gifting was open) and ran the whole e2e suite
+    against it: 278 passed, 4 failed (2 tests × desktop and mobile).
+  - **Real gap found:** once the site's date has passed, a new group opens
+    the moment it's made, and its organiser could never set the day their
+    members agreed ("already opened"): only a site admin could. That's the
+    case the owner asked for on 7 Nov (a community joining after launch).
+    Now organisers can set or move the date until the first wishlist is
+    picked up in the group (`organiserCanMove`), and the console says so.
+  - **Test that would have gone red on 27 Nov:** "gifting is open" goes to
+    people who finished their profile before opening; test users made after
+    the real opening didn't count. The reminders test seam takes
+    `beforeOpening` to date them a week before opening.
+  - Dev's Season went back to 27 Nov after the CI run; the two specs were
+    run again in the "before" phase.
+  - **Next (nightly, 17 Nov):** drive day 3; the backlog item the owner
+    picks.

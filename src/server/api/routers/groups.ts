@@ -19,7 +19,7 @@ import {
   serverColumns,
 } from "~/server/discord";
 import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
-import { launchInfo, setGroupLaunch } from "~/server/group-launch";
+import { launchInfo, organiserCanMove, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { ukDateString, ukMidnight } from "~/lib/uk-date";
@@ -777,8 +777,13 @@ export const groupsRouter = createTRPCRouter({
         joinCode: group.joinCode,
         discordGuildId: group.discordGuildId,
         createdAt: group.createdAt,
-        launch: launchInfo(group, await seasonWindow(ctx.db)),
-        /** site admins can set any date; organisers only before it opens */
+        launch: await (async () => {
+          const w = await seasonWindow(ctx.db);
+          const info = launchInfo(group, w);
+          // organisers: until it opens, or while nothing's been picked up in it
+          return { ...info, movable: await organiserCanMove(ctx.db, group.id, info.opensAt, w.year) };
+        })(),
+        /** site admins can set any date; organisers until the first pick-up */
         siteAdmin: site,
         stats: {
           members: members.length,

@@ -80,8 +80,28 @@ const ukDay = (d: Date) =>
  * hasn't opened yet: once people are picking up, moving it is a site
  * admin's call. Throws a message for people on a bad date.
  */
+/**
+ * Whether its organiser can still set or move the group's date: until it
+ * opens, and after that while nobody has picked up a wishlist in it this
+ * season (16 Nov). A group made after the site's date opens straight away,
+ * and its organiser still needs to set the day they've agreed.
+ */
+export async function organiserCanMove(
+  db: Pick<PrismaClient, "wishlistAssignment">,
+  groupId: string,
+  opensAt: Date,
+  season: number,
+  now = new Date(),
+) {
+  if (now < opensAt) return true;
+  const picked = await db.wishlistAssignment.count({
+    where: { season, OR: [{ groupId }, { group: { parentId: groupId } }] },
+  });
+  return picked === 0;
+}
+
 export async function setGroupLaunch(
-  db: Pick<PrismaClient, "group">,
+  db: Pick<PrismaClient, "group" | "wishlistAssignment">,
   w: Window,
   groupId: string,
   date: string | null,
@@ -89,10 +109,11 @@ export async function setGroupLaunch(
 ) {
   const g = await db.group.findUnique({ where: { id: groupId }, select: { id: true, ...launchSelect } });
   if (!g || g.kind === "TEAM") throw new TRPCError({ code: "NOT_FOUND" });
-  if (by === "ORGANISER" && now >= launchOf(g, w)) {
+  if (by === "ORGANISER" && !(await organiserCanMove(db, g.id, launchOf(g, w), w.year, now))) {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "Your group has already opened for gifting. Ask a site admin if its date needs to change.",
+      message:
+        "Your group has already opened and wishlists have been picked up in it. Ask a site admin if its date needs to change.",
     });
   }
   let launchAt: Date | null = null;

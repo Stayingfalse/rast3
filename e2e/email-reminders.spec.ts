@@ -34,7 +34,7 @@ type Reminders = {
 };
 const reminders = async (
   r: APIRequestContext,
-  data: { now?: string; run?: boolean; backdate?: string[]; quietHours?: boolean },
+  data: { now?: string; run?: boolean; backdate?: string[]; beforeOpening?: string[]; quietHours?: boolean },
 ) => {
   const res = await r.post("/api/test-auth/reminders", { headers: testHeaders, data });
   expect(res.status()).toBe(200);
@@ -202,7 +202,12 @@ test("when gifting opens, members hear about it once (not the one who opted out,
   page,
 }, testInfo) => {
   const p = testInfo.project.name;
-  const r = await reminders(page.request, { now: new Date(opensAt + DAY).toISOString() });
+  const r = await reminders(page.request, {
+    now: new Date(opensAt + DAY).toISOString(),
+    // they joined before it opened, whatever today's real date is (from the
+    // opening day on, accounts made during the run are "after")
+    beforeOpening: [who("in", p), who("out", p), who("pend", p), who("santa", p)],
+  });
   const open = mine(r.log, p).filter((l) => l.kind === "SEASON_OPEN");
   // (Pia, the pending group's organiser, is a member like any other)
   expect(open.map((l) => l.email).sort()).toEqual(

@@ -173,11 +173,18 @@ test("launch emails follow the group's own date", async ({ page }, testInfo) => 
   expect(log.filter((l) => l.kind === "SEASON_OPEN").map((l) => l.email)).toContain(who("member", testInfo));
 });
 
-test("once it opens the organiser can't move it; a site admin can", async ({ page }, testInfo) => {
+test("once someone picks up, the organiser can't move it; a site admin can", async ({ page }, testInfo) => {
   await loginAs(page, { email: who("host", testInfo) });
   const today = await mutate(page.request, "groups.setLaunchDate", { groupId: state.groupId, date: ukDay(0) });
   expect(today.status(), await today.text()).toBe(200);
   expect((await unwrap(today)) as Saved).toMatchObject({ own: true, open: true });
+  // open, but nobody has picked up yet: the organiser can still move it (a
+  // group made after the site's date opens straight away and still needs the
+  // day its members agreed; 16 Nov)
+  const agreed = await mutate(page.request, "groups.setLaunchDate", { groupId: state.groupId, date: state.later });
+  expect(agreed.status(), await agreed.text()).toBe(200);
+  expect((await unwrap(agreed)) as Saved).toMatchObject({ own: true, open: false });
+  expect((await mutate(page.request, "groups.setLaunchDate", { groupId: state.groupId, date: ukDay(0) })).status()).toBe(200);
 
   // open: the member picks up straight away
   await loginAs(page, { email: who("member", testInfo) });

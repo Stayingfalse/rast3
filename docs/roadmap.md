@@ -1869,3 +1869,15 @@ that don't touch the data model. Known items to include:
     before the opt-in exists counts as consented (an older privacy policy
     covered it); new ones need the poster's tick; every one needs a site
     admin's approval first.
+- **17 Nov: security update.** Next.js 16.4.1 → **16.4.6** for GHSA-mfr8-8qww-v76h (moderate:
+  information disclosure across root params when a `'use cache'` function runs through
+  `unstable_cache()`). The site uses `unstable_cache` but no `'use cache'`, so it probably wasn't
+  exposed. tsc, eslint and build pass.
+  `npm audit --omit=dev` still lists, for the owner to decide (each is a major upgrade or blocked):
+  - **nodemailer 8.0.11** (high: four advisories, fixed in 9.1+). `next-auth` 5 beta's
+    `@auth/core` only accepts nodemailer 7 or 8, so this waits for a next-auth release that
+    allows 9 (or a swap of the email sender).
+  - **zod 3** (high: memory exhaustion on oversized collections; fixed in 4.6.6, a major) via
+    `@t3-oss/env-nextjs`. It only validates our own env at start-up, so low real risk.
+  - **prisma 6.19.3** (high, via deepmerge-ts in `@prisma/config`; tooling, not request handling).
+  - **shadcn CLI** (moderate, via minimatch; a dev tool, not served).

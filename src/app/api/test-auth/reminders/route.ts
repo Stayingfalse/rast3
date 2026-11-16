@@ -21,13 +21,18 @@ import { isTestAuthAuthorised, testDomain } from "~/server/utils/test-auth";
  * backdate: these test users' profiles become last year's (a returning
  * member who hasn't checked in yet).
  *
- * POST { now?: ISO date, run?: boolean, ageGifts?: days, backdate?: emails, quietHours?: boolean } -> { window, run, log, tokens }
+ * beforeOpening: these test users' profiles were finished a week before this
+ * season opened (16 Nov: once the real date is past opening, users made
+ * during a test run would otherwise count as joining after it).
+ *
+ * POST { now?: ISO date, run?: boolean, ageGifts?: days, backdate?: emails, beforeOpening?: emails, quietHours?: boolean } -> { window, run, log, tokens }
  */
 const body = z.object({
   now: z.string().datetime().optional(),
   run: z.boolean().default(true),
   ageGifts: z.number().int().min(0).max(60).optional(),
   backdate: z.array(z.string()).max(20).optional(),
+  beforeOpening: z.array(z.string()).max(20).optional(),
   /** run as the hourly schedule does, with quiet hours (9 Nov) */
   quietHours: z.boolean().default(false),
 });
@@ -49,6 +54,14 @@ export async function POST(req: NextRequest) {
     await db.user.updateMany({
       where: { AND: [only, { email: { in: input.data.backdate } }] },
       data: { profileCompletedAt: lastYear },
+    });
+  }
+
+  if (input.data.beforeOpening?.length) {
+    const { opensAt } = await seasonWindow(db);
+    await db.user.updateMany({
+      where: { AND: [only, { email: { in: input.data.beforeOpening } }] },
+      data: { profileCompletedAt: new Date(opensAt.getTime() - 7 * 24 * 3600_000) },
     });
   }
 

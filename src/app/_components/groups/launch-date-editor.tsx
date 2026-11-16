@@ -15,6 +15,8 @@ export type Launch = {
   siteOpensAt: Date | string;
   own: boolean;
   open: boolean;
+  /** organisers can still change it: not open yet, or open with nothing picked up */
+  movable?: boolean;
 };
 
 const longDay = (d: Date | string) =>
@@ -61,7 +63,7 @@ export function LaunchDateEditor({
     },
     onError: (e) => toast.error(e.message),
   });
-  const canEdit = siteAdmin || !launch.open;
+  const canEdit = siteAdmin || (launch.movable ?? !launch.open);
   const today = ukDateString(new Date());
   // the last day you can pick: the day before gifting closes
   const lastDay = ukDateString(new Date(new Date(launch.closesAt).getTime() - 24 * 3600_000));
@@ -77,8 +79,8 @@ export function LaunchDateEditor({
       </p>
       {!canEdit ? (
         <p className="text-ink-soft text-sm">
-          Your group is already open. If its date needs to change, ask a site
-          admin.
+          Your group is open and wishlists have been picked up in it. If its
+          date needs to change, ask a site admin.
         </p>
       ) : (
         <form
@@ -101,6 +103,12 @@ export function LaunchDateEditor({
               onChange={(e) => setDate(e.target.value)}
             />
             <FieldDescription>
+              {launch.open && !siteAdmin && (
+                <>
+                  Nobody has picked up a wishlist here yet, so you can still
+                  move the start to the day you&apos;ve agreed.{" "}
+                </>
+              )}
               Most groups start with everyone else on {shortDay(launch.siteOpensAt)}.
               Joining later, or starting together on a day you&apos;ve agreed?
               Pick it here. Members can pick up wishlists in this group from

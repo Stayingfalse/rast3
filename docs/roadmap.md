@@ -1846,3 +1846,26 @@ that don't touch the data model. Known items to include:
     run again in the "before" phase.
   - **Next (nightly, 17 Nov):** drive day 3; the backlog item the owner
     picks.
+- **16-17 Nov (owner, in chat): the promo channel's figures.** The owner is
+  starting a promo channel, **raosanta.uk** on Instagram and YouTube, made by
+  the TechNews-Bot repo (plan: its `docs/SANTA_PLAN.md`): tutorials, pitches
+  for each kind of group, season updates, Christmas quizzes and thank-you
+  postcards, one every 22 hours.
+  - **Built:** `GET /api/promo/stats`, server to server
+    (`Authorization: Bearer $PROMO_API_TOKEN`, 32+ characters; without the
+    setting the route is a 404). It returns:
+    - the season's phase (off-season, drive, open, closed), its dates and
+      day counts;
+    - all-time and this-season members, gifts, gifts in the last 7 days and
+      thank-yous;
+    - live workplaces, communities and friends groups.
+    Every count goes through `roundForPublic`, as on the home page: under 10
+    is hidden, never a raw number, never a name or one group's figures.
+    e2e in `promo-stats.spec.ts`; the data check runs when the
+    `E2E_PROMO_API_TOKEN` secret is set.
+  - **Owner to do:** set `PROMO_API_TOKEN` on prod (`ras/raosanta-uk`) when
+    this reaches `main`, and give the same value to the bot (`RAOSANTA_API_TOKEN`).
+  - **Next for this thread:** kudos for social media. Every kudos posted
+    before the opt-in exists counts as consented (an older privacy policy
+    covered it); new ones need the poster's tick; every one needs a site
+    admin's approval first.

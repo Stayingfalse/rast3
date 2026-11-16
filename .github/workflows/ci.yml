@@ -11,7 +11,7 @@
 # - A manual rerun of the e2e suite lives in e2e-manual.yml, apart from this
 #   pipeline (4 Nov: a combined trigger here let e2e start before the deploy).
 #
-# Secrets: WEBHOOK_URL (prod), DEV_WEBHOOK_URI (dev), E2E_TEST_LOGIN_SECRET
+# Secrets: WEBHOOK_URL (prod), DEV_WEBHOOK_URI (dev), E2E_TEST_LOGIN_SECRET, E2E_PROMO_API_TOKEN (optional: dev's PROMO_API_TOKEN)
 # (dev-only test login; without it the signed-in e2e tests are skipped).
 name: CI
 
@@ -100,6 +100,7 @@ jobs:
     env:
       E2E_BASE_URL: https://dev.raosanta.uk
       E2E_TEST_LOGIN_SECRET: ${{ secrets.E2E_TEST_LOGIN_SECRET }}
+      E2E_PROMO_API_TOKEN: ${{ secrets.E2E_PROMO_API_TOKEN }}
       E2E_NS: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4

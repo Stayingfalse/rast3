@@ -38,6 +38,16 @@ export default function HomeMarketingServer({ season }: { season: HomeSeason }) 
             {closing.heading}
           </h2>
           <p className="text-frost-soft mt-2">{closing.body}</p>
+          {season.phase === "before" && (
+            // a file download, not a page
+            <a
+              download
+              href="/api/calendar"
+              className="text-frost mt-2 inline-block text-sm font-semibold underline underline-offset-4"
+            >
+              Add {season.opens} to your calendar
+            </a>
+          )}
         </div>
         <JoinButton label="Join Random Acts of Santa" />
       </Reveal>

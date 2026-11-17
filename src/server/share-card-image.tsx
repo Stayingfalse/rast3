@@ -8,7 +8,7 @@ import type { PublicShareCard } from "~/server/share-cards";
 import type { PublicWall } from "~/server/wall";
 import { readFromE2 } from "~/server/utils/e2-upload";
 
-const C = {
+export const C = {
   night: "#13264d",
   frost: "#e6ecf7",
   frostSoft: "#aebbd4",
@@ -20,12 +20,13 @@ const C = {
   post: "#b8262c",
   gold: "#caa24c",
   goldSoft: "#e5cf98",
+  goldInk: "#9c7a2a",
   paper: "#fffdf8",
 };
 
 const pub = (...p: string[]) => join(process.cwd(), "public", ...p);
 
-async function fonts() {
+export async function fonts() {
   const [x800, r400, r600] = await Promise.all([
     readFile(pub("fonts", "archivo-expanded-800.ttf")),
     readFile(pub("fonts", "archivo-400.ttf")),
@@ -53,7 +54,7 @@ async function fonts() {
   ];
 }
 
-async function stampDataUri(season: number) {
+export async function stampDataUri(season: number) {
   const svg = await readFile(pub("brand", "stamps", `${season}.svg`)).catch(
     () => readFile(pub("brand", "stamp.svg")),
   );
@@ -77,7 +78,7 @@ async function photoDataUri(url: string | undefined) {
 const clip = (s: string, n: number) =>
   s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s;
 
-function Airmail() {
+export function Airmail() {
   const colours = [C.post, C.label, C.night, C.label];
   return (
     <div

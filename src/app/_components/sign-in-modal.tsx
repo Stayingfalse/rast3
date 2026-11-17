@@ -108,6 +108,8 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  /** the sign-in link couldn't be sent (17 Nov: it failed silently before) */
+  const [sendError, setSendError] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
   const domain = workDomain?.toLowerCase();
   const typedDomain = email.trim().toLowerCase().split("@")[1] ?? "";
@@ -122,10 +124,12 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
       setShowEmailForm(false);
       setEmail("");
       setIsLoading(null);
+      setSendError(false);
     }
   }, [isOpen]);
   const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
+    setSendError(false);
     try {
       if (providerId === "nodemailer" && email) {
         // Store email for the verify-request page as fallback
@@ -141,7 +145,7 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
             providerId,
             email: email ?? undefined,
           });
-          // You could show an error message here
+          setSendError(true);
         } else {
           // Show success state in modal
           setEmailSent(true);
@@ -152,6 +156,7 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
         // OAuth sign-in initiated - client-side info logging not needed
       }
     } catch (error) {
+      if (providerId === "nodemailer") setSendError(true);
       logger.error(
         error instanceof Error ? error.message : String(error),
         "Sign in error",
@@ -420,6 +425,12 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                                       <strong>That&apos;s your work email.</strong> Most companies block
                                       emails from us, so the sign-in link may never arrive. We
                                       recommend your personal email, or one of the options below.
+                                    </p>
+                                  )}
+                                  {sendError && (
+                                    <p role="alert" className="rounded-label border-post bg-post-tint text-post-deep border px-3 py-2 text-sm">
+                                      <strong>We couldn&apos;t send your sign-in link just now.</strong> Please try
+                                      again in a few minutes, or sign in with one of the other options.
                                     </p>
                                   )}
                                   <div className="flex gap-2">

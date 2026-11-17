@@ -19,6 +19,7 @@ import {
   serverColumns,
 } from "~/server/discord";
 import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
+import { claimWorkEmail } from "~/server/work-email";
 import { launchInfo, organiserCanMove, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
 import { currentSeason, seasonWindow } from "~/server/season";
@@ -120,24 +121,6 @@ const workEmail = z
   .trim()
   .toLowerCase()
   .email("Enter a valid work email");
-
-/** Another account already using this work email? */
-async function assertWorkEmailFree(
-  db: PrismaClient,
-  email: string,
-  userId: string,
-) {
-  const owner = await db.user.findUnique({
-    where: { workEmail: email },
-    select: { id: true },
-  });
-  if (owner && owner.id !== userId) {
-    throw new TRPCError({
-      code: "CONFLICT",
-      message: "That work email is already used by another account.",
-    });
-  }
-}
 
 export const groupsRouter = createTRPCRouter({
   mine: protectedProcedure.query(async ({ ctx }) => {
@@ -399,13 +382,17 @@ export const groupsRouter = createTRPCRouter({
           };
         }
       }
-      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+      // a returning member's work email may still be on last year's account
+      const carried = await claimWorkEmail(ctx.db, input.workEmail, userId);
 
       await ctx.db.user.update({
         where: { id: userId },
         data: { workEmail: input.workEmail },
       });
-      await setWorkplace(ctx.db, userId, org.id);
+      await setWorkplace(ctx.db, userId, org.id, carried?.role);
+      if (!input.teamId && carried?.teamId) {
+        await setTeam(ctx.db, userId, org.id, carried.teamId);
+      }
       if (input.teamId) {
         const team = await ctx.db.group.findUnique({
           where: { id: input.teamId },
@@ -451,7 +438,7 @@ export const groupsRouter = createTRPCRouter({
           message: `${domain} is already on Random Acts of Santa. Join it with your work email instead.`,
         });
       }
-      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+      await claimWorkEmail(ctx.db, input.workEmail, userId);
 
       const org = await createOrgGroup(ctx.db, domain, {
         status: "PENDING",

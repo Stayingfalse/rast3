@@ -49,6 +49,8 @@ export function InviteFlow(props: Props) {
   const { group, signedIn } = props;
   const [step, setStep] = useState<Step>(props.alreadyIn ? "profile" : "start");
   const [error, setError] = useState<string | null>(null);
+  /** carried on to their wishlist without joining (17 Nov): no dead end */
+  const [skipped, setSkipped] = useState(false);
   const profile = api.profile.getCurrentProfile.useQuery(undefined, { enabled: signedIn });
 
   // after joining: the profile if it isn't done yet, then the welcome
@@ -88,7 +90,20 @@ export function InviteFlow(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, [signedIn]);
 
-  const welcome = (
+  const welcome = skipped ? (
+    <div className="flex flex-col gap-4">
+      <p className="font-expanded text-ink text-2xl leading-tight font-extrabold">Your wishlist is ready.</p>
+      <p className="text-ink-soft">
+        You&apos;re not in {group.name} yet. Try again from this page once it&apos;s sorted, or ask your
+        organiser to help.
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <Link href="/" className="btn-post">
+          Go to your home page
+        </Link>
+      </div>
+    </div>
+  ) : (
     <div className="flex flex-col gap-4">
       <p className="font-expanded text-ink text-2xl leading-tight font-extrabold">
         You&apos;re in {group.name}.
@@ -113,7 +128,16 @@ export function InviteFlow(props: Props) {
 
   let body: React.ReactNode;
   if (props.kind === "workplace" && (step === "start" || step === "error")) {
-    body = <WorkplaceStep {...props} onJoined={joined} />;
+    body = (
+      <WorkplaceStep
+        {...props}
+        onJoined={joined}
+        onSkip={() => {
+          setSkipped(true);
+          setStep("profile");
+        }}
+      />
+    );
   } else if (step === "done") {
     body = welcome;
   } else if (step === "profile") {
@@ -220,7 +244,8 @@ function WorkplaceStep({
   signedIn,
   sessionEmail,
   onJoined,
-}: Extract<Props, { kind: "workplace" }> & { onJoined: () => void }) {
+  onSkip,
+}: Extract<Props, { kind: "workplace" }> & { onJoined: () => void; onSkip: () => void }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(linkCode ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -313,6 +338,15 @@ function WorkplaceStep({
         </Field>
       )}
       {error && <FieldError>{error}</FieldError>}
+      {error && signedIn && (
+        <p className="text-ink-soft text-sm">
+          Can&apos;t sort it now?{" "}
+          <button type="button" className="text-post font-semibold underline underline-offset-4" onClick={onSkip}>
+            Add your wishlist anyway
+          </button>{" "}
+          and join {group.name} later.
+        </p>
+      )}
       {signedIn ? (
         <button type="submit" className="btn-post self-start" disabled={join.isPending}>
           {join.isPending ? "Joining…" : `Join ${group.name}`}

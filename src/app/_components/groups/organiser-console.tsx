@@ -45,6 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { driveMessage, inviteLink, inviteMessage, launchMessage } from "~/lib/invite-message";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { WallCard } from "../share/wall-card";
+import { BannersCard } from "./banners-card";
 import { DiscordLinkEditor } from "./discord-link-editor";
 import { LaunchDateEditor } from "./launch-date-editor";
 
@@ -490,6 +491,11 @@ function Invite({ g }: { g: Console }) {
           </Button>
         </CardContent>
       </Card>
+
+      <BannersCard
+        groupId={g.id}
+        people={g.kind === "ORG" ? "colleagues" : g.kind === "FRIENDS" ? "friends" : "members"}
+      />
     </div>
   );
 }

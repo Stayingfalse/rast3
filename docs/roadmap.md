@@ -1886,3 +1886,22 @@ that don't touch the data model. Known items to include:
     Season is back to 27 Nov – 6 Jan.
   - **Next (nightly, 18 Nov):** drive day 4; the backlog item the owner
     picks.
+- **17 Nov (owner, in chat): promotional banners for every group.**
+  - The owner asked for a sign-up banner (the Sensee example,
+    raosanta.uk/sensee.co.uk) and then for it to be programmatic, so any
+    workplace or community gets theirs from its dashboard.
+  - **Built:** `/groups/<id>/banners/<size>` draws the group's banner as a
+    PNG at twice its size (next/og, like the share cards), in four web sizes:
+    1200×628 (social, intranet, email), 728×90, 300×250 and 320×100.
+    Organisers and site admins only, like the poster (it carries the join
+    link); `?download=1` saves it as a file.
+  - What it says follows the group: workplaces get raosanta.uk/<domain>,
+    "Everyone @domain" and "colleagues"; communities and friends groups
+    their join link, "Everyone in <group>" and "members"/"friends". The
+    date line follows the group's own launch date ("Opens Fri 27 November",
+    then "Open now until …"). The proof line is members who were in before
+    this season, rounded as on the public pages ("130+ joined in last
+    year"), and left off under 10: this season's numbers are too early to
+    boast about (owner).
+  - "Bring your team" on the organiser console has a Banners card: a preview
+    and a download for each size. e2e in `group-banners.spec.ts`.

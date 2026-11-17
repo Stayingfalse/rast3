@@ -1905,3 +1905,26 @@ that don't touch the data model. Known items to include:
     boast about (owner).
   - "Bring your team" on the organiser console has a Banners card: a preview
     and a download for each size. e2e in `group-banners.spec.ts`.
+- **17 Nov (owner report): returning members stuck on "work email already in use".**
+  - **Cause:** a work email belongs to one account. Returning members who
+    sign in differently from last year (the workplace page suggests a
+    personal address or a social account, as company mail blocks our links)
+    get a new account; joining then fails because last year's account still
+    holds the work email, and the workplace page only offers the wishlist
+    after joining, so they were stuck. Reproduced on dev.
+  - **Fix (owner chose 1 and 3, then 2):**
+    - If the account holding the work email hasn't been used this season
+      (not signed in since 1 August, not checked in, not a site admin), the
+      work email moves to the new account with its workplace role and team;
+      last year's account keeps everything else (`claimWorkEmail`).
+    - If it has been used this season, the message says how: "Sign out,
+      then sign in with Google (p•••@gmail.com) instead."
+    - The workplace page offers "Add your wishlist anyway" when joining
+      fails, so nobody is left unable to add a wishlist.
+  - **Magic links on prod:** a sign-in link request on prod ends in
+    `error=Configuration`, which is Auth.js's answer when sending throws
+    (prod offers email sign-in; dev has none). The sign-in modal swallowed
+    it, so people saw the button come back and no email. The modal now says
+    the link couldn't be sent. The send failure itself needs the owner:
+    most likely the Gmail authorisation (Admin › Settings › Email). Logs
+    can't be read from here (Easypanel log collection is off).

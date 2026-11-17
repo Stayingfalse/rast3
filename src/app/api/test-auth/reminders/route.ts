@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
     const lastYear = seasonRange(currentSeason() - 1).gte;
     await db.user.updateMany({
       where: { AND: [only, { email: { in: input.data.backdate } }] },
-      data: { profileCompletedAt: lastYear },
+      // and last seen then, so it counts as not used this season (17 Nov)
+      data: { profileCompletedAt: lastYear, lastSeenAt: lastYear },
     });
   }
 

@@ -90,7 +90,9 @@ jobs:
     name: E2E on dev (${{ matrix.project }})
     needs: deploy
     if: github.event_name == 'push' && github.ref_name == 'dev'
-    runs-on: ubuntu-latest
+    # Pinned (17 Nov): ubuntu-latest moved to 26.04, where this Playwright
+    # can't install Chromium. Move on when Playwright supports it.
+    runs-on: ubuntu-24.04
     # Desktop and mobile run side by side, each in its own test email
     # subdomain (E2E_NS), so their seeds and clean-ups never collide.
     strategy:

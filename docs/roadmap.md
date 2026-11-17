@@ -1869,3 +1869,11 @@ that don't touch the data model. Known items to include:
     before the opt-in exists counts as consented (an older privacy policy
     covered it); new ones need the poster's tick; every one needs a site
     admin's approval first.
+- **Nightly run, 17 Nov: dev e2e was broken by the runner image.**
+  - The two dev CI runs on the evening of 16 Nov (another session's promo
+    stats endpoint and the Next 16.4.6 security bump) failed before any
+    test ran: GitHub's `ubuntu-latest` moved to Ubuntu 26.04, and this
+    Playwright can't install Chromium there. Not those changes' fault.
+  - Fix: the e2e jobs (CI and the manual e2e workflow) run on
+    `ubuntu-24.04` until Playwright supports 26.04. Checks and deploy jobs
+    stay on `ubuntu-latest`.

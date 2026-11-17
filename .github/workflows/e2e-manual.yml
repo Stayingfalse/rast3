@@ -16,7 +16,8 @@ concurrency:
 jobs:
   e2e:
     name: E2E on dev (${{ matrix.project }})
-    runs-on: ubuntu-latest
+    # Pinned (17 Nov): see ci.yml's e2e job
+    runs-on: ubuntu-24.04
     # Desktop and mobile run side by side, each in its own test email
     # subdomain (E2E_NS), so their seeds and clean-ups never collide.
     strategy:

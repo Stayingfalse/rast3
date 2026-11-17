@@ -1846,3 +1846,20 @@ that don't touch the data model. Known items to include:
     run again in the "before" phase.
   - **Next (nightly, 17 Nov):** drive day 3; the backlog item the owner
     picks.
+- **Nightly run, 17 Nov: dev e2e was broken by the runner image.**
+  - The two dev CI runs on the evening of 16 Nov (another session's promo
+    stats endpoint and the Next 16.4.6 security bump) failed before any
+    test ran: GitHub's `ubuntu-latest` moved to Ubuntu 26.04, and this
+    Playwright can't install Chromium there. Not those changes' fault.
+  - Fix: the e2e jobs (CI and the manual e2e workflow) run on
+    `ubuntu-24.04` until Playwright supports 26.04. Checks and deploy jobs
+    stay on `ubuntu-latest`.
+  - **Closing-week rehearsal:** dev's Season set to open 1 Nov and close
+    18 Nov, the whole e2e suite run against it: 292 passed. The 2 failures
+    (× desktop and mobile) were the tests choosing launch dates after that
+    artificial close, which the app rightly refuses. With the real close
+    (6 Jan), `group-launch.spec`'s "three days ahead" date would do the same
+    from 4 Jan: fine to leave, worth knowing if CI goes red then. Dev's
+    Season is back to 27 Nov – 6 Jan.
+  - **Next (nightly, 18 Nov):** drive day 4; the backlog item the owner
+    picks.

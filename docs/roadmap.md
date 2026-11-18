@@ -1905,3 +1905,14 @@ that don't touch the data model. Known items to include:
     the link couldn't be sent. The send failure itself needs the owner:
     most likely the Gmail authorisation (Admin › Settings › Email). Logs
     can't be read from here (Easypanel log collection is off).
+- **Nightly run, 18 Nov: Next.js security update to main; weekly e2e.**
+  - Prod and dev healthy. Sign-in links on prod still fail
+    (`error=Configuration`): waiting on the owner's Gmail re-authorisation.
+  - **Next.js 16.4.1 → 16.4.6** (GHSA-mfr8-8qww-v76h), the other session's
+    commit from 16 Nov, carried to main on its own: it has run on dev since
+    then with CI green. Builds on 16.4.1 now stop with a security notice.
+  - **Weekly e2e:** the e2e workflow also runs every Monday at 05:17 UTC
+    against dev, in its own test namespace (`weekly-desktop`,
+    `weekly-mobile`), so a breakage outside our code shows within a week.
+  - **Next (nightly, 19 Nov):** drive day 5; the backlog item the owner
+    picks.

@@ -1952,3 +1952,21 @@ that don't touch the data model. Known items to include:
     open). Exact counts, but only to members of that group.
   - **Next (nightly, 20 Nov):** drive day 6; the backlog item the owner
     picks.
+- **19 Nov (owner): "Send test email"; logs go to the log service, not the database.**
+  - Sign-in links still fail on prod after the owner re-authorised Gmail,
+    and the host's log collection is a paid extra. Ruled out: prod has no
+    `EMAIL_SERVER_*` variables (it uses Admin › Settings), the settings
+    reload every 5 minutes, the Gmail authorisation asks for the right
+    scope, and the default server is smtp.gmail.com:587.
+  - An in-app log table was built on dev, then dropped on the owner's
+    question: logs belong in a log service. The app already sends them to
+    Better Stack when `BETTERSTACK_SOURCE_TOKEN` is set; dev has it, prod
+    doesn't. (Dev keeps that migration and a dev-only one that drops it.)
+  - **Built:** Admin › Settings › **Send test email**: checks the saved
+    settings (no secrets shown), connects, sends to you, and shows the step
+    that failed and the mail server's reply. The sign-in email error now
+    logs the server's code and reply; Auth.js errors log their cause.
+  - **Removed:** the Better Stack token fallback in the code and docs.
+  - **Owner:** add `BETTERSTACK_SOURCE_TOKEN` and `BETTERSTACK_ENDPOINT` to
+    prod's environment; make a new Better Stack token, as the old one was in
+    the repository; then use Send test email.

@@ -111,6 +111,29 @@ export function WorkplaceCard() {
               colleagues now; gifting opens once it&apos;s approved.
             </p>
           )}
+          {org.ready !== null && (
+            // the wishlist drive (19 Nov): lists waiting for when it opens
+            <p className="text-ink text-sm">
+              Gifting opens on{" "}
+              {new Date(org.opensAt).toLocaleDateString("en-GB", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                timeZone: "Europe/London",
+              })}
+              .{" "}
+              {org.ready > 0 ? (
+                <>
+                  <strong className="tabular">
+                    {org.ready} {org.ready === 1 ? "list" : "lists"} ready
+                  </strong>{" "}
+                  so far: invite colleagues so there are more waiting.
+                </>
+              ) : (
+                "Invite colleagues so there are lists waiting."
+              )}
+            </p>
+          )}
           {org.affiliate && <AffiliateNote tone="label" />}
           {org.teams.length > 0 && (
             <label className="flex flex-col gap-1">

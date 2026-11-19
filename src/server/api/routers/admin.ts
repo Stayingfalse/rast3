@@ -13,6 +13,8 @@ import {
   TRACKING_ID_HINT,
   type Store,
 } from "~/server/affiliate";
+import { APP_LOG_DAYS } from "~/server/app-log";
+import { sendTestEmail } from "~/server/email/email-test";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { launchInfo, setGroupLaunch } from "~/server/group-launch";
 import { insightSeasons, seasonInsights } from "~/server/insights";
@@ -108,6 +110,49 @@ export const adminRouter = createTRPCRouter({
    * Counts only, without test users; never credentials or names.
    */
   status: siteAdminProcedure.query(({ ctx }) => launchStatus(ctx.db)),
+
+  /**
+   * Admin › Settings › "Send test email" (19 Nov): one email to you, sent the
+   * way sign-in links go, with the step that failed and the server's reply.
+   */
+  sendTestEmail: siteAdminProcedure.mutation(async ({ ctx }) => {
+    const me = await ctx.db.user.findUnique({ where: { id: ctx.session.user.id }, select: { email: true } });
+    if (!me?.email) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Your account has no email address to send the test to." });
+    }
+    return sendTestEmail(me.email);
+  }),
+
+  /** Admin › Logs (19 Nov): our own log, newest first, kept 30 days. */
+  logs: siteAdminProcedure
+    .input(
+      z.object({
+        level: z.enum(["INFO", "WARN", "ERROR"]).nullable().default(null),
+        area: z.string().max(40).nullable().default(null),
+        q: z.string().trim().max(100).default(""),
+        before: z.string().nullable().default(null),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const PAGE = 50;
+      const rows = await ctx.db.appLog.findMany({
+        where: {
+          ...(input.level ? { level: input.level } : {}),
+          ...(input.area ? { area: input.area } : {}),
+          ...(input.q ? { message: { contains: input.q } } : {}),
+          ...(input.before ? { createdAt: { lt: new Date(input.before) } } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        take: PAGE + 1,
+      });
+      const areas = await ctx.db.appLog.groupBy({ by: ["area"], _count: { _all: true }, orderBy: { area: "asc" } });
+      return {
+        entries: rows.slice(0, PAGE),
+        next: rows.length > PAGE ? rows[PAGE - 1]!.createdAt.toISOString() : null,
+        areas: areas.map((a) => ({ area: a.area, count: a._count._all })),
+        keptDays: APP_LOG_DAYS,
+      };
+    }),
 
   /** Every group except teams (they're managed inside their organisation). */
   groups: siteAdminProcedure

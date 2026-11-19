@@ -2,6 +2,7 @@ import type { EmailKind, PrismaClient } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { createTransport, type Transporter } from "nodemailer";
 
+import { appLog, errorDetail } from "~/server/app-log";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { emailSettings } from "./smtp";
 import { oneClickUrl, siteUrl } from "./unsubscribe";
@@ -98,6 +99,12 @@ export async function sendOnce(
     return "SENT";
   } catch (e) {
     lastError = (e instanceof Error ? e.message : String(e)).slice(0, 190);
+    // our own log (19 Nov): the mail server's reply, for Admin › Logs
+    await appLog("ERROR", "reminders", `A ${kind} email couldn't be sent`, {
+      to: to.email,
+      kind,
+      error: errorDetail(e),
+    });
     // keep a record of the failure, but give the claim back so the next run
     // tries again: the row moves to a ref of its own
     await db.emailLog.update({

@@ -1,4 +1,5 @@
 import { deleteInactiveAccounts } from "~/server/account";
+import { appLog, deleteOldAppLogs, errorDetail } from "~/server/app-log";
 import { db } from "~/server/db";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { createChildLogger } from "~/utils/logger";
@@ -30,6 +31,7 @@ export function startReminderSchedule() {
         log.info(run, "Reminder emails processed");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
+      await appLog("ERROR", "reminders", "The hourly reminder run failed", { error: errorDetail(error) });
     }
     // Day 30: accounts unused for 24 months are deleted (privacy policy)
     try {
@@ -39,6 +41,13 @@ export function startReminderSchedule() {
       });
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Inactive account clean-up failed");
+      await appLog("ERROR", "clean-up", "Deleting accounts unused for 24 months failed", { error: errorDetail(error) });
+    }
+    // our own log keeps 30 days (19 Nov)
+    try {
+      await deleteOldAppLogs(db);
+    } catch (error) {
+      log.error({ error: error instanceof Error ? error.message : String(error) }, "App log clean-up failed");
     }
   };
   setTimeout(() => {

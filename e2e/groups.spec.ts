@@ -42,7 +42,8 @@ test("a member starts a friends group and gets an invite code", async ({
   // friends groups go live straight away (6 Nov)
   await expect(card.getByText("Live", { exact: true })).toBeVisible();
   await expect(card.getByText("Waiting for approval")).toHaveCount(0);
-  await expect(card.getByText("1 member", { exact: true })).toBeVisible();
+  // everyone who ever joined, and this season's check-ins (19 Nov)
+  await expect(card.getByText(/^1 member so far · 0 checked in for Christmas \d{4}$/)).toBeVisible();
   const label = await card.getByLabel(/^Invite code /).getAttribute("aria-label");
   code = (label ?? "").replace("Invite code ", "").replace(/ /g, "");
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
@@ -56,6 +57,8 @@ test("a visitor sees the invite and is asked to sign in", async ({ page }) => {
   await page.goto(`/join/${code}`);
   await expect(page.getByRole("heading", { name: groupName })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign in to join" })).toBeVisible();
+  // the invite says who's in this Christmas, not just who ever joined (19 Nov)
+  await expect(page.getByText(/1 member so far · 0 checked in for Christmas \d{4}/)).toBeVisible();
 });
 
 test("a friend joins with the link", async ({ page }, testInfo) => {
@@ -82,7 +85,8 @@ test("a friend joins with the link", async ({ page }, testInfo) => {
   await page.getByRole("link", { name: "Your groups" }).click();
   await expect(page).toHaveURL(/\/groups$/);
   const card = page.getByRole("listitem").filter({ hasText: groupName });
-  await expect(card.getByText("2 members")).toBeVisible();
+  // a profile without a wishlist isn't a check-in yet
+  await expect(card.getByText(/^2 members so far · 0 checked in for Christmas \d{4}$/)).toBeVisible();
   // only organisers see the code
   await expect(card.getByText("Invite code")).toHaveCount(0);
   expect(errors).toEqual([]);

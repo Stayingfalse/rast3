@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { InviteFlow } from "~/app/_components/invite/invite-flow";
 import { auth } from "~/server/auth";
+import { memberCounts } from "~/lib/member-counts";
 import { db } from "~/server/db";
 import { findInvite, formatJoinCode } from "~/server/invites";
 
@@ -53,7 +54,7 @@ export default async function JoinPage({ params }: Props) {
         </h1>
         <p className="text-ink-soft">
           {viaDiscord ? "Discord community" : invite.kind === "FRIENDS" ? "Friends group" : "Community group"} ·{" "}
-          {invite.members} {invite.members === 1 ? "member" : "members"}
+          {memberCounts(invite, ["member", "members"])}
           {!viaDiscord && (
             <>
               {" "}

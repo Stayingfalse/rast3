@@ -1970,3 +1970,15 @@ that don't touch the data model. Known items to include:
   - **Owner:** add `BETTERSTACK_SOURCE_TOKEN` and `BETTERSTACK_ENDPOINT` to
     prod's environment; make a new Better Stack token, as the old one was in
     the repository; then use Send test email.
+- **19 Nov (owner): returning groups' numbers are this season's.**
+  - The owner: sensee.co.uk "says it has 150 involved, but that figure may
+    be wrong for this year … reframe the 150+ to ever involved and add a
+    number of how many checked in this year."
+  - **Changed:**
+    - Workplace landing page, invite page, a group's home tab and its card
+      on Your groups: "150 colleagues so far · 23 checked in for Christmas
+      2026" (`memberCounts`, `checkedInMembers`).
+    - "Your Christmas so far" share totals: **Taking part** now counts
+      members checked in for that season (it counted everyone who ever
+      joined, as did the share card image).
+  - Organisers' consoles already show "N of M checked in"; unchanged.

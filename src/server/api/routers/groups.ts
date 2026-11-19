@@ -22,7 +22,7 @@ import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
 import { claimWorkEmail } from "~/server/work-email";
 import { launchInfo, organiserCanMove, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
-import { currentSeason, listsReady, seasonWindow } from "~/server/season";
+import { checkedInMembers, currentSeason, listsReady, seasonWindow } from "~/server/season";
 import { ukDateString, ukMidnight } from "~/lib/uk-date";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
@@ -158,6 +158,9 @@ export const groupsRouter = createTRPCRouter({
         status: group.status,
         role,
         members: group._count.memberships,
+        /** this season's (19 Nov): members is everyone who ever joined */
+        checkedIn: await checkedInMembers(ctx.db, group.id),
+        season: w.year,
         // only organisers can see and share the code
         joinCode: role === "ADMIN" ? group.joinCode : null,
         discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,

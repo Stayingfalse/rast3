@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
+import { memberCounts } from "~/lib/member-counts";
 import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { type FirstGift, ShareSheet, type ShareRequest } from "../share/share-sheet";
@@ -58,7 +59,7 @@ export function GroupHome({ group }: { group: Group }) {
       <div className="flex flex-col gap-2">
         <p className="label-caps text-frost-soft">
           {group.kind === "FRIENDS" ? "Friends group" : "Community"} ·{" "}
-          {group.members} {group.members === 1 ? "member" : "members"}
+          {memberCounts(group, ["member", "members"])}
         </p>
         <h2
           id="group-home-heading"

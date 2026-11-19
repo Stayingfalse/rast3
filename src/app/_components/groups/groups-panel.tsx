@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
+import { memberCounts } from "~/lib/member-counts";
 import { api, type RouterOutputs } from "~/trpc/react";
 import { AffiliateNote } from "./affiliate-note";
 import { DiscordJoinCard } from "./discord-join-card";
@@ -281,7 +282,7 @@ function GroupCard({ group }: { group: Group }) {
           {group.name}
         </h3>
         <p className="text-ink-soft text-sm">
-          {group.members} {group.members === 1 ? "member" : "members"}
+          {memberCounts(group, ["member", "members"])}
         </p>
         {group.affiliate && <AffiliateNote tone="label" />}
 

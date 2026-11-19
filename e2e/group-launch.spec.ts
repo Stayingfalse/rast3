@@ -48,7 +48,7 @@ const who = (name: string, testInfo: { project: { name: string }; retry: number 
   `gl-${name}-${testInfo.project.name}-${testInfo.retry}@${E}`;
 
 type Saved = { opensAt: string; own: boolean; open: boolean };
-type Mine = { id: string; opensAt: string; open: boolean; opensLater: boolean }[];
+type Mine = { id: string; opensAt: string; open: boolean; opensLater: boolean; ready: number | null }[];
 const state = { groupId: "", joinCode: "", name: "", later: "" };
 
 test.afterAll(async ({ playwright }, testInfo) => {
@@ -113,6 +113,11 @@ test("an organiser picks a later launch date: the group waits until then", async
   await page.getByRole("tablist", { name: "Gifting in" }).getByRole("tab", { name: state.name }).click();
   const home = page.getByRole("tabpanel", { name: state.name });
   await expect(home.getByText(`Gifting opens in this group on ${longDay(state.later)}.`)).toBeVisible();
+  // the wishlist drive (19 Nov): how many lists are ready for when it opens
+  const ready = mine.find((x) => x.id === g.id)?.ready ?? null;
+  expect(typeof ready).toBe("number");
+  if (ready) await expect(home.getByText(`${ready} ${ready === 1 ? "list" : "lists"} ready`)).toBeVisible();
+  else await expect(home.getByText("Until then, invite people so there are lists waiting.")).toBeVisible();
   await expect(home.getByRole("button", { name: "Pick up a wishlist" })).toHaveCount(0);
   await expect(home.getByText(/Pick one up whenever you're ready/)).toHaveCount(0);
   await settle(page);

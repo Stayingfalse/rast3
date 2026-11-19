@@ -88,7 +88,16 @@ export function GroupHome({ group }: { group: Group }) {
                 })}
                 .
               </strong>{" "}
-              Until then, invite people so there are lists waiting.
+              {group.ready ? (
+                <>
+                  <strong className="text-frost tabular">
+                    {group.ready} {group.ready === 1 ? "list" : "lists"} ready
+                  </strong>{" "}
+                  so far: invite people so there are more waiting.
+                </>
+              ) : (
+                "Until then, invite people so there are lists waiting."
+              )}
             </>
           ) : group.status === "PENDING" ? (
             "This group is waiting for our approval. Gifting opens once it's approved; meanwhile, invite people so there are lists waiting."

@@ -141,6 +141,8 @@ export function transcriptLogger(lines: string[]) {
 export async function sendTestEmail(to: string): Promise<EmailTestResult> {
   const described = await describeSettings();
   const google = await googleAccountCheck((described as { user?: string } | null)?.user);
+  // the SMTP conversation, filled while it runs (declared first: finish() reads it)
+  const lines: string[] = [];
   const finish = async (r: Omit<EmailTestResult, "settings" | "to">) => {
     const result: EmailTestResult = {
       ...r,
@@ -161,7 +163,6 @@ export async function sendTestEmail(to: string): Promise<EmailTestResult> {
       detail: { message: "No email server is set up, or email sign-in is switched off in Admin › Settings." },
     });
   }
-  const lines: string[] = [];
   // logger + debug: the SMTP conversation, for the result (logins removed)
   const transport = createTransport({
     ...settings.server,

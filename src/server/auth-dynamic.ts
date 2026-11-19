@@ -19,6 +19,7 @@ import { toClientSession } from "~/server/auth-session";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
+import { appLog, errorDetail } from "~/server/app-log";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('server');
@@ -269,6 +270,13 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               operation: 'send_verification_email_env',
               actionNeeded: 'Check EMAIL_SERVER_* environment variables and SMTP credentials'
             }, `Failed to send verification email via env config to ${email}: ${error instanceof Error ? error.message : String(error)}`);
+            await appLog("ERROR", "sign-in-email", "A sign-in link couldn't be sent", {
+              to: email,
+              error: errorDetail(error),
+              server: { host: process.env.EMAIL_SERVER_HOST, port: process.env.EMAIL_SERVER_PORT ?? "587" },
+              from: process.env.EMAIL_FROM,
+              settings: "environment (EMAIL_SERVER_*)",
+            });
             throw new Error("Failed to send verification email");
           }
         },
@@ -308,6 +316,14 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
                 subject,
                 authType: emailConfig.authType
               }, "Failed to send verification email (db config)");
+              // our own log (19 Nov): the mail server's own reply, for Admin › Logs
+              await appLog("ERROR", "sign-in-email", "A sign-in link couldn't be sent", {
+                to: email,
+                error: errorDetail(error),
+                server: { host: emailConfig.host, port: emailConfig.port, authType: emailConfig.authType },
+                from: emailConfig.from,
+                settings: "Admin › Settings",
+              });
               throw new Error("Failed to send verification email");
             }
           },
@@ -319,6 +335,16 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   return {
     adapter: PrismaAdapter(db),
     providers,
+    // our own log (19 Nov): Auth.js errors with their cause (the page only
+    // ever says "Configuration"), for Admin › Logs
+    logger: {
+      error(error) {
+        void appLog("ERROR", "auth", error.message || error.name, errorDetail(error));
+      },
+      warn(code) {
+        void appLog("WARN", "auth", `Auth.js warning: ${code}`);
+      },
+    },
     cookies: {
       sessionToken: {
         name: "next-auth.session-token",

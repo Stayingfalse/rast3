@@ -1952,3 +1952,26 @@ that don't touch the data model. Known items to include:
     open). Exact counts, but only to members of that group.
   - **Next (nightly, 20 Nov):** drive day 6; the backlog item the owner
     picks.
+- **19 Nov (owner): our own log, and "Send test email".**
+  - Sign-in links still fail on prod after the owner re-authorised Gmail.
+    The host's log collection is a paid extra, so the cause couldn't be
+    read. Checked and ruled out: prod has no `EMAIL_SERVER_*` variables (so
+    it uses Admin › Settings), the settings reload every 5 minutes, the
+    Gmail authorisation asks for the right scope, and the default server is
+    smtp.gmail.com:587.
+  - **Built (owner: "add our own verbose notes, with cleanup"):**
+    - `AppLog` table (migration `20261119200000_app_log`) and `appLog()`:
+      never throws; secrets dropped by key, email addresses masked, long
+      text cut. Deleted after 30 days by the hourly schedule.
+    - Recorded: sign-in email failures with the mail server's reply, Auth.js
+      errors with their cause (its pages only say "Configuration"),
+      reminder send failures, failed hourly runs, and every test email.
+    - **Admin › Logs:** newest first, filter by level and area, search,
+      details per entry.
+    - **Admin › Settings › Send test email:** checks the settings (Gmail
+      authorised? client id the site's Google one? from address the
+      authorised account?), connects, sends to you, and shows the step that
+      failed and the server's reply.
+    - Privacy page: the 30-day note of errors, with addresses shortened.
+  - **Owner, once merged:** Admin › Settings › Send test email, and read the
+    reply (or Admin › Logs after a sign-in attempt).

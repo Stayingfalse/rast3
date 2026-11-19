@@ -3,6 +3,7 @@
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
+import { EmailTestCard } from "../_components/email-test-card";
 import { api } from "~/trpc/react";
 import { clientLogger } from "~/utils/client-logger";
 
@@ -281,6 +282,8 @@ export default function SettingsPage() {
             Configure authentication providers and system settings
           </p>
         </div>
+        {/* 19 Nov: send one test email and see the mail server's reply */}
+        <EmailTestCard />
         {/* Authentication Providers Section */}
         <div className="rounded-lg border border-white/20 bg-black/85 p-4 sm:p-6 backdrop-blur-sm">
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

@@ -154,3 +154,12 @@ export async function listsReady(db: Pick<PrismaClient, "membership">, groupId: 
     where: { groupId, user: { ...checkedIn(season), amazonWishlistUrl: { not: null } } },
   });
 }
+
+/**
+ * How many of a group's members have checked in this season (owner, 19 Nov):
+ * shown beside the all-time member count, which for a returning group counts
+ * everyone who ever joined.
+ */
+export async function checkedInMembers(db: Pick<PrismaClient, "membership">, groupId: string, season = currentSeason()) {
+  return db.membership.count({ where: { groupId, user: checkedIn(season) } });
+}

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 
 import { InviteFlow } from "~/app/_components/invite/invite-flow";
 import { auth } from "~/server/auth";
+import { memberCounts } from "~/lib/member-counts";
 import { db } from "~/server/db";
+import { checkedInMembers, currentSeason } from "~/server/season";
 
 /**
  * A workplace's own invite link (owner, 23 Oct 2026): raosanta.uk/acme.co.uk.
@@ -74,7 +76,11 @@ export default async function WorkplaceInvitePage({ params, searchParams }: Prop
           {org.name}
         </h1>
         <p className="text-ink-soft">
-          Workplace · {org._count.memberships} {org._count.memberships === 1 ? "colleague" : "colleagues"}
+          Workplace ·{" "}
+          {memberCounts(
+            { members: org._count.memberships, checkedIn: await checkedInMembers(db, org.id), season: currentSeason() },
+            ["colleague", "colleagues"],
+          )}
         </p>
         <p className="text-lg leading-relaxed">
           Your workplace is doing Christmas presents differently this year. Share

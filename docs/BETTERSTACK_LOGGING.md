@@ -32,7 +32,7 @@ LOG_TO_FILE="true"           # Enable file logging in production
 ```
 
 #### Current Configuration
-- **Source Token**: `fp5ZHG1xBxoPCoe3a6fSzCP6`
+- **Source Token**: `<your Better Stack source token>`
 - **Endpoint**: `https://s1340543.eu-nbg-2.betterstackdata.com`
 - **Log Level**: `debug` (development) / `info` (production)
 
@@ -196,7 +196,7 @@ function MyComponent() {
 ### Access Your Logs
 1. **Login**: https://logs.betterstack.com/
 2. **Source**: RAoSanta Application
-3. **Token**: `fp5ZHG1xBxoPCoe3a6fSzCP6`
+3. **Token**: `<your Better Stack source token>`
 
 ### Useful Queries
 

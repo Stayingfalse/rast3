@@ -36,7 +36,7 @@ The robust logging system using Pino.js with BetterStack integration has been su
 ### 🔧 **Configuration**
 ```bash
 # Environment Variables (in .env)
-BETTERSTACK_SOURCE_TOKEN=fp5ZHG1xBxoPCoe3a6fSzCP6
+BETTERSTACK_SOURCE_TOKEN=<your Better Stack source token>
 BETTERSTACK_ENDPOINT=https://s1340543.eu-nbg-2.betterstackdata.com
 LOG_LEVEL=debug
 NODE_ENV=development

@@ -11,7 +11,7 @@ const getBetterStackConfig = () => {
   // Only access process.env on server-side
   if (typeof window === 'undefined') {
     return {
-      sourceToken: process.env.BETTERSTACK_SOURCE_TOKEN ?? 'fp5ZHG1xBxoPCoe3a6fSzCP6',
+      sourceToken: process.env.BETTERSTACK_SOURCE_TOKEN ?? '', // never in the code (19 Nov)
       endpoint: process.env.BETTERSTACK_ENDPOINT ?? 'https://s1340543.eu-nbg-2.betterstackdata.com',
       enabled: !!process.env.BETTERSTACK_SOURCE_TOKEN // Enable in any environment if token is provided
     };

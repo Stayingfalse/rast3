@@ -19,6 +19,8 @@ import { toClientSession } from "~/server/auth-session";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
+import { clean, errorDetail } from "~/server/utils/error-detail";
+import { maskEmail } from "~/server/work-email";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('server');
@@ -260,6 +262,8 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           } catch (error) {
             logger.error({
               error: error instanceof Error ? error.message : String(error),
+              // the mail server's code and reply (19 Nov)
+              detail: clean(errorDetail(error)),
               errorType: error instanceof Error ? error.constructor.name : 'Unknown',
               to: email,
               subject,
@@ -304,9 +308,13 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
             } catch (error) {
               logger.error({
                 error: error instanceof Error ? error.message : String(error),
-                to: email,
+                // the mail server's code and reply (19 Nov)
+                detail: clean(errorDetail(error)),
+                to: maskEmail(email),
                 subject,
-                authType: emailConfig.authType
+                authType: emailConfig.authType,
+                host: emailConfig.host,
+                port: emailConfig.port,
               }, "Failed to send verification email (db config)");
               throw new Error("Failed to send verification email");
             }
@@ -319,6 +327,16 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   return {
     adapter: PrismaAdapter(db),
     providers,
+    // Auth.js errors with their cause (19 Nov): its pages only ever say
+    // "Configuration"
+    logger: {
+      error(error) {
+        logger.error({ detail: clean(errorDetail(error)) }, `Auth.js error: ${error.message || error.name}`);
+      },
+      warn(code) {
+        logger.warn(`Auth.js warning: ${code}`);
+      },
+    },
     cookies: {
       sessionToken: {
         name: "next-auth.session-token",

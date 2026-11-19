@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What personal data Random Acts of Santa collects, why, who can see it, how long we keep it and your rights under UK data protection law.",
 };
 
-const LAST_UPDATED = "19 November 2026";
+const LAST_UPDATED = "14 November 2026";
 const CONTACT = "privacy@raosanta.uk";
 
 function Section({
@@ -122,10 +122,7 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong>Technical data.</strong> Our servers keep short-lived logs
             of requests, including your IP address, browser type and the pages
-            requested, to keep the site secure and working. When something
-            goes wrong (an email that couldn&apos;t be sent, a sign-in error), we
-            keep a note of it for 30 days so we can fix it, with your email
-            address shortened (p•••@example.com) and never any password.
+            requested, to keep the site secure and working.
           </p>
         </Section>
 

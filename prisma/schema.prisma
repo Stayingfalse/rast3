@@ -539,26 +539,3 @@ model WishlistOpen {
   @@index([giftPageId])
   @@index([groupId])
 }
-
-/// Our own log (owner, 19 Nov): the host's log collection is a paid extra,
-/// so errors that matter (sign-in emails, reminders, Auth.js) are kept here
-/// for site admins (Admin › Logs). No secrets; email addresses masked.
-/// Kept 30 days.
-model AppLog {
-  id        String      @id @default(cuid())
-  createdAt DateTime    @default(now())
-  level     AppLogLevel
-  /// what it's about, e.g. "sign-in-email", "auth", "reminders"
-  area      String      @db.VarChar(40)
-  message   String      @db.VarChar(500)
-  detail    Json?
-
-  @@index([createdAt])
-  @@index([level, createdAt])
-}
-
-enum AppLogLevel {
-  INFO
-  WARN
-  ERROR
-}

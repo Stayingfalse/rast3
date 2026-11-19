@@ -1,4 +1,5 @@
 import { deleteInactiveAccounts } from "~/server/account";
+import { beat, checkEmailServer } from "~/server/heartbeats";
 import { db } from "~/server/db";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { createChildLogger } from "~/utils/logger";
@@ -28,8 +29,22 @@ export function startReminderSchedule() {
       const { nudged, opened, giftCheckIns, newLists, organisersLive, organisersDrive, adminStatus } = run;
       if (nudged || opened || giftCheckIns || newLists || organisersLive || organisersDrive || adminStatus)
         log.info(run, "Reminder emails processed");
+      await beat("reminders");
     } catch (error) {
       log.error({ error: error instanceof Error ? error.message : String(error) }, "Reminder run failed");
+      await beat("reminders", false);
+    }
+    // the email server still accepts our login (19 Nov: it didn't for four
+    // days and nobody knew); sends nothing
+    try {
+      const email = await checkEmailServer();
+      if (email) {
+        if (!email.ok) log.error({ error: email.error }, "Email server check failed");
+        await beat("email", email.ok);
+      }
+    } catch (error) {
+      log.error({ error: error instanceof Error ? error.message : String(error) }, "Email server check failed");
+      await beat("email", false);
     }
     // Day 30: accounts unused for 24 months are deleted (privacy policy)
     try {

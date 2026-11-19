@@ -30,6 +30,10 @@ export const env = createEnv({
     AUTH_TIKTOK_ID: z.string().optional(),
     AUTH_TIKTOK_SECRET: z.string().optional(),
 
+    // Better Stack heartbeats (19 Nov): set on prod only; see src/server/heartbeats.ts
+    HEARTBEAT_REMINDERS_URL: z.string().url().optional(),
+    HEARTBEAT_EMAIL_URL: z.string().url().optional(),
+
     // Email provider for magic links
     EMAIL_SERVER_HOST: z.string().optional(),
     EMAIL_SERVER_PORT: z.string().optional(),
@@ -62,6 +66,8 @@ export const env = createEnv({
    */ runtimeEnv: {
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_URL: process.env.AUTH_URL,
+    HEARTBEAT_REMINDERS_URL: process.env.HEARTBEAT_REMINDERS_URL,
+    HEARTBEAT_EMAIL_URL: process.env.HEARTBEAT_EMAIL_URL,
 
     // OAuth Providers
     AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,

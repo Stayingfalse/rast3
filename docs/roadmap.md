@@ -1959,3 +1959,21 @@ that don't touch the data model. Known items to include:
       members checked in for that season (it counted everyone who ever
       joined, as did the share card image).
   - Organisers' consoles already show "N of M checked in"; unchanged.
+- **19 Nov evening (owner: "do tonight's nightly now"): heartbeats, and monitoring set up.**
+  - **Monitoring (done with the Better Stack and Easypanel MCPs, owner's
+    go-ahead):** log sources "RAoSanta Prod" and "RAoSanta Dev" (the old
+    token was in the repository; the old source is deleted); a Better Stack
+    Collector as the Easypanel compose service `ras/bs-collector` (host and
+    container metrics; tracing off; about 0.17 cores); the "RAoSanta"
+    dashboard (prod errors, host CPU/memory/disk, CPU and memory by
+    service) with alerts (3+ prod errors in 10 min; disk over 85%, CPU or
+    memory over 90%); monitors on prod and dev `/api/health`, the database
+    and sign-in; the status page shows them with the host charts.
+  - **Built:** the hourly schedule reports to Better Stack heartbeats:
+    `HEARTBEAT_REMINDERS_URL` after each reminder run (or `/fail`), and
+    `HEARTBEAT_EMAIL_URL` after checking that the email server accepts our
+    login (connects and signs in, sends nothing). Without the URL nothing is
+    sent, so only prod reports. The email check would have caught the 15-19
+    Nov sign-in email outage within the hour.
+  - **Owner:** add the two URLs to `ras/raosanta-uk` once merged (values in
+    the chat); the heartbeats are paused until prod reports.

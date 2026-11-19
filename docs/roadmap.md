@@ -1916,3 +1916,16 @@ that don't touch the data model. Known items to include:
     `weekly-mobile`), so a breakage outside our code shows within a week.
   - **Next (nightly, 19 Nov):** drive day 5; the backlog item the owner
     picks.
+- **Nightly run, 19 Nov: "lists ready" during the wishlist drive.**
+  - Prod and dev healthy. Sign-in links on prod still fail
+    (`error=Configuration`): waiting on the owner's Gmail re-authorisation.
+    #98 (Next.js security update, weekly e2e) awaits the owner.
+  - **Built:** before a group opens, members see how many lists are ready
+    for opening day: "12 lists ready so far: invite people so there are
+    more waiting." On a friends or community group's home tab, and on the
+    "Your workplace" card for workplaces. Ready means checked in this season
+    with a wishlist, the same rule that decides who gets handed out.
+    `groups.mine` and `groups.myOrganisation` return `ready` (null once
+    open). Exact counts, but only to members of that group.
+  - **Next (nightly, 20 Nov):** drive day 6; the backlog item the owner
+    picks.

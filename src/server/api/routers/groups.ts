@@ -22,7 +22,7 @@ import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
 import { claimWorkEmail } from "~/server/work-email";
 import { launchInfo, organiserCanMove, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
-import { currentSeason, seasonWindow } from "~/server/season";
+import { currentSeason, listsReady, seasonWindow } from "~/server/season";
 import { ukDateString, ukMidnight } from "~/lib/uk-date";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
@@ -163,6 +163,11 @@ export const groupsRouter = createTRPCRouter({
         discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
         /** when gifting opens here (its own date or the season's), and whether it is now */
         ...(({ opensAt, open }) => ({ opensAt, open, opensLater: now < opensAt }))(launchInfo(group, w, now)),
+        /** the wishlist drive (19 Nov): lists ready for when it opens; null once it's open */
+        ready:
+          group.status === "ACTIVE" && now < launchInfo(group, w, now).opensAt
+            ? await listsReady(ctx.db, group.id)
+            : null,
         /** wishlists here open from gift pages with affiliate links */
         affiliate: (await affiliateFor(ctx.db, group.id, undefined, settings)).enabled,
       })),
@@ -321,14 +326,18 @@ export const groupsRouter = createTRPCRouter({
     const userId = ctx.session.user.id;
     const { org, team } = await getWorkplace(ctx.db, userId);
     if (!org) return null;
-    const [user, teams] = await Promise.all([
+    const now = new Date();
+    const [user, teams, launch, w] = await Promise.all([
       ctx.db.user.findUnique({ where: { id: userId }, select: { workEmail: true } }),
       ctx.db.group.findMany({
         where: { kind: "TEAM", parentId: org.group.id },
         orderBy: { name: "asc" },
         select: { id: true, name: true },
       }),
+      ctx.db.group.findUnique({ where: { id: org.group.id }, select: { launchAt: true, launchSeason: true } }),
+      seasonWindow(ctx.db),
     ]);
+    const opensAt = launch ? launchInfo({ ...launch, kind: "ORG" }, w, now).opensAt : w.opensAt;
     return {
       id: org.group.id,
       name: org.group.name,
@@ -340,6 +349,9 @@ export const groupsRouter = createTRPCRouter({
       /** leads their team (7 Nov): a link to its page */
       teamLead: team?.role === "ADMIN",
       affiliate: (await affiliateFor(ctx.db, org.group.id)).enabled,
+      /** the wishlist drive (19 Nov): when it opens, and lists ready by then; null once open */
+      opensAt,
+      ready: org.group.status === "ACTIVE" && now < opensAt ? await listsReady(ctx.db, org.group.id) : null,
     };
   }),
 

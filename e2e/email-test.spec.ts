@@ -47,7 +47,34 @@ test("a site admin's test email says which step failed", async ({ page }, testIn
   expect(errors).toEqual([]);
 });
 
+test("the connection check says where the connection stops", async ({ page }, testInfo) => {
+  const p = testInfo.project.name;
+  await loginAs(page, { email: who("site", p), adminLevel: "SITE" });
+  const errors = trackPageErrors(page);
+
+  // dev has no email server saved, so this probes Gmail's (20 Nov)
+  const r = (await unwrap(await mutate(page.request, "admin.checkEmailConnection"))) as {
+    ok: boolean;
+    saved: boolean;
+    probe: { host: string; port: number; attempts: { port: number; family: number; outcome: string }[] };
+  };
+  expect(r.saved).toBe(false);
+  expect(r.probe).toMatchObject({ host: "smtp.gmail.com", port: 587 });
+  expect(r.probe.attempts.length).toBeGreaterThan(0);
+  // what the host sees, for the 20 Nov outage (whatever it is, the test passes)
+  testInfo.annotations.push({ type: "probe", description: JSON.stringify(r.probe.attempts) });
+  console.log(`[${p}] smtp probe:`, JSON.stringify(r.probe.attempts));
+
+  await page.goto("/admin/settings");
+  await page.getByRole("button", { name: "Check the connection only" }).click();
+  await expect(page.getByText(/smtp\.gmail\.com (answers|doesn't answer) on port 587\./)).toBeVisible({ timeout: 30_000 });
+  await settle(page);
+  await snap(page, testInfo, "email-connection-check");
+  expect(errors).toEqual([]);
+});
+
 test("only site admins can send one", async ({ page }, testInfo) => {
   await loginAs(page, { email: who("member", testInfo.project.name) });
   expect((await mutate(page.request, "admin.sendTestEmail")).status()).toBe(403);
+  expect((await mutate(page.request, "admin.checkEmailConnection")).status()).toBe(403);
 });

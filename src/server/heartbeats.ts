@@ -1,6 +1,9 @@
 import { createTransport } from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 import { emailSettings } from "~/server/email/smtp";
+import { transcriptLogger } from "~/server/email/email-test";
+import { probeSmtp, type ProbeResult } from "~/server/email/smtp-probe";
 import { createChildLogger } from "~/utils/logger";
 
 /**
@@ -30,10 +33,14 @@ export async function beat(which: Heartbeat, ok = true) {
       method: "GET",
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) log.warn({ which, status: res.status }, "Heartbeat not accepted");
+    if (!res.ok)
+      log.warn({ which, status: res.status }, "Heartbeat not accepted");
     return res.ok;
   } catch (error) {
-    log.warn({ which, error: error instanceof Error ? error.message : String(error) }, "Heartbeat failed to send");
+    log.warn(
+      { which, error: error instanceof Error ? error.message : String(error) },
+      "Heartbeat failed to send",
+    );
     return false;
   }
 }
@@ -42,15 +49,51 @@ export async function beat(which: Heartbeat, ok = true) {
  * Does the email server accept our login? Connects and signs in, sends
  * nothing. Null when no email server is set up.
  */
-export async function checkEmailServer(): Promise<{ ok: boolean; error?: string } | null> {
+export async function checkEmailServer(): Promise<{
+  ok: boolean;
+  error?: string;
+  probe?: ProbeResult;
+  conversation?: string[];
+} | null> {
   const settings = await emailSettings();
   if (!settings) return null;
-  const transport = createTransport({ ...settings.server, connectionTimeout: 20_000, greetingTimeout: 20_000 });
+  const transport = createTransport({
+    ...settings.server,
+    connectionTimeout: 20_000,
+    greetingTimeout: 20_000,
+  });
   try {
     await transport.verify();
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    // where it stops (20 Nov): nodemailer calls every hang-up "CONN", even
+    // one after the login, so try once more with the SMTP conversation kept
+    // (logins removed), and probe the server's addresses
+    const lines: string[] = [];
+    const again = createTransport({
+      ...settings.server,
+      connectionTimeout: 20_000,
+      greetingTimeout: 20_000,
+      logger: transcriptLogger(lines),
+      debug: true,
+    } as SMTPTransport.Options);
+    let retry: string | null = null;
+    try {
+      await again.verify();
+    } catch (e) {
+      retry = e instanceof Error ? e.message : String(e);
+    } finally {
+      again.close();
+    }
+    if (retry === null) return { ok: true, conversation: lines };
+    const { host, port } = settings.server;
+    const probe = host ? await probeSmtp(host, Number(port ?? 587)) : undefined;
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+      probe,
+      conversation: lines,
+    };
   } finally {
     transport.close();
   }

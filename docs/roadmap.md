@@ -2004,8 +2004,9 @@ that don't touch the data model. Known items to include:
   The heartbeats worked at once: the email heartbeat went down after the
   first check (00:24 UTC 20 Nov). Every hourly check since, and every
   sign-in email (35 by 05:00 UTC 21 Nov), ends "Connection closed
-  unexpectedly" at the connect stage (`command: CONN`), before Gmail's
-  greeting and before our login. So it's not the Gmail authorisation.
+  unexpectedly" (`command: CONN`). Note: nodemailer gives every hang-up
+  `CONN`, also one after the greeting or during the login, so this alone
+  doesn't say where it stops.
 - **Nightly run, 21 Nov: where the connection to the mail server stops.**
   - **Built:** `src/server/email/smtp-probe.ts` opens plain sockets to each
     of the mail server's addresses (2 IPv4, 1 IPv6) on its port and on the
@@ -2016,10 +2017,16 @@ that don't touch the data model. Known items to include:
     one-line `probeSummary`), after a failed "Send test email" at the
     connect step, and from the new Admin › Settings button "Check the
     connection only" (Gmail's server when none is saved, as on dev).
-  - **Owner:** after merge, press "Check the connection only" on prod, or
-    wait for the next hourly check in Better Stack. If 587 closes and 465
-    greets, switch the port to 465. If both close, the host's address is
-    blocked or its outbound mail ports are filtered: move email to a
-    sending service (Resend, Postmark) before gifting opens on 27 Nov.
+  - A failed hourly check now tries once more with the SMTP conversation
+    kept (logins removed, as in "Send test email") and logs it as
+    `conversation`, so the log shows the step where Gmail hangs up.
+  - **Result on dev (same host as prod), 21 Nov 05:10 UTC:** Gmail greets on
+    587 and 465 and sees us as `130.162.177.109`; IPv6 is unreachable
+    (ENETUNREACH; nodemailer tries IPv4 first, so no matter). The host's
+    network and address are fine: the problem is in prod's conversation
+    with Gmail (most likely the login), not the connection.
+  - **Owner:** press "Send test email" on prod now (it shows the
+    conversation today), or merge this and read the next hourly check in
+    Better Stack.
   - **Next (nightly, 22 Nov):** act on the probe result; then the backlog
     item the owner picks.

@@ -42,7 +42,11 @@ export function startReminderSchedule() {
       if (email) {
         if (!email.ok)
           log.error(
-            { error: email.error, ...(email.probe && { probe: email.probe, probeSummary: probeSummary(email.probe) }) },
+            {
+              error: email.error,
+              conversation: email.conversation,
+              ...(email.probe && { probe: email.probe, probeSummary: probeSummary(email.probe) }),
+            },
             "Email server check failed",
           );
         await beat("email", email.ok);

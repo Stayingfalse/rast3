@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#13264d">
+<title>Back shortly · Random Acts of Santa</title>
+<link rel="icon" href="data:image/svg+xml;base64,{{STAMP_B64}}">
+<style>
+@font-face{font-family:Archivo;font-weight:400;font-stretch:100%;font-display:swap;src:url(data:font/woff2;base64,{{FONT_400}}) format("woff2")}
+@font-face{font-family:Archivo;font-weight:600;font-stretch:100%;font-display:swap;src:url(data:font/woff2;base64,{{FONT_600}}) format("woff2")}
+@font-face{font-family:Archivo;font-weight:700 800;font-stretch:112% 125%;font-display:swap;src:url(data:font/woff2;base64,{{FONT_X800}}) format("woff2")}
+:root{
+  --night:#13264d;--night-deep:#0c1a37;--frost:#e6ecf7;--frost-soft:#aebbd4;
+  --label:#f6f0e2;--label-shade:#ebe2cd;--rule:#cdbf9f;--ink:#18223a;--ink-soft:#4b5670;
+  --post:#b8262c;--post-deep:#941c21;--paper:#fffdf8;--gold:#caa24c;--gold-soft:#e5cf98;--gold-ink:#9c7a2a;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;background:var(--night);color:var(--frost);
+  font-family:Archivo,ui-sans-serif,system-ui,sans-serif;line-height:1.625;
+  text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;caret-color:var(--post)}
+.frame{position:relative;min-height:100vh;overflow:hidden}
+::selection{background:var(--gold);color:var(--night-deep)}
+:where(a,button):focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:2px}
+a{text-underline-offset:.22em;text-decoration-thickness:1px}
+.x{font-stretch:125%}
+.caps{font-stretch:125%;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.6875rem;line-height:1.2}
+.tab{font-variant-numeric:tabular-nums lining-nums}
+
+/* the hanging post */
+.sky{position:absolute;inset:0 0 auto;height:150px;pointer-events:none;overflow:hidden}
+.sky span{position:absolute;top:0;height:150px}
+.sky svg{display:block;height:100%;width:auto}
+.sky .l{left:-56px}.sky .r{right:-56px}
+@media (min-width:640px){.sky,.sky span{height:260px}.sky .l{left:0}.sky .r{right:0}}
+
+main{position:relative;max-width:34rem;margin:0 auto;padding:150px 16px 56px}
+@media (min-width:640px){main{padding:200px 24px 72px}}
+
+/* wordmark lockup */
+.mark{display:flex;align-items:center;gap:14px;margin:0 0 40px}
+.stamp{position:relative;flex:none;width:56px;aspect-ratio:108/132;transform:rotate(-4deg);container-type:inline-size}
+.stamp svg{display:block;width:100%;height:100%}
+.stamp .yr{position:absolute;inset:auto 0 10%;text-align:center;font-stretch:125%;font-weight:800;color:var(--gold-soft);
+  font-size:max(13cqw,10px);line-height:1;letter-spacing:.06em;font-variant-numeric:tabular-nums lining-nums}
+.name{margin:0;font-stretch:125%;font-weight:800;line-height:.95;letter-spacing:-.01em;font-size:1.5rem}
+.name span{display:block;white-space:nowrap}
+.name .of{display:inline;font-weight:400;font-stretch:100%}
+@media (min-width:400px){.stamp{width:64px}.name{font-size:1.75rem}}
+
+/* the label */
+.label{position:relative;background:var(--label);color:var(--ink);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:0 1px 0 rgb(255 255 255/.6) inset,0 12px 28px -12px rgb(4 10 26/.55),0 2px 6px -2px rgb(4 10 26/.35);
+  transform:rotate(1.25deg)}
+.airmail{height:10px;border-radius:6px 6px 0 0;background:repeating-linear-gradient(-45deg,var(--post) 0 12px,var(--label) 12px 20px,var(--night) 20px 32px,var(--label) 32px 40px)}
+.head{padding:18px 20px 16px;border-bottom:1px solid var(--rule)}
+h1{margin:0;font-stretch:125%;font-weight:800;font-size:1.5rem;line-height:1.05;text-wrap:balance;max-width:18ch}
+@media (min-width:400px){h1{font-size:1.75rem}}
+.lede{margin:10px 0 0;color:var(--ink-soft);max-width:34ch}
+dl{margin:0;padding:0 20px}
+dl div{display:grid;grid-template-columns:6.5rem 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--rule)}
+dl div:first-child{border-top:0}
+dt{color:var(--ink-soft);padding-top:4px}
+dd{margin:0;font-weight:600;line-height:1.4}
+dd small{display:block;font-weight:400;font-size:.875rem;color:var(--ink-soft)}
+dd a{color:var(--post)}
+dd a:hover{color:var(--post-deep)}
+.foot{display:flex;flex-wrap:wrap;gap:10px;padding:16px 20px;background:var(--label-shade);border-top:1px solid var(--rule);border-radius:0 0 6px 6px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:6px;
+  font:inherit;font-weight:700;font-stretch:112%;letter-spacing:.01em;text-decoration:none;cursor:pointer;
+  transition:background-color 160ms ease-out,transform 160ms ease-out}
+.btn:active{transform:translateY(1px)}
+.btn-post{background:var(--post);color:var(--paper);border:0;box-shadow:0 1px 0 rgb(255 255 255/.18) inset,0 6px 16px -8px rgb(148 28 33/.9)}
+.btn-post:hover{background:var(--post-deep)}
+.btn-quiet{background:transparent;color:var(--ink);border:1px solid var(--ink);font-weight:600;padding:10px 18px}
+.btn-quiet:hover{background:rgb(24 34 58/.1)}
+.btn svg{width:18px;height:18px;flex:none}
+@media (max-width:479px){.foot .btn{flex:1 1 100%}}
+
+/* the postmark, franked across the corner */
+.pm{position:absolute;right:-22px;top:-30px;width:112px;color:var(--gold-ink);opacity:.9;transform:rotate(-10deg);pointer-events:none}
+@media (max-width:479px){.pm{width:88px;right:2px;top:-24px}}
+@keyframes frank{from{transform:scale(1.35) rotate(-14deg);filter:blur(2px);opacity:0}to{transform:rotate(-10deg);filter:none;opacity:.9}}
+.pm{animation:frank 520ms var(--ease) 240ms backwards}
+
+.after{margin:44px 0 0;color:var(--frost-soft);font-size:.9375rem;max-width:36ch}
+.after a{color:var(--frost)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="sky" aria-hidden="true">
+  <span class="l">{{SKY_LEFT}}</span>
+  <span class="r">{{SKY_RIGHT}}</span>
+</div>
+<main>
+  <div class="mark">
+    <span class="stamp" aria-hidden="true">{{STAMP}}<span class="yr">{{YEAR}}</span></span>
+    <p class="name"><span>Random Acts</span><span><span class="of">of</span> Santa</span></p>
+  </div>
+
+  <article class="label" aria-labelledby="t">
+    <div class="airmail" aria-hidden="true"></div>
+    <div class="head">
+      <h1 id="t">The post is running a little late</h1>
+      <p class="lede">Random Acts of Santa can’t be reached right now. We know, and we’re working on it.</p>
+    </div>
+    <dl>
+      <div><dt class="caps">Status</dt><dd>Held at the sorting office<small>The site is offline for the moment.</small></dd></div>
+      <div><dt class="caps">Updates</dt><dd><a href="https://status.raosanta.uk">status.raosanta.uk</a><small>Live status and any news on the fix.</small></dd></div>
+      <div><dt class="caps">This page</dt><dd><span id="check">Checks again every 30 seconds</span><small>It opens the site by itself once it’s back.</small></dd></div>
+    </dl>
+    <div class="foot">
+      <a class="btn btn-post" href="https://status.raosanta.uk">See the status page
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h9v9"/><path d="M16 4 5 15"/></svg></a>
+      <button class="btn btn-quiet" type="button" id="retry">Try again</button>
+    </div>
+    <svg class="pm" viewBox="0 0 120 120" fill="none" stroke="currentColor" aria-hidden="true">
+      <defs><path id="pt" d="M 22 60 A 38 38 0 0 1 98 60"/><path id="pb" d="M 16 60 A 44 44 0 0 0 104 60"/></defs>
+      <circle cx="60" cy="60" r="56" stroke-width="2.5"/><circle cx="60" cy="60" r="34" stroke-width="1.5"/>
+      <g fill="currentColor" stroke="none" style="font-stretch:125%">
+        <text font-size="8.5" font-weight="700" letter-spacing="1.2"><textPath href="#pt" startOffset="50%" text-anchor="middle">RANDOM ACTS</textPath></text>
+        <text font-size="8.5" font-weight="700" letter-spacing="1.2"><textPath href="#pb" startOffset="50%" text-anchor="middle">CHRISTMAS POST</textPath></text>
+        <text x="60" y="65" text-anchor="middle" font-size="13.5" font-weight="800" letter-spacing=".5">DELAYED</text>
+      </g>
+    </svg>
+  </article>
+
+  <p class="after">Thanks for bearing with us. The status page says when it’s fixed.</p>
+</main>
+</div>
+<script>
+(function(){
+  var el=document.getElementById("check"),busy=false;
+  function hhmm(d){return("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+  function check(manual){
+    if(busy)return;busy=true;
+    if(manual)el.textContent="Checking…";
+    fetch("/api/health",{cache:"no-store",headers:{"x-down-page":"1"}})
+      .then(function(r){if(r.ok){location.reload();return}throw 0})
+      .catch(function(){el.textContent="Still down at "+hhmm(new Date())+". Checking again every 30 seconds"})
+      .then(function(){busy=false});
+  }
+  document.getElementById("retry").addEventListener("click",function(){check(true)});
+  setInterval(function(){if(!document.hidden)check(false)},30000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+name = "raosanta-down-page"
+main = "src/worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+# Prod route approved by the owner in chat, 21 Nov 2026.
+routes = [
+  { pattern = "raosanta.uk/*", zone_name = "raosanta.uk" },
+  { pattern = "dev.raosanta.uk/*", zone_name = "raosanta.uk" },
+]

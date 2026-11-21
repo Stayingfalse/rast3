@@ -18,8 +18,9 @@ https://status.raosanta.uk, instead of Cloudflare's or Easypanel's error screen.
 
 ## Routes
 
-`wrangler.toml` routes `dev.raosanta.uk/*`. Prod (`raosanta.uk/*`) is added
-only with the owner's approval.
+`wrangler.toml` routes `raosanta.uk/*` (live since 21 Nov 2026, owner-approved)
+and `dev.raosanta.uk/*`. `www.raosanta.uk` is not routed (it has no Easypanel
+domain and returns 404).
 
 ## Change it
 

@@ -3,7 +3,8 @@ main = "src/worker.js"
 compatibility_date = "2026-11-01"
 workers_dev = false
 
-# Start on dev only. Add the prod route (raosanta.uk/*) once the owner approves.
+# Prod route approved by the owner in chat, 21 Nov 2026.
 routes = [
+  { pattern = "raosanta.uk/*", zone_name = "raosanta.uk" },
   { pattern = "dev.raosanta.uk/*", zone_name = "raosanta.uk" },
 ]

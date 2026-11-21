@@ -15,6 +15,48 @@ const authProviderSchema = z.object({
   emailConfig: z.any().optional().nullable(), // Allow any JSON value
 });
 
+type GmailTokens = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+};
+
+/**
+ * Gmail codes being exchanged, by code (21 Nov). Google accepts each code
+ * once, and the settings page could send it twice (the second got
+ * invalid_grant and logged an error although Gmail was connected).
+ */
+const gmailExchanges = new Map<string, { at: number; tokens: Promise<GmailTokens> }>();
+
+async function exchangeGmailCode(code: string, redirectUri: string): Promise<GmailTokens> {
+  logger.info({ redirectUri, operation: "token_exchange" }, "Gmail token exchange started");
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: process.env.AUTH_GOOGLE_ID ?? "",
+      client_secret: process.env.AUTH_GOOGLE_SECRET ?? "",
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+  if (!tokenResponse.ok) {
+    const errorData = (await tokenResponse.json()) as { error_description?: string; error?: string };
+    logger.error(
+      { status: tokenResponse.status, statusText: tokenResponse.statusText, errorData, operation: "token_exchange" },
+      "Gmail OAuth2 token exchange failed",
+    );
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `Gmail OAuth2 token exchange failed: ${errorData.error_description ?? errorData.error ?? "Unknown error"}`,
+    });
+  }
+  return (await tokenResponse.json()) as GmailTokens;
+}
+
 export const authProviderRouter = createTRPCRouter({
   // Get all auth providers
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -311,53 +353,18 @@ export const authProviderRouter = createTRPCRouter({
             "Google OAuth2 is not configured. Please set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET in your environment variables.",
         });
       }      try {
-        logger.info({
-          codePreview: input.code.substring(0, 20) + "...",
-          redirectUri: input.redirectUri,
-          operation: 'token_exchange'
-        }, 'Gmail token exchange started');
-
-        const tokenResponse = await fetch(
-          "https://oauth2.googleapis.com/token",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              code: input.code,
-              client_id: process.env.AUTH_GOOGLE_ID,
-              client_secret: process.env.AUTH_GOOGLE_SECRET,
-              redirect_uri: input.redirectUri,
-              grant_type: "authorization_code",
-            }),
-          },
-        );        if (!tokenResponse.ok) {
-          const errorData = (await tokenResponse.json()) as {
-            error_description?: string;
-            error?: string;
-          };
-
-          logger.error({
-            status: tokenResponse.status,
-            statusText: tokenResponse.statusText,
-            errorData,
-            operation: 'token_exchange'
-          }, 'Gmail OAuth2 token exchange failed');
-
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Gmail OAuth2 token exchange failed: ${errorData.error_description ?? errorData.error ?? "Unknown error"}`,
-          });
+        // each code works once: a second call with it shares the first
+        // exchange instead of failing with invalid_grant (21 Nov)
+        const now = Date.now();
+        for (const [k, v] of gmailExchanges) if (now - v.at > 10 * 60_000) gmailExchanges.delete(k);
+        let exchange = gmailExchanges.get(input.code);
+        if (exchange) {
+          logger.info({ operation: "token_exchange" }, "Gmail code already being exchanged: sharing that result");
+        } else {
+          exchange = { at: now, tokens: exchangeGmailCode(input.code, input.redirectUri) };
+          gmailExchanges.set(input.code, exchange);
         }
-
-        const tokens = (await tokenResponse.json()) as {
-          access_token: string;
-          refresh_token: string;
-          expires_in: number;
-          token_type: string;
-          scope: string;
-        };
+        const tokens = await exchange.tokens;
 
         // Save it straight onto the Gmail (OAuth2) email sign-in, if there is
         // one (27 Oct): coming back from Google reloads the settings page, so
@@ -391,15 +398,17 @@ export const authProviderRouter = createTRPCRouter({
           tokenType: tokens.token_type,
           scope: tokens.scope,
           saved,
-        };      } catch (error) {
+        };
+      } catch (error) {
+        // Google's refusal is already logged once, in exchangeGmailCode
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         logger.error({
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           operation: 'token_exchange'
         }, 'Gmail OAuth2 token exchange error');
-        if (error instanceof TRPCError) {
-          throw error;
-        }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to exchange authorization code for Gmail tokens",

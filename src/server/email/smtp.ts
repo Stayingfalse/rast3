@@ -34,13 +34,16 @@ export function serverFromEmailConfig(c: EmailConfig) {
     auth:
       c.authType === "oauth2"
         ? {
-            // Gmail OAuth2: nodemailer refreshes the access token itself
+            // Gmail OAuth2: nodemailer gets an access token from the refresh
+            // token. Never pass the saved access token (21 Nov): it has no
+            // expiry time, so nodemailer kept using it after Gmail's 1 hour,
+            // and Gmail hung up ("Connection closed unexpectedly") until the
+            // next re-authorisation.
             type: "OAuth2" as const,
             user: c.user,
             clientId: c.clientId,
             clientSecret: c.clientSecret,
             refreshToken: c.refreshToken,
-            accessToken: c.accessToken,
           }
         : { user: c.user, pass: c.password },
   };

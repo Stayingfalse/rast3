@@ -1,6 +1,7 @@
 import { createTransport } from "nodemailer";
 
 import { emailSettings } from "~/server/email/smtp";
+import { probeSmtp, type ProbeResult } from "~/server/email/smtp-probe";
 import { createChildLogger } from "~/utils/logger";
 
 /**
@@ -42,7 +43,7 @@ export async function beat(which: Heartbeat, ok = true) {
  * Does the email server accept our login? Connects and signs in, sends
  * nothing. Null when no email server is set up.
  */
-export async function checkEmailServer(): Promise<{ ok: boolean; error?: string } | null> {
+export async function checkEmailServer(): Promise<{ ok: boolean; error?: string; probe?: ProbeResult } | null> {
   const settings = await emailSettings();
   if (!settings) return null;
   const transport = createTransport({ ...settings.server, connectionTimeout: 20_000, greetingTimeout: 20_000 });
@@ -50,7 +51,10 @@ export async function checkEmailServer(): Promise<{ ok: boolean; error?: string 
     await transport.verify();
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    // where the connection stops (20 Nov), when there's a host to probe
+    const { host, port } = settings.server;
+    const probe = host ? await probeSmtp(host, Number(port ?? 587)) : undefined;
+    return { ok: false, error: error instanceof Error ? error.message : String(error), probe };
   } finally {
     transport.close();
   }

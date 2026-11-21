@@ -13,7 +13,7 @@ import {
   TRACKING_ID_HINT,
   type Store,
 } from "~/server/affiliate";
-import { sendTestEmail } from "~/server/email/email-test";
+import { checkEmailConnection, sendTestEmail } from "~/server/email/email-test";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { launchInfo, setGroupLaunch } from "~/server/group-launch";
 import { insightSeasons, seasonInsights } from "~/server/insights";
@@ -121,6 +121,9 @@ export const adminRouter = createTRPCRouter({
     }
     return sendTestEmail(me.email);
   }),
+
+  /** "Check the connection only" (20 Nov): where the connection to the mail server stops. */
+  checkEmailConnection: siteAdminProcedure.mutation(() => checkEmailConnection()),
 
   /** Every group except teams (they're managed inside their organisation). */
   groups: siteAdminProcedure

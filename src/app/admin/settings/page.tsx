@@ -171,7 +171,17 @@ export default function SettingsPage() {
       return;
     }
 
-    if (code && state === "admin_email_setup" && !exchanged.current) {
+    // once per code, even if the page mounts again (21 Nov): Google accepts
+    // each code once, so a second exchange failed with invalid_grant
+    const seen = !!code && (() => {
+      try {
+        const key = `gmail-code:${code}`;
+        if (sessionStorage.getItem(key)) return true;
+        sessionStorage.setItem(key, "1");
+      } catch {}
+      return false;
+    })();
+    if (code && state === "admin_email_setup" && !exchanged.current && !seen) {
       exchanged.current = true;
       setIsOAuthInProgress(true);
       // Exchange the code for tokens (same redirect address as the request)

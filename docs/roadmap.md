@@ -2019,3 +2019,10 @@ that don't touch the data model. Known items to include:
   - **Fixed:** the saved access token is no longer passed; nodemailer gets a
     new one from the refresh token for each connection. Reproduced locally
     with a fake Gmail (stale token → the same error; fix → OK).
+- **21 Nov (owner): the Gmail code exchange runs once.** Coming back from
+  Google, the code was exchanged twice; Google accepts each code once, so
+  the second call failed with `invalid_grant` and logged an error although
+  Gmail was connected. The server now shares one exchange per code (for 10
+  minutes), the settings page sends each code once per browser session
+  (sessionStorage, so a remount can't resend it), and Google's refusal is
+  logged once instead of twice. The log no longer holds the start of the code.

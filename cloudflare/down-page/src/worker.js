@@ -40,6 +40,7 @@ function downPage(status = 503) {
  * A browser loading a page, not an API call or asset. The site's service
  * worker re-fetches page loads itself, and those requests can arrive with
  * Sec-Fetch-Dest "empty", so the Accept header counts as well.
+ * @param {Request} request
  */
 function isPageLoad(request) {
   if (request.method !== "GET" && request.method !== "HEAD") return false;
@@ -51,6 +52,7 @@ function isPageLoad(request) {
 }
 
 const worker = {
+  /** @param {Request} request */
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === "/__down") return downPage(200);

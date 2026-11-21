@@ -2030,3 +2030,15 @@ that don't touch the data model. Known items to include:
     Better Stack.
   - **Next (nightly, 22 Nov):** act on the probe result; then the backlog
     item the owner picks.
+- **21 Nov (owner): Gmail re-authorisation fixes email "for a bit".**
+  - **Cause:** Admin › Settings saves Gmail's access token with the refresh
+    token, and `serverFromEmailConfig` passed both to nodemailer. Without an
+    expiry time nodemailer treats the access token as valid forever, but
+    Gmail's last about an hour. After that Gmail refuses it and hangs up
+    before nodemailer can retry with a new one: "Connection closed
+    unexpectedly". Each re-authorisation saved a fresh token, so email
+    worked for about an hour each time (22:27 → broken by 00:24 on 19/20 Nov;
+    the same pattern on 15-19 Nov). Not Google's 7-day test-mode limit.
+  - **Fixed:** the saved access token is no longer passed; nodemailer gets a
+    new one from the refresh token for each connection. Reproduced locally
+    with a fake Gmail (stale token → the same error; fix → OK).

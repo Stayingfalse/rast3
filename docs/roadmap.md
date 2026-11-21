@@ -1977,3 +1977,26 @@ that don't touch the data model. Known items to include:
     Nov sign-in email outage within the hour.
   - **Owner:** add the two URLs to `ras/raosanta-uk` once merged (values in
     the chat); the heartbeats are paused until prod reports.
+- **20 Nov nightly:** no change (the owner moved it to 19 Nov evening: #102).
+  The heartbeats worked at once: the email heartbeat went down after the
+  first check (00:24 UTC 20 Nov). Every hourly check since, and every
+  sign-in email (35 by 05:00 UTC 21 Nov), ends "Connection closed
+  unexpectedly" at the connect stage (`command: CONN`), before Gmail's
+  greeting and before our login. So it's not the Gmail authorisation.
+- **Nightly run, 21 Nov: where the connection to the mail server stops.**
+  - **Built:** `src/server/email/smtp-probe.ts` opens plain sockets to each
+    of the mail server's addresses (2 IPv4, 1 IPv6) on its port and on the
+    other Gmail port (587 ↔ 465), and records the outcome: greeting, closed,
+    reset, refused or timeout. On 587 it also says EHLO: Gmail's reply names
+    the address it sees us connecting from. No login, no mail.
+  - It runs after a failed hourly email check (the log gets `probe` and a
+    one-line `probeSummary`), after a failed "Send test email" at the
+    connect step, and from the new Admin › Settings button "Check the
+    connection only" (Gmail's server when none is saved, as on dev).
+  - **Owner:** after merge, press "Check the connection only" on prod, or
+    wait for the next hourly check in Better Stack. If 587 closes and 465
+    greets, switch the port to 465. If both close, the host's address is
+    blocked or its outbound mail ports are filtered: move email to a
+    sending service (Resend, Postmark) before gifting opens on 27 Nov.
+  - **Next (nightly, 22 Nov):** act on the probe result; then the backlog
+    item the owner picks.

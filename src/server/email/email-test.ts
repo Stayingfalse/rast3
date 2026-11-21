@@ -6,6 +6,7 @@ import { clean, errorDetail } from "~/server/utils/error-detail";
 import { maskEmail } from "~/server/work-email";
 import { createChildLogger } from "~/utils/logger";
 import { type EmailConfig, emailSettings } from "./smtp";
+import { probeSmtp } from "./smtp-probe";
 
 /**
  * Admin › Settings › "Send test email" (owner, 19 Nov): sends one email the
@@ -138,6 +139,22 @@ export function transcriptLogger(lines: string[]) {
   return { trace: keep("trace"), debug: keep("debug"), info: keep("info"), warn: keep("warn"), error: keep("error"), fatal: keep("fatal") };
 }
 
+/**
+ * "Check the connection only": probes the saved mail server (or Gmail's,
+ * when none is saved) without signing in or sending anything.
+ */
+export async function checkEmailConnection() {
+  const settings = await emailSettings();
+  const host = settings?.server.host ?? "smtp.gmail.com";
+  const port = Number(settings?.server.port ?? 587);
+  const probe = await probeSmtp(host, port);
+  const ok = probe.attempts.some((a) => a.port === port && a.outcome === "greeting");
+  const result = { ok, saved: !!settings, probe };
+  if (ok) log.info(result, "Email connection check: the server answers");
+  else log.error(result, "Email connection check: no greeting from the server");
+  return result;
+}
+
 export async function sendTestEmail(to: string): Promise<EmailTestResult> {
   const described = await describeSettings();
   const google = await googleAccountCheck((described as { user?: string } | null)?.user);
@@ -172,7 +189,10 @@ export async function sendTestEmail(to: string): Promise<EmailTestResult> {
   try {
     await transport.verify();
   } catch (error) {
-    return finish({ ok: false, step: "connect", detail: errorDetail(error) });
+    // where the connection stops: DNS, each address, both Gmail ports (20 Nov)
+    const { host, port } = settings.server;
+    const probe = host ? await probeSmtp(host, Number(port ?? 587)) : null;
+    return finish({ ok: false, step: "connect", detail: { error: errorDetail(error), probe } });
   }
   try {
     const info = await transport.sendMail({

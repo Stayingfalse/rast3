@@ -1,5 +1,6 @@
 import { deleteInactiveAccounts } from "~/server/account";
 import { beat, checkEmailServer } from "~/server/heartbeats";
+import { probeSummary } from "./smtp-probe";
 import { db } from "~/server/db";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { createChildLogger } from "~/utils/logger";
@@ -39,7 +40,11 @@ export function startReminderSchedule() {
     try {
       const email = await checkEmailServer();
       if (email) {
-        if (!email.ok) log.error({ error: email.error }, "Email server check failed");
+        if (!email.ok)
+          log.error(
+            { error: email.error, ...(email.probe && { probe: email.probe, probeSummary: probeSummary(email.probe) }) },
+            "Email server check failed",
+          );
         await beat("email", email.ok);
       }
     } catch (error) {

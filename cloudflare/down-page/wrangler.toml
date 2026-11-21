@@ -1,0 +1,9 @@
+name = "raosanta-down-page"
+main = "src/worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+# Start on dev only. Add the prod route (raosanta.uk/*) once the owner approves.
+routes = [
+  { pattern = "dev.raosanta.uk/*", zone_name = "raosanta.uk" },
+]

@@ -19,8 +19,9 @@ https://status.raosanta.uk, instead of Cloudflare's or Easypanel's error screen.
 ## Routes
 
 `wrangler.toml` routes `raosanta.uk/*` (live since 21 Nov 2026, owner-approved)
-and `dev.raosanta.uk/*`. `www.raosanta.uk` is not routed (it has no Easypanel
-domain and returns 404).
+and `dev.raosanta.uk/*`. `www.raosanta.uk` never reaches the Worker: a Cloudflare
+redirect rule (zone raosanta.uk, Rules → Redirect Rules, "www.raosanta.uk ->
+raosanta.uk") sends it to the same path on raosanta.uk with a 301.
 
 ## Change it
 

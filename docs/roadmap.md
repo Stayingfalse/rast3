@@ -2049,3 +2049,25 @@ that don't touch the data model. Known items to include:
   minutes), the settings page sends each code once per browser session
   (sessionStorage, so a remount can't resend it), and Google's refusal is
   logged once instead of twice. The log no longer holds the start of the code.
+- **Nightly run, 22 Nov (spare day, no owner pick; the 21 Nov idea): sign-in
+  says when email is down.**
+  - **Why:** from 15 to 21 Nov sign-in links failed for hours at a time (35
+    on 20 Nov alone) and people only found out after waiting for a link.
+  - **Built:** `src/server/email/status.ts` remembers whether email is
+    getting out: the hourly email check and every sign-in email report to
+    it (a rejected recipient doesn't count; a failure older than 2 hours
+    counts as unknown). `/api/email-status` (public: `down` and `since`
+    only). While email is down, the sign-in window says "Email sign-in
+    links aren't getting through right now" and points to the other
+    options; email sign-in stays available.
+  - **Small fix (backlog "session refresh race"):** two requests refreshing
+    the same session (or last-seen date) at once hit MariaDB's error 1020
+    (twice on 21 Nov). The session refresh now retries once and then lets
+    the lost race go, and the database log calls it a warning, so it
+    can't trip the "3+ errors" alert. The env-config sign-in path no
+    longer logs the full email address.
+  - **Checked:** the 03:05 UTC reboot on 22 Nov raised no alert (the
+    maintenance window works); no email errors since the 21 Nov fixes.
+  - **Next (nightly, 23 Nov):** gifting opens Fri 27 Nov: re-check the
+    launch rehearsal on dev (Season row, launch emails, banners), then the
+    backlog item the owner picks.

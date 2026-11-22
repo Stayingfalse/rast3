@@ -1,7 +1,9 @@
 // Dynamic authentication provider configuration
+import { noteEmail, noteEmailError } from "~/server/email/status";
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { serverFromEmailConfig, type EmailConfig } from "~/server/email/smtp";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { withSessionRetry } from "~/server/utils/write-conflict";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import type { Provider } from "next-auth/providers";
 import Discord from "next-auth/providers/discord";
@@ -261,20 +263,22 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               text,
               html,
             });
+            noteEmail(true);
           } catch (error) {
+            noteEmailError(error);
             logger.error({
               error: error instanceof Error ? error.message : String(error),
               // the mail server's code and reply (19 Nov)
               detail: clean(errorDetail(error)),
               errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-              to: email,
+              to: maskEmail(email),
               subject,
               configSource: 'environment_variables',
               smtpHost: process.env.EMAIL_SERVER_HOST ?? 'unknown',
               smtpPort: process.env.EMAIL_SERVER_PORT ?? 'unknown',
               operation: 'send_verification_email_env',
               actionNeeded: 'Check EMAIL_SERVER_* environment variables and SMTP credentials'
-            }, `Failed to send verification email via env config to ${email}: ${error instanceof Error ? error.message : String(error)}`);
+            }, "Failed to send verification email (env config)");
             throw new Error("Failed to send verification email");
           }
         },
@@ -307,7 +311,9 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
                 text,
                 html,
               });
+              noteEmail(true);
             } catch (error) {
+              noteEmailError(error);
               logger.error({
                 error: error instanceof Error ? error.message : String(error),
                 // the mail server's code and reply (19 Nov)
@@ -327,7 +333,7 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   }
 
   return {
-    adapter: PrismaAdapter(db),
+    adapter: withSessionRetry(PrismaAdapter(db)),
     providers,
     // Auth.js errors with their cause (19 Nov): its pages only ever say
     // "Configuration"

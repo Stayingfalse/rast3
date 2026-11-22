@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 import { env } from "~/env";
 import { createChildLogger } from "~/utils/logger";
+import { isWriteConflict } from "~/server/utils/write-conflict";
 
 const logger = createChildLogger('server');
 
@@ -31,6 +32,11 @@ const createPrismaClient = () => {
   });
 
   prisma.$on('error', (e) => {
+    // two requests refreshing the same row at once: harmless (21 Nov)
+    if (isWriteConflict(e.message)) {
+      logger.warn({ target: e.target, errorType: 'write_conflict' }, 'Database write conflict (harmless race)');
+      return;
+    }
     logger.error({
       message: e.message,
       target: e.target,

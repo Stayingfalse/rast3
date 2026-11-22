@@ -111,12 +111,18 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
   /** the sign-in link couldn't be sent (17 Nov: it failed silently before) */
   const [sendError, setSendError] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  /** email sign-in links are failing right now (22 Nov), from /api/email-status */
+  const [emailDown, setEmailDown] = useState(false);
   const domain = workDomain?.toLowerCase();
   const typedDomain = email.trim().toLowerCase().split("@")[1] ?? "";
   const isWorkEmail = !!domain && (typedDomain === domain || typedDomain.endsWith(`.${domain}`));
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
+      void fetch("/api/email-status")
+        .then((r) => (r.ok ? (r.json() as Promise<{ down?: boolean }>) : null))
+        .then((s) => setEmailDown(!!s?.down))
+        .catch(() => setEmailDown(false));
     } else {
       setShowAll(false);
       // Reset states when modal is closed
@@ -386,6 +392,16 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                           {/* Email provider with special form */}
                           {emailProvider && (
                             <div className="space-y-3">
+                              {emailDown && oauthProviders.length > 0 && (
+                                <p
+                                  role="status"
+                                  className="rounded-label border-gold bg-gold-soft/40 text-ink border px-3 py-2 text-sm"
+                                >
+                                  <strong>Email sign-in links aren&apos;t getting through right now.</strong>{" "}
+                                  Sign in with one of the options below instead. If it uses the same
+                                  email address, you&apos;ll get the same account.
+                                </p>
+                              )}
                               {!showEmailForm ? (
                                 <button
                                   onClick={() => setShowEmailForm(true)}

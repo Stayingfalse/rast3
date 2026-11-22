@@ -78,6 +78,11 @@ self.addEventListener('fetch', /** @param {any} event */ (event) => {
           if (networkResponse && networkResponse.ok) {
             return networkResponse;
           }
+          // The site is down and Cloudflare sent its "back shortly" page
+          // (cloudflare/down-page): show that, not a stale cached home page.
+          if (networkResponse && networkResponse.headers.get('x-raosanta-fallback')) {
+            return networkResponse;
+          }
           // Fallback to cached root if available
           return caches.match('/').then((cached) => cached || networkResponse);
         })

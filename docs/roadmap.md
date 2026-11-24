@@ -2101,4 +2101,5 @@ that don't touch the data model. Known items to include:
   - **After the season:** dev and prod share `AUTH_SECRET` (and dev has the
     test login); give each its own.
   - **Next (nightly, 24 Nov):** the backlog item the owner picks; otherwise
-    check the Google app's status and a small launch-week polish.
+    a small launch-week polish. (Google app: the owner believes it's
+    published and will re-authorise if the email heartbeat fires.)

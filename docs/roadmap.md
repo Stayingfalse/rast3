@@ -2059,10 +2059,10 @@ that don't touch the data model. Known items to include:
   - **Prod (from outside):** healthy; the home page says "Opens 27
     November"; no reboot alert on 22 or 23 Nov (the maintenance window
     works); no email errors since the 21 Nov fixes.
-  - **Found: backups.** Prod's database backup schedule (02:00, enabled)
-    still never runs on its own; the last backup is the owner's manual one
-    on 8 Nov 18:25. `docs/launch-checklist.md` updated: take one now and on
-    the evening of 26 Nov.
+  - **Backups (owner, 23 Nov): handled outside Easypanel** by the owner's
+    service `ras/db-backup` (Easypanel charges for scheduled backups), so
+    Easypanel's Backups list only shows manual ones. **Don't remind about
+    backups** in nightly runs or updates.
   - **Found: Google OAuth "Testing"?** If the Google app is still in
     Testing, the Gmail authorisation from 21 Nov ends on 28 Nov. Owner to
     confirm it's published (checklist).
@@ -2071,5 +2071,11 @@ that don't touch the data model. Known items to include:
     opening.
   - **Weekly reminder: VAPID keys** for push notifications (dev and prod)
     are still unset; PWA push stays off until they are.
+  - **VAPID keys set (owner, 23 Nov)** on dev and prod (a pair each:
+    `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+    The weekly reminder stops. PWA push is built after launch day (not in
+    opening week), unless the owner asks sooner.
+  - **After the season:** dev and prod share `AUTH_SECRET` (and dev has the
+    test login); give each its own.
   - **Next (nightly, 24 Nov):** the backlog item the owner picks; otherwise
-    check the backups and the Google app, and a small launch-week polish.
+    check the Google app's status and a small launch-week polish.

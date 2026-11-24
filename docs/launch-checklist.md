@@ -15,9 +15,8 @@ verified from the outside or in the code (1 Nov, or the date given);
 | ✅ | Security headers: HSTS (preload), CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy | Checked |
 | ⬜ | Season dates: gifting opens **27 Nov** (the last Friday in November; moved 14 Nov), closes 6 Jan. Prod's Season row overrides the code default, so set Admin › Season › Gifting opens = 27/11/2026 before midnight on 14 Nov | **Owner** |
 | ✅ | Privacy policy, terms and "Your data" live; Amazon Associates disclosure in the footer | Checked |
-| ⚠️ | **Database backups.** Easypanel's database schedule (02:00, enabled) has still never run on its own (checked 23 Nov via the connector: the last backup is the owner's manual one on **8 Nov 18:25**, 15 days old, with the drive's sign-ups since). The database volume has no volume backup either. **Take one now and again on the evening of 26 Nov, before gifting opens**; until the schedule works, one each evening, or a nightly `mysqldump` cron to IDrive e2. Also try one restore into a scratch database | **Owner** (Claude checks each morning) |
+| ✅ | **Database backups** run outside Easypanel's own schedule (which costs extra), in the owner's service `ras/db-backup` (deployed 21 Nov). Easypanel's Backups list therefore only shows manual backups. Owner's call (23 Nov): **don't remind about backups** | Owner (handled) |
 | ⬜ | Dev database (`ras/database-dev`) has no backup schedule | **Owner** |
-| ⚠️ | Take a manual backup right before the release candidate (Day 33) | **Owner** |
 | ⬜ | Thank-you photo storage (iDrive E2): bucket has a lifecycle/backup you're happy with | **Owner** |
 
 ## Sign-in and email

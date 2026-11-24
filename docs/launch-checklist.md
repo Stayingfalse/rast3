@@ -23,7 +23,7 @@ verified from the outside or in the code (1 Nov, or the date given);
 
 | | Item | Status |
 |---|---|---|
-| ⚠️ | **Google OAuth app published?** If it's still in "Testing", only listed test users can sign in with Google, and Google ends the Gmail authorisation 7 days after it was given: the last one (21 Nov, about 12:00 UTC) would stop on **28 Nov**, the day after gifting opens. The email heartbeat would alert within the hour, but publishing it avoids that | **Owner** |
+| ✅ | **Google OAuth app:** the owner believes it's published, not in "Testing" (23 Nov), and will re-authorise Gmail if needed. If it were in Testing, the 21 Nov authorisation would stop on 28 Nov: the email heartbeat alerts within the hour and the sign-in window points members to Google and Discord | Owner (handled) |
 | ✅ | **Gmail sending works** (23 Nov): the 15-21 Nov outage was our code reusing an expired access token (fixed 21 Nov, #104); no email errors since. The email heartbeat alerts within the hour if it stops; the sign-in window then points members to Google and Discord (#107) | Checked |
 | ⬜ | Send yourself a sign-in link on prod and check it arrives (not in spam) | **Owner** |
 | ⬜ | Consider a raosanta.uk sender (SPF/DKIM/DMARC) rather than a personal Gmail for 300 emails a day | **Owner** |

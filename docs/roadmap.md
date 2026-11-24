@@ -2048,3 +2048,23 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 23 Nov):** gifting opens Fri 27 Nov: re-check the
     launch rehearsal on dev (Season row, launch emails, banners), then the
     backlog item the owner picks.
+- **Nightly run, 24 Nov (launch-week polish): sign-in links that "don't work".**
+  - **Seen on prod (23 Nov 19:12 UTC):** a member opened an already-used
+    sign-in link 3 times, then the sign-in address without a token twice,
+    and got Auth.js's unbranded error page each time.
+  - **Cause found:** the email's Outlook-only button (VML) linked the raw
+    one-time sign-in URL; every other link goes through `/auth/magic`, the
+    page with a "Click to Sign In" button that link scanners don't press.
+    Outlook's link scanning (Safe Links) opens the raw link first and uses
+    it up. Fixed: the Outlook button uses the landing page too.
+  - **Built:** `/auth/error`, our own page for a failed sign-in (Auth.js
+    `pages.error`). A used or expired link says what happened ("Each link
+    works once, within 24 hours"; work email systems may open links first)
+    and its button opens the usual sign-in window; other errors get a plain
+    message and a retry. Never a dead end.
+  - **Logs:** a used link and a request with no token are the member's side,
+    so they're warnings now (Auth.js "Verification"/"UnknownAction" and the
+    adapter's "no record for verificationToken.delete"), not errors that
+    count towards the "3+ errors" alert.
+  - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
+    a final look over opening day (27 Nov) and the gifting emails.

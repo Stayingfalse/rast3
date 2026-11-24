@@ -100,7 +100,7 @@ function createMagicLinkEmailTemplate({ url, host, email }: EmailTemplateParams)
                       <tr>
                         <td style="background-color: #dc2626; padding: 0; text-align: center;">
                           <!--[if mso]>
-                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#dc2626">
+                          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${landing}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" stroke="f" fillcolor="#dc2626">
                           <w:anchorlock/>
                           <center>
                           <![endif]-->

@@ -95,6 +95,59 @@ test("a workplace's own link asks for the work email first", async ({ page }, te
   expect(errors).toEqual([]);
 });
 
+test("signing in with a workplace's address asks first (owner, 24 Nov)", async ({ page }, testInfo) => {
+  const errors = trackPageErrors(page);
+  // the check takes a domain and says only yes or no; subdomains count
+  const ask = async (d: string) =>
+    ((await (await page.request.get(`/api/email-domain?domain=${encodeURIComponent(d)}`)).json()) as {
+      workplace: boolean;
+    }).workplace;
+  expect(await ask(domain)).toBe(true);
+  expect(await ask(`mail.${domain.toUpperCase()}`)).toBe(true);
+  expect(await ask("gmail.com")).toBe(false);
+  expect(await ask("not a domain")).toBe(false);
+
+  // from anywhere (here the home page, with no invite to know the domain by)
+  await page.route("**/api/auth/providers", async (route) => {
+    const res = await route.fetch();
+    const providers = (await res.json()) as Record<string, unknown>;
+    providers.nodemailer ??= { id: "nodemailer", name: "Email", type: "email", signinUrl: "", callbackUrl: "" };
+    await route.fulfill({ response: res, json: providers });
+  });
+  await page.goto("/?for=invited");
+  await page.getByRole("button", { name: "Join your group" }).first().click();
+  const signIn = page.getByRole("dialog");
+  await signIn.getByRole("button", { name: "Continue with Email" }).click();
+  const box = signIn.getByLabel("Email address");
+  await box.fill(`cole@${domain}`);
+  await signIn.getByRole("button", { name: "Send Magic Link" }).click();
+  await expect(signIn.getByText("Is that your work email?")).toBeVisible();
+  await expect(signIn.getByRole("button", { name: "Send Magic Link" })).toBeHidden();
+  await settle(page);
+  await snap(page, testInfo, "sign-in-work-email-confirm");
+
+  // "personal" clears the box for another address
+  await signIn.getByRole("button", { name: "Use my personal email" }).click();
+  await expect(box).toHaveValue("");
+  await expect(box).toBeFocused();
+  await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
+
+  // a personal address goes straight through (dev has no email server, so it
+  // fails to send; what matters is that nothing asked first)
+  await box.fill("cole@example.com");
+  await signIn.getByRole("button", { name: "Send Magic Link" }).click();
+  await expect(signIn.getByText("We couldn't send your sign-in link just now.")).toBeVisible();
+  await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
+
+  // and "send to my work email" sends it
+  await box.fill(`cole@${domain}`);
+  await signIn.getByRole("button", { name: "Send Magic Link" }).click();
+  await signIn.getByRole("button", { name: "Send to my work email" }).click();
+  await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
+  await expect(signIn.getByText("We couldn't send your sign-in link just now.")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("a colleague joins from the link with its code, then fills in their profile", async ({
   page,
 }, testInfo) => {

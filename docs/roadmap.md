@@ -2048,6 +2048,38 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 23 Nov):** gifting opens Fri 27 Nov: re-check the
     launch rehearsal on dev (Season row, launch emails, banners), then the
     backlog item the owner picks.
+- **Nightly run, 23 Nov: launch rehearsal for Fri 27 Nov (no code change).**
+  - **Rehearsal:** the weekly e2e run (05:23 UTC) passed with the season
+    still before opening (162 desktop, 162 mobile). Then dev's Season was
+    set to open on 20 Nov and the full suite run again with gifting open:
+    162 passed on desktop and 162 on mobile. The home page reads "Open
+    until 6 January" and "Pick up a wishlist any time"; the "gifts sent so
+    far" figure is all-time (all purchases), so it isn't empty on launch
+    morning. Dev's Season is back on 27 Nov 00:00 UTC.
+  - **Prod (from outside):** healthy; the home page says "Opens 27
+    November"; no reboot alert on 22 or 23 Nov (the maintenance window
+    works); no email errors since the 21 Nov fixes.
+  - **Backups (owner, 23 Nov): handled outside Easypanel** by the owner's
+    service `ras/db-backup` (Easypanel charges for scheduled backups), so
+    Easypanel's Backups list only shows manual ones. **Don't remind about
+    backups** in nightly runs or updates.
+  - **Found: Google OAuth "Testing"?** If the Google app is still in
+    Testing, the Gmail authorisation from 21 Nov ends on 28 Nov. Owner to
+    confirm it's published (checklist).
+  - The "last chance to add your wishlist" idea (22 Nov) already exists:
+    members who haven't checked in get CHECK_IN_NUDGE in the 14 days before
+    opening.
+  - **Weekly reminder: VAPID keys** for push notifications (dev and prod)
+    are still unset; PWA push stays off until they are.
+  - **VAPID keys set (owner, 23 Nov)** on dev and prod (a pair each:
+    `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+    The weekly reminder stops. PWA push is built after launch day (not in
+    opening week), unless the owner asks sooner.
+  - **After the season:** dev and prod share `AUTH_SECRET` (and dev has the
+    test login); give each its own.
+  - **Next (nightly, 24 Nov):** the backlog item the owner picks; otherwise
+    a small launch-week polish. (Google app: the owner believes it's
+    published and will re-authorise if the email heartbeat fires.)
 - **Nightly run, 24 Nov (launch-week polish): sign-in links that "don't work".**
   - **Seen on prod (23 Nov 19:12 UTC):** a member opened an already-used
     sign-in link 3 times, then the sign-in address without a token twice,

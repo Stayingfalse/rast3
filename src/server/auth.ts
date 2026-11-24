@@ -206,6 +206,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   pages: {
     verifyRequest: "/auth/verify-request", // Custom verify-request page
+    error: "/auth/error", // a used link, or any other failed sign-in (24 Nov)
   },
   cookies: {
     sessionToken: {

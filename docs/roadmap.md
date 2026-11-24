@@ -2121,5 +2121,13 @@ that don't touch the data model. Known items to include:
     so they're warnings now (Auth.js "Verification"/"UnknownAction" and the
     adapter's "no record for verificationToken.delete"), not errors that
     count towards the "3+ errors" alert.
+  - **Owner, 24 Nov: "lots of failed sign-ons" with company emails.** The
+    work-email warning only showed on a workplace's own invite page (the
+    one place the domain was known). Now any email sign-in checks the
+    address's domain (`/api/email-domain`: the domain only, yes or no;
+    subdomains count) against registered workplaces (live or pending), and
+    before sending asks "Is that your work email?", with "Use my personal
+    email" (clears the box) or "Send to my work email". The check never
+    blocks sign-in: if it fails, the link is sent.
   - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
     a final look over opening day (27 Nov) and the gifting emails.

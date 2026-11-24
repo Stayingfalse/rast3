@@ -111,6 +111,15 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
   /** the sign-in link couldn't be sent (17 Nov: it failed silently before) */
   const [sendError, setSendError] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  /**
+   * A registered workplace's address, waiting for "send anyway" (owner, 24
+   * Nov: lots of sign-in links to company addresses never arrive).
+   */
+  const [confirmWork, setConfirmWork] = useState(false);
+  const [checking, setChecking] = useState(false);
+  /** the address the member said to send to anyway */
+  const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
+  const emailInput = React.useRef<HTMLInputElement>(null);
   /** email sign-in links are failing right now (22 Nov), from /api/email-status */
   const [emailDown, setEmailDown] = useState(false);
   const domain = workDomain?.toLowerCase();
@@ -131,6 +140,8 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
       setEmail("");
       setIsLoading(null);
       setSendError(false);
+      setConfirmWork(false);
+      setConfirmedFor(null);
     }
   }, [isOpen]);
   const handleSignIn = async (providerId: string, email?: string) => {
@@ -175,8 +186,32 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
       setIsLoading(null);
     }
   };
+  /** Is this address at a workplace registered here? Only the domain is sent. */
+  const isWorkplaceDomain = async (address: string) => {
+    const domain = address.trim().toLowerCase().split("@")[1];
+    if (!domain) return false;
+    try {
+      const r = await fetch(`/api/email-domain?domain=${encodeURIComponent(domain)}`);
+      return r.ok && ((await r.json()) as { workplace?: boolean }).workplace === true;
+    } catch {
+      return false; // never block sign-in on the check
+    }
+  };
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // a workplace address: ask first, unless they already chose to send
+    // (an invite's own domain is warned about as they type, and its button
+    // already says "anyway")
+    const address = email.trim().toLowerCase();
+    if (email && !isWorkEmail && confirmedFor !== address) {
+      setChecking(true);
+      const work = await isWorkplaceDomain(address);
+      setChecking(false);
+      if (work) {
+        setConfirmWork(true);
+        return;
+      }
+    }
     if (email) {
       await handleSignIn("nodemailer", email);
     }
@@ -425,8 +460,12 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                                   <input
                                     type="email"
                                     placeholder={domain ? "Your personal email address" : "Enter your email address"}
+                                    ref={emailInput}
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                      setEmail(e.target.value);
+                                      setConfirmWork(false);
+                                    }}
                                     aria-label="Email address"
                                     aria-describedby={isWorkEmail ? "work-email-warning" : undefined}
                                     className="rounded-label border-rule text-ink placeholder:text-ink-soft w-full border bg-white px-4 py-3"
@@ -443,17 +482,56 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                                       recommend your personal email, or one of the options below.
                                     </p>
                                   )}
+                                  {confirmWork && (
+                                    <div
+                                      role="alert"
+                                      className="rounded-label border-gold bg-gold-soft/40 text-ink space-y-3 border px-3 py-3 text-sm"
+                                    >
+                                      <p>
+                                        <strong>Is that your work email?</strong> Many workplaces
+                                        block emails from outside, so your sign-in link may never
+                                        arrive. A personal email is the safest choice. You can still
+                                        join your workplace: add your work email to your profile
+                                        after you sign in.
+                                      </p>
+                                      <div className="flex flex-col gap-2 sm:flex-row">
+                                        <button
+                                          type="button"
+                                          className="btn-post flex-1"
+                                          onClick={() => {
+                                            setConfirmWork(false);
+                                            setEmail("");
+                                            emailInput.current?.focus();
+                                          }}
+                                        >
+                                          Use my personal email
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn-quiet text-ink flex-1"
+                                          onClick={() => {
+                                            const address = email.trim().toLowerCase();
+                                            setConfirmedFor(address);
+                                            setConfirmWork(false);
+                                            void handleSignIn("nodemailer", email);
+                                          }}
+                                        >
+                                          Send to my work email
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
                                   {sendError && (
                                     <p role="alert" className="rounded-label border-post bg-post-tint text-post-deep border px-3 py-2 text-sm">
                                       <strong>We couldn&apos;t send your sign-in link just now.</strong> Please try
                                       again in a few minutes, or sign in with one of the other options.
                                     </p>
                                   )}
-                                  <div className="flex gap-2">
+                                  <div className={confirmWork ? "hidden" : "flex gap-2"}>
                                     {" "}
                                     <button
                                       type="submit"
-                                      disabled={isLoading !== null || !email}
+                                      disabled={isLoading !== null || checking || !email}
                                       className="btn-post flex-1 disabled:opacity-50"
                                     >
                                       {" "}

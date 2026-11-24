@@ -2048,3 +2048,63 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 23 Nov):** gifting opens Fri 27 Nov: re-check the
     launch rehearsal on dev (Season row, launch emails, banners), then the
     backlog item the owner picks.
+- **Nightly run, 23 Nov: launch rehearsal for Fri 27 Nov (no code change).**
+  - **Rehearsal:** the weekly e2e run (05:23 UTC) passed with the season
+    still before opening (162 desktop, 162 mobile). Then dev's Season was
+    set to open on 20 Nov and the full suite run again with gifting open:
+    162 passed on desktop and 162 on mobile. The home page reads "Open
+    until 6 January" and "Pick up a wishlist any time"; the "gifts sent so
+    far" figure is all-time (all purchases), so it isn't empty on launch
+    morning. Dev's Season is back on 27 Nov 00:00 UTC.
+  - **Prod (from outside):** healthy; the home page says "Opens 27
+    November"; no reboot alert on 22 or 23 Nov (the maintenance window
+    works); no email errors since the 21 Nov fixes.
+  - **Backups (owner, 23 Nov): handled outside Easypanel** by the owner's
+    service `ras/db-backup` (Easypanel charges for scheduled backups), so
+    Easypanel's Backups list only shows manual ones. **Don't remind about
+    backups** in nightly runs or updates.
+  - **Found: Google OAuth "Testing"?** If the Google app is still in
+    Testing, the Gmail authorisation from 21 Nov ends on 28 Nov. Owner to
+    confirm it's published (checklist).
+  - The "last chance to add your wishlist" idea (22 Nov) already exists:
+    members who haven't checked in get CHECK_IN_NUDGE in the 14 days before
+    opening.
+  - **Weekly reminder: VAPID keys** for push notifications (dev and prod)
+    are still unset; PWA push stays off until they are.
+  - **VAPID keys set (owner, 23 Nov)** on dev and prod (a pair each:
+    `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+    The weekly reminder stops. PWA push is built after launch day (not in
+    opening week), unless the owner asks sooner.
+  - **After the season:** dev and prod share `AUTH_SECRET` (and dev has the
+    test login); give each its own.
+  - **Next (nightly, 24 Nov):** the backlog item the owner picks; otherwise
+    a small launch-week polish. (Google app: the owner believes it's
+    published and will re-authorise if the email heartbeat fires.)
+- **Nightly run, 24 Nov (launch-week polish): sign-in links that "don't work".**
+  - **Seen on prod (23 Nov 19:12 UTC):** a member opened an already-used
+    sign-in link 3 times, then the sign-in address without a token twice,
+    and got Auth.js's unbranded error page each time.
+  - **Cause found:** the email's Outlook-only button (VML) linked the raw
+    one-time sign-in URL; every other link goes through `/auth/magic`, the
+    page with a "Click to Sign In" button that link scanners don't press.
+    Outlook's link scanning (Safe Links) opens the raw link first and uses
+    it up. Fixed: the Outlook button uses the landing page too.
+  - **Built:** `/auth/error`, our own page for a failed sign-in (Auth.js
+    `pages.error`). A used or expired link says what happened ("Each link
+    works once, within 24 hours"; work email systems may open links first)
+    and its button opens the usual sign-in window; other errors get a plain
+    message and a retry. Never a dead end.
+  - **Logs:** a used link and a request with no token are the member's side,
+    so they're warnings now (Auth.js "Verification"/"UnknownAction" and the
+    adapter's "no record for verificationToken.delete"), not errors that
+    count towards the "3+ errors" alert.
+  - **Owner, 24 Nov: "lots of failed sign-ons" with company emails.** The
+    work-email warning only showed on a workplace's own invite page (the
+    one place the domain was known). Now any email sign-in checks the
+    address's domain (`/api/email-domain`: the domain only, yes or no;
+    subdomains count) against registered workplaces (live or pending), and
+    before sending asks "Is that your work email?", with "Use my personal
+    email" (clears the box) or "Send to my work email". The check never
+    blocks sign-in: if it fails, the link is sent.
+  - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
+    a final look over opening day (27 Nov) and the gifting emails.

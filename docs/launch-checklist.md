@@ -1,6 +1,6 @@
 # Launch checklist (wishlist drive from 15 Nov, gifting opens 27 Nov 2026)
 
-Day 31 (1 Nov 2026), refreshed 8 Nov for launch week. What has to be true
+Day 31 (1 Nov 2026), refreshed 8 Nov for launch week and 23 Nov for opening day. What has to be true
 before members are pointed at raosanta.uk for the season. **Checked** means
 verified from the outside or in the code (1 Nov, or the date given);
 **Owner** means only the owner can do or confirm it.
@@ -15,17 +15,16 @@ verified from the outside or in the code (1 Nov, or the date given);
 | ✅ | Security headers: HSTS (preload), CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy | Checked |
 | ⬜ | Season dates: gifting opens **27 Nov** (the last Friday in November; moved 14 Nov), closes 6 Jan. Prod's Season row overrides the code default, so set Admin › Season › Gifting opens = 27/11/2026 before midnight on 14 Nov | **Owner** |
 | ✅ | Privacy policy, terms and "Your data" live; Amazon Associates disclosure in the footer | Checked |
-| ⚠️ | **Database backups.** Easypanel's database schedule (02:00) has still never run on its own (checked 8 Nov); the database volume has no volume backup either. Last backup: the owner's manual one on 6 Nov 01:58, before five migrations reached prod (launch emails, last order, Discord names and details on 6 Nov; group launch dates on 7 Nov). Take one now; until the schedule works, one each evening, or a nightly `mysqldump` cron to IDrive e2. Also try one restore into a scratch database | **Owner** (Claude checks each morning) |
+| ✅ | **Database backups** run outside Easypanel's own schedule (which costs extra), in the owner's service `ras/db-backup` (deployed 21 Nov). Easypanel's Backups list therefore only shows manual backups. Owner's call (23 Nov): **don't remind about backups** | Owner (handled) |
 | ⬜ | Dev database (`ras/database-dev`) has no backup schedule | **Owner** |
-| ⚠️ | Take a manual backup right before the release candidate (Day 33) | **Owner** |
 | ⬜ | Thank-you photo storage (iDrive E2): bucket has a lifecycle/backup you're happy with | **Owner** |
 
 ## Sign-in and email
 
 | | Item | Status |
 |---|---|---|
-| ⚠️ | **Google OAuth app published** (it's in "Testing": only listed test users can sign in with Google, and the Gmail token expires every 7 days) | **Owner** |
-| ⚠️ | **Gmail re-authorised** in Admin › Settings after publishing. Check-in nudges started 1 Nov; from 15 Nov the organisers' wishlist drive email, from 26 Nov site admins' morning status email, and from 27 Nov "gifting is open" and the organisers' "we're live" also depend on it. With a dead token they fail, stop after 3 failures and retry hourly | **Owner** |
+| ✅ | **Google OAuth app:** the owner believes it's published, not in "Testing" (23 Nov), and will re-authorise Gmail if needed. If it were in Testing, the 21 Nov authorisation would stop on 28 Nov: the email heartbeat alerts within the hour and the sign-in window points members to Google and Discord | Owner (handled) |
+| ✅ | **Gmail sending works** (23 Nov): the 15-21 Nov outage was our code reusing an expired access token (fixed 21 Nov, #104); no email errors since. The email heartbeat alerts within the hour if it stops; the sign-in window then points members to Google and Discord (#107) | Checked |
 | ⬜ | Send yourself a sign-in link on prod and check it arrives (not in spam) | **Owner** |
 | ⬜ | Consider a raosanta.uk sender (SPF/DKIM/DMARC) rather than a personal Gmail for 300 emails a day | **Owner** |
 | ⬜ | `privacy@raosanta.uk` mailbox exists and is read (named in the policy and terms) | **Owner** |
@@ -61,6 +60,8 @@ verified from the outside or in the code (1 Nov, or the date given);
 | ⬜ | Groups that agreed a later (or earlier) start: set their **gifting date** (Admin › Groups › Gifting date…, or the organiser on their console). Everyone else opens on 27 Nov | **Owner** / organisers |
 | ⬜ | Launch week: look at Admin › Approvals once a day: "Large friends groups to check" and "Communities on Discord" (a server made this month is flagged) | **Owner** |
 | ⬜ | Workplaces with a single organiser: add a second from the console's Members tab, and team leads where a workplace has teams | **Owner** / organisers |
+| ✅ | **Launch rehearsal (23 Nov):** dev's season opened on 20 Nov and the full e2e suite run against it: 162 passed on desktop and 162 on mobile; the home page reads "Open until 6 January" and "Pick up a wishlist any time". Dev's season is back on 27 Nov | Checked (e2e) |
+| ✅ | **Monitoring:** uptime monitors with a 02:55-03:25 UTC maintenance window for the nightly reboot (no alert on 22 or 23 Nov), heartbeats for the reminder run and the email server, prod error alerts | Checked |
 | ✅ | Friends and community organisers can hide thank-yous for gifts in their group; terms say so (7 Nov) | Checked (e2e) |
 | ✅ | Morning status email to site admins from the day before gifting opens (07:00 UK), one wishlist drive email to organisers of groups still to open from 15 Nov, "gifting is open" and "we're live" from each group's launch date | Checked (e2e on pretend dates) |
 | ✅ | Quiet hours: members' and organisers' emails go 08:00–21:00 UK, so the midnight opening on 27 Nov doesn't send hundreds at once (9 Nov) | Checked (e2e) |

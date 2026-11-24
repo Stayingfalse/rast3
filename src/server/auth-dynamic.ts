@@ -335,11 +335,21 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   return {
     adapter: withSessionRetry(PrismaAdapter(db)),
     providers,
+    // our own page for a used link or any other failed sign-in (24 Nov)
+    pages: { error: "/auth/error" },
     // Auth.js errors with their cause (19 Nov): its pages only ever say
     // "Configuration"
     logger: {
       error(error) {
-        logger.error({ detail: clean(errorDetail(error)) }, `Auth.js error: ${error.message || error.name}`);
+        // a used or expired sign-in link, or a bot opening the callback
+        // without one: the member's side, shown on /auth/error (24 Nov), so
+        // a warning, not an error that counts towards the alert
+        const type = (error as { type?: string }).type;
+        const theirs = type === "Verification" || type === "UnknownAction";
+        (theirs ? logger.warn.bind(logger) : logger.error.bind(logger))(
+          { detail: clean(errorDetail(error)) },
+          `Auth.js ${theirs ? "warning" : "error"}: ${error.message || error.name}`,
+        );
       },
       warn(code) {
         logger.warn(`Auth.js warning: ${code}`);

@@ -13,6 +13,7 @@ import {
   TRACKING_ID_HINT,
   type Store,
 } from "~/server/affiliate";
+import { checkEmailConnection, sendTestEmail } from "~/server/email/email-test";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
 import { launchInfo, setGroupLaunch } from "~/server/group-launch";
 import { insightSeasons, seasonInsights } from "~/server/insights";
@@ -108,6 +109,21 @@ export const adminRouter = createTRPCRouter({
    * Counts only, without test users; never credentials or names.
    */
   status: siteAdminProcedure.query(({ ctx }) => launchStatus(ctx.db)),
+
+  /**
+   * Admin › Settings › "Send test email" (19 Nov): one email to you, sent the
+   * way sign-in links go, with the step that failed and the server's reply.
+   */
+  sendTestEmail: siteAdminProcedure.mutation(async ({ ctx }) => {
+    const me = await ctx.db.user.findUnique({ where: { id: ctx.session.user.id }, select: { email: true } });
+    if (!me?.email) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Your account has no email address to send the test to." });
+    }
+    return sendTestEmail(me.email);
+  }),
+
+  /** "Check the connection only" (20 Nov): where the connection to the mail server stops. */
+  checkEmailConnection: siteAdminProcedure.mutation(() => checkEmailConnection()),
 
   /** Every group except teams (they're managed inside their organisation). */
   groups: siteAdminProcedure

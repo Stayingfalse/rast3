@@ -1881,3 +1881,265 @@ that don't touch the data model. Known items to include:
     `@t3-oss/env-nextjs`. It only validates our own env at start-up, so low real risk.
   - **prisma 6.19.3** (high, via deepmerge-ts in `@prisma/config`; tooling, not request handling).
   - **shadcn CLI** (moderate, via minimatch; a dev tool, not served).
+- **Nightly run, 17 Nov: dev e2e was broken by the runner image.**
+  - The two dev CI runs on the evening of 16 Nov (another session's promo
+    stats endpoint and the Next 16.4.6 security bump) failed before any
+    test ran: GitHub's `ubuntu-latest` moved to Ubuntu 26.04, and this
+    Playwright can't install Chromium there. Not those changes' fault.
+  - Fix: the e2e jobs (CI and the manual e2e workflow) run on
+    `ubuntu-24.04` until Playwright supports 26.04. Checks and deploy jobs
+    stay on `ubuntu-latest`.
+  - **Closing-week rehearsal:** dev's Season set to open 1 Nov and close
+    18 Nov, the whole e2e suite run against it: 292 passed. The 2 failures
+    (× desktop and mobile) were the tests choosing launch dates after that
+    artificial close, which the app rightly refuses. With the real close
+    (6 Jan), `group-launch.spec`'s "three days ahead" date would do the same
+    from 4 Jan: fine to leave, worth knowing if CI goes red then. Dev's
+    Season is back to 27 Nov – 6 Jan.
+  - **Next (nightly, 18 Nov):** drive day 4; the backlog item the owner
+    picks.
+- **17 Nov (owner, in chat): promotional banners for every group.**
+  - The owner asked for a sign-up banner (the Sensee example,
+    raosanta.uk/sensee.co.uk) and then for it to be programmatic, so any
+    workplace or community gets theirs from its dashboard.
+  - **Built:** `/groups/<id>/banners/<size>` draws the group's banner as a
+    PNG at twice its size (next/og, like the share cards), in four web sizes:
+    1200×628 (social, intranet, email), 728×90, 300×250 and 320×100.
+    Organisers and site admins only, like the poster (it carries the join
+    link); `?download=1` saves it as a file.
+  - What it says follows the group: workplaces get raosanta.uk/<domain>,
+    "Everyone @domain" and "colleagues"; communities and friends groups
+    their join link, "Everyone in <group>" and "members"/"friends". The
+    date line follows the group's own launch date ("Opens Fri 27 November",
+    then "Open now until …"). The proof line is members who were in before
+    this season, rounded as on the public pages ("130+ joined in last
+    year"), and left off under 10: this season's numbers are too early to
+    boast about (owner).
+  - "Bring your team" on the organiser console has a Banners card: a preview
+    and a download for each size. e2e in `group-banners.spec.ts`.
+- **17 Nov (owner report): returning members stuck on "work email already in use".**
+  - **Cause:** a work email belongs to one account. Returning members who
+    sign in differently from last year (the workplace page suggests a
+    personal address or a social account, as company mail blocks our links)
+    get a new account; joining then fails because last year's account still
+    holds the work email, and the workplace page only offers the wishlist
+    after joining, so they were stuck. Reproduced on dev.
+  - **Fix (owner chose 1 and 3, then 2):**
+    - If the account holding the work email hasn't been used this season
+      (not signed in since 1 August, not checked in, not a site admin), the
+      work email moves to the new account with its workplace role and team;
+      last year's account keeps everything else (`claimWorkEmail`).
+    - If it has been used this season, the message says how: "Sign out,
+      then sign in with Google (p•••@gmail.com) instead."
+    - The workplace page offers "Add your wishlist anyway" when joining
+      fails, so nobody is left unable to add a wishlist.
+  - **Magic links on prod:** a sign-in link request on prod ends in
+    `error=Configuration`, which is Auth.js's answer when sending throws
+    (prod offers email sign-in; dev has none). The sign-in modal swallowed
+    it, so people saw the button come back and no email. The modal now says
+    the link couldn't be sent. The send failure itself needs the owner:
+    most likely the Gmail authorisation (Admin › Settings › Email). Logs
+    can't be read from here (Easypanel log collection is off).
+- **Nightly run, 18 Nov: Next.js security update to main; weekly e2e.**
+  - Prod and dev healthy. Sign-in links on prod still fail
+    (`error=Configuration`): waiting on the owner's Gmail re-authorisation.
+  - **Next.js 16.4.1 → 16.4.6** (GHSA-mfr8-8qww-v76h), the other session's
+    commit from 16 Nov, carried to main on its own: it has run on dev since
+    then with CI green. Builds on 16.4.1 now stop with a security notice.
+  - **Weekly e2e:** the e2e workflow also runs every Monday at 05:17 UTC
+    against dev, in its own test namespace (`weekly-desktop`,
+    `weekly-mobile`), so a breakage outside our code shows within a week.
+  - **Next (nightly, 19 Nov):** drive day 5; the backlog item the owner
+    picks.
+- **Nightly run, 19 Nov: "lists ready" during the wishlist drive.**
+  - Prod and dev healthy. Sign-in links on prod still fail
+    (`error=Configuration`): waiting on the owner's Gmail re-authorisation.
+    #98 (Next.js security update, weekly e2e) awaits the owner.
+  - **Built:** before a group opens, members see how many lists are ready
+    for opening day: "12 lists ready so far: invite people so there are
+    more waiting." On a friends or community group's home tab, and on the
+    "Your workplace" card for workplaces. Ready means checked in this season
+    with a wishlist, the same rule that decides who gets handed out.
+    `groups.mine` and `groups.myOrganisation` return `ready` (null once
+    open). Exact counts, but only to members of that group.
+  - **Next (nightly, 20 Nov):** drive day 6; the backlog item the owner
+    picks.
+- **19 Nov (owner): "Send test email"; logs go to the log service, not the database.**
+  - Sign-in links still fail on prod after the owner re-authorised Gmail,
+    and the host's log collection is a paid extra. Ruled out: prod has no
+    `EMAIL_SERVER_*` variables (it uses Admin › Settings), the settings
+    reload every 5 minutes, the Gmail authorisation asks for the right
+    scope, and the default server is smtp.gmail.com:587.
+  - An in-app log table was built on dev, then dropped on the owner's
+    question: logs belong in a log service. The app already sends them to
+    Better Stack when `BETTERSTACK_SOURCE_TOKEN` is set; dev has it, prod
+    doesn't. (Dev keeps that migration and a dev-only one that drops it.)
+  - **Built:** Admin › Settings › **Send test email**: checks the saved
+    settings (no secrets shown), connects, sends to you, and shows the step
+    that failed and the mail server's reply. The sign-in email error now
+    logs the server's code and reply; Auth.js errors log their cause.
+  - **Removed:** the Better Stack token fallback in the code and docs.
+  - **Owner:** add `BETTERSTACK_SOURCE_TOKEN` and `BETTERSTACK_ENDPOINT` to
+    prod's environment; make a new Better Stack token, as the old one was in
+    the repository; then use Send test email.
+- **19 Nov (owner): returning groups' numbers are this season's.**
+  - The owner: sensee.co.uk "says it has 150 involved, but that figure may
+    be wrong for this year … reframe the 150+ to ever involved and add a
+    number of how many checked in this year."
+  - **Changed:**
+    - Workplace landing page, invite page, a group's home tab and its card
+      on Your groups: "150 colleagues so far · 23 checked in for Christmas
+      2026" (`memberCounts`, `checkedInMembers`).
+    - "Your Christmas so far" share totals: **Taking part** now counts
+      members checked in for that season (it counted everyone who ever
+      joined, as did the share card image).
+  - Organisers' consoles already show "N of M checked in"; unchanged.
+- **19 Nov evening (owner: "do tonight's nightly now"): heartbeats, and monitoring set up.**
+  - **Monitoring (done with the Better Stack and Easypanel MCPs, owner's
+    go-ahead):** log sources "RAoSanta Prod" and "RAoSanta Dev" (the old
+    token was in the repository; the old source is deleted); a Better Stack
+    Collector as the Easypanel compose service `ras/bs-collector` (host and
+    container metrics; tracing off; about 0.17 cores); the "RAoSanta"
+    dashboard (prod errors, host CPU/memory/disk, CPU and memory by
+    service) with alerts (3+ prod errors in 10 min; disk over 85%, CPU or
+    memory over 90%); monitors on prod and dev `/api/health`, the database
+    and sign-in; the status page shows them with the host charts.
+  - **Built:** the hourly schedule reports to Better Stack heartbeats:
+    `HEARTBEAT_REMINDERS_URL` after each reminder run (or `/fail`), and
+    `HEARTBEAT_EMAIL_URL` after checking that the email server accepts our
+    login (connects and signs in, sends nothing). Without the URL nothing is
+    sent, so only prod reports. The email check would have caught the 15-19
+    Nov sign-in email outage within the hour.
+  - **Owner:** add the two URLs to `ras/raosanta-uk` once merged (values in
+    the chat); the heartbeats are paused until prod reports.
+- **20 Nov nightly:** no change (the owner moved it to 19 Nov evening: #102).
+  The heartbeats worked at once: the email heartbeat went down after the
+  first check (00:24 UTC 20 Nov). Every hourly check since, and every
+  sign-in email (35 by 05:00 UTC 21 Nov), ends "Connection closed
+  unexpectedly" (`command: CONN`). Note: nodemailer gives every hang-up
+  `CONN`, also one after the greeting or during the login, so this alone
+  doesn't say where it stops.
+- **Nightly run, 21 Nov: where the connection to the mail server stops.**
+  - **Built:** `src/server/email/smtp-probe.ts` opens plain sockets to each
+    of the mail server's addresses (2 IPv4, 1 IPv6) on its port and on the
+    other Gmail port (587 ↔ 465), and records the outcome: greeting, closed,
+    reset, refused or timeout. On 587 it also says EHLO: Gmail's reply names
+    the address it sees us connecting from. No login, no mail.
+  - It runs after a failed hourly email check (the log gets `probe` and a
+    one-line `probeSummary`), after a failed "Send test email" at the
+    connect step, and from the new Admin › Settings button "Check the
+    connection only" (Gmail's server when none is saved, as on dev).
+  - A failed hourly check now tries once more with the SMTP conversation
+    kept (logins removed, as in "Send test email") and logs it as
+    `conversation`, so the log shows the step where Gmail hangs up.
+  - **Result on dev (same host as prod), 21 Nov 05:10 UTC:** Gmail greets on
+    587 and 465 and sees us as `130.162.177.109`; IPv6 is unreachable
+    (ENETUNREACH; nodemailer tries IPv4 first, so no matter). The host's
+    network and address are fine: the problem is in prod's conversation
+    with Gmail (most likely the login), not the connection.
+  - **Owner:** press "Send test email" on prod now (it shows the
+    conversation today), or merge this and read the next hourly check in
+    Better Stack.
+  - **Next (nightly, 22 Nov):** act on the probe result; then the backlog
+    item the owner picks.
+- **21 Nov (owner): Gmail re-authorisation fixes email "for a bit".**
+  - **Cause:** Admin › Settings saves Gmail's access token with the refresh
+    token, and `serverFromEmailConfig` passed both to nodemailer. Without an
+    expiry time nodemailer treats the access token as valid forever, but
+    Gmail's last about an hour. After that Gmail refuses it and hangs up
+    before nodemailer can retry with a new one: "Connection closed
+    unexpectedly". Each re-authorisation saved a fresh token, so email
+    worked for about an hour each time (22:27 → broken by 00:24 on 19/20 Nov;
+    the same pattern on 15-19 Nov). Not Google's 7-day test-mode limit.
+  - **Fixed:** the saved access token is no longer passed; nodemailer gets a
+    new one from the refresh token for each connection. Reproduced locally
+    with a fake Gmail (stale token → the same error; fix → OK).
+- **21 Nov (owner): the Gmail code exchange runs once.** Coming back from
+  Google, the code was exchanged twice; Google accepts each code once, so
+  the second call failed with `invalid_grant` and logged an error although
+  Gmail was connected. The server now shares one exchange per code (for 10
+  minutes), the settings page sends each code once per browser session
+  (sessionStorage, so a remount can't resend it), and Google's refusal is
+  logged once instead of twice. The log no longer holds the start of the code.
+- **Nightly run, 22 Nov (spare day, no owner pick; the 21 Nov idea): sign-in
+  says when email is down.**
+  - **Why:** from 15 to 21 Nov sign-in links failed for hours at a time (35
+    on 20 Nov alone) and people only found out after waiting for a link.
+  - **Built:** `src/server/email/status.ts` remembers whether email is
+    getting out: the hourly email check and every sign-in email report to
+    it (a rejected recipient doesn't count; a failure older than 2 hours
+    counts as unknown). `/api/email-status` (public: `down` and `since`
+    only). While email is down, the sign-in window says "Email sign-in
+    links aren't getting through right now" and points to the other
+    options; email sign-in stays available.
+  - **Small fix (backlog "session refresh race"):** two requests refreshing
+    the same session (or last-seen date) at once hit MariaDB's error 1020
+    (twice on 21 Nov). The session refresh now retries once and then lets
+    the lost race go, and the database log calls it a warning, so it
+    can't trip the "3+ errors" alert. The env-config sign-in path no
+    longer logs the full email address.
+  - **Checked:** the 03:05 UTC reboot on 22 Nov raised no alert (the
+    maintenance window works); no email errors since the 21 Nov fixes.
+  - **Next (nightly, 23 Nov):** gifting opens Fri 27 Nov: re-check the
+    launch rehearsal on dev (Season row, launch emails, banners), then the
+    backlog item the owner picks.
+- **Nightly run, 23 Nov: launch rehearsal for Fri 27 Nov (no code change).**
+  - **Rehearsal:** the weekly e2e run (05:23 UTC) passed with the season
+    still before opening (162 desktop, 162 mobile). Then dev's Season was
+    set to open on 20 Nov and the full suite run again with gifting open:
+    162 passed on desktop and 162 on mobile. The home page reads "Open
+    until 6 January" and "Pick up a wishlist any time"; the "gifts sent so
+    far" figure is all-time (all purchases), so it isn't empty on launch
+    morning. Dev's Season is back on 27 Nov 00:00 UTC.
+  - **Prod (from outside):** healthy; the home page says "Opens 27
+    November"; no reboot alert on 22 or 23 Nov (the maintenance window
+    works); no email errors since the 21 Nov fixes.
+  - **Backups (owner, 23 Nov): handled outside Easypanel** by the owner's
+    service `ras/db-backup` (Easypanel charges for scheduled backups), so
+    Easypanel's Backups list only shows manual ones. **Don't remind about
+    backups** in nightly runs or updates.
+  - **Found: Google OAuth "Testing"?** If the Google app is still in
+    Testing, the Gmail authorisation from 21 Nov ends on 28 Nov. Owner to
+    confirm it's published (checklist).
+  - The "last chance to add your wishlist" idea (22 Nov) already exists:
+    members who haven't checked in get CHECK_IN_NUDGE in the 14 days before
+    opening.
+  - **Weekly reminder: VAPID keys** for push notifications (dev and prod)
+    are still unset; PWA push stays off until they are.
+  - **VAPID keys set (owner, 23 Nov)** on dev and prod (a pair each:
+    `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+    The weekly reminder stops. PWA push is built after launch day (not in
+    opening week), unless the owner asks sooner.
+  - **After the season:** dev and prod share `AUTH_SECRET` (and dev has the
+    test login); give each its own.
+  - **Next (nightly, 24 Nov):** the backlog item the owner picks; otherwise
+    a small launch-week polish. (Google app: the owner believes it's
+    published and will re-authorise if the email heartbeat fires.)
+- **Nightly run, 24 Nov (launch-week polish): sign-in links that "don't work".**
+  - **Seen on prod (23 Nov 19:12 UTC):** a member opened an already-used
+    sign-in link 3 times, then the sign-in address without a token twice,
+    and got Auth.js's unbranded error page each time.
+  - **Cause found:** the email's Outlook-only button (VML) linked the raw
+    one-time sign-in URL; every other link goes through `/auth/magic`, the
+    page with a "Click to Sign In" button that link scanners don't press.
+    Outlook's link scanning (Safe Links) opens the raw link first and uses
+    it up. Fixed: the Outlook button uses the landing page too.
+  - **Built:** `/auth/error`, our own page for a failed sign-in (Auth.js
+    `pages.error`). A used or expired link says what happened ("Each link
+    works once, within 24 hours"; work email systems may open links first)
+    and its button opens the usual sign-in window; other errors get a plain
+    message and a retry. Never a dead end.
+  - **Logs:** a used link and a request with no token are the member's side,
+    so they're warnings now (Auth.js "Verification"/"UnknownAction" and the
+    adapter's "no record for verificationToken.delete"), not errors that
+    count towards the "3+ errors" alert.
+  - **Owner, 24 Nov: "lots of failed sign-ons" with company emails.** The
+    work-email warning only showed on a workplace's own invite page (the
+    one place the domain was known). Now any email sign-in checks the
+    address's domain (`/api/email-domain`: the domain only, yes or no;
+    subdomains count) against registered workplaces (live or pending), and
+    before sending asks "Is that your work email?", with "Use my personal
+    email" (clears the box) or "Send to my work email". The check never
+    blocks sign-in: if it fails, the link is sent.
+  - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
+    a final look over opening day (27 Nov) and the gifting emails.

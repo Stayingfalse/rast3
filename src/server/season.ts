@@ -143,3 +143,23 @@ export async function publicSeason(db: Db, now = new Date()) {
 /** "15 November", in UK time. */
 export const ukDay = (d: Date) =>
   d.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" });
+
+/**
+ * The wishlist drive (19 Nov): how many of a group's members are ready to be
+ * picked up when it opens, i.e. checked in this season with a wishlist. A
+ * workplace counts its own members (teams are inside it).
+ */
+export async function listsReady(db: Pick<PrismaClient, "membership">, groupId: string, season = currentSeason()) {
+  return db.membership.count({
+    where: { groupId, user: { ...checkedIn(season), amazonWishlistUrl: { not: null } } },
+  });
+}
+
+/**
+ * How many of a group's members have checked in this season (owner, 19 Nov):
+ * shown beside the all-time member count, which for a returning group counts
+ * everyone who ever joined.
+ */
+export async function checkedInMembers(db: Pick<PrismaClient, "membership">, groupId: string, season = currentSeason()) {
+  return db.membership.count({ where: { groupId, user: checkedIn(season) } });
+}

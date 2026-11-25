@@ -1,5 +1,6 @@
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { withSessionRetry } from "~/server/utils/write-conflict";
 import NextAuth, { type DefaultSession } from "next-auth";
 import { cache } from "react";
 import { touchLastSeen } from "~/server/account";
@@ -201,10 +202,11 @@ if (process.env.EMAIL_SERVER_HOST) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: withSessionRetry(PrismaAdapter(db)),
   providers,
   pages: {
     verifyRequest: "/auth/verify-request", // Custom verify-request page
+    error: "/auth/error", // a used link, or any other failed sign-in (24 Nov)
   },
   cookies: {
     sessionToken: {

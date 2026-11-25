@@ -3,6 +3,7 @@
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
+import { EmailTestCard } from "../_components/email-test-card";
 import { api } from "~/trpc/react";
 import { clientLogger } from "~/utils/client-logger";
 
@@ -170,7 +171,17 @@ export default function SettingsPage() {
       return;
     }
 
-    if (code && state === "admin_email_setup" && !exchanged.current) {
+    // once per code, even if the page mounts again (21 Nov): Google accepts
+    // each code once, so a second exchange failed with invalid_grant
+    const seen = !!code && (() => {
+      try {
+        const key = `gmail-code:${code}`;
+        if (sessionStorage.getItem(key)) return true;
+        sessionStorage.setItem(key, "1");
+      } catch {}
+      return false;
+    })();
+    if (code && state === "admin_email_setup" && !exchanged.current && !seen) {
       exchanged.current = true;
       setIsOAuthInProgress(true);
       // Exchange the code for tokens (same redirect address as the request)
@@ -281,6 +292,8 @@ export default function SettingsPage() {
             Configure authentication providers and system settings
           </p>
         </div>
+        {/* 19 Nov: send one test email and see the mail server's reply */}
+        <EmailTestCard />
         {/* Authentication Providers Section */}
         <div className="rounded-lg border border-white/20 bg-black/85 p-4 sm:p-6 backdrop-blur-sm">
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

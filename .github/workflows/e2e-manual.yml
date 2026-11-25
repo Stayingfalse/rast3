@@ -1,10 +1,16 @@
 # Rerun the e2e suite (regression crawl included) against the dev site as
 # it stands, without a code change: GitHub › Actions › "E2E on dev (manual)"
 # › Run workflow. It never deploys anything (4 Nov).
+# It also runs every Monday morning (18 Nov), so a change outside our code
+# (a new runner image, an expired secret) shows up within a week even when
+# nobody pushes: on 16 Nov ubuntu-latest moved to 26.04 and broke e2e
+# silently until the next push.
 name: E2E on dev (manual)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
 
 permissions:
   contents: read
@@ -16,7 +22,8 @@ concurrency:
 jobs:
   e2e:
     name: E2E on dev (${{ matrix.project }})
-    runs-on: ubuntu-latest
+    # Pinned (17 Nov): see ci.yml's e2e job
+    runs-on: ubuntu-24.04
     # Desktop and mobile run side by side, each in its own test email
     # subdomain (E2E_NS), so their seeds and clean-ups never collide.
     strategy:
@@ -26,7 +33,9 @@ jobs:
     env:
       E2E_BASE_URL: https://dev.raosanta.uk
       E2E_TEST_LOGIN_SECRET: ${{ secrets.E2E_TEST_LOGIN_SECRET }}
-      E2E_NS: ${{ matrix.project }}
+      # the weekly run has its own test namespace, so it can't collide with a
+      # push's e2e run on the same accounts
+      E2E_NS: ${{ github.event_name == 'schedule' && format('weekly-{0}', matrix.project) || matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

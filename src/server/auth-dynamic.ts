@@ -1,7 +1,9 @@
 // Dynamic authentication provider configuration
+import { noteEmail, noteEmailError } from "~/server/email/status";
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { serverFromEmailConfig, type EmailConfig } from "~/server/email/smtp";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { withSessionRetry } from "~/server/utils/write-conflict";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import type { Provider } from "next-auth/providers";
 import Discord from "next-auth/providers/discord";
@@ -19,6 +21,8 @@ import { toClientSession } from "~/server/auth-session";
 import { db } from "~/server/db";
 import { getDbAuthProviders } from "~/server/utils/auth-providers";
 import { createMagicLinkEmailTemplate } from "~/server/utils/email-templates";
+import { clean, errorDetail } from "~/server/utils/error-detail";
+import { maskEmail } from "~/server/work-email";
 import { createChildLogger } from "~/utils/logger";
 
 const logger = createChildLogger('server');
@@ -234,6 +238,8 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
         server: {
           host: process.env.EMAIL_SERVER_HOST,
           port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
+          // TLS from the first byte on 465; STARTTLS otherwise (19 Nov)
+          secure: parseInt(process.env.EMAIL_SERVER_PORT ?? "587") === 465,
           auth: {
             user: process.env.EMAIL_SERVER_USER,
             pass: process.env.EMAIL_SERVER_PASSWORD,
@@ -257,18 +263,22 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
               text,
               html,
             });
+            noteEmail(true);
           } catch (error) {
+            noteEmailError(error);
             logger.error({
               error: error instanceof Error ? error.message : String(error),
+              // the mail server's code and reply (19 Nov)
+              detail: clean(errorDetail(error)),
               errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-              to: email,
+              to: maskEmail(email),
               subject,
               configSource: 'environment_variables',
               smtpHost: process.env.EMAIL_SERVER_HOST ?? 'unknown',
               smtpPort: process.env.EMAIL_SERVER_PORT ?? 'unknown',
               operation: 'send_verification_email_env',
               actionNeeded: 'Check EMAIL_SERVER_* environment variables and SMTP credentials'
-            }, `Failed to send verification email via env config to ${email}: ${error instanceof Error ? error.message : String(error)}`);
+            }, "Failed to send verification email (env config)");
             throw new Error("Failed to send verification email");
           }
         },
@@ -301,12 +311,18 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
                 text,
                 html,
               });
+              noteEmail(true);
             } catch (error) {
+              noteEmailError(error);
               logger.error({
                 error: error instanceof Error ? error.message : String(error),
-                to: email,
+                // the mail server's code and reply (19 Nov)
+                detail: clean(errorDetail(error)),
+                to: maskEmail(email),
                 subject,
-                authType: emailConfig.authType
+                authType: emailConfig.authType,
+                host: emailConfig.host,
+                port: emailConfig.port,
               }, "Failed to send verification email (db config)");
               throw new Error("Failed to send verification email");
             }
@@ -317,8 +333,28 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
   }
 
   return {
-    adapter: PrismaAdapter(db),
+    adapter: withSessionRetry(PrismaAdapter(db)),
     providers,
+    // our own page for a used link or any other failed sign-in (24 Nov)
+    pages: { error: "/auth/error" },
+    // Auth.js errors with their cause (19 Nov): its pages only ever say
+    // "Configuration"
+    logger: {
+      error(error) {
+        // a used or expired sign-in link, or a bot opening the callback
+        // without one: the member's side, shown on /auth/error (24 Nov), so
+        // a warning, not an error that counts towards the alert
+        const type = (error as { type?: string }).type;
+        const theirs = type === "Verification" || type === "UnknownAction";
+        (theirs ? logger.warn.bind(logger) : logger.error.bind(logger))(
+          { detail: clean(errorDetail(error)) },
+          `Auth.js ${theirs ? "warning" : "error"}: ${error.message || error.name}`,
+        );
+      },
+      warn(code) {
+        logger.warn(`Auth.js warning: ${code}`);
+      },
+    },
     cookies: {
       sessionToken: {
         name: "next-auth.session-token",

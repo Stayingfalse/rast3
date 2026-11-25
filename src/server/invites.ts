@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { db } from "~/server/db";
+import { checkedInMembers, currentSeason } from "~/server/season";
 
 /** Join codes: 8 characters with no look-alikes (no 0/O, 1/I/L), shown as XXXX-XXXX. */
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -50,6 +51,9 @@ export async function findInvite(rawCode: string) {
     kind: group.kind as (typeof INVITE_KINDS)[number],
     status: group.status,
     members: group._count.memberships,
+    /** this season's: members is everyone who ever joined (19 Nov) */
+    checkedIn: await checkedInMembers(db, group.id),
+    season: currentSeason(),
     joinCode,
     /** set when a community is linked to a Discord server: join through Discord */
     discordGuildId: group.discordGuildId,

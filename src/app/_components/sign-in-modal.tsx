@@ -108,13 +108,30 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  /** the sign-in link couldn't be sent (17 Nov: it failed silently before) */
+  const [sendError, setSendError] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  /**
+   * A registered workplace's address, waiting for "send anyway" (owner, 24
+   * Nov: lots of sign-in links to company addresses never arrive).
+   */
+  const [confirmWork, setConfirmWork] = useState(false);
+  const [checking, setChecking] = useState(false);
+  /** the address the member said to send to anyway */
+  const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
+  const emailInput = React.useRef<HTMLInputElement>(null);
+  /** email sign-in links are failing right now (22 Nov), from /api/email-status */
+  const [emailDown, setEmailDown] = useState(false);
   const domain = workDomain?.toLowerCase();
   const typedDomain = email.trim().toLowerCase().split("@")[1] ?? "";
   const isWorkEmail = !!domain && (typedDomain === domain || typedDomain.endsWith(`.${domain}`));
   React.useEffect(() => {
     if (isOpen) {
       void getProviders().then(setProviders);
+      void fetch("/api/email-status")
+        .then((r) => (r.ok ? (r.json() as Promise<{ down?: boolean }>) : null))
+        .then((s) => setEmailDown(!!s?.down))
+        .catch(() => setEmailDown(false));
     } else {
       setShowAll(false);
       // Reset states when modal is closed
@@ -122,10 +139,14 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
       setShowEmailForm(false);
       setEmail("");
       setIsLoading(null);
+      setSendError(false);
+      setConfirmWork(false);
+      setConfirmedFor(null);
     }
   }, [isOpen]);
   const handleSignIn = async (providerId: string, email?: string) => {
     setIsLoading(providerId);
+    setSendError(false);
     try {
       if (providerId === "nodemailer" && email) {
         // Store email for the verify-request page as fallback
@@ -141,7 +162,7 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
             providerId,
             email: email ?? undefined,
           });
-          // You could show an error message here
+          setSendError(true);
         } else {
           // Show success state in modal
           setEmailSent(true);
@@ -152,6 +173,7 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
         // OAuth sign-in initiated - client-side info logging not needed
       }
     } catch (error) {
+      if (providerId === "nodemailer") setSendError(true);
       logger.error(
         error instanceof Error ? error.message : String(error),
         "Sign in error",
@@ -164,8 +186,32 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
       setIsLoading(null);
     }
   };
+  /** Is this address at a workplace registered here? Only the domain is sent. */
+  const isWorkplaceDomain = async (address: string) => {
+    const domain = address.trim().toLowerCase().split("@")[1];
+    if (!domain) return false;
+    try {
+      const r = await fetch(`/api/email-domain?domain=${encodeURIComponent(domain)}`);
+      return r.ok && ((await r.json()) as { workplace?: boolean }).workplace === true;
+    } catch {
+      return false; // never block sign-in on the check
+    }
+  };
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // a workplace address: ask first, unless they already chose to send
+    // (an invite's own domain is warned about as they type, and its button
+    // already says "anyway")
+    const address = email.trim().toLowerCase();
+    if (email && !isWorkEmail && confirmedFor !== address) {
+      setChecking(true);
+      const work = await isWorkplaceDomain(address);
+      setChecking(false);
+      if (work) {
+        setConfirmWork(true);
+        return;
+      }
+    }
     if (email) {
       await handleSignIn("nodemailer", email);
     }
@@ -381,6 +427,16 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                           {/* Email provider with special form */}
                           {emailProvider && (
                             <div className="space-y-3">
+                              {emailDown && oauthProviders.length > 0 && (
+                                <p
+                                  role="status"
+                                  className="rounded-label border-gold bg-gold-soft/40 text-ink border px-3 py-2 text-sm"
+                                >
+                                  <strong>Email sign-in links aren&apos;t getting through right now.</strong>{" "}
+                                  Sign in with one of the options below instead. If it uses the same
+                                  email address, you&apos;ll get the same account.
+                                </p>
+                              )}
                               {!showEmailForm ? (
                                 <button
                                   onClick={() => setShowEmailForm(true)}
@@ -404,8 +460,12 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                                   <input
                                     type="email"
                                     placeholder={domain ? "Your personal email address" : "Enter your email address"}
+                                    ref={emailInput}
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                      setEmail(e.target.value);
+                                      setConfirmWork(false);
+                                    }}
                                     aria-label="Email address"
                                     aria-describedby={isWorkEmail ? "work-email-warning" : undefined}
                                     className="rounded-label border-rule text-ink placeholder:text-ink-soft w-full border bg-white px-4 py-3"
@@ -422,11 +482,56 @@ export function SignInModal({ isOpen, onClose, only, workDomain }: SignInModalPr
                                       recommend your personal email, or one of the options below.
                                     </p>
                                   )}
-                                  <div className="flex gap-2">
+                                  {confirmWork && (
+                                    <div
+                                      role="alert"
+                                      className="rounded-label border-gold bg-gold-soft/40 text-ink space-y-3 border px-3 py-3 text-sm"
+                                    >
+                                      <p>
+                                        <strong>Is that your work email?</strong> Many workplaces
+                                        block emails from outside, so your sign-in link may never
+                                        arrive. A personal email is the safest choice. You can still
+                                        join your workplace: add your work email to your profile
+                                        after you sign in.
+                                      </p>
+                                      <div className="flex flex-col gap-2 sm:flex-row">
+                                        <button
+                                          type="button"
+                                          className="btn-post flex-1"
+                                          onClick={() => {
+                                            setConfirmWork(false);
+                                            setEmail("");
+                                            emailInput.current?.focus();
+                                          }}
+                                        >
+                                          Use my personal email
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn-quiet text-ink flex-1"
+                                          onClick={() => {
+                                            const address = email.trim().toLowerCase();
+                                            setConfirmedFor(address);
+                                            setConfirmWork(false);
+                                            void handleSignIn("nodemailer", email);
+                                          }}
+                                        >
+                                          Send to my work email
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {sendError && (
+                                    <p role="alert" className="rounded-label border-post bg-post-tint text-post-deep border px-3 py-2 text-sm">
+                                      <strong>We couldn&apos;t send your sign-in link just now.</strong> Please try
+                                      again in a few minutes, or sign in with one of the other options.
+                                    </p>
+                                  )}
+                                  <div className={confirmWork ? "hidden" : "flex gap-2"}>
                                     {" "}
                                     <button
                                       type="submit"
-                                      disabled={isLoading !== null || !email}
+                                      disabled={isLoading !== null || checking || !email}
                                       className="btn-post flex-1 disabled:opacity-50"
                                     >
                                       {" "}

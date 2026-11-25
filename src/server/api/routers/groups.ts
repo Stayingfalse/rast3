@@ -19,9 +19,10 @@ import {
   serverColumns,
 } from "~/server/discord";
 import { discordSummary, discordSummarySelect } from "~/lib/discord-server";
+import { claimWorkEmail } from "~/server/work-email";
 import { launchInfo, organiserCanMove, setGroupLaunch } from "~/server/group-launch";
 import { requireTeamAccess, runsWorkplace } from "~/server/teams";
-import { currentSeason, seasonWindow } from "~/server/season";
+import { checkedInMembers, currentSeason, listsReady, seasonWindow } from "~/server/season";
 import { ukDateString, ukMidnight } from "~/lib/uk-date";
 import { affiliateFor, getAffiliateSettings } from "~/server/affiliate";
 import {
@@ -121,24 +122,6 @@ const workEmail = z
   .toLowerCase()
   .email("Enter a valid work email");
 
-/** Another account already using this work email? */
-async function assertWorkEmailFree(
-  db: PrismaClient,
-  email: string,
-  userId: string,
-) {
-  const owner = await db.user.findUnique({
-    where: { workEmail: email },
-    select: { id: true },
-  });
-  if (owner && owner.id !== userId) {
-    throw new TRPCError({
-      code: "CONFLICT",
-      message: "That work email is already used by another account.",
-    });
-  }
-}
-
 export const groupsRouter = createTRPCRouter({
   mine: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db.membership.findMany({
@@ -175,11 +158,19 @@ export const groupsRouter = createTRPCRouter({
         status: group.status,
         role,
         members: group._count.memberships,
+        /** this season's (19 Nov): members is everyone who ever joined */
+        checkedIn: await checkedInMembers(ctx.db, group.id),
+        season: w.year,
         // only organisers can see and share the code
         joinCode: role === "ADMIN" ? group.joinCode : null,
         discord: role === "ADMIN" ? { guildId: group.discordGuildId } : null,
         /** when gifting opens here (its own date or the season's), and whether it is now */
         ...(({ opensAt, open }) => ({ opensAt, open, opensLater: now < opensAt }))(launchInfo(group, w, now)),
+        /** the wishlist drive (19 Nov): lists ready for when it opens; null once it's open */
+        ready:
+          group.status === "ACTIVE" && now < launchInfo(group, w, now).opensAt
+            ? await listsReady(ctx.db, group.id)
+            : null,
         /** wishlists here open from gift pages with affiliate links */
         affiliate: (await affiliateFor(ctx.db, group.id, undefined, settings)).enabled,
       })),
@@ -338,14 +329,18 @@ export const groupsRouter = createTRPCRouter({
     const userId = ctx.session.user.id;
     const { org, team } = await getWorkplace(ctx.db, userId);
     if (!org) return null;
-    const [user, teams] = await Promise.all([
+    const now = new Date();
+    const [user, teams, launch, w] = await Promise.all([
       ctx.db.user.findUnique({ where: { id: userId }, select: { workEmail: true } }),
       ctx.db.group.findMany({
         where: { kind: "TEAM", parentId: org.group.id },
         orderBy: { name: "asc" },
         select: { id: true, name: true },
       }),
+      ctx.db.group.findUnique({ where: { id: org.group.id }, select: { launchAt: true, launchSeason: true } }),
+      seasonWindow(ctx.db),
     ]);
+    const opensAt = launch ? launchInfo({ ...launch, kind: "ORG" }, w, now).opensAt : w.opensAt;
     return {
       id: org.group.id,
       name: org.group.name,
@@ -357,6 +352,9 @@ export const groupsRouter = createTRPCRouter({
       /** leads their team (7 Nov): a link to its page */
       teamLead: team?.role === "ADMIN",
       affiliate: (await affiliateFor(ctx.db, org.group.id)).enabled,
+      /** the wishlist drive (19 Nov): when it opens, and lists ready by then; null once open */
+      opensAt,
+      ready: org.group.status === "ACTIVE" && now < opensAt ? await listsReady(ctx.db, org.group.id) : null,
     };
   }),
 
@@ -399,13 +397,17 @@ export const groupsRouter = createTRPCRouter({
           };
         }
       }
-      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+      // a returning member's work email may still be on last year's account
+      const carried = await claimWorkEmail(ctx.db, input.workEmail, userId);
 
       await ctx.db.user.update({
         where: { id: userId },
         data: { workEmail: input.workEmail },
       });
-      await setWorkplace(ctx.db, userId, org.id);
+      await setWorkplace(ctx.db, userId, org.id, carried?.role);
+      if (!input.teamId && carried?.teamId) {
+        await setTeam(ctx.db, userId, org.id, carried.teamId);
+      }
       if (input.teamId) {
         const team = await ctx.db.group.findUnique({
           where: { id: input.teamId },
@@ -451,7 +453,7 @@ export const groupsRouter = createTRPCRouter({
           message: `${domain} is already on Random Acts of Santa. Join it with your work email instead.`,
         });
       }
-      await assertWorkEmailFree(ctx.db, input.workEmail, userId);
+      await claimWorkEmail(ctx.db, input.workEmail, userId);
 
       const org = await createOrgGroup(ctx.db, domain, {
         status: "PENDING",

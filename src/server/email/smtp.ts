@@ -23,19 +23,27 @@ export interface EmailConfig {
 
 /** nodemailer server options for an Admin › Settings email config. */
 export function serverFromEmailConfig(c: EmailConfig) {
+  const port = Number(c.port ?? 587);
   return {
     host: c.host,
-    port: c.port,
+    port,
+    // Port 465 talks TLS from the first byte; others (587) upgrade with
+    // STARTTLS. Without this, port 465 starts in plain text and the server
+    // hangs up ("Connection closed unexpectedly", 19 Nov).
+    secure: port === 465,
     auth:
       c.authType === "oauth2"
         ? {
-            // Gmail OAuth2: nodemailer refreshes the access token itself
+            // Gmail OAuth2: nodemailer gets an access token from the refresh
+            // token. Never pass the saved access token (21 Nov): it has no
+            // expiry time, so nodemailer kept using it after Gmail's 1 hour,
+            // and Gmail hung up ("Connection closed unexpectedly") until the
+            // next re-authorisation.
             type: "OAuth2" as const,
             user: c.user,
             clientId: c.clientId,
             clientSecret: c.clientSecret,
             refreshToken: c.refreshToken,
-            accessToken: c.accessToken,
           }
         : { user: c.user, pass: c.password },
   };
@@ -54,6 +62,7 @@ export async function emailSettings(): Promise<EmailSettings | null> {
       server: {
         host: process.env.EMAIL_SERVER_HOST,
         port: parseInt(process.env.EMAIL_SERVER_PORT ?? "587"),
+        secure: parseInt(process.env.EMAIL_SERVER_PORT ?? "587") === 465,
         auth: { user: process.env.EMAIL_SERVER_USER, pass: process.env.EMAIL_SERVER_PASSWORD },
       },
       from: process.env.EMAIL_FROM,

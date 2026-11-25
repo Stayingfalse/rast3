@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import { db } from "~/server/db";
+import { checkedIn } from "~/server/season";
 import { roundForPublic } from "~/server/public-stats";
 import { seasonRange, seasonYearOf } from "~/server/stamps";
 
@@ -57,7 +58,8 @@ export async function groupTotals(
   const [gifts, thanks, members] = await Promise.all([
     db.purchase.count({ where: { user: who, purchasedAt: range } }),
     db.kudos.count({ where: { user: who, hidden: false, createdAt: range } }),
-    db.user.count({ where: { ...who, profileCompleted: true } }),
+    // this season's: checked in for it, not everyone who ever joined (owner, 19 Nov)
+    db.user.count({ where: { ...who, profileCompleted: true, ...checkedIn(season) } }),
   ]);
   return {
     scope,

@@ -1869,6 +1869,18 @@ that don't touch the data model. Known items to include:
     before the opt-in exists counts as consented (an older privacy policy
     covered it); new ones need the poster's tick; every one needs a site
     admin's approval first.
+- **17 Nov: security update.** Next.js 16.4.1 → **16.4.6** for GHSA-mfr8-8qww-v76h (moderate:
+  information disclosure across root params when a `'use cache'` function runs through
+  `unstable_cache()`). The site uses `unstable_cache` but no `'use cache'`, so it probably wasn't
+  exposed. tsc, eslint and build pass.
+  `npm audit --omit=dev` still lists, for the owner to decide (each is a major upgrade or blocked):
+  - **nodemailer 8.0.11** (high: four advisories, fixed in 9.1+). `next-auth` 5 beta's
+    `@auth/core` only accepts nodemailer 7 or 8, so this waits for a next-auth release that
+    allows 9 (or a swap of the email sender).
+  - **zod 3** (high: memory exhaustion on oversized collections; fixed in 4.6.6, a major) via
+    `@t3-oss/env-nextjs`. It only validates our own env at start-up, so low real risk.
+  - **prisma 6.19.3** (high, via deepmerge-ts in `@prisma/config`; tooling, not request handling).
+  - **shadcn CLI** (moderate, via minimatch; a dev tool, not served).
 - **Nightly run, 17 Nov: dev e2e was broken by the runner image.**
   - The two dev CI runs on the evening of 16 Nov (another session's promo
     stats endpoint and the Next 16.4.6 security bump) failed before any
@@ -2131,3 +2143,36 @@ that don't touch the data model. Known items to include:
     blocks sign-in: if it fails, the link is sent.
   - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
     a final look over opening day (27 Nov) and the gifting emails.
+- **25 Nov (owner, in chat): screen-recorded tutorials for the promo channel.**
+  - **Built:** `scripts/promo-clips/record.mjs` films six flows at Pixel 7 size with the test login
+    and the e2e seed (namespace `promo`), so no real member appears:
+    - a new member's profile and wishlist;
+    - joining a workplace and picking a team;
+    - picking up three wishlists;
+    - marking one Gifted;
+    - posting a thank-you;
+    - starting a friends group and its invite code.
+  - **How it films:** frames come from Chrome's screencast at full pixel density (1080×2400). Taps
+    show as ripples. The test domain reads "elfworks.co.uk" and the host reads raosanta.uk.
+  - **Use:** run it against dev (`E2E_TEST_LOGIN_SECRET`) or a local copy, and copy the MP4s into
+    TechNews-Bot's `assets/santa/clips/`. Re-record when the UI changes.
+  - Not part of the app; no deploy needed.
+- **Owner decisions, 24 Nov:** keep the work-email question's wording as
+  built ("Is that your work email?" / "Use my personal email" / "Send to my
+  work email"). It asks **only for registered workplaces' domains**, never
+  for any non-personal domain: the owner doesn't want false positives
+  (personal custom domains, companies not on the site).
+- **Nightly run, 25 Nov: opening-day check (no code change).**
+  - Used sign-in links: 8 on 24 Nov, all before #109 reached prod (23:00
+    UTC); none since. Email up; prod and dev healthy.
+  - **Opening emails:** "Gifting is open" goes 100 per hourly run from
+    08:10 UK on Fri 27 Nov (quiet hours), only to people who checked in or
+    signed up this season, so it fits the 300-in-24-hours cap alongside
+    the organisers' "we're live" and the admins' status email. If Admin ›
+    Status ever shows emails held, `REMINDER_DAILY_LIMIT` raises the cap
+    without a code change (Workspace Gmail allows about 2,000 a day).
+  - **The switch at midnight:** the home page is never cached (`no-store`)
+    and the season's dates are read on each request, so it opens at 00:00.
+  - **Next (nightly, 26 Nov):** the backlog item the owner picks; otherwise
+    a last check of dev and prod the day before opening. Claude checks the
+    opening emails on Fri 27 Nov at about 09:30 UTC.

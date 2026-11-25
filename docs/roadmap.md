@@ -2143,3 +2143,17 @@ that don't touch the data model. Known items to include:
     blocks sign-in: if it fails, the link is sent.
   - **Next (nightly, 25 Nov):** the backlog item the owner picks; otherwise
     a final look over opening day (27 Nov) and the gifting emails.
+- **25 Nov (owner, in chat): screen-recorded tutorials for the promo channel.**
+  - **Built:** `scripts/promo-clips/record.mjs` films six flows at Pixel 7 size with the test login
+    and the e2e seed (namespace `promo`), so no real member appears:
+    - a new member's profile and wishlist;
+    - joining a workplace and picking a team;
+    - picking up three wishlists;
+    - marking one Gifted;
+    - posting a thank-you;
+    - starting a friends group and its invite code.
+  - **How it films:** frames come from Chrome's screencast at full pixel density (1080×2400). Taps
+    show as ripples. The test domain reads "elfworks.co.uk" and the host reads raosanta.uk.
+  - **Use:** run it against dev (`E2E_TEST_LOGIN_SECRET`) or a local copy, and copy the MP4s into
+    TechNews-Bot's `assets/santa/clips/`. Re-record when the UI changes.
+  - Not part of the app; no deploy needed.

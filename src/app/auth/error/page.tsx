@@ -20,6 +20,11 @@ const MESSAGES: Record<string, { title: string; body: string[]; action: string }
     ],
     action: "Get a new sign-in link",
   },
+  TooManyRequests: {
+    title: "Too many sign-in links asked for",
+    body: ["To keep our emails out of spam folders, we only send a few sign-in links at a time. Please try again in 15 minutes, or sign in with Google or Discord now."],
+    action: "Sign in another way",
+  },
   AccessDenied: {
     title: "That account can't sign in here",
     body: ["Try another sign-in option, or a different account."],

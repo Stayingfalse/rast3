@@ -15,8 +15,10 @@ export function MagicLandingClient() {
     }
     try {
       // Basic validation: ensure it's an absolute URL and uses http(s)
+      // only our own sign-in callback (audit, 26 Nov): any other address
+      // would put our "Click to Sign In" button on someone else's link
       const parsed = new URL(url);
-      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      if (parsed.origin === window.location.origin && parsed.pathname.startsWith("/api/auth/callback/")) {
         setSafeUrl(url);
         return;
       }

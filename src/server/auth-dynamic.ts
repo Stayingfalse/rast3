@@ -1,5 +1,6 @@
 // Dynamic authentication provider configuration
 import { noteEmail, noteEmailError } from "~/server/email/status";
+import { allowSignInEmail } from "~/server/sign-in-limits";
 import { DISCORD_SCOPES, saveDiscordTokens } from "~/server/discord";
 import { serverFromEmailConfig, type EmailConfig } from "~/server/email/smtp";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -247,6 +248,8 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
         },
         from: process.env.EMAIL_FROM,
         sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+          // a script can't use up our mailbox (audit, 26 Nov)
+          if (!allowSignInEmail(email)) throw new Error("Too many sign-in emails");
           const { host } = new URL(url);
           const transport = createTransport(provider.server);
             const { subject, html, text } = createMagicLinkEmailTemplate({
@@ -296,6 +299,8 @@ export async function createDynamicAuthConfig(): Promise<NextAuthConfig> {
           server: serverFromEmailConfig(emailConfig),
           from: emailConfig.from,
           sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+          // a script can't use up our mailbox (audit, 26 Nov)
+          if (!allowSignInEmail(email)) throw new Error("Too many sign-in emails");
             const { host } = new URL(url);
             const transport = createTransport(provider.server);
             

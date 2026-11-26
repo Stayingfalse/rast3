@@ -53,7 +53,13 @@ test("signing in with a real email link", async ({ page, baseURL }, testInfo) =>
   const dialog = await openEmailSignIn(page);
   await dialog.getByLabel("Email address").fill(to);
   await dialog.getByRole("button", { name: "Send Magic Link" }).click();
-  await expect(dialog.getByText("We've sent a magic link to")).toBeVisible();
+  // test addresses sit under a test workplace's domain, so the work-email
+  // question (24 Nov) may come first: say send it
+  const sent = dialog.getByText("We've sent a magic link to");
+  const ask = dialog.getByRole("button", { name: "Send to my work email" });
+  await expect(sent.or(ask)).toBeVisible();
+  if (await ask.isVisible()) await ask.click();
+  await expect(sent).toBeVisible();
 
   const mail = await newest(page.request, to);
   expect(mail.subject).toContain("Sign in to");

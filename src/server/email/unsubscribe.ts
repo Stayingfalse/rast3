@@ -18,8 +18,19 @@ export function validUnsubscribe(userId: string, token: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Where the site lives, for links in emails. */
-export const siteUrl = () => (process.env.AUTH_URL ?? "https://raosanta.uk").replace(/\/$/, "");
+/**
+ * Where the site lives, for links in emails: the origin only (26 Nov).
+ * AUTH_URL is Auth.js's address, https://raosanta.uk/api/auth, so using it
+ * whole sent every email button and "stop reminder emails" link to
+ * /api/auth/..., which Auth.js answers with an error.
+ */
+export const siteUrl = () => {
+  try {
+    return new URL(process.env.AUTH_URL ?? "https://raosanta.uk").origin;
+  } catch {
+    return "https://raosanta.uk";
+  }
+};
 
 export const unsubscribeUrl = (userId: string) =>
   `${siteUrl()}/unsubscribe?u=${encodeURIComponent(userId)}&t=${unsubscribeToken(userId)}`;

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db } from "~/server/db";
 import { runReminders } from "~/server/email/reminders";
-import { unsubscribeToken } from "~/server/email/unsubscribe";
+import { unsubscribeToken, unsubscribeUrl } from "~/server/email/unsubscribe";
 import { arrivalPath } from "~/server/gifts";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { seasonRange } from "~/server/stamps";
@@ -92,9 +92,10 @@ export async function POST(req: NextRequest) {
     })),
     // unsubscribe links for these users, so tests can follow one
     tokens: Object.fromEntries(
-      log.map((l): [string, { u: string; t: string }] => [
+      log.map((l): [string, { u: string; t: string; url: string }] => [
         l.user.email ?? "",
-        { u: l.user.id, t: unsubscribeToken(l.user.id) },
+        // and the link exactly as the email has it (26 Nov)
+        { u: l.user.id, t: unsubscribeToken(l.user.id), url: unsubscribeUrl(l.user.id) },
       ]),
     ),
   });

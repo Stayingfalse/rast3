@@ -2176,3 +2176,20 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 26 Nov):** the backlog item the owner picks; otherwise
     a last check of dev and prod the day before opening. Claude checks the
     opening emails on Fri 27 Nov at about 09:30 UTC.
+- **Nightly run, 26 Nov: URGENT, every link in reminder emails was broken.**
+  - **Found:** prod logged requests to `/api/auth/api/email/unsubscribe` and
+    `/api/auth/unsubscribe` (25 Nov 11:10 UTC). `siteUrl()` (links in
+    emails) used `AUTH_URL` whole, and AUTH_URL is Auth.js's address,
+    `https://raosanta.uk/api/auth` (dev: the same). So every reminder
+    email's button ("Pick up a wishlist", "Check in", "Something's
+    arrived"), its "Stop reminder emails" link, the one-click unsubscribe
+    header and organisers' invite links went to `/api/auth/...`, which
+    Auth.js answers with an error. Sign-in links were fine (Auth.js builds
+    them itself).
+  - **Fixed:** `siteUrl()` uses AUTH_URL's origin only. The e2e reminders
+    test now checks the unsubscribe link exactly as the email has it (the
+    tests built their own paths before, so they never saw this).
+  - **Needs merging and deploying before 08:10 UK on Fri 27 Nov**, when
+    "Gifting is open" goes to everyone.
+  - **Next (nightly, 27 Nov, opening day):** watch the opening (Claude's
+    check at 09:30 UTC); the backlog item the owner picks.

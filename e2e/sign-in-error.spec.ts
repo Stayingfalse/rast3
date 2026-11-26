@@ -31,3 +31,23 @@ test("Auth.js sends failed sign-ins to our page", async ({ request }) => {
   expect(res.status()).toBeLessThan(400);
   expect(res.headers().location).toContain("/auth/error?error=Verification");
 });
+
+test("the sign-in landing page only offers our own sign-in links (audit, 26 Nov)", async ({ page, baseURL }) => {
+  // someone else's address: no button, so our page can't front a phishing link
+  await page.goto(`/auth/magic?url=${encodeURIComponent("https://evil.example/api/auth/callback/nodemailer?token=x")}`);
+  await expect(page.getByText("No valid sign-in link found")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Click to Sign In" })).toHaveCount(0);
+  // our own address but not the sign-in callback: no button either
+  await page.goto(`/auth/magic?url=${encodeURIComponent(`${baseURL}/admin`)}`);
+  await expect(page.getByText("No valid sign-in link found")).toBeVisible();
+  // our sign-in callback: the button, pointing at it
+  const real = `${baseURL}/api/auth/callback/nodemailer?callbackUrl=%2F&token=abc&email=a%40b.c`;
+  await page.goto(`/auth/magic?url=${encodeURIComponent(real)}`);
+  await expect(page.getByRole("link", { name: "Click to Sign In" })).toHaveAttribute("href", real);
+});
+
+test("too many sign-in requests gets its own message", async ({ page }) => {
+  await page.goto("/auth/error?error=TooManyRequests");
+  await expect(page.getByRole("heading", { name: "Too many sign-in links asked for" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in another way" })).toBeVisible();
+});

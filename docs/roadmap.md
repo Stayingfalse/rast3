@@ -2157,6 +2157,25 @@ that don't touch the data model. Known items to include:
   - **Use:** run it against dev (`E2E_TEST_LOGIN_SECRET`) or a local copy, and copy the MP4s into
     TechNews-Bot's `assets/santa/clips/`. Re-record when the UI changes.
   - Not part of the app; no deploy needed.
+- **Owner decisions, 24 Nov:** keep the work-email question's wording as
+  built ("Is that your work email?" / "Use my personal email" / "Send to my
+  work email"). It asks **only for registered workplaces' domains**, never
+  for any non-personal domain: the owner doesn't want false positives
+  (personal custom domains, companies not on the site).
+- **Nightly run, 25 Nov: opening-day check (no code change).**
+  - Used sign-in links: 8 on 24 Nov, all before #109 reached prod (23:00
+    UTC); none since. Email up; prod and dev healthy.
+  - **Opening emails:** "Gifting is open" goes 100 per hourly run from
+    08:10 UK on Fri 27 Nov (quiet hours), only to people who checked in or
+    signed up this season, so it fits the 300-in-24-hours cap alongside
+    the organisers' "we're live" and the admins' status email. If Admin ›
+    Status ever shows emails held, `REMINDER_DAILY_LIMIT` raises the cap
+    without a code change (Workspace Gmail allows about 2,000 a day).
+  - **The switch at midnight:** the home page is never cached (`no-store`)
+    and the season's dates are read on each request, so it opens at 00:00.
+  - **Next (nightly, 26 Nov):** the backlog item the owner picks; otherwise
+    a last check of dev and prod the day before opening. Claude checks the
+    opening emails on Fri 27 Nov at about 09:30 UTC.
 - **Nightly run, 26 Nov: URGENT, every link in reminder emails was broken.**
   - **Found:** prod logged requests to `/api/auth/api/email/unsubscribe` and
     `/api/auth/unsubscribe` (25 Nov 11:10 UTC). `siteUrl()` (links in

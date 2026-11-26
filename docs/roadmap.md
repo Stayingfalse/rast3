@@ -2193,3 +2193,8 @@ that don't touch the data model. Known items to include:
     "Gifting is open" goes to everyone.
   - **Next (nightly, 27 Nov, opening day):** watch the opening (Claude's
     check at 09:30 UTC); the backlog item the owner picks.
+- **26 Nov (owner): full audit after the broken email links.** Report:
+  `docs/audit-2026-11-26.md`. Fixed: sign-in emails had no limit (a script
+  could use up the Gmail allowance); `/auth/magic` put our sign-in button on
+  any address (phishing). Everything else checked is sound. Biggest
+  recommendation: a test mailbox on dev so e2e covers real emails.

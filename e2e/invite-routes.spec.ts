@@ -133,8 +133,9 @@ test("signing in with a workplace's address asks first (owner, 24 Nov)", async (
   await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
 
   // a personal address goes straight through: nothing asks first (dev sends
-  // to its test mailbox, 26 Nov)
-  await box.fill(`cole-${testInfo.project.name}@${E}`);
+  // to its test mailbox, which delivers nothing, 26 Nov; test addresses
+  // themselves sit under a test workplace's domain, so not one of those)
+  await box.fill("cole@example.com");
   await signIn.getByRole("button", { name: "Send Magic Link" }).click();
   await expect(signIn.getByText("We've sent a magic link to")).toBeVisible();
   await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);

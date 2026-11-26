@@ -30,7 +30,7 @@ type Reminders = {
   window: { opensAt: string; closesAt: string };
   run: { organisersLive: number; adminStatus: number; opened: number; quiet?: boolean } | null;
   log: Log[];
-  tokens: Record<string, { u: string; t: string }>;
+  tokens: Record<string, { u: string; t: string; url: string }>;
 };
 const reminders = async (
   r: APIRequestContext,
@@ -280,7 +280,16 @@ test("the stop link turns reminders off and back on", async ({ page }, testInfo)
   const errors = trackPageErrors(page);
   const p = testInfo.project.name;
   const { tokens } = await reminders(page.request, { run: false });
-  const { u, t } = tokens[who("in", p)]!;
+  const { u, t, url } = tokens[who("in", p)]!;
+
+  // the link exactly as the email has it: the site's own /unsubscribe page,
+  // never under /api/auth (26 Nov: AUTH_URL is Auth.js's address, and every
+  // email link went to /api/auth/..., which Auth.js answers with an error)
+  const link = new URL(url);
+  expect(link.pathname).toBe("/unsubscribe");
+  expect(link.origin).toBe(new URL(page.url() === "about:blank" ? testInfo.project.use.baseURL! : page.url()).origin);
+  await page.goto(link.pathname + link.search);
+  await expect(page.getByRole("heading", { name: "Stop reminder emails?" })).toBeVisible();
 
   await page.goto(`/unsubscribe?u=${u}&t=wrong${t.slice(5)}`);
   await expect(page.getByRole("heading", { name: "This link doesn't work" })).toBeVisible();

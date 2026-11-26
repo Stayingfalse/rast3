@@ -2198,3 +2198,14 @@ that don't touch the data model. Known items to include:
   could use up the Gmail allowance); `/auth/magic` put our sign-in button on
   any address (phishing). Everything else checked is sound. Biggest
   recommendation: a test mailbox on dev so e2e covers real emails.
+- **26 Nov (owner): a test mailbox on dev.** New Easypanel service
+  `ras/mailpit` (Mailpit `axllent/mailpit:v1.21`, internal only: SMTP
+  `ras_mailpit:1025`, API `:8025`; it accepts any login and delivers
+  nothing). Dev's environment now sends all email there (`EMAIL_SERVER_*`,
+  `EMAIL_FROM=noreply@dev.raosanta.uk`, `MAILPIT_API_URL`); prod is
+  unchanged. `/api/test-auth/mailbox` (test gate, test addresses only) reads
+  an address's emails with their links, sends one of our real reminder
+  templates to it, or clears it. New `e2e/mailbox.spec.ts`: a real sign-in
+  link end to end (landing page, button, signed in), and every link in the
+  "gifting is open", check-in and gift check-in emails opens a page of ours.
+  Reminders still skip test addresses in the email log, as before.

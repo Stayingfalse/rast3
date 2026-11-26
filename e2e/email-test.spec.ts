@@ -1,11 +1,12 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, settle, snap, trackPageErrors } from "./helpers";
+import { deleteTestUsers, E2E_DOMAIN, hasTestLogin, loginAs, settle, snap, testHeaders, trackPageErrors } from "./helpers";
 
 /**
  * "Send test email" (owner, 19 Nov): site admins send one email the way
  * sign-in links go and see which step failed and what the server said. Dev
- * has no email server, so the test stops at "settings" and nothing is sent.
+ * sends to its test mailbox (Mailpit, 26 Nov), so the email really goes and
+ * the test reads it there.
  */
 test.skip(!hasTestLogin, "E2E_TEST_LOGIN_SECRET not set");
 test.describe.configure({ mode: "serial" });
@@ -24,50 +25,59 @@ test.afterAll(async ({ playwright }, testInfo) => {
   await request.dispose();
 });
 
-test("a site admin's test email says which step failed", async ({ page }, testInfo) => {
+test("a site admin's test email arrives", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
-  await loginAs(page, { email: who("site", p), adminLevel: "SITE" });
+  const me = who("site", p);
+  await loginAs(page, { email: me, adminLevel: "SITE" });
   const errors = trackPageErrors(page);
+  await page.request.delete(`/api/test-auth/mailbox?to=${encodeURIComponent(me)}`, { headers: testHeaders });
 
   const r = (await unwrap(await mutate(page.request, "admin.sendTestEmail"))) as {
     ok: boolean;
     step: string | null;
     to: string;
   };
-  expect(r).toMatchObject({ ok: false, step: "settings" });
+  expect(r).toMatchObject({ ok: true, step: null });
   // the address is masked in what comes back
   expect(r.to).toMatch(/^e•••@/);
+  // and it's in the test mailbox
+  await expect
+    .poll(
+      async () => {
+        const res = await page.request.get(`/api/test-auth/mailbox?to=${encodeURIComponent(me)}`, { headers: testHeaders });
+        return ((await res.json()) as { messages: { subject: string }[] }).messages.map((m) => m.subject);
+      },
+      { timeout: 30_000 },
+    )
+    .toContain("Random Acts of Santa: test email");
 
   await page.goto("/admin/settings");
   await page.getByRole("button", { name: "Send test email" }).click();
-  await expect(page.getByText("Failed at: Reading the email settings")).toBeVisible();
-  await expect(page.getByText(/No email server is set up/)).toBeVisible();
+  await expect(page.getByText(/^Sent to e•••@/)).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "email-test");
   expect(errors).toEqual([]);
 });
 
-test("the connection check says where the connection stops", async ({ page }, testInfo) => {
+test("the connection check reaches the mail server", async ({ page }, testInfo) => {
   const p = testInfo.project.name;
   await loginAs(page, { email: who("site", p), adminLevel: "SITE" });
   const errors = trackPageErrors(page);
 
-  // dev has no email server saved, so this probes Gmail's (20 Nov)
+  // dev's saved server is its test mailbox; the probe greets it (20 Nov)
   const r = (await unwrap(await mutate(page.request, "admin.checkEmailConnection"))) as {
     ok: boolean;
     saved: boolean;
     probe: { host: string; port: number; attempts: { port: number; family: number; outcome: string }[] };
   };
-  expect(r.saved).toBe(false);
-  expect(r.probe).toMatchObject({ host: "smtp.gmail.com", port: 587 });
-  expect(r.probe.attempts.length).toBeGreaterThan(0);
-  // what the host sees, for the 20 Nov outage (whatever it is, the test passes)
-  testInfo.annotations.push({ type: "probe", description: JSON.stringify(r.probe.attempts) });
-  console.log(`[${p}] smtp probe:`, JSON.stringify(r.probe.attempts));
+  expect(r).toMatchObject({ ok: true, saved: true });
+  expect(r.probe.attempts.some((a) => a.port === r.probe.port && a.outcome === "greeting")).toBe(true);
 
   await page.goto("/admin/settings");
   await page.getByRole("button", { name: "Check the connection only" }).click();
-  await expect(page.getByText(/smtp\.gmail\.com (answers|doesn't answer) on port 587\./)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(new RegExp(`${r.probe.host.replace(/\./g, "\\.")} answers on port ${r.probe.port}\\.`))).toBeVisible({
+    timeout: 30_000,
+  });
   await settle(page);
   await snap(page, testInfo, "email-connection-check");
   expect(errors).toEqual([]);

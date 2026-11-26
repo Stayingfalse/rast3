@@ -66,7 +66,7 @@ test("a workplace's own link asks for the work email first", async ({ page }, te
 
   // sign-in: the work email isn't carried over, and typing it gets a warning
   // (company mail often blocks our links), though it can still be sent. Dev
-  // has no email sign-in configured, so the browser is shown it; nothing is sent.
+  // shows the browser email sign-in whatever dev has configured; nothing is sent.
   await page.route("**/api/auth/providers", async (route) => {
     const res = await route.fetch();
     const providers = (await res.json()) as Record<string, unknown>;
@@ -132,19 +132,23 @@ test("signing in with a workplace's address asks first (owner, 24 Nov)", async (
   await expect(box).toBeFocused();
   await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
 
-  // a personal address goes straight through (dev has no email server, so it
-  // fails to send; what matters is that nothing asked first)
+  // a personal address goes straight through: nothing asks first (dev sends
+  // to its test mailbox, which delivers nothing, 26 Nov; test addresses
+  // themselves sit under a test workplace's domain, so not one of those)
   await box.fill("cole@example.com");
   await signIn.getByRole("button", { name: "Send Magic Link" }).click();
-  await expect(signIn.getByText("We couldn't send your sign-in link just now.")).toBeVisible();
+  await expect(signIn.getByText("We've sent a magic link to")).toBeVisible();
   await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
 
   // and "send to my work email" sends it
-  await box.fill(`cole@${domain}`);
+  await signIn.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Join your group" }).first().click();
+  await signIn.getByRole("button", { name: "Continue with Email" }).click();
+  await signIn.getByLabel("Email address").fill(`cole@${domain}`);
   await signIn.getByRole("button", { name: "Send Magic Link" }).click();
   await signIn.getByRole("button", { name: "Send to my work email" }).click();
   await expect(signIn.getByText("Is that your work email?")).toHaveCount(0);
-  await expect(signIn.getByText("We couldn't send your sign-in link just now.")).toBeVisible();
+  await expect(signIn.getByText("We've sent a magic link to")).toBeVisible();
   expect(errors).toEqual([]);
 });
 

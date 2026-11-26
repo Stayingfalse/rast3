@@ -5,7 +5,7 @@ import { settle, snap, trackPageErrors } from "./helpers";
 /**
  * While email sign-in links are failing (22 Nov), the sign-in window says so
  * and points to the other options, before anyone waits for a link. Dev has
- * no email server, so the browser is shown email sign-in and the status.
+ * a test mailbox (26 Nov) that never fails, so the browser is shown the status.
  */
 async function withEmail(page: Page, down: boolean) {
   await page.route("**/api/auth/providers", async (route) => {
@@ -27,7 +27,7 @@ test("the status says up or down, and nothing more", async ({ request }) => {
   expect(res.headers()["cache-control"]).toContain("no-store");
   const body = (await res.json()) as Record<string, unknown>;
   expect(Object.keys(body).sort()).toEqual(["down", "since"]);
-  // dev sends no email, so it's never down
+  // dev sends to its test mailbox, which never fails, so it is never down
   expect(body).toEqual({ down: false, since: null });
 });
 

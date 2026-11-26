@@ -2193,3 +2193,14 @@ that don't touch the data model. Known items to include:
     "Gifting is open" goes to everyone.
   - **Next (nightly, 27 Nov, opening day):** watch the opening (Claude's
     check at 09:30 UTC); the backlog item the owner picks.
+- **26 Nov (owner): a test mailbox on dev.** New Easypanel service
+  `ras/mailpit` (Mailpit `axllent/mailpit:v1.21`, internal only: SMTP
+  `ras_mailpit:1025`, API `:8025`; it accepts any login and delivers
+  nothing). Dev's environment now sends all email there (`EMAIL_SERVER_*`,
+  `EMAIL_FROM=noreply@dev.raosanta.uk`, `MAILPIT_API_URL`); prod is
+  unchanged. `/api/test-auth/mailbox` (test gate, test addresses only) reads
+  an address's emails with their links, sends one of our real reminder
+  templates to it, or clears it. New `e2e/mailbox.spec.ts`: a real sign-in
+  link end to end (landing page, button, signed in), and every link in the
+  "gifting is open", check-in and gift check-in emails opens a page of ours.
+  Reminders still skip test addresses in the email log, as before.

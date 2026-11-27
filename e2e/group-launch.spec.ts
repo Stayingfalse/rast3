@@ -118,7 +118,7 @@ test("an organiser picks a later launch date: the group waits until then", async
   expect(typeof ready).toBe("number");
   if (ready) await expect(home.getByText(`${ready} ${ready === 1 ? "list" : "lists"} ready`)).toBeVisible();
   else await expect(home.getByText("Until then, invite people so there are lists waiting.")).toBeVisible();
-  await expect(home.getByRole("button", { name: "Pick up a wishlist" })).toHaveCount(0);
+  await expect(home.getByRole("button", { name: /^Pick up/ })).toHaveCount(0);
   await expect(home.getByText(/Pick one up whenever you're ready/)).toHaveCount(0);
   await settle(page);
   await snap(page, testInfo, "group-launch-waiting");

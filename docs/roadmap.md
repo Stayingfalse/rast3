@@ -2245,3 +2245,14 @@ that don't touch the data model. Known items to include:
   ref is the oldest open report, so after the owner resolves everything a
   new problem can email again. The owner's alert now shows the problems in
   plain words, not "NO_ADDRESS".
+- **27 Nov (owner): friends and community parcels work like the workplace's.**
+  The group page had its own flat cards ("Parcel 1", "Gifted. Thank you!",
+  one list at a time). The workplace card, its Gifted and Report windows,
+  the share window and its actions (share, undo, archive, unassign) are now
+  one shared component, `src/app/_components/parcels/parcel-board.tsx`,
+  used by both pages, so they can't drift apart again. Group cards say the
+  group's name under "Wishlist No. 01"; the SENT postmark shows the season's
+  year (it said 2026 always). A first pick-up in a group gives up to 3 lists
+  ("Pick up 3 wishlists"), then "Pick up another", as at work. The group
+  page's own "Report a problem" form (added earlier on 27 Nov) is replaced by
+  the shared "Report issue" window.

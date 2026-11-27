@@ -2235,3 +2235,24 @@ that don't touch the data model. Known items to include:
     with an optional note), show "Problem reported", and "It's fixed now"
     clears it. The list's owner sees it in the site-wide alert next time they
     visit; they never see who reported it.
+- **27 Nov (owner): email the owner when two or more Santas report a
+  problem with their wishlist,** so they don't miss out. New email kind
+  `WISHLIST_PROBLEM` (migration `20261127120000_wishlist_problem`), sent by
+  the hourly reminder run (quiet hours, daily cap and opt-out apply) when two
+  different Santas have open reports on the owner's ungifted lists this
+  season. It names each problem with its fix (no delivery address, empty,
+  link doesn't open) and points to "Resolve All". One email per problem: the
+  ref is the oldest open report, so after the owner resolves everything a
+  new problem can email again. The owner's alert now shows the problems in
+  plain words, not "NO_ADDRESS".
+- **27 Nov (owner): friends and community parcels work like the workplace's.**
+  The group page had its own flat cards ("Parcel 1", "Gifted. Thank you!",
+  one list at a time). The workplace card, its Gifted and Report windows,
+  the share window and its actions (share, undo, archive, unassign) are now
+  one shared component, `src/app/_components/parcels/parcel-board.tsx`,
+  used by both pages, so they can't drift apart again. Group cards say the
+  group's name under "Wishlist No. 01"; the SENT postmark shows the season's
+  year (it said 2026 always). A first pick-up in a group gives up to 3 lists
+  ("Pick up 3 wishlists"), then "Pick up another", as at work. The group
+  page's own "Report a problem" form (added earlier on 27 Nov) is replaced by
+  the shared "Report issue" window.

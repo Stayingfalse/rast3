@@ -143,6 +143,34 @@ export const seasonOpen = (
       : { label: "Check in", path: "/" },
   });
 
+/** What each kind of wishlist report means, and how to fix it (27 Nov). */
+const PROBLEM_FIX: Record<string, string> = {
+  NO_ADDRESS:
+    "There's no delivery address on it. In Amazon, open your list, choose Manage list and add a delivery address. Santas never see it.",
+  NO_ITEMS: "It's empty. Add a few things, ideally at a range of prices.",
+  DOESNT_EXIST:
+    "The link doesn't open. In Amazon, set the list to Shared (not Private), or update the link in your profile.",
+  OTHER: "Something else is stopping them. Have a look at the list in Amazon.",
+};
+
+/**
+ * Two or more Santas reported a problem with your wishlist (owner, 27 Nov),
+ * so nobody can send you anything until it's fixed.
+ */
+export const wishlistProblem = (userId: string, season: number, santas: number, types: string[]) =>
+  render({
+    userId,
+    subject: "Santas can't send you a gift yet",
+    kicker: `Christmas ${season}`,
+    heading: "Your wishlist needs a quick fix",
+    paragraphs: [
+      `${santas} Santas picked up your wishlist but couldn't send you anything. They told us:`,
+      ...types.map((t) => PROBLEM_FIX[t] ?? PROBLEM_FIX.OTHER!),
+      "Once it's fixed, open the site and choose \"Resolve All\" on the message about your wishlist, so Santas can try again.",
+    ],
+    button: { label: "Check my wishlist", path: "/" },
+  });
+
 /**
  * A few days after a Santa marked a gift to your list, if you haven't
  * posted a thank-you. Worded as a check-in, never "you've been sent a gift",

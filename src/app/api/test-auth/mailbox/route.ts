@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "~/server/db";
 import { emailSettings } from "~/server/email/smtp";
-import { checkInNudge, giftCheckIn, seasonOpen } from "~/server/email/templates";
+import { checkInNudge, giftCheckIn, seasonOpen, wishlistProblem } from "~/server/email/templates";
 import { oneClickUrl } from "~/server/email/unsubscribe";
 import { currentSeason, seasonWindow } from "~/server/season";
 import { isTestAuthAuthorised, TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
 const sendBody = z.object({
   to: testAddress,
-  template: z.enum(["seasonOpen", "checkInNudge", "giftCheckIn"]),
+  template: z.enum(["seasonOpen", "checkInNudge", "giftCheckIn", "wishlistProblem"]),
 });
 
 export async function POST(req: NextRequest) {
@@ -80,7 +80,9 @@ export async function POST(req: NextRequest) {
       ? seasonOpen(user.id, season, w.closesAt, true)
       : input.data.template === "checkInNudge"
         ? checkInNudge(user.id, season, w.opensAt)
-        : giftCheckIn(user.id, season, "test-purchase");
+        : input.data.template === "giftCheckIn"
+          ? giftCheckIn(user.id, season, "test-purchase")
+          : wishlistProblem(user.id, season, 2, ["NO_ADDRESS", "DOESNT_EXIST"]);
   // as the reminders send it (mailer.sendOnce), minus the email log
   await createTransport(settings.server).sendMail({
     to: input.data.to,

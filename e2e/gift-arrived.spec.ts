@@ -124,8 +124,9 @@ test("days later, Ina says it arrived and her Santa sees it landed", async ({ pa
   await page.goto("/");
   await page.getByRole("tablist", { name: "Gifting in" }).getByRole("tab", { name: groupName }).click();
   const panel = page.getByRole("tabpanel", { name: groupName });
-  await expect(panel.getByText("It arrived. Thank you, Santa!")).toHaveCount(1);
-  await expect(panel.getByText("Gifted. Thank you!")).toHaveCount(1);
+  await expect(panel.getByText("It arrived: they told us on", { exact: false })).toHaveCount(1);
+  await expect(panel.getByText("Arrived", { exact: true })).toHaveCount(1);
+  await expect(panel.getByText("Gift sent", { exact: true })).toHaveCount(1);
   await settle(page);
   await snap(page, testInfo, "gift-arrived-santa");
   expect(errors).toEqual([]);

@@ -61,12 +61,14 @@ test("set up: a gift in a friends group and its thank-you", async ({ page }, tes
   expect((await mutate(page.request, "groups.join", { code: g.joinCode })).status()).toBe(200);
   expect((await mutate(page.request, "wishlist.requestFromGroup", { groupId, count: 1 })).status()).toBe(200);
   const [parcel] = (await unwrap(await query(page.request, "wishlist.getMyAssignments", { groupId }))) as { id: string }[];
-  expect((await mutate(page.request, "wishlist.markPurchase", { assignmentId: parcel!.id })).status()).toBe(200);
+  // (the gift's id from marking it: gifts only show to their owner after a few days)
+  const gift = (await unwrap(await mutate(page.request, "wishlist.markPurchase", { assignmentId: parcel!.id }))) as {
+    id: string;
+  };
 
   await loginAs(page, { email: who("owner", p) });
-  const [gift] = (await unwrap(await query(page.request, "wishlist.giftsToMe"))) as { id: string }[];
   expect(
-    (await mutate(page.request, "kudos.createKudos", { message, purchaseId: gift!.id, images: [] })).status(),
+    (await mutate(page.request, "kudos.createKudos", { message, purchaseId: gift.id, images: [] })).status(),
   ).toBe(200);
 });
 

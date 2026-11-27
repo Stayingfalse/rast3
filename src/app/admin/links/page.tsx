@@ -16,23 +16,14 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import { useDebounced } from "~/lib/use-debounced";
 import { api, type RouterOutputs } from "~/trpc/react";
+import { ALL_GROUPS, GroupFilter } from "../_components/group-filter";
 
 type Row = RouterOutputs["admin"]["wishlists"]["rows"][number];
 type Show = "all" | "problems" | "notCheckedIn" | "notPickedUp";
-const ALL = "all";
 
 const SHOW: Record<Show, string> = {
   all: "Everyone",
@@ -46,7 +37,6 @@ const KIND = {
   COMMUNITY: { label: "Community", Icon: MessagesSquareIcon },
   FRIENDS: { label: "Friends group", Icon: HeartIcon },
 } as const;
-const KIND_ORDER = ["ORG", "TEAM", "COMMUNITY", "FRIENDS"] as const;
 const PROBLEM: Record<string, string> = {
   NO_ADDRESS: "No delivery address",
   NO_ITEMS: "Empty list",
@@ -63,15 +53,14 @@ const seen = (d: Date | string | null) =>
  */
 export default function AdminWishlistsPage() {
   const [q, setQ] = useState("");
-  const [groupId, setGroupId] = useState<string>(ALL);
+  const [groupId, setGroupId] = useState<string>(ALL_GROUPS);
   const [show, setShow] = useState<Show>("all");
   const search = useDebounced(q);
   const { data, isLoading, error } = api.admin.wishlists.useQuery({
     q: search,
-    groupId: groupId === ALL ? null : groupId,
+    groupId: groupId === ALL_GROUPS ? null : groupId,
     show,
   });
-  const { data: groups } = api.admin.wishlistGroups.useQuery();
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,34 +79,7 @@ export default function AdminWishlistsPage() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="wishlist-group">Group</FieldLabel>
-              <Select value={groupId} onValueChange={setGroupId}>
-                <SelectTrigger id="wishlist-group" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value={ALL}>All groups</SelectItem>
-                  </SelectGroup>
-                  {KIND_ORDER.map((k) => {
-                    const inKind = groups?.filter((g) => g.kind === k) ?? [];
-                    if (!inKind.length) return null;
-                    return (
-                      <SelectGroup key={k}>
-                        <SelectSeparator />
-                        <SelectLabel>{KIND[k].label}s</SelectLabel>
-                        {inKind.map((g) => (
-                          <SelectItem key={g.id} value={g.id}>
-                            {g.label} <span className="text-ink-soft tabular-nums">({g.members})</span>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </Field>
+            <GroupFilter id="wishlist-group" value={groupId} onChange={setGroupId} />
             <Field>
               <FieldLabel htmlFor="wishlist-show">Show</FieldLabel>
               <Select value={show} onValueChange={(v) => setShow(v as Show)}>

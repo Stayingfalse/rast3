@@ -13,6 +13,7 @@ import {
   TRACKING_ID_HINT,
   type Store,
 } from "~/server/affiliate";
+import { adminKudos, KUDOS_SHOW } from "~/server/admin-kudos";
 import { adminWishlistGroups, adminWishlists, WISHLIST_SHOW } from "~/server/admin-wishlists";
 import { checkEmailConnection, sendTestEmail } from "~/server/email/email-test";
 import { getMigrations, getSchemaSync, processStartedAt } from "~/server/health";
@@ -137,7 +138,18 @@ export const adminRouter = createTRPCRouter({
     )
     .query(({ ctx, input }) => adminWishlists(ctx.db, input)),
 
-  /** The groups to filter Admin › Wishlists by. */
+  /** Admin › Kudos (27 Nov): every thank-you, for moderation. */
+  kudos: siteAdminProcedure
+    .input(
+      z.object({
+        q: z.string().trim().max(100).default(""),
+        groupId: z.string().nullable().default(null),
+        show: z.enum(KUDOS_SHOW).default("all"),
+      }),
+    )
+    .query(({ ctx, input }) => adminKudos(ctx.db, input)),
+
+  /** The groups to filter Admin › Wishlists (and Kudos) by. */
   wishlistGroups: siteAdminProcedure.query(({ ctx }) => adminWishlistGroups(ctx.db)),
 
   /** Every group except teams (they're managed inside their organisation). */

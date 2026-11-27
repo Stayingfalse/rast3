@@ -2267,5 +2267,13 @@ that don't touch the data model. Known items to include:
   but not picked up; one row per person with every group as a label, this
   season's check-in, picked up and gifted (this season), open problems in
   place; actions: open or copy the wishlist, email about the problems.
-  - **Next admin pages to bring up:** the others still on the old look (to
-    check one by one with the owner).
+  - **Admin › Kudos** next (owner, 27 Nov), rebuilt the same way
+    (`src/server/admin-kudos.ts`, `admin.kudos`): it showed the public
+    feed's newest 30. Now every thank-you (newest 200 at a time), search by
+    message, name or email, filter by any group (the gift's group, or the
+    author's workplace or team for workplace thank-yous) and by visible,
+    hidden or with photos; photos as thumbnails; who hid it and when; hide,
+    show again, and delete after a confirmation. The group filter is one
+    shared admin component (`_components/group-filter.tsx`).
+  - **Last admin page on the old look:** Settings / Sign-in (providers and
+    email setup, ~1,000 lines).

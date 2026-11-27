@@ -116,7 +116,7 @@ test("a picked-up wishlist opens from a public gift page", async ({ page, browse
   await page.getByRole("tablist", { name: "Gifting in" }).getByRole("tab", { name: groupName }).click();
   const panel = page.getByRole("tabpanel", { name: groupName });
   await expect(panel.getByText("Wishlists in this group open from a gift page")).toBeVisible();
-  await expect(panel.getByRole("link", { name: "Open wishlist" })).toHaveAttribute("href", giftPath);
+  await expect(panel.getByRole("link", { name: "View Wishlist", exact: true })).toHaveAttribute("href", giftPath);
   await expect(page.locator("footer").filter({ hasText: "As an Amazon Associate" })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "affiliate-group-home");

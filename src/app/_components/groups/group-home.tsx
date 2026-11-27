@@ -1,52 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { memberCounts } from "~/lib/member-counts";
-import { trackOpen } from "~/lib/track";
 import { api, type RouterOutputs } from "~/trpc/react";
-import { type FirstGift, ShareSheet, type ShareRequest } from "../share/share-sheet";
 import { LastOrderBanner } from "../last-order-banner";
+import { ParcelBoard } from "../parcels/parcel-board";
 import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
 
+/** How many lists a first pick-up gives, as at work: 3, then one at a time. */
+const FIRST_PICK = 3;
+
 /**
  * Day 14: a friends or community group's home: pick up wishlists from the
- * group and mark them gifted.
+ * group and gift them. Since 27 Nov the parcels are the same cards as at
+ * work (owner: the group's were flat and simple): Gifted with notes and the
+ * SENT postmark, report a problem, share, undo, archive, unassign.
  */
 export function GroupHome({ group }: { group: Group }) {
   const utils = api.useUtils();
   const { data: parcels, isLoading } = api.wishlist.getMyAssignments.useQuery({
     groupId: group.id,
   });
+  const refresh = () => void utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
   const pick = api.wishlist.requestFromGroup.useMutation({
-    onSuccess: async () => {
-      toast.success("Wishlist picked up");
-      await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
+    onSuccess: (r) => {
+      toast.success(r.count === 1 ? "Wishlist picked up" : `${r.count} wishlists picked up`);
+      refresh();
     },
     onError: (e) => toast.error(e.message),
   });
-  // a Santa's first gift (ever, or of the season) opens the share window
-  // with the season's stamp (4 Nov); later gifts just get the toast
-  const [share, setShare] = useState<{ request: ShareRequest; first: FirstGift } | null>(null);
-  const gifted = api.wishlist.markPurchase.useMutation({
-    onSuccess: async (purchase) => {
-      if (purchase.first) {
-        setShare({
-          request: { kind: "sent", purchaseId: purchase.id },
-          first: { kind: purchase.first, year: purchase.season, stamp: purchase.stamp },
-        });
-      } else {
-        toast.success("Marked as gifted. Thank you, Santa!");
-      }
-      await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
-      void utils.stamps.getMyAlbum.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  const first = !parcels?.length;
 
   const live = group.status === "ACTIVE";
   // approved, but its gifting date (the site's or its own, 7 Nov) is still to come
@@ -111,10 +98,10 @@ export function GroupHome({ group }: { group: Group }) {
           <button
             type="button"
             disabled={pick.isPending}
-            onClick={() => pick.mutate({ groupId: group.id, count: 1 })}
+            onClick={() => pick.mutate({ groupId: group.id, count: first ? FIRST_PICK : 1 })}
             className="btn-post"
           >
-            {pick.isPending ? "Picking…" : "Pick up a wishlist"}
+            {pick.isPending ? "Picking…" : first ? `Pick up ${FIRST_PICK} wishlists` : "Pick up another"}
           </button>
           <Link href="/groups" className="btn-quiet text-frost">
             Invite people
@@ -126,57 +113,13 @@ export function GroupHome({ group }: { group: Group }) {
         live && !opensLater && (
           <p className="text-frost-soft max-w-xl">
             You haven&apos;t picked up anyone&apos;s wishlist in this group yet.
-            Pick one up whenever you&apos;re ready; there&apos;s no draw and no
-            deadline.
+            Pick up {FIRST_PICK} whenever you&apos;re ready, then more if you like;
+            there&apos;s no draw and no deadline.
           </p>
         )
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {parcels.map((a, i) => {
-            const done = !!a.purchases;
-            return (
-              <li key={a.id} className="label-stock flex flex-col gap-3 p-5">
-                <p className="label-caps text-ink-soft">Parcel {i + 1}</p>
-                <p className="text-ink font-semibold">
-                  {a.purchases?.receivedAt
-                    ? "It arrived. Thank you, Santa!"
-                    : done
-                      ? "Gifted. Thank you!"
-                      : "A wishlist from this group"}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {a.link && (
-                    <a
-                      href={a.link}
-                      {...(a.viaGiftPage
-                        ? {}
-                        : {
-                            target: "_blank",
-                            rel: "noopener noreferrer",
-                            onClick: () => trackOpen({ assignmentId: a.id }),
-                          })}
-                      className="btn-quiet text-ink"
-                    >
-                      Open wishlist
-                    </a>
-                  )}
-                  {!done && (
-                    <button
-                      type="button"
-                      disabled={gifted.isPending}
-                      onClick={() => gifted.mutate({ assignmentId: a.id })}
-                      className="btn-post"
-                    >
-                      Mark as gifted
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ParcelBoard parcels={parcels} onChanged={refresh} routeOf={() => group.name} />
       )}
-      <ShareSheet request={share?.request ?? null} first={share?.first} onClose={() => setShare(null)} />
     </section>
   );
 }

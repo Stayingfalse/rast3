@@ -31,6 +31,7 @@ const KIND = {
   ORGANISER_LIVE: "Organisers: we're live",
   ADMIN_STATUS: "Admins' morning status",
   ORGANISER_DRIVE: "Organisers: wishlist drive",
+  WISHLIST_PROBLEM: "Wishlist problem",
 } as const;
 
 const PHASE = { before: "Not open yet", open: "Gifting open", after: "Closed" } as const;

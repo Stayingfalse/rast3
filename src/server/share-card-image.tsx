@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 
-import type { PublicShareCard } from "~/server/share-cards";
+import { recipientLabel, type PublicShareCard } from "~/server/share-cards";
 import type { PublicWall } from "~/server/wall";
 import { readFromE2 } from "~/server/utils/e2-upload";
 
@@ -414,7 +414,7 @@ export async function renderShareCardImage(card: PublicShareCard) {
                 padding: "8px 32px 12px",
               }}
             >
-              <Row k="TO" v="A colleague" />
+              <Row k="TO" v={recipientLabel[card.recipient]} />
               <Row k="FROM" v="Santa" />
               <Row k="ADDRESS" v="Withheld" />
             </div>

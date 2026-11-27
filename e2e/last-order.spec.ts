@@ -206,7 +206,7 @@ test("a group's Santas see it on the group home, on the day and after", async ({
   const day = ukDay(3);
   await expectBanner(page, home, day, `Order by ${label(day)} for Christmas delivery · 3 days left`);
   const banner = home().getByRole("status").filter({ hasText: "Christmas delivery" });
-  const pick = home().getByRole("button", { name: "Pick up a wishlist" });
+  const pick = home().getByRole("button", { name: "Pick up 3 wishlists" });
   const [b, a] = [await banner.boundingBox(), await pick.boundingBox()];
   expect(b && a && b.y < a.y).toBe(true);
   await settle(page);

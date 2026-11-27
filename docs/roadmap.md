@@ -2209,3 +2209,50 @@ that don't touch the data model. Known items to include:
   link end to end (landing page, button, signed in), and every link in the
   "gifting is open", check-in and gift check-in emails opens a page of ours.
   Reminders still skip test addresses in the email log, as before.
+- **Nightly run, 27 Nov (opening day): no code change.** Gifting opened at
+  00:00 UK: prod reads "Open until 6 January"; no errors or incidents
+  overnight; email up. Wrote `docs/marketing/outreach-drafts.md` (owner's
+  growth plan, 26 Nov): the organiser "know another group?" email, a Discord
+  moderator message and announcement, and a founder post for remote-work
+  communities (LinkedIn is out: no access). New daily routine (26 Nov,
+  owner): read-only Reddit research and drafts at 07:23 UK, notes on the
+  `marketing/reddit` branch; the Reddit API key is still refused (401: check
+  the app type and Reddit's API access approval).
+  - **Next (nightly, 28 Nov):** the organiser referral email in the app
+    (wording above, once approved) and the "bring your other group" prompt
+    after a member's first gift.
+- **27 Nov (owner): two bugs in friends and community groups.**
+  - **"To a colleague" on a Discord or friends gift:** the share card for a
+    sent gift (its image, page, preview text and footer) always said
+    colleague. Share cards now carry who the gift went to, from the kind of
+    group it was picked up in: "A colleague" (workplace), "A community
+    member" (Discord community), "A friend" (friends group). Thank-you
+    cards too.
+  - **No way to report a problem with a list in a friends or community
+    group:** the workplace page had "Report issue"; the group page only had
+    "Open wishlist" and "Mark as gifted". Group pick-ups now have "Report a
+    problem" (no delivery address, empty list, broken link, something else,
+    with an optional note), show "Problem reported", and "It's fixed now"
+    clears it. The list's owner sees it in the site-wide alert next time they
+    visit; they never see who reported it.
+- **27 Nov (owner): email the owner when two or more Santas report a
+  problem with their wishlist,** so they don't miss out. New email kind
+  `WISHLIST_PROBLEM` (migration `20261127120000_wishlist_problem`), sent by
+  the hourly reminder run (quiet hours, daily cap and opt-out apply) when two
+  different Santas have open reports on the owner's ungifted lists this
+  season. It names each problem with its fix (no delivery address, empty,
+  link doesn't open) and points to "Resolve All". One email per problem: the
+  ref is the oldest open report, so after the owner resolves everything a
+  new problem can email again. The owner's alert now shows the problems in
+  plain words, not "NO_ADDRESS".
+- **27 Nov (owner): friends and community parcels work like the workplace's.**
+  The group page had its own flat cards ("Parcel 1", "Gifted. Thank you!",
+  one list at a time). The workplace card, its Gifted and Report windows,
+  the share window and its actions (share, undo, archive, unassign) are now
+  one shared component, `src/app/_components/parcels/parcel-board.tsx`,
+  used by both pages, so they can't drift apart again. Group cards say the
+  group's name under "Wishlist No. 01"; the SENT postmark shows the season's
+  year (it said 2026 always). A first pick-up in a group gives up to 3 lists
+  ("Pick up 3 wishlists"), then "Pick up another", as at work. The group
+  page's own "Report a problem" form (added earlier on 27 Nov) is replaced by
+  the shared "Report issue" window.

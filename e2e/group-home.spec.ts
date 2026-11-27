@@ -79,16 +79,38 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
   const panel = page.getByRole("tabpanel", { name: groupName });
   await expect(panel.getByRole("heading", { name: groupName })).toBeVisible();
 
-  await panel.getByRole("button", { name: "Pick up a wishlist" }).click();
-  const parcel = panel.getByRole("listitem").first();
-  await expect(parcel.getByRole("link", { name: "Open wishlist" })).toHaveAttribute(
+  // the first pick-up gives up to 3, as at work (owner, 27 Nov); this group
+  // has one other list
+  await panel.getByRole("button", { name: "Pick up 3 wishlists" }).click();
+  const parcel = panel.getByRole("article").first();
+  // the same parcel card as at work: numbered, from this group
+  await expect(parcel.getByText("Wishlist No. 01")).toBeVisible();
+  await expect(parcel.getByText(groupName, { exact: true })).toBeVisible();
+  await expect(parcel.getByRole("link", { name: "View Wishlist on Amazon" })).toHaveAttribute(
     "href",
     /E2EFRB0001$/,
   );
   await settle(page);
   await snap(page, testInfo, "group-home");
 
-  await parcel.getByRole("button", { name: "Mark as gifted" }).click();
+  // a list that can't be gifted can be reported here too (owner, 27 Nov),
+  // and cleared once it's fixed
+  await parcel.getByRole("button", { name: "Report issue" }).click();
+  const reportDialog = page.getByRole("dialog").filter({ hasText: "Report Wishlist Issue" });
+  await reportDialog.getByRole("combobox").selectOption("NO_ADDRESS");
+  await reportDialog.getByRole("textbox").fill("No delivery address set");
+  await reportDialog.getByRole("button", { name: "Submit Report" }).click();
+  await expect(parcel.getByText("Issue reported")).toBeVisible();
+  await expect(parcel.getByText("Reported: No Shipping Address")).toBeVisible();
+  await parcel.getByRole("button", { name: "It's fixed" }).click();
+  await page.getByRole("button", { name: "Yes, it's fixed" }).click();
+  await expect(parcel.getByText("Issue reported")).toHaveCount(0);
+
+  // Gifted, with a note
+  await parcel.getByRole("button", { name: "Gifted" }).click();
+  const giftDialog = page.getByRole("dialog").filter({ hasText: "Mark Purchase Complete" });
+  await giftDialog.getByRole("textbox").fill("Jaffa Cakes");
+  await giftDialog.getByRole("button", { name: "Confirm Purchase" }).click();
 
   // Ava's first gift ever: its own share window with this season's stamp
   // (4 Nov), and the card ready to share
@@ -102,12 +124,25 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
     .toBe(1200);
   await settle(page);
   await snap(page, testInfo, "first-gift");
+  // a friends group's gift goes "to a friend", not "a colleague" (27 Nov)
+  const cardPath = await sheet.getByRole("link", { name: "Save image" }).getAttribute("href");
+  expect(cardPath).toMatch(/^\/sent\/\w+\/card\.png$/);
+  const shared = await page.context().newPage();
+  await shared.goto(cardPath!.replace(/\/card\.png$/, ""));
+  await expect(shared.getByRole("img", { name: "Parcel label: to a friend, from Santa, address withheld" })).toBeVisible();
+  await expect(shared.getByText("a few friends'", { exact: false })).toBeVisible();
+  await shared.close();
   await sheet.getByRole("button", { name: "Not now" }).click();
   await expect(sheet).toHaveCount(0);
-  await expect(parcel.getByText("Gifted. Thank you!")).toBeVisible();
+  // the SENT card, as at work
+  await expect(parcel.getByText("Gift sent")).toBeVisible();
+  await expect(parcel.getByText('"Jaffa Cakes"')).toBeVisible();
+  await expect(parcel.getByRole("button", { name: "Share this act" })).toBeVisible();
+  await settle(page);
+  await snap(page, testInfo, "group-home-gifted");
 
   // nobody else left in the group
-  await panel.getByRole("button", { name: "Pick up a wishlist" }).click();
+  await panel.getByRole("button", { name: "Pick up another" }).click();
   await expect(page.getByText(/No more wishlists in this group/)).toBeVisible();
   expect(errors).toEqual([]);
 });

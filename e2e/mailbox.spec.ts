@@ -85,7 +85,7 @@ test("every link in the reminder emails opens a page of ours", async ({ page, ba
   const to = `mb-member-${testInfo.project.name}@${E}`;
   await loginAs(page, { email: to });
   const origin = new URL(baseURL!).origin;
-  for (const template of ["seasonOpen", "checkInNudge", "giftCheckIn"] as const) {
+  for (const template of ["seasonOpen", "checkInNudge", "giftCheckIn", "wishlistProblem"] as const) {
     await clear(page.request, to);
     const sent = await page.request.post("/api/test-auth/mailbox", { headers: testHeaders, data: { to, template } });
     expect(sent.status(), await sent.text()).toBe(200);

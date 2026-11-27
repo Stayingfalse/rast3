@@ -2256,3 +2256,16 @@ that don't touch the data model. Known items to include:
   ("Pick up 3 wishlists"), then "Pick up another", as at work. The group
   page's own "Report a problem" form (added earlier on 27 Nov) is replaced by
   the shared "Report issue" window.
+- **27 Nov (owner): admin pages up to the standard of the newer ones,
+  starting with Admin › Wishlists.** The old page sorted people into
+  "workplace › team" (community and friends members all landed in "No
+  company", and anyone in several groups showed in one), counted every
+  year, and loaded every purchase on the site. Rebuilt like Admin › Groups
+  (`src/server/admin-wishlists.ts`, `admin.wishlists`/`admin.wishlistGroups`):
+  search; filter by any group (workplaces, teams, communities, friends
+  groups); show everyone, problems reported, not checked in, or checked in
+  but not picked up; one row per person with every group as a label, this
+  season's check-in, picked up and gifted (this season), open problems in
+  place; actions: open or copy the wishlist, email about the problems.
+  - **Next admin pages to bring up:** the others still on the old look (to
+    check one by one with the owner).

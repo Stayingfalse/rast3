@@ -400,6 +400,9 @@ enum EmailKind {
   /// 27 Nov: to a wishlist's owner when two or more Santas have reported a
   /// problem with it (ref = the oldest open report, so one email per problem)
   WISHLIST_PROBLEM
+  /// 27 Nov: once a season, a few days after someone saved a wishlist without
+  /// joining or starting a group, so nobody can pick their list up yet
+  NO_GROUP
 }
 
 enum EmailStatus {

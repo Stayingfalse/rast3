@@ -2277,3 +2277,11 @@ that don't touch the data model. Known items to include:
     shared admin component (`_components/group-filter.tsx`).
   - **Last admin page on the old look:** Settings / Sign-in (providers and
     email setup, ~1,000 lines).
+- **27 Nov (owner): a "join a group" email for people with a wishlist but no
+  group** (9 on prod that day). Nobody can pick their list up until they're
+  in a group. `NO_GROUP` (migration `20261127200000_no_group`): once a
+  season, 3 days (`NO_GROUP_DAYS`) after the profile and wishlist were
+  saved, until gifting closes; a switched-off group doesn't count as one.
+  Same rules as the other reminders (opt-out, quiet hours, daily limit).
+  Button: "Join or start a group" to `/groups`. Spec `no-group-email.spec.ts`;
+  the mailbox spec checks its links.

@@ -2221,3 +2221,17 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 28 Nov):** the organiser referral email in the app
     (wording above, once approved) and the "bring your other group" prompt
     after a member's first gift.
+- **27 Nov (owner): two bugs in friends and community groups.**
+  - **"To a colleague" on a Discord or friends gift:** the share card for a
+    sent gift (its image, page, preview text and footer) always said
+    colleague. Share cards now carry who the gift went to, from the kind of
+    group it was picked up in: "A colleague" (workplace), "A community
+    member" (Discord community), "A friend" (friends group). Thank-you
+    cards too.
+  - **No way to report a problem with a list in a friends or community
+    group:** the workplace page had "Report issue"; the group page only had
+    "Open wishlist" and "Mark as gifted". Group pick-ups now have "Report a
+    problem" (no delivery address, empty list, broken link, something else,
+    with an optional note), show "Problem reported", and "It's fixed now"
+    clears it. The list's owner sees it in the site-wide alert next time they
+    visit; they never see who reported it.

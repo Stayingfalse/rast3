@@ -13,6 +13,15 @@ import { AffiliateNote } from "./affiliate-note";
 
 type Group = RouterOutputs["groups"]["mine"][number];
 
+const REPORT_TYPES = ["NO_ADDRESS", "NO_ITEMS", "DOESNT_EXIST", "OTHER"] as const;
+type ReportType = (typeof REPORT_TYPES)[number];
+const REPORT_LABEL: Record<string, string> = {
+  NO_ADDRESS: "No delivery address on the wishlist",
+  NO_ITEMS: "The wishlist is empty",
+  DOESNT_EXIST: "The link doesn't work (private or deleted)",
+  OTHER: "Something else",
+};
+
 /**
  * Day 14: a friends or community group's home: pick up wishlists from the
  * group and mark them gifted.
@@ -44,6 +53,27 @@ export function GroupHome({ group }: { group: Group }) {
       }
       await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
       void utils.stamps.getMyAlbum.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  // a list that can't be gifted (no address, empty, broken link) can be
+  // reported here too, as on the workplace page (owner, 27 Nov)
+  const [reportFor, setReportFor] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<ReportType>("NO_ADDRESS");
+  const [reportNote, setReportNote] = useState("");
+  const report = api.wishlist.reportIssue.useMutation({
+    onSuccess: async () => {
+      toast.success("Reported. They'll see it next time they visit.");
+      setReportFor(null);
+      setReportNote("");
+      await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const clearReport = api.wishlist.clearReport.useMutation({
+    onSuccess: async () => {
+      await utils.wishlist.getMyAssignments.invalidate({ groupId: group.id });
     },
     onError: (e) => toast.error(e.message),
   });
@@ -134,6 +164,7 @@ export function GroupHome({ group }: { group: Group }) {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {parcels.map((a, i) => {
             const done = !!a.purchases;
+            const reported = a.reports[0];
             return (
               <li key={a.id} className="label-stock flex flex-col gap-3 p-5">
                 <p className="label-caps text-ink-soft">Parcel {i + 1}</p>
@@ -144,6 +175,13 @@ export function GroupHome({ group }: { group: Group }) {
                       ? "Gifted. Thank you!"
                       : "A wishlist from this group"}
                 </p>
+                {reported && !done && (
+                  <p className="text-ink-soft text-sm">
+                    <span className="text-ink font-semibold">Problem reported:</span>{" "}
+                    {REPORT_LABEL[reported.reportType] ?? "Something's wrong"}.
+                    {reported.description ? ` “${reported.description}”` : ""} They&apos;ll see it next time they visit.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {a.link && (
                     <a
@@ -170,7 +208,79 @@ export function GroupHome({ group }: { group: Group }) {
                       Mark as gifted
                     </button>
                   )}
+                  {!done && !reported && (
+                    <button
+                      type="button"
+                      onClick={() => setReportFor(a.id)}
+                      className="btn-quiet text-ink-soft border-transparent"
+                    >
+                      Report a problem
+                    </button>
+                  )}
+                  {!done && reported && (
+                    <button
+                      type="button"
+                      disabled={clearReport.isPending}
+                      onClick={() => clearReport.mutate({ assignmentId: a.id })}
+                      className="btn-quiet text-ink-soft border-transparent"
+                    >
+                      It&apos;s fixed now
+                    </button>
+                  )}
                 </div>
+                {reportFor === a.id && (
+                  <form
+                    className="border-rule flex flex-col gap-3 border-t pt-3"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      report.mutate({
+                        assignmentId: a.id,
+                        reportType,
+                        description: reportNote.trim() || undefined,
+                      });
+                    }}
+                  >
+                    <label className="text-ink flex flex-col gap-1 text-sm font-semibold">
+                      What&apos;s wrong?
+                      <select
+                        value={reportType}
+                        onChange={(e) => setReportType(e.target.value as ReportType)}
+                        className="rounded-label border-rule text-ink border bg-white p-2 font-normal"
+                      >
+                        {REPORT_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {REPORT_LABEL[t]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-ink flex flex-col gap-1 text-sm font-semibold">
+                      Anything to add? (optional)
+                      <textarea
+                        value={reportNote}
+                        onChange={(e) => setReportNote(e.target.value)}
+                        maxLength={300}
+                        rows={2}
+                        className="rounded-label border-rule text-ink border bg-white p-2 font-normal"
+                      />
+                    </label>
+                    <p className="text-ink-soft text-xs">
+                      They won&apos;t see who reported it.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="submit" disabled={report.isPending} className="btn-post">
+                        {report.isPending ? "Sending…" : "Send report"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReportFor(null)}
+                        className="btn-quiet text-ink border-transparent"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
               </li>
             );
           })}

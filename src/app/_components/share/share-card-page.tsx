@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import {
   countShareView,
   getPublicShareCard,
+  recipientLabel,
   type ShareKind,
 } from "~/server/share-cards";
 import { getProxyImageUrl } from "~/utils/image-utils";
@@ -29,6 +30,12 @@ const COPY: Record<ShareKind, { title: string; description: string }> = {
   },
 };
 
+/** A sent card says who the gift went to (27 Nov: not always a colleague). */
+const describe = (kind: ShareKind, card: { recipient: keyof typeof recipientLabel }) =>
+  kind === "sent"
+    ? `A Christmas gift to ${recipientLabel[card.recipient].toLowerCase()}, sent through their wishlist. No names, no addresses, no draw.`
+    : COPY[kind].description;
+
 export async function shareCardMetadata(
   kind: ShareKind,
   code: string,
@@ -38,11 +45,11 @@ export async function shareCardMetadata(
   const image = `/${kind}/${code}/card.png`;
   return {
     title: `${COPY[kind].title} · Random Acts of Santa`,
-    description: COPY[kind].description,
+    description: describe(kind, card),
     robots: { index: false, follow: false },
     openGraph: {
       title: COPY[kind].title,
-      description: COPY[kind].description,
+      description: describe(kind, card),
       url: `/${kind}/${code}`,
       images: [{ url: image, width: 1200, height: 630, alt: COPY[kind].title }],
       type: "website",
@@ -85,7 +92,7 @@ export async function ShareCardPage({
                 ]
                   .filter(Boolean)
                   .join(", ")}`
-              : "Parcel label: to a colleague, from Santa, address withheld"
+              : `Parcel label: to ${recipientLabel[card.recipient].toLowerCase()}, from Santa, address withheld`
         }
         width={1200}
         height={630}
@@ -114,7 +121,11 @@ export async function ShareCardPage({
           </div>
         )}
 
-      <ShareJoinFooter />
+      <ShareJoinFooter
+        pickUp={
+          card.recipient === "member" ? "a few members'" : card.recipient === "friend" ? "a few friends'" : undefined
+        }
+      />
     </article>
   );
 }

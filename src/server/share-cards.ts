@@ -27,7 +27,23 @@ export interface PublicShareCard {
   images: string[];
   /** Live, rounded season totals (team cards only) */
   group: GroupTotals | null;
+  /**
+   * Who the gift went to, by the kind of group it was picked up in (sent
+   * cards; 27 Nov: a Discord or friends gift said "a colleague").
+   */
+  recipient: Recipient;
 }
+
+export type Recipient = "colleague" | "member" | "friend";
+const recipientOf = (kind: string | null | undefined): Recipient =>
+  kind === "COMMUNITY" ? "member" : kind === "FRIENDS" ? "friend" : "colleague";
+
+/** "A colleague", "A community member", "A friend" */
+export const recipientLabel: Record<Recipient, string> = {
+  colleague: "A colleague",
+  member: "A community member",
+  friend: "A friend",
+};
 
 export type GroupScope = "org" | "team";
 
@@ -83,9 +99,17 @@ export async function getPublicShareCard(
   const card = await db.shareCard.findUnique({
     where: { id: code },
     include: {
-      purchase: { select: { purchasedAt: true } },
+      purchase: {
+        select: { purchasedAt: true, wishlistAssignment: { select: { group: { select: { kind: true } } } } },
+      },
       kudos: {
-        select: { message: true, images: true, hidden: true, createdAt: true },
+        select: {
+          message: true,
+          images: true,
+          hidden: true,
+          createdAt: true,
+          purchase: { select: { wishlistAssignment: { select: { group: { select: { kind: true } } } } } },
+        },
       },
     },
   });
@@ -99,6 +123,7 @@ export async function getPublicShareCard(
       message: null,
       images: [],
       group: null,
+      recipient: recipientOf(card.purchase.wishlistAssignment?.group?.kind),
     };
   }
   if (kind === "thanks" && card.kind === "THANKS" && card.kudos) {
@@ -118,6 +143,7 @@ export async function getPublicShareCard(
       message: card.kudos.message,
       images,
       group: null,
+      recipient: recipientOf(card.kudos.purchase?.wishlistAssignment?.group?.kind),
     };
   }
   if (
@@ -137,7 +163,7 @@ export async function getPublicShareCard(
     );
     // Too few gifts to show yet: the card stays private until there are.
     if (!group.gifts) return null;
-    return { code, kind, season, message: null, images: [], group };
+    return { code, kind, season, message: null, images: [], group, recipient: "colleague" };
   }
   return null;
 }

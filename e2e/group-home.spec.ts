@@ -88,6 +88,21 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
   await settle(page);
   await snap(page, testInfo, "group-home");
 
+  // a list that can't be gifted can be reported here too (owner, 27 Nov),
+  // and cleared once it's fixed
+  await parcel.getByRole("button", { name: "Report a problem" }).click();
+  await parcel.getByLabel("What's wrong?").selectOption("NO_ADDRESS");
+  await parcel.getByLabel("Anything to add? (optional)").fill("No delivery address set");
+  await settle(page);
+  await snap(page, testInfo, "group-home-report");
+  await parcel.getByRole("button", { name: "Send report" }).click();
+  await expect(parcel.getByText("Problem reported:")).toBeVisible();
+  await expect(parcel.getByText("No delivery address on the wishlist", { exact: false })).toBeVisible();
+  await expect(parcel.getByRole("button", { name: "Report a problem" })).toHaveCount(0);
+  await parcel.getByRole("button", { name: "It's fixed now" }).click();
+  await expect(parcel.getByText("Problem reported:")).toHaveCount(0);
+  await expect(parcel.getByRole("button", { name: "Report a problem" })).toBeVisible();
+
   await parcel.getByRole("button", { name: "Mark as gifted" }).click();
 
   // Ava's first gift ever: its own share window with this season's stamp
@@ -102,6 +117,14 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
     .toBe(1200);
   await settle(page);
   await snap(page, testInfo, "first-gift");
+  // a friends group's gift goes "to a friend", not "a colleague" (27 Nov)
+  const cardPath = await sheet.getByRole("link", { name: "Save image" }).getAttribute("href");
+  expect(cardPath).toMatch(/^\/sent\/\w+\/card\.png$/);
+  const shared = await page.context().newPage();
+  await shared.goto(cardPath!.replace(/\/card\.png$/, ""));
+  await expect(shared.getByRole("img", { name: "Parcel label: to a friend, from Santa, address withheld" })).toBeVisible();
+  await expect(shared.getByText("a few friends'", { exact: false })).toBeVisible();
+  await shared.close();
   await sheet.getByRole("button", { name: "Not now" }).click();
   await expect(sheet).toHaveCount(0);
   await expect(parcel.getByText("Gifted. Thank you!")).toBeVisible();

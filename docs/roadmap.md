@@ -2209,3 +2209,15 @@ that don't touch the data model. Known items to include:
   link end to end (landing page, button, signed in), and every link in the
   "gifting is open", check-in and gift check-in emails opens a page of ours.
   Reminders still skip test addresses in the email log, as before.
+- **Nightly run, 27 Nov (opening day): no code change.** Gifting opened at
+  00:00 UK: prod reads "Open until 6 January"; no errors or incidents
+  overnight; email up. Wrote `docs/marketing/outreach-drafts.md` (owner's
+  growth plan, 26 Nov): the organiser "know another group?" email, a Discord
+  moderator message and announcement, and a founder post for remote-work
+  communities (LinkedIn is out: no access). New daily routine (26 Nov,
+  owner): read-only Reddit research and drafts at 07:23 UK, notes on the
+  `marketing/reddit` branch; the Reddit API key is still refused (401: check
+  the app type and Reddit's API access approval).
+  - **Next (nightly, 28 Nov):** the organiser referral email in the app
+    (wording above, once approved) and the "bring your other group" prompt
+    after a member's first gift.

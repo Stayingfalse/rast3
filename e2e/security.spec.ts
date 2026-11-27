@@ -84,6 +84,9 @@ test.describe("members can't use organiser APIs", () => {
       ["admin.users", { q: "" }],
       ["admin.groups", {}],
       ["link.getAll", undefined],
+      ["admin.wishlists", {}],
+      ["admin.wishlistGroups", undefined],
+      ["admin.kudos", {}],
     ] as const) {
       expect((await query(req, path, input)).status(), path).toBe(403);
     }

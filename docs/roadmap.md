@@ -2256,3 +2256,24 @@ that don't touch the data model. Known items to include:
   ("Pick up 3 wishlists"), then "Pick up another", as at work. The group
   page's own "Report a problem" form (added earlier on 27 Nov) is replaced by
   the shared "Report issue" window.
+- **27 Nov (owner): admin pages up to the standard of the newer ones,
+  starting with Admin › Wishlists.** The old page sorted people into
+  "workplace › team" (community and friends members all landed in "No
+  company", and anyone in several groups showed in one), counted every
+  year, and loaded every purchase on the site. Rebuilt like Admin › Groups
+  (`src/server/admin-wishlists.ts`, `admin.wishlists`/`admin.wishlistGroups`):
+  search; filter by any group (workplaces, teams, communities, friends
+  groups); show everyone, problems reported, not checked in, or checked in
+  but not picked up; one row per person with every group as a label, this
+  season's check-in, picked up and gifted (this season), open problems in
+  place; actions: open or copy the wishlist, email about the problems.
+  - **Admin › Kudos** next (owner, 27 Nov), rebuilt the same way
+    (`src/server/admin-kudos.ts`, `admin.kudos`): it showed the public
+    feed's newest 30. Now every thank-you (newest 200 at a time), search by
+    message, name or email, filter by any group (the gift's group, or the
+    author's workplace or team for workplace thank-yous) and by visible,
+    hidden or with photos; photos as thumbnails; who hid it and when; hide,
+    show again, and delete after a confirmation. The group filter is one
+    shared admin component (`_components/group-filter.tsx`).
+  - **Last admin page on the old look:** Settings / Sign-in (providers and
+    email setup, ~1,000 lines).

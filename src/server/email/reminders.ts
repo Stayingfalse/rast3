@@ -7,7 +7,7 @@ import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { adminStatusEmails, organiserDriveEmails, organiserLiveEmails } from "./launch";
 import { counted, engagedThisSeason, isQuietHour, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
-import { checkInNudge, giftCheckIn, newLists, seasonOpen } from "./templates";
+import { checkInNudge, giftCheckIn, newLists, seasonOpen, wishlistProblem } from "./templates";
 
 /**
  * Reminder emails (22 Oct), run hourly (src/instrumentation.ts):
@@ -51,6 +51,8 @@ export type ReminderRun = {
   /** the wishlist drive (14 Nov) */
   organisersDrive: number;
   adminStatus: number;
+  /** 27 Nov: owners whose wishlist two or more Santas reported a problem with */
+  wishlistProblems: number;
   /** quiet hours (9 Nov): only the site admins' status email went this run */
   quiet?: boolean;
 };
@@ -93,6 +95,7 @@ export async function runReminders(
     organisersLive: 0,
     organisersDrive: 0,
     adminStatus: 0,
+    wishlistProblems: 0,
   };
   let failures = 0;
   let sentToday = await db.emailLog.count({
@@ -230,7 +233,66 @@ export async function runReminders(
   }
 
   run.newLists = await sendNewLists(db, base, season, w, now, send, went);
+  run.wishlistProblems = await sendWishlistProblems(db, base, season, send, went);
   return run;
+}
+
+/**
+ * Two or more Santas couldn't gift someone's wishlist (owner, 27 Nov): no
+ * delivery address, empty, or a link that doesn't work. The owner may never
+ * visit the site to see the alert, so they get one email. Counted per Santa
+ * (one person reporting twice is still one), on open reports this season.
+ * The ref is the oldest open report: once they mark everything fixed, a later
+ * problem is a new episode and may email again.
+ */
+export const PROBLEM_REPORTERS = 2;
+
+async function sendWishlistProblems(
+  db: PrismaClient,
+  base: Prisma.UserWhereInput,
+  season: number,
+  send: Send,
+  went: (r: Awaited<ReturnType<Send>>) => boolean,
+) {
+  const reports = await db.wishlistReport.findMany({
+    where: {
+      resolved: false,
+      wishlistAssignment: { season, isActive: true, purchases: null, wishlistOwner: base },
+    },
+    orderBy: { reportedAt: "asc" },
+    select: {
+      id: true,
+      userId: true,
+      reportType: true,
+      wishlistAssignment: { select: { wishlistOwner: { select: { id: true, email: true } } } },
+    },
+    take: 2000,
+  });
+  const byOwner = new Map<
+    string,
+    { owner: { id: string; email: string | null }; first: string; santas: Set<string>; types: Set<string> }
+  >();
+  for (const r of reports) {
+    const owner = r.wishlistAssignment.wishlistOwner;
+    const o = byOwner.get(owner.id) ?? { owner, first: r.id, santas: new Set(), types: new Set() };
+    o.santas.add(r.userId);
+    o.types.add(r.reportType);
+    byOwner.set(owner.id, o);
+  }
+  let sent = 0;
+  for (const o of byOwner.values()) {
+    if (o.santas.size < PROBLEM_REPORTERS || !o.owner.email || sent >= BATCH) continue;
+    const r = await send(
+      db,
+      { id: o.owner.id, email: o.owner.email },
+      "WISHLIST_PROBLEM",
+      season,
+      () => wishlistProblem(o.owner.id, season, o.santas.size, [...o.types]),
+      o.first,
+    );
+    if (went(r)) sent++;
+  }
+  return sent;
 }
 
 /** The weekly "new wishlists to pick up" email; returns how many went. */

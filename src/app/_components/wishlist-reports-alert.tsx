@@ -3,6 +3,14 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
+/** The report kinds in plain words (27 Nov: the alert showed "NO_ADDRESS"). */
+const REPORT_LABEL: Record<string, string> = {
+  NO_ADDRESS: "No delivery address on your wishlist",
+  NO_ITEMS: "Your wishlist is empty",
+  DOESNT_EXIST: "Your wishlist link doesn't work (private or deleted)",
+  OTHER: "Something else",
+};
+
 type ReportItem = {
   id: string;
   type: string;
@@ -136,7 +144,7 @@ export default function WishlistReportsAlert() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-lg">⚠️</span>
-                          <h3 className="text-lg font-semibold text-ink">{g.type}</h3>
+                          <h3 className="text-lg font-semibold text-ink">{REPORT_LABEL[g.type] ?? g.type}</h3>
                         </div>
                         <p className="text-sm text-ink-soft">
                           {g.count} {g.count === 1 ? "elf has" : "elves have"} reported this issue

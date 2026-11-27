@@ -397,6 +397,9 @@ enum EmailKind {
   /// 14 Nov: the wishlist drive, to each organiser of a group not yet open,
   /// from 15 Nov (ref = group id)
   ORGANISER_DRIVE
+  /// 27 Nov: to a wishlist's owner when two or more Santas have reported a
+  /// problem with it (ref = the oldest open report, so one email per problem)
+  WISHLIST_PROBLEM
 }
 
 enum EmailStatus {

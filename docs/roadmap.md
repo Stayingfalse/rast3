@@ -2235,3 +2235,13 @@ that don't touch the data model. Known items to include:
     with an optional note), show "Problem reported", and "It's fixed now"
     clears it. The list's owner sees it in the site-wide alert next time they
     visit; they never see who reported it.
+- **27 Nov (owner): email the owner when two or more Santas report a
+  problem with their wishlist,** so they don't miss out. New email kind
+  `WISHLIST_PROBLEM` (migration `20261127120000_wishlist_problem`), sent by
+  the hourly reminder run (quiet hours, daily cap and opt-out apply) when two
+  different Santas have open reports on the owner's ungifted lists this
+  season. It names each problem with its fix (no delivery address, empty,
+  link doesn't open) and points to "Resolve All". One email per problem: the
+  ref is the oldest open report, so after the owner resolves everything a
+  new problem can email again. The owner's alert now shows the problems in
+  plain words, not "NO_ADDRESS".

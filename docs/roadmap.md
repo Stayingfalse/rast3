@@ -2285,3 +2285,17 @@ that don't touch the data model. Known items to include:
   Same rules as the other reminders (opt-out, quiet hours, daily limit).
   Button: "Join or start a group" to `/groups`. Spec `no-group-email.spec.ts`;
   the mailbox spec checks its links.
+- **Nightly run, 28 Nov: "Know another group?" after a member's first gift**
+  (growth plan, 26 Nov). The first-gift share window (first ever, or first
+  this season) now ends with a short band: "Your Discord server, another
+  team or a group of friends can do this too…", with "Start a group" (to
+  `/groups`) and "Copy site link". Shown on the first gift only; later
+  gifts keep the plain share window. Specs: `group-home` (it shows, links
+  to `/groups`) and `wishlist` (not on a second gift).
+  - **Waiting on the owner:** merge #119 (the "join a group" email for the 9
+    people with a wishlist and no group); approve the organiser "know
+    another group?" email wording in `docs/marketing/outreach-drafts.md`
+    before it's built.
+  - **Next (nightly, 29 Nov):** the organiser referral email once its wording
+    is approved; otherwise the backlog item the owner picks, or Settings /
+    Sign-in (the last admin page on the old look).

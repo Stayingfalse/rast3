@@ -83,6 +83,8 @@ test("member gets 3 wishlists and marks one as gifted", async ({
   await page.getByRole("button", { name: "Confirm Purchase" }).click();
   const again = page.getByRole("dialog", { name: "Share your random act" });
   await expect(again).toBeVisible();
+  // "Know another group?" is for the first gift only (28 Nov)
+  await expect(again.getByRole("region", { name: "Know another group?" })).toHaveCount(0);
   await again.getByRole("button", { name: "Not now" }).click();
   await expect(again).toHaveCount(0);
   expect(errors).toEqual([]);

@@ -122,8 +122,16 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
   await expect
     .poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBe(1200);
+  // and asks once whether they know another group (28 Nov)
+  const another = sheet.getByRole("region", { name: "Know another group?" });
+  await expect(another).toBeVisible();
+  await expect(another.getByRole("link", { name: "Start a group" })).toHaveAttribute("href", "/groups");
+  await expect(another.getByRole("button", { name: "Copy site link" })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "first-gift");
+  // what a phone shows once scrolled to it (a full-page capture resets the scroll)
+  await another.getByRole("button", { name: "Copy site link" }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/screenshots/${testInfo.project.name}/first-gift-another-group.png` });
   // a friends group's gift goes "to a friend", not "a colleague" (27 Nov)
   const cardPath = await sheet.getByRole("link", { name: "Save image" }).getAttribute("href");
   expect(cardPath).toMatch(/^\/sent\/\w+\/card\.png$/);

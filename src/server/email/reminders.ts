@@ -7,7 +7,7 @@ import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
 import { adminStatusEmails, organiserDriveEmails, organiserLiveEmails } from "./launch";
 import { counted, engagedThisSeason, isQuietHour, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
-import { checkInNudge, giftCheckIn, newLists, seasonOpen, wishlistProblem } from "./templates";
+import { checkInNudge, giftCheckIn, newLists, noGroup, seasonOpen, wishlistProblem } from "./templates";
 
 /**
  * Reminder emails (22 Oct), run hourly (src/instrumentation.ts):
@@ -23,6 +23,9 @@ import { checkInNudge, giftCheckIn, newLists, seasonOpen, wishlistProblem } from
  *   Only to people already gifting: nobody who just receives is chased.
  * The first two go once per person per season; anyone can opt out. None go
  * to last year's members until they check in again (see engagedThisSeason).
+ * - people who saved a wishlist NO_GROUP_DAYS ago but aren't in a group
+ *   hear how to join or start one, once a season, until gifting closes
+ *   (owner, 27 Nov).
  * Launch emails (6 Nov, ./launch): organisers hear their group is live, and
  * site admins get a morning status email in launch week.
  */
@@ -33,6 +36,8 @@ const GIFT_AFTER_DAYS = ARRIVAL_AFTER_DAYS;
 const GIFT_LATEST_DAYS = 14;
 /** new-lists emails: at most one per person this often */
 const NEW_LISTS_EVERY_DAYS = 7;
+/** the "join a group" email waits this long after the profile (and wishlist) was saved */
+export const NO_GROUP_DAYS = 3;
 /** per kind per run, to stay well inside SMTP sending limits */
 const BATCH = 100;
 /** failed sends in a row that stop a run (SMTP down or misconfigured); the next run retries */
@@ -53,6 +58,8 @@ export type ReminderRun = {
   adminStatus: number;
   /** 27 Nov: owners whose wishlist two or more Santas reported a problem with */
   wishlistProblems: number;
+  /** 27 Nov: people with a wishlist but no group, told how to join or start one */
+  noGroup: number;
   /** quiet hours (9 Nov): only the site admins' status email went this run */
   quiet?: boolean;
 };
@@ -96,6 +103,7 @@ export async function runReminders(
     organisersDrive: 0,
     adminStatus: 0,
     wishlistProblems: 0,
+    noGroup: 0,
   };
   let failures = 0;
   let sentToday = await db.emailLog.count({
@@ -234,6 +242,29 @@ export async function runReminders(
 
   run.newLists = await sendNewLists(db, base, season, w, now, send, went);
   run.wishlistProblems = await sendWishlistProblems(db, base, season, send, went);
+
+  // A wishlist but no group (owner, 27 Nov): nobody can pick it up. A group
+  // that was switched off doesn't count as one.
+  if (now <= w.closesAt) {
+    const users = await db.user.findMany({
+      where: {
+        ...base,
+        amazonWishlistUrl: { not: null },
+        profileCompletedAt: { lte: new Date(now.getTime() - NO_GROUP_DAYS * DAY) },
+        memberships: { none: { group: { status: { not: "DISABLED" } } } },
+        emailLog: { none: { kind: "NO_GROUP", season, ...counted } },
+      },
+      select: { id: true, email: true },
+      orderBy: { id: "asc" },
+      take: BATCH,
+    });
+    for (const u of users) {
+      const r = await send(db, { id: u.id, email: u.email! }, "NO_GROUP", season, () =>
+        noGroup(u.id, season, w.closesAt),
+      );
+      if (went(r)) run.noGroup++;
+    }
+  }
   return run;
 }
 

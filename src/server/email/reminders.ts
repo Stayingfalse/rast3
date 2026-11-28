@@ -4,7 +4,7 @@ import { ARRIVAL_AFTER_DAYS } from "~/server/gifts";
 import { openNowWhere, ownLaunchWithinWhere } from "~/server/group-launch";
 import { seasonWindow } from "~/server/season";
 import { TEST_EMAIL_DOMAIN } from "~/server/utils/test-auth";
-import { adminStatusEmails, organiserDriveEmails, organiserLiveEmails } from "./launch";
+import { adminStatusEmails, organiserDriveEmails, organiserLiveEmails, organiserReferralEmails } from "./launch";
 import { counted, engagedThisSeason, isQuietHour, REMINDER_DAILY_LIMIT, type Send } from "./rules";
 import { lastError, sendOnce } from "./mailer";
 import { checkInNudge, giftCheckIn, newLists, noGroup, seasonOpen, wishlistProblem } from "./templates";
@@ -55,6 +55,8 @@ export type ReminderRun = {
   organisersLive: number;
   /** the wishlist drive (14 Nov) */
   organisersDrive: number;
+  /** 28 Nov: organisers asked whether they know another group */
+  organisersReferral: number;
   adminStatus: number;
   /** 27 Nov: owners whose wishlist two or more Santas reported a problem with */
   wishlistProblems: number;
@@ -101,6 +103,7 @@ export async function runReminders(
     newLists: 0,
     organisersLive: 0,
     organisersDrive: 0,
+    organisersReferral: 0,
     adminStatus: 0,
     wishlistProblems: 0,
     noGroup: 0,
@@ -131,6 +134,8 @@ export async function runReminders(
   run.organisersLive = await organiserLiveEmails(db, { now, w, scope, send, went, seasonJustOpened: justOpened });
   // the wishlist drive (14 Nov): organisers of groups not open yet, from 15 Nov
   run.organisersDrive = await organiserDriveEmails(db, { now, w, scope, send, went });
+  // "know another group?" (28 Nov), once a group has been open a couple of days
+  run.organisersReferral = await organiserReferralEmails(db, { now, w, scope, send, went });
 
   if (now < w.opensAt && now.getTime() >= w.opensAt.getTime() - NUDGE_DAYS * DAY) {
     const users = await db.user.findMany({

@@ -2299,3 +2299,17 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 29 Nov):** the organiser referral email once its wording
     is approved; otherwise the backlog item the owner picks, or Settings /
     Sign-in (the last admin page on the old look).
+- **28 Nov (owner): merged #119 and #120; approved the organiser "know another
+  group?" email wording, and it's built.** `ORGANISER_REFERRAL` (migration
+  `20261128080000_organiser_referral`), wording exactly as approved in
+  `docs/marketing/outreach-drafts.md` §1 (the closing date comes from the
+  season). Once a season per organiser, about the first group they organised
+  (one email even for someone running several), once that group has been
+  open 2 days (`REFERRAL_AFTER_DAYS`), so it never lands on top of "we're
+  live". Same rules as the other reminders (opt-out, quiet hours, daily
+  limit). Button: "Open your organiser console". Spec
+  `organiser-referral.spec.ts`: a group open 3 days emails its organiser
+  once; a group opened today doesn't; every link in the real email opens.
+  - **Note:** the email asks organisers to forward it. A forwarded copy keeps
+    the organiser's own "Stop reminder emails" link, which asks for a
+    confirmation first.

@@ -7,7 +7,7 @@ import { seasonRange } from "~/server/stamps";
 import { WALL_MIN_THANKS } from "~/server/wall";
 import { isTestAddress } from "./mailer";
 import { counted, engagedThisSeason, type Send } from "./rules";
-import { adminStatus, organiserDrive, organiserLive, type StatusSummary } from "./templates";
+import { adminStatus, organiserDrive, organiserLive, organiserReferral, type StatusSummary } from "./templates";
 
 /**
  * Launch emails (owner, 6 Nov), run from runReminders, so they share its
@@ -22,7 +22,13 @@ import { adminStatus, organiserDrive, organiserLive, type StatusSummary } from "
  *   the day before gifting opens to a week after, from 07:00 UK time (the
  *   first hourly run after it). Once a UK day (ref = the date).
  *
- * Both respect the reminder opt-out.
+ * - ORGANISER_REFERRAL (28 Nov, owner approved the wording): once a group
+ *   has been open REFERRAL_AFTER_DAYS (after the "we're live" email), its
+ *   organiser is asked whether they know another group. Once per organiser
+ *   per season (ref empty), about the first group they organised, so
+ *   someone running three groups gets one email, not three.
+ *
+ * All respect the reminder opt-out.
  */
 type Ctx = {
   now: Date;
@@ -39,6 +45,8 @@ const BATCH = 100;
 /** an own-date group's organiser hears within this many days of it opening */
 const LIVE_DAYS = 7;
 const DAY = 24 * 3600_000;
+/** the referral ask waits this long after a group opens */
+export const REFERRAL_AFTER_DAYS = 2;
 /** the status email goes from this UK hour */
 export const ADMIN_STATUS_HOUR = 7;
 /** ...on UK days from this many before gifting opens to this many after */
@@ -263,4 +271,48 @@ async function statusSummary(db: PrismaClient, now: Date): Promise<StatusSummary
       ["Thank-yous", n(s.lastDay.thanks)],
     ],
   };
+}
+
+/** "Know another group?" (28 Nov): see the top of this file. */
+export async function organiserReferralEmails(db: PrismaClient, { now, w, scope, send, went }: Ctx) {
+  const season = w.year;
+  // it says "gifting is open now": not before the season opens, even for a
+  // group that opened early
+  if (now < w.opensAt || now > w.closesAt) return 0;
+  const organisers = await db.membership.findMany({
+    where: {
+      role: "ADMIN",
+      group: {
+        AND: [
+          { status: "ACTIVE", kind: { not: "TEAM" } },
+          // open for a couple of days already, so it doesn't land on top of "we're live"
+          openNowWhere(w, new Date(now.getTime() - REFERRAL_AFTER_DAYS * DAY)),
+        ],
+      },
+      user: {
+        emailReminders: true,
+        email: { not: null },
+        AND: [scope],
+        emailLog: { none: { kind: "ORGANISER_REFERRAL", season, ...counted } },
+      },
+      OR: [{ user: engagedThisSeason(season) }, { joinedAt: { gte: seasonRange(season).gte } }],
+    },
+    select: {
+      user: { select: { id: true, email: true, firstName: true } },
+      group: { select: { id: true, name: true } },
+    },
+    orderBy: { joinedAt: "asc" },
+    take: BATCH * 3,
+  });
+  const seen = new Set<string>();
+  let sent = 0;
+  for (const { user, group } of organisers) {
+    if (seen.has(user.id) || seen.size >= BATCH) continue;
+    seen.add(user.id);
+    const r = await send(db, { id: user.id, email: user.email! }, "ORGANISER_REFERRAL", season, () =>
+      organiserReferral(user.id, season, user.firstName, group, w.closesAt),
+    );
+    if (went(r)) sent++;
+  }
+  return sent;
 }

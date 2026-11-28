@@ -403,6 +403,9 @@ enum EmailKind {
   /// 27 Nov: once a season, a few days after someone saved a wishlist without
   /// joining or starting a group, so nobody can pick their list up yet
   NO_GROUP
+  /// 28 Nov: once a season, organisers of a group open for two days or more
+  /// are asked whether they know another group (owner approved the wording)
+  ORGANISER_REFERRAL
 }
 
 enum EmailStatus {

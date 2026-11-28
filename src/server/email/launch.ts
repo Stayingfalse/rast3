@@ -276,7 +276,9 @@ async function statusSummary(db: PrismaClient, now: Date): Promise<StatusSummary
 /** "Know another group?" (28 Nov): see the top of this file. */
 export async function organiserReferralEmails(db: PrismaClient, { now, w, scope, send, went }: Ctx) {
   const season = w.year;
-  if (now > w.closesAt) return 0;
+  // it says "gifting is open now": not before the season opens, even for a
+  // group that opened early
+  if (now < w.opensAt || now > w.closesAt) return 0;
   const organisers = await db.membership.findMany({
     where: {
       role: "ADMIN",

@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   if (!isTestAuthAuthorised(req)) return notFound();
   const input = sendBody.safeParse(await req.json().catch(() => ({})));
   if (!input.success) return NextResponse.json({ error: input.error.message }, { status: 400 });
-  const user = await db.user.findUnique({ where: { email: input.data.to }, select: { id: true } });
+  const user = await db.user.findUnique({ where: { email: input.data.to }, select: { id: true, firstName: true } });
   if (!user) return NextResponse.json({ error: "No such test user (log in as them first)" }, { status: 404 });
   const settings = await emailSettings();
   if (!settings) return NextResponse.json({ error: "No email server" }, { status: 409 });
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         : input.data.template === "giftCheckIn"
           ? giftCheckIn(user.id, season, "test-purchase")
           : input.data.template === "organiserReferral"
-            ? organiserReferral(user.id, season, "Test", (await organisedGroup(user.id)) ?? { id: "none", name: "E2E Test Group" }, w.closesAt)
+            ? organiserReferral(user.id, season, user.firstName, (await organisedGroup(user.id)) ?? { id: "none", name: "E2E Test Group" }, w.closesAt)
             : input.data.template === "noGroup"
             ? noGroup(user.id, season, w.closesAt)
             : wishlistProblem(user.id, season, 2, ["NO_ADDRESS", "DOESNT_EXIST"]);

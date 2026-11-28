@@ -28,8 +28,8 @@ export function startReminderSchedule() {
       }
       // members' and organisers' emails wait for 08:00–21:00 UK (9 Nov)
       const run = await runReminders(db, { quietHours: true });
-      const { nudged, opened, giftCheckIns, newLists, organisersLive, organisersDrive, adminStatus, wishlistProblems, noGroup } = run;
-      if (nudged || opened || giftCheckIns || newLists || organisersLive || organisersDrive || adminStatus || wishlistProblems || noGroup)
+      const { nudged, opened, giftCheckIns, newLists, organisersLive, organisersDrive, adminStatus, wishlistProblems, noGroup, organisersReferral } = run;
+      if (nudged || opened || giftCheckIns || newLists || organisersLive || organisersDrive || adminStatus || wishlistProblems || noGroup || organisersReferral)
         log.info(run, "Reminder emails processed");
       await beat("reminders");
     } catch (error) {

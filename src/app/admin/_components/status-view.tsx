@@ -33,6 +33,7 @@ const KIND = {
   ORGANISER_DRIVE: "Organisers: wishlist drive",
   WISHLIST_PROBLEM: "Wishlist problem",
   NO_GROUP: "No group yet",
+  ORGANISER_REFERRAL: "Organisers: know another group?",
 } as const;
 
 const PHASE = { before: "Not open yet", open: "Gifting open", after: "Closed" } as const;

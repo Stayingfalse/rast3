@@ -222,15 +222,14 @@ export function ShareSheet({
           {firstGift && (
             <section
               aria-labelledby="another-group-title"
-              className="border-rule bg-label-shade -mx-6 flex flex-col gap-3 border-y px-6 py-4"
+              className="border-rule bg-label-shade -mx-6 flex flex-col gap-2.5 border-y px-6 py-4"
             >
               <h3 id="another-group-title" className="font-expanded text-ink text-base font-extrabold">
                 Know another group?
               </h3>
               <p className="text-ink-soft text-sm">
-                Your Discord server, another team or a group of friends can do this too. It&apos;s
-                free, there&apos;s no draw, and nobody shares an address. Anyone can start a group in a
-                minute and share the link.
+                Your Discord server, another team or your friends can start their own in a minute.
+                It&apos;s free, with no draw and no addresses shared.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Link href="/groups" onClick={onClose} className="btn-quiet text-ink">

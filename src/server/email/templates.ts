@@ -172,6 +172,24 @@ export const wishlistProblem = (userId: string, season: number, santas: number, 
   });
 
 /**
+ * 27 Nov (owner): someone saved a wishlist a few days ago but isn't in a
+ * group, so nobody can pick their list up and they can't pick anyone's.
+ */
+export const noGroup = (userId: string, season: number, closesAt: Date) =>
+  render({
+    userId,
+    subject: "Your wishlist is ready, but nobody can see it yet",
+    kicker: `Christmas ${season}`,
+    heading: "One step left: join a group",
+    paragraphs: [
+      "Thanks for adding your wishlist. Wishlists are handed out inside groups, and you're not in one yet, so no Santa can pick yours up.",
+      "Join your workplace, a community or friends group with its invite link, or start a friends group yourself in a minute and share the link in your group chat.",
+      `Gifting closes on ${day(closesAt)}.`,
+    ],
+    button: { label: "Join or start a group", path: "/groups" },
+  });
+
+/**
  * A few days after a Santa marked a gift to your list, if you haven't
  * posted a thank-you. Worded as a check-in, never "you've been sent a gift",
  * so the surprise is kept (owner, 22 Oct). The button says it arrived in

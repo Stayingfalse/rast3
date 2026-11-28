@@ -275,6 +275,35 @@ export const organiserLive = (
 };
 
 /**
+ * 28 Nov (owner approved the wording, docs/marketing/outreach-drafts.md §1):
+ * once a season, a thank-you to each organiser and one small ask: do they
+ * know another team, Discord server or group of friends who'd like this?
+ */
+export const organiserReferral = (
+  userId: string,
+  season: number,
+  name: string | null,
+  group: { id: string; name: string },
+  closesAt: Date,
+) =>
+  render({
+    userId,
+    subject: "Gifting is open. Know another group that would like this?",
+    kicker: `Christmas ${season} · for organisers`,
+    heading: "Know another group that would like this?",
+    paragraphs: [
+      `Hi ${name ?? "there"},`,
+      `Thank you for running ${group.name} on Random Acts of Santa. Gifting is open now, until ${day(closesAt)}.`,
+      "One small ask. Do you know another team, Discord server or group of friends who would like this? It's free, there's no draw, and nobody shares an address. One person starts a group in two minutes and shares the link.",
+      `Forward this email, or send them here: ${siteUrl()}`,
+      `Your own group's link and ready-made banners are in your organiser console: ${siteUrl()}/groups/${group.id}/manage`,
+      "Thank you for making someone's Christmas a little brighter.",
+      "Random Acts of Santa",
+    ],
+    button: { label: "Open your organiser console", path: `/groups/${group.id}/manage` },
+  });
+
+/**
  * The wishlist drive (owner, 14 Nov): to each organiser of a group that
  * hasn't opened yet, once, from 15 November. Get people in with their
  * wishlists before gifting opens.

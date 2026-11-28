@@ -39,7 +39,13 @@ const createPrismaClient = () => {
       logger.warn({ target: e.target, errorType: 'used_sign_in_link' }, 'Sign-in link already used');
       return;
     }
-    if (isWriteConflict(e.message)) {
+    // an email already sent (28 Nov): the email log's once-only claim
+    // (sendOnce) refuses it on purpose and the sender skips it
+    if (e.target === 'emailLog.create' && e.message.includes('EmailLog_userId_kind_season_ref_key')) {
+      logger.info({ target: e.target, errorType: 'email_already_sent' }, 'Email already sent (once-only claim)');
+      return;
+    }
+        if (isWriteConflict(e.message)) {
       logger.warn({ target: e.target, errorType: 'write_conflict' }, 'Database write conflict (harmless race)');
       return;
     }

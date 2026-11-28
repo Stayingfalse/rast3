@@ -2299,3 +2299,11 @@ that don't touch the data model. Known items to include:
   - **Next (nightly, 29 Nov):** the organiser referral email once its wording
     is approved; otherwise the backlog item the owner picks, or Settings /
     Sign-in (the last admin page on the old look).
+- **28 Nov (owner): Better Stack alert "4 errors in 10 minutes" (12:15 UTC).**
+  No email went twice, and nothing was down. The wishlist-problem email
+  (27 Nov) retried owners it had already emailed on every hourly run; the
+  email log's once-only claim refused each retry, as designed, but Prisma
+  logged every refusal as a database error (1–2 an hour since 08:09). The
+  two deploys that day each started an extra run, so 6 landed in 15 minutes.
+  Fixed: the sender skips problems it already emailed about, and a refused
+  claim on `emailLog.create` logs as info ("Email already sent"), not error.

@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- generated card preview */
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-hot-toast";
@@ -46,7 +47,9 @@ const COPY = {
  * message and photos the recipient already posted.
  *
  * A Santa's first gift (ever, or of the season) gets its own moment: the
- * season's stamp lands in their album, and the card leads (4 Nov).
+ * season's stamp lands in their album, and the card leads (4 Nov). It also
+ * asks once whether they know another group (28 Nov, growth plan): a
+ * Discord server, another team or friends who could start their own.
  */
 export function ShareSheet({
   request,
@@ -107,6 +110,14 @@ export function ShareSheet({
     if (!url) return;
     await navigator.clipboard.writeText(url);
     toast.success("Link copied");
+  };
+  const copySite = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/`);
+      toast.success("Site link copied");
+    } catch {
+      toast.error("Couldn't copy the link");
+    }
   };
 
   return createPortal(
@@ -208,6 +219,28 @@ export function ShareSheet({
               <span className="btn-quiet text-ink opacity-50">Save image</span>
             )}
           </div>
+          {firstGift && (
+            <section
+              aria-labelledby="another-group-title"
+              className="border-rule bg-label-shade -mx-6 flex flex-col gap-2.5 border-y px-6 py-4"
+            >
+              <h3 id="another-group-title" className="font-expanded text-ink text-base font-extrabold">
+                Know another group?
+              </h3>
+              <p className="text-ink-soft text-sm">
+                Your Discord server, another team or your friends can start their own in a minute.
+                It&apos;s free, with no draw and no addresses shared.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link href="/groups" onClick={onClose} className="btn-quiet text-ink">
+                  Start a group
+                </Link>
+                <button type="button" onClick={() => void copySite()} className="btn-quiet text-ink">
+                  Copy site link
+                </button>
+              </div>
+            </section>
+          )}
           <button
             type="button"
             onClick={onClose}

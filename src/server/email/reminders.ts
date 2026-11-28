@@ -310,9 +310,26 @@ async function sendWishlistProblems(
     o.types.add(r.reportType);
     byOwner.set(owner.id, o);
   }
+  // already emailed about this problem (28 Nov: retrying them every hour
+  // was harmless, but each retry logged a database error)
+  const emailed = new Set(
+    (
+      await db.emailLog.findMany({
+        where: {
+          kind: "WISHLIST_PROBLEM",
+          season,
+          userId: { in: [...byOwner.keys()] },
+          ref: { in: [...byOwner.values()].map((o) => o.first) },
+          ...counted,
+        },
+        select: { userId: true, ref: true },
+      })
+    ).map((l) => `${l.userId} ${l.ref}`),
+  );
   let sent = 0;
   for (const o of byOwner.values()) {
     if (o.santas.size < PROBLEM_REPORTERS || !o.owner.email || sent >= BATCH) continue;
+    if (emailed.has(`${o.owner.id} ${o.first}`)) continue;
     const r = await send(
       db,
       { id: o.owner.id, email: o.owner.email },

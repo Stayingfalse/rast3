@@ -129,6 +129,8 @@ test("a member switches to the group, picks up a wishlist and gifts it", async (
   await expect(another.getByRole("button", { name: "Copy site link" })).toBeVisible();
   await settle(page);
   await snap(page, testInfo, "first-gift");
+  await another.scrollIntoViewIfNeeded();
+  await snap(page, testInfo, "first-gift-another-group");
   // a friends group's gift goes "to a friend", not "a colleague" (27 Nov)
   const cardPath = await sheet.getByRole("link", { name: "Save image" }).getAttribute("href");
   expect(cardPath).toMatch(/^\/sent\/\w+\/card\.png$/);
